@@ -1,0 +1,3 @@
+package dev.juanrincon.simmerly.welcome.presentation.decompose
+
+interface WelcomeComponent
