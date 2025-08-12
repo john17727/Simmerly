@@ -4,9 +4,8 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.tooling.preview.Preview
 import com.arkivanov.decompose.defaultComponentContext
+import com.arkivanov.mvikotlin.main.store.DefaultStoreFactory
 import dev.juanrincon.simmerly.decompose.DefaultRootComponent
 
 class MainActivity : ComponentActivity() {
@@ -14,7 +13,10 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
 
-        val root = DefaultRootComponent(componentContext = defaultComponentContext())
+        val root = DefaultRootComponent(
+            componentContext = defaultComponentContext(),
+            storeFactory = DefaultStoreFactory()
+        )
 
         setContent {
             App(root)

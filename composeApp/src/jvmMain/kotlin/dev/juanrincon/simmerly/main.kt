@@ -6,6 +6,7 @@ import androidx.compose.ui.window.rememberWindowState
 import com.arkivanov.decompose.DefaultComponentContext
 import com.arkivanov.decompose.extensions.compose.lifecycle.LifecycleController
 import com.arkivanov.essenty.lifecycle.LifecycleRegistry
+import com.arkivanov.mvikotlin.main.store.DefaultStoreFactory
 import dev.juanrincon.simmerly.decompose.DefaultRootComponent
 
 fun main() {
@@ -15,6 +16,7 @@ fun main() {
     val root = runOnUiThread {
         DefaultRootComponent(
             componentContext = DefaultComponentContext(lifecycle = lifecycle),
+            storeFactory = DefaultStoreFactory()
         )
     }
     application {

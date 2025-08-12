@@ -6,11 +6,12 @@ import com.arkivanov.decompose.router.stack.StackNavigation
 import com.arkivanov.decompose.router.stack.childStack
 import com.arkivanov.decompose.router.stack.popTo
 import com.arkivanov.decompose.value.Value
+import com.arkivanov.mvikotlin.core.store.StoreFactory
 import dev.juanrincon.simmerly.welcome.presentation.decompose.DefaultWelcomeComponent
 import dev.juanrincon.simmerly.welcome.presentation.decompose.WelcomeComponent
 import kotlinx.serialization.Serializable
 
-class DefaultRootComponent(componentContext: ComponentContext) : RootComponent,
+class DefaultRootComponent(componentContext: ComponentContext, val storeFactory: StoreFactory) : RootComponent,
     ComponentContext by componentContext {
 
         private val navigation = StackNavigation<Configuration>()
@@ -34,7 +35,7 @@ class DefaultRootComponent(componentContext: ComponentContext) : RootComponent,
         }
 
     private fun welcomeComponent(componentContext: ComponentContext): WelcomeComponent =
-        DefaultWelcomeComponent(componentContext)
+        DefaultWelcomeComponent(componentContext, storeFactory)
 
     @Serializable
     private sealed interface Configuration {

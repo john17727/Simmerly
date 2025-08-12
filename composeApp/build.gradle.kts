@@ -30,6 +30,7 @@ kotlin {
                 isStatic = true
                 export(libs.decompose)
                 export(libs.essenty.lifecycle)
+                export(libs.mvikotlin.main)
                 // Optional, only if you need Predictive Back Gesture on Darwin (Apple) targets
 //                export(libs.essenty.backHandler)
                 // Optional, only if you need state preservation on Darwin (Apple) targets
@@ -66,7 +67,12 @@ kotlin {
             api(libs.decompose)
             implementation(libs.decompose.compose.extensions)
 
-            // Ktor
+            // MVIKotlin
+            implementation(libs.mvikotlin)
+            api(libs.mvikotlin.main)
+            implementation(libs.mvikotlin.extensions.coroutines)
+
+            // Ktor and Kotlinx Serialization through Ktor
             implementation(libs.bundles.ktor)
         }
         commonTest.dependencies {

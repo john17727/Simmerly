@@ -26,13 +26,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
+import dev.juanrincon.simmerly.welcome.presentation.mvikotlin.WelcomeStore
 import org.jetbrains.compose.resources.painterResource
 import simmerly.composeapp.generated.resources.Res
 import simmerly.composeapp.generated.resources.simmerly_logo
 import simmerly.composeapp.generated.resources.welcome_background
 
 @Composable
-fun WelcomeScreen() {
+fun WelcomeScreen(state: WelcomeStore.State, onEvent: (WelcomeStore.Intent) -> Unit) {
     Box(modifier = Modifier.fillMaxSize()) {
         Image(
             painter = painterResource(Res.drawable.welcome_background),
@@ -49,7 +50,10 @@ fun WelcomeScreen() {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.SpaceEvenly
         ) {
-            Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
                 Image(
                     painter = painterResource(Res.drawable.simmerly_logo),
                     contentDescription = "Simmerly Logo",
@@ -58,7 +62,7 @@ fun WelcomeScreen() {
                 Text(
                     text = "Welcome to Simmerly",
                     style = MaterialTheme.typography.headlineLarge,
-                    color = MaterialTheme.colorScheme.surface,
+                    color = Color.White,
                     modifier = Modifier.padding(16.dp)
                 )
                 Text(
@@ -73,36 +77,45 @@ fun WelcomeScreen() {
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
             ) {
                 OutlinedTextField(
-                    value = "",
-                    onValueChange = {},
+                    value = state.serverAddress,
+                    onValueChange = { onEvent(WelcomeStore.Intent.OnServerAddressChanged(it)) },
                     modifier = Modifier.fillMaxWidth().padding(16.dp),
                     label = { Text("Server Address") })
                 SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
-                    SegmentedButton(
-                        shape = SegmentedButtonDefaults.itemShape(0, 2),
-                        onClick = {},
-                        selected = true,
-                        icon = {},
-                        label = { Text("Credentials") },
-                    )
-                    SegmentedButton(
-                        shape = SegmentedButtonDefaults.itemShape(1, 2),
-                        onClick = {},
-                        selected = false,
-                        icon = {},
-                        label = { Text("API Token") },
-                    )
+                    WelcomeStore.LoginType.entries.forEach { type ->
+                        SegmentedButton(
+                            shape = SegmentedButtonDefaults.itemShape(
+                                type.ordinal,
+                                WelcomeStore.LoginType.entries.size
+                            ),
+                            onClick = { onEvent(WelcomeStore.Intent.OnLoginTypeChanged(type)) },
+                            selected = state.loginType == type,
+                            icon = {},
+                            label = { Text(type.displayName) },
+                        )
+                    }
                 }
-                OutlinedTextField(
-                    value = "",
-                    onValueChange = {},
-                    Modifier.fillMaxWidth().padding(horizontal = 16.dp),
-                    label = { Text("Username/Email") })
-                OutlinedTextField(
-                    value = "",
-                    onValueChange = {},
-                    Modifier.fillMaxWidth().padding(horizontal = 16.dp),
-                    label = { Text("Password") })
+                when (state.loginType) {
+                    WelcomeStore.LoginType.CREDENTIALS -> {
+                        OutlinedTextField(
+                            value = state.username,
+                            onValueChange = { onEvent(WelcomeStore.Intent.OnUsernameChanged(it)) },
+                            Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                            label = { Text("Username/Email") })
+                        OutlinedTextField(
+                            value = state.password,
+                            onValueChange = { onEvent(WelcomeStore.Intent.OnPasswordChanged(it)) },
+                            Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                            label = { Text("Password") })
+                    }
+                    WelcomeStore.LoginType.API_KEY -> {
+                        OutlinedTextField(
+                            value = state.apiKey,
+                            onValueChange = { onEvent(WelcomeStore.Intent.OnApiKeyChanged(it)) },
+                            Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                            label = { Text("Api Key") })
+                    }
+                }
                 Button(
                     onClick = {},
                     modifier = Modifier.fillMaxWidth().padding(16.dp)

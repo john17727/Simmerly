@@ -15,7 +15,8 @@ class RootHolder : ObservableObject {
         lifecycle = LifecycleRegistryKt.LifecycleRegistry()
 
         root = DefaultRootComponent(
-            componentContext: DefaultComponentContext(lifecycle: lifecycle)
+            componentContext: DefaultComponentContext(lifecycle: lifecycle),
+            storeFactory: DefaultStoreFactory()
         )
 
         LifecycleRegistryExtKt.create(lifecycle)
