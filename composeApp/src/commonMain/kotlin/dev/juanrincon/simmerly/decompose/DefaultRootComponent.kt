@@ -16,8 +16,7 @@ class DefaultRootComponent(componentContext: ComponentContext, val storeFactory:
 
         private val navigation = StackNavigation<Configuration>()
 
-    override val stack: Value<ChildStack<*, RootComponent.Child>>
-        get() = childStack(
+    override val stack: Value<ChildStack<*, RootComponent.Child>> = childStack(
             source = navigation,
             serializer = Configuration.serializer(),
             initialConfiguration = Configuration.Welcome,

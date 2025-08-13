@@ -42,11 +42,15 @@ kotlin {
 
     sourceSets {
         androidMain.dependencies {
+            implementation(compose.runtime)
             implementation(compose.preview)
             implementation(libs.androidx.activity.compose)
 
             // Ktor
             implementation(libs.ktor.client.android)
+
+            // Window Size Class
+            implementation(libs.androidx.material3.windowSizeClass)
         }
         commonMain.dependencies {
             implementation(compose.runtime)
@@ -57,6 +61,7 @@ kotlin {
             implementation(compose.components.uiToolingPreview)
             implementation(libs.androidx.lifecycle.viewmodelCompose)
             implementation(libs.androidx.lifecycle.runtimeCompose)
+            implementation(libs.jetbrains.material3.windowSizeClass)
 
             // Coil
             implementation(libs.coil.compose)
