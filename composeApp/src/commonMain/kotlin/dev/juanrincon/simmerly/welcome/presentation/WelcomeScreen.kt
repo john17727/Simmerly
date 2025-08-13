@@ -61,12 +61,13 @@ fun WelcomeScreen(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.SpaceEvenly
             ) {
-                LogoSection(modifier = Modifier.fillMaxWidth())
-                LoginMobile(
-                    state = state,
-                    onEvent = onEvent,
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)
-                )
+                Logo(modifier = Modifier.fillMaxWidth())
+                Card(
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+                ) {
+                    Login(state, onEvent, modifier = Modifier.fillMaxWidth())
+                }
             }
         } else {
             Row(modifier = Modifier.fillMaxSize().systemBarsPadding()) {
@@ -75,21 +76,30 @@ fun WelcomeScreen(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Spacer(modifier = Modifier.weight(1f))
-                    LogoSection(modifier = Modifier.weight(3f))
+                    Logo(modifier = Modifier.weight(3f))
                 }
-                LoginDesktop(
-                    state = state,
-                    onEvent = onEvent,
-                    modifier = Modifier.padding(16.dp).background(color = MaterialTheme.colorScheme.surface, shape = MaterialTheme.shapes.medium)
-                        .fillMaxHeight().weight(3f)
-                )
+                Column(
+                    modifier = Modifier.padding(16.dp).background(
+                        color = MaterialTheme.colorScheme.surface,
+                        shape = MaterialTheme.shapes.medium
+                    )
+                        .fillMaxHeight().weight(3f),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Login(
+                        state,
+                        onEvent,
+                        modifier = Modifier.fillMaxWidth(DESKTOP_ELEMENTS_MAX_WIDTH_FRACTION)
+                    )
+                }
             }
         }
     }
 }
 
 @Composable
-fun LogoSection(modifier: Modifier = Modifier) {
+fun Logo(modifier: Modifier = Modifier) {
     Column(
         modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally
@@ -115,130 +125,57 @@ fun LogoSection(modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun LoginMobile(
+private fun Login(
     state: WelcomeStore.State,
     onEvent: (WelcomeStore.Intent) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Card(
-        modifier = modifier,
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
-    ) {
-        OutlinedTextField(
-            value = state.serverAddress,
-            onValueChange = { onEvent(WelcomeStore.Intent.OnServerAddressChanged(it)) },
-            modifier = Modifier.fillMaxWidth().padding(16.dp),
-            label = { Text("Server Address") })
-        SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
-            WelcomeStore.LoginType.entries.forEach { type ->
-                SegmentedButton(
-                    shape = SegmentedButtonDefaults.itemShape(
-                        type.ordinal,
-                        WelcomeStore.LoginType.entries.size
-                    ),
-                    onClick = { onEvent(WelcomeStore.Intent.OnLoginTypeChanged(type)) },
-                    selected = state.loginType == type,
-                    icon = {},
-                    label = { Text(type.displayName) },
-                )
-            }
-        }
-        when (state.loginType) {
-            WelcomeStore.LoginType.CREDENTIALS -> {
-                OutlinedTextField(
-                    value = state.username,
-                    onValueChange = { onEvent(WelcomeStore.Intent.OnUsernameChanged(it)) },
-                    Modifier.fillMaxWidth().padding(horizontal = 16.dp),
-                    label = { Text("Username/Email") })
-                OutlinedTextField(
-                    value = state.password,
-                    onValueChange = { onEvent(WelcomeStore.Intent.OnPasswordChanged(it)) },
-                    Modifier.fillMaxWidth().padding(horizontal = 16.dp),
-                    label = { Text("Password") })
-            }
-
-            WelcomeStore.LoginType.API_KEY -> {
-                OutlinedTextField(
-                    value = state.apiKey,
-                    onValueChange = { onEvent(WelcomeStore.Intent.OnApiKeyChanged(it)) },
-                    Modifier.fillMaxWidth().padding(horizontal = 16.dp),
-                    label = { Text("Api Key") })
-            }
-        }
-        Button(
-            onClick = {},
-            modifier = Modifier.fillMaxWidth().padding(16.dp)
-        ) {
-            Text("Login")
+    OutlinedTextField(
+        value = state.serverAddress,
+        onValueChange = { onEvent(WelcomeStore.Intent.OnServerAddressChanged(it)) },
+        modifier = modifier.padding(16.dp),
+        label = { Text("Server Address") })
+    SingleChoiceSegmentedButtonRow(modifier = modifier.padding(16.dp)) {
+        WelcomeStore.LoginType.entries.forEach { type ->
+            SegmentedButton(
+                shape = SegmentedButtonDefaults.itemShape(
+                    type.ordinal,
+                    WelcomeStore.LoginType.entries.size
+                ),
+                onClick = { onEvent(WelcomeStore.Intent.OnLoginTypeChanged(type)) },
+                selected = state.loginType == type,
+                icon = {},
+                label = { Text(type.displayName) },
+            )
         }
     }
-}
+    when (state.loginType) {
+        WelcomeStore.LoginType.CREDENTIALS -> {
+            OutlinedTextField(
+                value = state.username,
+                onValueChange = { onEvent(WelcomeStore.Intent.OnUsernameChanged(it)) },
+                modifier.padding(horizontal = 16.dp),
+                label = { Text("Username/Email") })
+            OutlinedTextField(
+                value = state.password,
+                onValueChange = { onEvent(WelcomeStore.Intent.OnPasswordChanged(it)) },
+                modifier.padding(horizontal = 16.dp),
+                label = { Text("Password") })
+        }
 
-@Composable
-fun LoginDesktop(
-    state: WelcomeStore.State,
-    onEvent: (WelcomeStore.Intent) -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Column(
-        modifier = modifier,
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+        WelcomeStore.LoginType.API_KEY -> {
+            OutlinedTextField(
+                value = state.apiKey,
+                onValueChange = { onEvent(WelcomeStore.Intent.OnApiKeyChanged(it)) },
+                modifier.padding(horizontal = 16.dp),
+                label = { Text("Api Key") })
+        }
+    }
+    Button(
+        onClick = {},
+        modifier = modifier.padding(16.dp)
     ) {
-        OutlinedTextField(
-            value = state.serverAddress,
-            onValueChange = { onEvent(WelcomeStore.Intent.OnServerAddressChanged(it)) },
-            modifier = Modifier.fillMaxWidth(DESKTOP_ELEMENTS_MAX_WIDTH_FRACTION).padding(16.dp),
-            label = { Text("Server Address") })
-        SingleChoiceSegmentedButtonRow(
-            modifier = Modifier.fillMaxWidth(
-                DESKTOP_ELEMENTS_MAX_WIDTH_FRACTION
-            ).padding(16.dp)
-        ) {
-            WelcomeStore.LoginType.entries.forEach { type ->
-                SegmentedButton(
-                    shape = SegmentedButtonDefaults.itemShape(
-                        type.ordinal,
-                        WelcomeStore.LoginType.entries.size
-                    ),
-                    onClick = { onEvent(WelcomeStore.Intent.OnLoginTypeChanged(type)) },
-                    selected = state.loginType == type,
-                    icon = {},
-                    label = { Text(type.displayName) },
-                )
-            }
-        }
-        when (state.loginType) {
-            WelcomeStore.LoginType.CREDENTIALS -> {
-                OutlinedTextField(
-                    value = state.username,
-                    onValueChange = { onEvent(WelcomeStore.Intent.OnUsernameChanged(it)) },
-                    Modifier.fillMaxWidth(DESKTOP_ELEMENTS_MAX_WIDTH_FRACTION)
-                        .padding(horizontal = 16.dp),
-                    label = { Text("Username/Email") })
-                OutlinedTextField(
-                    value = state.password,
-                    onValueChange = { onEvent(WelcomeStore.Intent.OnPasswordChanged(it)) },
-                    Modifier.fillMaxWidth(DESKTOP_ELEMENTS_MAX_WIDTH_FRACTION)
-                        .padding(horizontal = 16.dp),
-                    label = { Text("Password") })
-            }
-
-            WelcomeStore.LoginType.API_KEY -> {
-                OutlinedTextField(
-                    value = state.apiKey,
-                    onValueChange = { onEvent(WelcomeStore.Intent.OnApiKeyChanged(it)) },
-                    Modifier.fillMaxWidth(DESKTOP_ELEMENTS_MAX_WIDTH_FRACTION)
-                        .padding(horizontal = 16.dp),
-                    label = { Text("Api Key") })
-            }
-        }
-        Button(
-            onClick = {},
-            modifier = Modifier.fillMaxWidth(DESKTOP_ELEMENTS_MAX_WIDTH_FRACTION).padding(16.dp)
-        ) {
-            Text("Login")
-        }
+        Text("Login")
     }
 }
 
