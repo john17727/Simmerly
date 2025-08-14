@@ -11,6 +11,7 @@ fun initKoin(appDeclaration: KoinAppDeclaration = {}) {
     simmerlyKoin = startKoin {
         appDeclaration()
         modules(
+            platformModule,
             authModule
         )
     }
