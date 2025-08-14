@@ -13,10 +13,13 @@ class RootHolder : ObservableObject {
 
     init() {
         lifecycle = LifecycleRegistryKt.LifecycleRegistry()
+        
+        let authRepository: AuthRepository = IosDependenciesKt.getAuthRepositoryFromKoin()
 
         root = DefaultRootComponent(
             componentContext: DefaultComponentContext(lifecycle: lifecycle),
-            storeFactory: DefaultStoreFactory()
+            storeFactory: DefaultStoreFactory(),
+            authRepository: authRepository
         )
 
         LifecycleRegistryExtKt.create(lifecycle)

@@ -16,14 +16,15 @@ import dev.juanrincon.simmerly.welcome.presentation.decompose.DefaultWelcomeComp
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.serialization.Serializable
+import org.koin.core.component.KoinComponent
 
 class DefaultRootComponent(
     componentContext: ComponentContext,
     val storeFactory: StoreFactory,
-    authRepository: AuthRepository
-) :
-    RootComponent,
-    ComponentContext by componentContext {
+    private val authRepository: AuthRepository
+) : RootComponent,
+    ComponentContext by componentContext,
+    KoinComponent {
 
     private val navigation = StackNavigation<AuthConfiguration>()
 
@@ -78,6 +79,7 @@ class DefaultRootComponent(
                     componentContext
                 )
             )
+
             AuthConfiguration.Splash -> TODO()
         }
 

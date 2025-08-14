@@ -24,6 +24,10 @@ struct iOSApp: App {
                 }
         }
     }
+    
+    init() {
+        KoinKt.doInitKoin()
+    }
 }
 
 class AppDelegate: NSObject, UIApplicationDelegate {

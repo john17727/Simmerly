@@ -51,6 +51,9 @@ kotlin {
 
             // Window Size Class
             implementation(libs.androidx.material3.windowSizeClass)
+
+            // Koin
+            implementation(libs.koin.android)
         }
         commonMain.dependencies {
             implementation(compose.runtime)
@@ -82,6 +85,14 @@ kotlin {
 
             // Ktor and Kotlinx Serialization through Ktor
             implementation(libs.bundles.ktor)
+
+            // Koin
+            implementation(project.dependencies.platform(libs.koin.bom))
+            implementation(libs.koin.core)
+
+            // DataStore
+            implementation(libs.androidx.datastore)
+            implementation(libs.androidx.datastore.preferences)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
