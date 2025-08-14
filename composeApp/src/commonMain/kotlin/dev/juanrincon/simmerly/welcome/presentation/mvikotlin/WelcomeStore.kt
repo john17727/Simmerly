@@ -17,5 +17,7 @@ interface WelcomeStore : Store<Intent, State, Nothing> {
         val serverAddress: String = "",
         val username: String = "",
         val password: String = "",
+        val isLoading: Boolean = false,
+        val isLoginButtonEnabled: Boolean = false
     )
 }

@@ -25,24 +25,37 @@ class WelcomeStoreProvider(
         data class ServerAddressChanged(val serverAddress: String) : Message
         data class UsernameChanged(val username: String) : Message
         data class PasswordChanged(val password: String) : Message
+        data class LoginButtonStateChanged(val isEnabled: Boolean) : Message
+        data class LoadingStateChanged(val isLoading: Boolean) : Message
     }
 
     private inner class WelcomeExecutorImpl :
         CoroutineExecutor<WelcomeStore.Intent, Unit, WelcomeStore.State, Message, Nothing>() {
 
         override fun executeIntent(intent: WelcomeStore.Intent) = when (intent) {
-            is WelcomeStore.Intent.OnServerAddressChanged -> dispatch(ServerAddressChanged(intent.serverAddress))
+            is WelcomeStore.Intent.OnServerAddressChanged -> {
+                dispatch(ServerAddressChanged(intent.serverAddress))
+                updateLoginButtonState()
+            }
+
             WelcomeStore.Intent.OnLoginClicked -> logInUser(
                 state().serverAddress,
                 state().username,
-                state().password
+                state().password,
             )
 
-            is WelcomeStore.Intent.OnPasswordChanged -> dispatch(PasswordChanged(intent.password))
-            is WelcomeStore.Intent.OnUsernameChanged -> dispatch(UsernameChanged(intent.username))
+            is WelcomeStore.Intent.OnPasswordChanged -> {
+                dispatch(PasswordChanged(intent.password))
+                updateLoginButtonState()
+            }
+            is WelcomeStore.Intent.OnUsernameChanged -> {
+                dispatch(UsernameChanged(intent.username))
+                updateLoginButtonState()
+            }
         }
 
         private fun logInUser(serverAddress: String, username: String, password: String) {
+            dispatch(Message.LoadingStateChanged(true))
             scope.launch {
                 var formattedServerAddress = serverAddress
                 if (!formattedServerAddress.startsWith("http://") && !formattedServerAddress.startsWith("https://")) {
@@ -51,16 +64,28 @@ class WelcomeStoreProvider(
                 authRepository.login(formattedServerAddress, username, password)
             }
         }
+
+        private fun updateLoginButtonState() {
+            val isEnabled = state().serverAddress.isNotBlank() &&
+                state().username.isNotBlank() &&
+                state().password.isNotBlank()
+            dispatch(Message.LoginButtonStateChanged(isEnabled))
+        }
     }
 
     private object WelcomeReducerImpl : Reducer<WelcomeStore.State, Message> {
         override fun WelcomeStore.State.reduce(
             msg: Message
         ): WelcomeStore.State = when (msg) {
-            is ServerAddressChanged -> copy(serverAddress = msg.serverAddress)
-            is PasswordChanged -> copy(password = msg.password)
-            is UsernameChanged -> copy(username = msg.username)
+            is ServerAddressChanged -> copy(
+                serverAddress = msg.serverAddress,
+                isLoginButtonEnabled = isLoginButtonEnabled(msg.serverAddress, username, password)
+            )
+            is PasswordChanged -> copy(password = msg.password, isLoginButtonEnabled = isLoginButtonEnabled(serverAddress, username, msg.password))
+            is UsernameChanged -> copy(username = msg.username, isLoginButtonEnabled = isLoginButtonEnabled(serverAddress, msg.username, password))
+            is LoginButtonStateChanged -> copy(isLoginButtonEnabled = msg.isEnabled)
+            is LoadingStateChanged -> copy(isLoading = msg.isLoading)
         }
-
+        private fun isLoginButtonEnabled(serverAddress: String, username: String, password: String) = serverAddress.isNotBlank() && username.isNotBlank() && password.isNotBlank()
     }
 }
