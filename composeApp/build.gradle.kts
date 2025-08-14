@@ -65,6 +65,7 @@ kotlin {
             implementation(libs.androidx.lifecycle.viewmodelCompose)
             implementation(libs.androidx.lifecycle.runtimeCompose)
             implementation(libs.jetbrains.material3.windowSizeClass)
+            implementation(compose.materialIconsExtended)
 
             // Coil
             implementation(libs.coil.compose)

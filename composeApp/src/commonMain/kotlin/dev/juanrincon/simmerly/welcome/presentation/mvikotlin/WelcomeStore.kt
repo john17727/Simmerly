@@ -10,8 +10,6 @@ interface WelcomeStore : Store<Intent, State, Nothing> {
         data class OnServerAddressChanged(val serverAddress: String) : Intent
         data class OnUsernameChanged(val username: String) : Intent
         data class OnPasswordChanged(val password: String) : Intent
-        data class OnLoginTypeChanged(val type: LoginType) : Intent
-        data class OnApiKeyChanged(val apiKey: String) : Intent
         object OnLoginClicked : Intent
     }
 
@@ -19,12 +17,5 @@ interface WelcomeStore : Store<Intent, State, Nothing> {
         val serverAddress: String = "",
         val username: String = "",
         val password: String = "",
-        val loginType: LoginType = LoginType.CREDENTIALS,
-        val apiKey: String = "",
     )
-
-    enum class LoginType(val displayName: String) {
-        CREDENTIALS("Credentials"),
-        API_KEY("API Key")
-    }
 }

@@ -15,6 +15,8 @@ import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -22,13 +24,21 @@ import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
+import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
@@ -135,42 +145,29 @@ private fun Login(
         onValueChange = { onEvent(WelcomeStore.Intent.OnServerAddressChanged(it)) },
         modifier = modifier.padding(16.dp),
         label = { Text("Server Address") })
-    SingleChoiceSegmentedButtonRow(modifier = modifier.padding(16.dp)) {
-        WelcomeStore.LoginType.entries.forEach { type ->
-            SegmentedButton(
-                shape = SegmentedButtonDefaults.itemShape(
-                    type.ordinal,
-                    WelcomeStore.LoginType.entries.size
-                ),
-                onClick = { onEvent(WelcomeStore.Intent.OnLoginTypeChanged(type)) },
-                selected = state.loginType == type,
-                icon = {},
-                label = { Text(type.displayName) },
-            )
+    OutlinedTextField(
+        value = state.username,
+        onValueChange = { onEvent(WelcomeStore.Intent.OnUsernameChanged(it)) },
+        modifier.padding(horizontal = 16.dp),
+        label = { Text("Username/Email") }
+    )
+    var passwordVisible by remember { mutableStateOf(false) }
+    OutlinedTextField(
+        value = state.password,
+        onValueChange = { onEvent(WelcomeStore.Intent.OnPasswordChanged(it)) },
+        modifier.padding(horizontal = 16.dp),
+        label = { Text("Password") },
+        visualTransformation = if (passwordVisible) androidx.compose.ui.text.input.VisualTransformation.None else PasswordVisualTransformation(),
+        trailingIcon = {
+            val image = if (passwordVisible)
+                Icons.Filled.Visibility
+            else Icons.Filled.VisibilityOff
+            val description = if (passwordVisible) "Hide password" else "Show password"
+            IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                Icon(imageVector = image, description)
+            }
         }
-    }
-    when (state.loginType) {
-        WelcomeStore.LoginType.CREDENTIALS -> {
-            OutlinedTextField(
-                value = state.username,
-                onValueChange = { onEvent(WelcomeStore.Intent.OnUsernameChanged(it)) },
-                modifier.padding(horizontal = 16.dp),
-                label = { Text("Username/Email") })
-            OutlinedTextField(
-                value = state.password,
-                onValueChange = { onEvent(WelcomeStore.Intent.OnPasswordChanged(it)) },
-                modifier.padding(horizontal = 16.dp),
-                label = { Text("Password") })
-        }
-
-        WelcomeStore.LoginType.API_KEY -> {
-            OutlinedTextField(
-                value = state.apiKey,
-                onValueChange = { onEvent(WelcomeStore.Intent.OnApiKeyChanged(it)) },
-                modifier.padding(horizontal = 16.dp),
-                label = { Text("Api Key") })
-        }
-    }
+    )
     Button(
         onClick = { onEvent(WelcomeStore.Intent.OnLoginClicked) },
         modifier = modifier.padding(16.dp)
