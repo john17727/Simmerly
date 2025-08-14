@@ -47,11 +47,11 @@ class WelcomeStoreProvider(
         }
 
         private fun logInUser(serverAddress: String, username: String, password: String) {
-            var formattedServerAddress = serverAddress
-            if (!formattedServerAddress.startsWith("http://") && !formattedServerAddress.startsWith("https://")) {
-                formattedServerAddress = "https://$formattedServerAddress"
-            }
             scope.launch {
+                var formattedServerAddress = serverAddress
+                if (!formattedServerAddress.startsWith("http://") && !formattedServerAddress.startsWith("https://")) {
+                    formattedServerAddress = "https://$formattedServerAddress"
+                }
                 authRepository.login(formattedServerAddress, username, password)
             }
         }

@@ -4,12 +4,11 @@ import app.tracktion.core.domain.util.DataError
 import app.tracktion.core.domain.util.Result
 import app.tracktion.core.domain.util.mapData
 import dev.juanrincon.simmerly.auth.data.network.dto.AuthTokenResponse
-import dev.juanrincon.simmerly.auth.data.network.dto.AuthenticationRequest
 import dev.juanrincon.simmerly.core.data.network.networkHandler
-import dev.juanrincon.simmerly.core.data.network.withApiUrl
 import io.ktor.client.HttpClient
-import io.ktor.client.request.post
-import io.ktor.client.request.setBody
+import io.ktor.client.request.forms.submitForm
+import io.ktor.client.request.url
+import io.ktor.http.Parameters
 
 class AuthNetworkClient(private val httpClient: HttpClient) {
     suspend fun logIn(
@@ -18,9 +17,13 @@ class AuthNetworkClient(private val httpClient: HttpClient) {
         password: String
     ): Result<String, DataError.NetworkError<Unit>> =
         networkHandler<AuthTokenResponse, Unit> {
-            httpClient.post {
-                withApiUrl(baseUrl, "/api/auth/token")
-                setBody(AuthenticationRequest(username, password))
+            httpClient.submitForm(
+                formParameters = Parameters.build {
+                    set("username", username)
+                    set("password", password)
+                }
+            ) {
+                url("$baseUrl/api/auth/token")
             }
         }.mapData { it.token }
 }

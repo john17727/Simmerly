@@ -47,7 +47,7 @@ kotlin {
             implementation(libs.androidx.activity.compose)
 
             // Ktor
-            implementation(libs.ktor.client.okhttp)
+            implementation(libs.ktor.client.android)
 
             // Window Size Class
             implementation(libs.androidx.material3.windowSizeClass)

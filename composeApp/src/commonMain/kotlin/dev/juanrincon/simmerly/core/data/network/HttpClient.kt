@@ -55,6 +55,10 @@ fun createHttpClient(
                 sessionStorage.setToken(newToken)
                 BearerTokens(newToken, newToken)
             }
+            sendWithoutRequest { request ->
+                val authPaths = listOf("/api/auth/token")
+                authPaths.any { path -> request.url.encodedPath.contains(path) }
+            }
         }
     }
 }
