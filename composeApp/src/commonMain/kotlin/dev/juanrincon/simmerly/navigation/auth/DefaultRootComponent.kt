@@ -70,7 +70,8 @@ class DefaultRootComponent(
             AuthConfiguration.Welcome -> RootComponent.Child.WelcomeChild(
                 DefaultWelcomeComponent(
                     componentContext,
-                    storeFactory
+                    storeFactory,
+                    authRepository
                 )
             )
 

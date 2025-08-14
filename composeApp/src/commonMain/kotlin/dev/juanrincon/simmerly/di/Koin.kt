@@ -1,6 +1,7 @@
 package dev.juanrincon.simmerly.di
 
 import dev.juanrincon.simmerly.auth.di.authModule
+import dev.juanrincon.simmerly.core.di.coreModule
 import org.koin.core.KoinApplication
 import org.koin.core.context.startKoin
 import org.koin.dsl.KoinAppDeclaration
@@ -12,6 +13,7 @@ fun initKoin(appDeclaration: KoinAppDeclaration = {}) {
         appDeclaration()
         modules(
             platformModule,
+            coreModule,
             authModule
         )
     }

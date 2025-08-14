@@ -11,6 +11,12 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 
 class DataStoreSessionStorage(private val preferences: DataStore<Preferences>) : SessionStorage {
+    override suspend fun setServerAddress(address: String) {
+        preferences.edit { store -> store[stringPreferencesKey(SERVER_ADDRESS_KEY)] = address }
+    }
+
+    override suspend fun getServerAddress(): String? = preferences.data.first()[stringPreferencesKey(SERVER_ADDRESS_KEY)]
+
     override suspend fun getToken(): String? =
         preferences.data.first()[stringPreferencesKey(TOKEN_KEY)]
 
@@ -34,5 +40,6 @@ class DataStoreSessionStorage(private val preferences: DataStore<Preferences>) :
 
     companion object {
         const val TOKEN_KEY = "token"
+        const val SERVER_ADDRESS_KEY = "server_address"
     }
 }

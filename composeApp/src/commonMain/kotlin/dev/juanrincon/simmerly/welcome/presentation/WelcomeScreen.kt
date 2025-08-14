@@ -172,7 +172,7 @@ private fun Login(
         }
     }
     Button(
-        onClick = {},
+        onClick = { onEvent(WelcomeStore.Intent.OnLoginClicked) },
         modifier = modifier.padding(16.dp)
     ) {
         Text("Login")
