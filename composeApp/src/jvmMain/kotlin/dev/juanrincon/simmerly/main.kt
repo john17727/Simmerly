@@ -1,6 +1,5 @@
 package dev.juanrincon.simmerly
 
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Window
@@ -10,7 +9,7 @@ import com.arkivanov.decompose.DefaultComponentContext
 import com.arkivanov.decompose.extensions.compose.lifecycle.LifecycleController
 import com.arkivanov.essenty.lifecycle.LifecycleRegistry
 import com.arkivanov.mvikotlin.main.store.DefaultStoreFactory
-import dev.juanrincon.simmerly.decompose.DefaultRootComponent
+import dev.juanrincon.simmerly.navigation.auth.DefaultRootComponent
 
 fun main() {
     val lifecycle = LifecycleRegistry()

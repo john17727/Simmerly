@@ -68,6 +68,9 @@ kotlin {
             implementation(libs.coil.network.ktor)
             implementation(libs.coil.svg)
 
+            // Essenty
+            implementation(libs.essenty.lifecycle.coroutines)
+
             // Decompose
             api(libs.decompose)
             implementation(libs.decompose.compose.extensions)
