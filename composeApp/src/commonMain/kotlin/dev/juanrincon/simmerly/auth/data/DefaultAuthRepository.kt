@@ -34,10 +34,10 @@ class DefaultAuthRepository(
                 is DataError.NetworkError.BadRequest<*>,
                 DataError.NetworkError.Unauthorized -> LoginError.InvalidCredentials
 
-                DataError.NetworkError.RequestTimeout,
                 DataError.NetworkError.ServerError,
                 DataError.NetworkError.NoInternet -> LoginError.NetworkError
 
+                DataError.NetworkError.RequestTimeout,
                 DataError.NetworkError.UnresolvedAddress -> LoginError.UnresolvedAddress
 
                 else -> LoginError.UnknownError

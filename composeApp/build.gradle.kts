@@ -106,6 +106,7 @@ kotlin {
             implementation(libs.ktor.client.java)
         }
         iosMain.dependencies {
+            api(compose.components.resources)
             // Ktor
             implementation(libs.ktor.client.darwin)
         }

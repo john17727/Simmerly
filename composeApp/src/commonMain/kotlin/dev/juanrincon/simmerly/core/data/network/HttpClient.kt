@@ -4,6 +4,7 @@ import app.tracktion.core.domain.util.Result
 import dev.juanrincon.simmerly.auth.domain.SessionStorage
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.HttpClientEngine
+import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.auth.Auth
 import io.ktor.client.plugins.auth.providers.BearerTokens
 import io.ktor.client.plugins.auth.providers.bearer
@@ -24,6 +25,10 @@ fun createHttpClient(
     engine: HttpClientEngine,
     sessionStorage: SessionStorage,
 ) = HttpClient(engine) {
+    install(HttpTimeout) {
+        requestTimeoutMillis = 10000
+        connectTimeoutMillis = 5000
+    }
     install(Logging) {
         level = LogLevel.ALL
     }

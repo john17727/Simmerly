@@ -3,10 +3,11 @@ package dev.juanrincon.simmerly.core.data.network
 import app.tracktion.core.domain.util.DataError
 import app.tracktion.core.domain.util.Result
 import io.ktor.client.call.body
+import io.ktor.client.network.sockets.SocketTimeoutException
+import io.ktor.client.plugins.HttpRequestTimeoutException
 import io.ktor.client.statement.HttpResponse
 import io.ktor.util.network.UnresolvedAddressException
 import kotlinx.serialization.SerializationException
-import kotlin.jvm.javaClass
 
 suspend inline fun <reified S, reified E> networkHandler(
     call: () -> HttpResponse,
@@ -17,13 +18,16 @@ suspend inline fun <reified S, reified E> networkHandler(
         return Result.Error(DataError.NetworkError.NoInternet)
     } catch (e: SerializationException) {
         return Result.Error(DataError.NetworkError.Serialization)
-    } catch (e: Exception) {
+    } catch (e: SocketTimeoutException) {
+        return Result.Error(DataError.NetworkError.UnresolvedAddress)
+    }
+    catch (e: HttpRequestTimeoutException) {
+       return Result.Error(DataError.NetworkError.RequestTimeout)
+    }
+    catch (e: Exception) {
         // Check for the Java-specific exception by its fully qualified name
         // This relies on the class being available at runtime on the platform
-        if (e::class.simpleName == "UnknownHostException") {
-            return Result.Error(DataError.NetworkError.UnresolvedAddress)
-        }
-        return Result.Error(DataError.NetworkError.Unknown)
+        return Result.Error(mapPlatformException(e))
     }
 
     return when (response.status.value) {
@@ -44,3 +48,5 @@ suspend inline fun <reified S, reified E> networkHandler(
         else -> Result.Error(DataError.NetworkError.Unknown)
     }
 }
+
+expect fun <E> mapPlatformException(e: Exception): DataError.NetworkError<E>

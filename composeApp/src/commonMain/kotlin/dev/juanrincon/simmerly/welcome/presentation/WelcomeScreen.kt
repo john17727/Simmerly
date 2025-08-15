@@ -49,6 +49,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
@@ -174,7 +175,10 @@ private fun Login(
         modifier.padding(horizontal = 16.dp),
         label = { Text("Username/Email") },
         enabled = !state.isLoading,
-        keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Next),
+        keyboardOptions = KeyboardOptions.Default.copy(
+            imeAction = ImeAction.Next,
+            keyboardType = KeyboardType.Email
+        ),
         keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) })
     )
     var passwordVisible by remember { mutableStateOf(false) }
@@ -184,7 +188,10 @@ private fun Login(
         modifier.padding(horizontal = 16.dp),
         label = { Text("Password") },
         visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-        keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Done),
+        keyboardOptions = KeyboardOptions.Default.copy(
+            imeAction = ImeAction.Done,
+            keyboardType = KeyboardType.Password
+        ),
         keyboardActions = KeyboardActions(onDone = { onEvent(WelcomeStore.Intent.OnLoginClicked) }),
         enabled = !state.isLoading,
         trailingIcon = {
@@ -200,7 +207,7 @@ private fun Login(
     Button(
         onClick = { onEvent(WelcomeStore.Intent.OnLoginClicked) },
         enabled = state.isLoginButtonEnabled,
-        modifier = Modifier.fillMaxWidth().padding(16.dp)
+        modifier = modifier.padding(16.dp)
     ) {
         AnimatedContent(targetState = state.isLoading, label = "LoginButtonContent") { isLoading ->
             if (isLoading) {
@@ -214,4 +221,5 @@ private fun Login(
         }
     }
 }
+
 const val DESKTOP_ELEMENTS_MAX_WIDTH_FRACTION = 0.55f
