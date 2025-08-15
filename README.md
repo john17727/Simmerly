@@ -1,16 +1,34 @@
-This is a Kotlin Multiplatform project targeting Android, iOS, Desktop (JVM).
+<picture>
+        <source media="(prefers-color-scheme: dark)" srcset="docs/media/logo/simmerly_logo_text_white.png">
+        <source media="(prefers-color-scheme: light)" srcset="docs/media/logo/simmerly_logo_text_black.png">
+        <img src="docs/media/logo/simmerly_logo_text_black.png" alt="Simmerly Logo" width="100">
+</picture>
 
-* [/composeApp](./composeApp/src) is for code that will be shared across your Compose Multiplatform applications.
-  It contains several subfolders:
-  - [commonMain](./composeApp/src/commonMain/kotlin) is for code that’s common for all targets.
-  - Other folders are for Kotlin code that will be compiled for only the platform indicated in the folder name.
-    For example, if you want to use Apple’s CoreCrypto for the iOS part of your Kotlin app,
-    the [iosMain](./composeApp/src/iosMain/kotlin) folder would be the right place for such calls.
-    Similarly, if you want to edit the Desktop (JVM) specific part, the [jvmMain](./composeApp/src/jvmMain/kotlin)
-    folder is the appropriate location.
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](http://www.apache.org/licenses/LICENSE-2.0)
 
-* [/iosApp](./iosApp/iosApp) contains iOS applications. Even if you’re sharing your UI with Compose Multiplatform,
-  you need this entry point for your iOS app. This is also where you should add SwiftUI code for your project.
+<br/>
+<br/>
 
+Simmerly is a Free and Open Source (FOSS) frontend client for [Mealie](https://mealie.io/), the self-hosted recipe manager. It brings the power of Mealie to your fingertips on Android, iOS, and desktop platforms.
 
-Learn more about [Kotlin Multiplatform](https://www.jetbrains.com/help/kotlin-multiplatform-dev/get-started.html)…
+## Libraries
+- [Material 3](https://m3.material.io/components) components.
+- [Compose multiplatform](https://github.com/JetBrains/compose-multiplatform)
+- [Coroutines](https://github.com/Kotlin/kotlinx.coroutines) for asynchronous operations.
+- [Decompose](https://github.com/arkivanov/Decompose) for lifecycle management and navigation.
+- [Kotlin Serialization](https://github.com/Kotlin/kotlinx.serialization)
+- [Ktor](https://github.com/ktorio/ktor) for network requests.
+- [Koin](https://github.com/InsertKoinIO/koin) dependency injection framework.
+- MVI Architecture with [MVIKotlin](https://github.com/arkivanov/MVIKotlin/)
+
+## Platforms
+
+* Android
+* iOS
+* Desktop (Windows, macOS, Linux)
+
+## License
+
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](http://www.apache.org/licenses/LICENSE-2.0)
+
+This project is licensed under the Apache License, Version 2.0. See the [LICENSE](LICENSE) file for details.
