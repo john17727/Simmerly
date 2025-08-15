@@ -1,7 +1,7 @@
 <picture>
         <source media="(prefers-color-scheme: dark)" srcset="docs/media/logo/simmerly_logo_text_white.png">
         <source media="(prefers-color-scheme: light)" srcset="docs/media/logo/simmerly_logo_text_black.png">
-        <img src="docs/media/logo/simmerly_logo_text_black.png" alt="Simmerly Logo" width="100">
+        <img src="docs/media/logo/simmerly_logo_text_black.png" alt="Simmerly Logo" width="300">
 </picture>
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](http://www.apache.org/licenses/LICENSE-2.0)
