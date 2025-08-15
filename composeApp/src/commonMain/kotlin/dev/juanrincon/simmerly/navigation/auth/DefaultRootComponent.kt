@@ -11,6 +11,7 @@ import com.arkivanov.essenty.lifecycle.coroutines.coroutineScope
 import com.arkivanov.mvikotlin.core.store.StoreFactory
 import dev.juanrincon.simmerly.auth.domain.AuthRepository
 import dev.juanrincon.simmerly.auth.domain.AuthState
+import dev.juanrincon.simmerly.navigation.app.DefaultAppComponent
 import dev.juanrincon.simmerly.splash.presentation.decompose.DefaultSplashComponent
 import dev.juanrincon.simmerly.welcome.presentation.decompose.DefaultWelcomeComponent
 import kotlinx.coroutines.flow.launchIn
@@ -31,7 +32,7 @@ class DefaultRootComponent(
     override val stack: Value<ChildStack<*, RootComponent.Child>> = childStack(
         source = navigation,
         serializer = AuthConfiguration.serializer(),
-        initialConfiguration = AuthConfiguration.Welcome,
+        initialConfiguration = AuthConfiguration.Splash,
         handleBackButton = true,
         childFactory = ::createChild
     )
@@ -75,13 +76,17 @@ class DefaultRootComponent(
                 )
             )
 
-            AuthConfiguration.App -> RootComponent.Child.SplashChild(
+            AuthConfiguration.Splash -> RootComponent.Child.SplashChild(
                 DefaultSplashComponent(
                     componentContext
                 )
             )
 
-            AuthConfiguration.Splash -> TODO()
+            AuthConfiguration.App -> RootComponent.Child.AppChild(
+                DefaultAppComponent(
+                    componentContext
+                )
+            )
         }
 
     @Serializable

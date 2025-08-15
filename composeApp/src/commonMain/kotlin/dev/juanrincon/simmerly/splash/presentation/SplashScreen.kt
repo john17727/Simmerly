@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -14,9 +15,11 @@ import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.unit.dp
 import dev.juanrincon.simmerly.welcome.presentation.Logo
 import org.jetbrains.compose.resources.painterResource
 import simmerly.composeapp.generated.resources.Res
+import simmerly.composeapp.generated.resources.simmerly_logo
 import simmerly.composeapp.generated.resources.welcome_background
 
 @Composable
@@ -37,7 +40,11 @@ fun SplashScreen() {
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Logo(modifier = Modifier.fillMaxWidth())
+            Image(
+                painter = painterResource(Res.drawable.simmerly_logo),
+                contentDescription = "Simmerly Logo",
+                modifier = Modifier.sizeIn(100.dp, 100.dp, 150.dp, 150.dp)
+            )
         }
     }
 }
