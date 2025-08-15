@@ -1,0 +1,5 @@
+<resources>
+    <string name="login_failed">Login failed. Please ensure that your username and password are valid for that server.</string>
+    <string name="something_went_wrong">Something went wrong. Please try again in a few moments.</string>
+    <string name="unreachable_server_address">Could not reach the server at the address provided. Please check the address and your network connection.</string>
+</resources>

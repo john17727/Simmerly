@@ -8,6 +8,7 @@ plugins {
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
     alias(libs.plugins.composeHotReload)
+    alias(libs.plugins.kotlinSerialization)
 }
 
 kotlin {
@@ -17,24 +18,42 @@ kotlin {
             jvmTarget.set(JvmTarget.JVM_11)
         }
     }
-    
+
     listOf(
         iosX64(),
         iosArm64(),
         iosSimulatorArm64()
-    ).forEach { iosTarget ->
-        iosTarget.binaries.framework {
-            baseName = "ComposeApp"
-            isStatic = true
+    ).takeIf { "XCODE_VERSION_MAJOR" in System.getenv().keys } // Export the framework only for Xcode builds
+        ?.forEach { iosTarget ->
+            iosTarget.binaries.framework {
+                baseName = "ComposeApp"
+                isStatic = true
+                export(libs.decompose)
+                export(libs.essenty.lifecycle)
+                export(libs.mvikotlin.main)
+                // Optional, only if you need Predictive Back Gesture on Darwin (Apple) targets
+//                export(libs.essenty.backHandler)
+                // Optional, only if you need state preservation on Darwin (Apple) targets
+//                export(libs.essenty.stateKeeper)
+            }
         }
-    }
-    
+
     jvm()
-    
+
     sourceSets {
         androidMain.dependencies {
+            implementation(compose.runtime)
             implementation(compose.preview)
             implementation(libs.androidx.activity.compose)
+
+            // Ktor
+            implementation(libs.ktor.client.android)
+
+            // Window Size Class
+            implementation(libs.androidx.material3.windowSizeClass)
+
+            // Koin
+            implementation(libs.koin.android)
         }
         commonMain.dependencies {
             implementation(compose.runtime)
@@ -45,6 +64,36 @@ kotlin {
             implementation(compose.components.uiToolingPreview)
             implementation(libs.androidx.lifecycle.viewmodelCompose)
             implementation(libs.androidx.lifecycle.runtimeCompose)
+            implementation(libs.jetbrains.material3.windowSizeClass)
+            implementation(compose.materialIconsExtended)
+
+            // Coil
+            implementation(libs.coil.compose)
+            implementation(libs.coil.network.ktor)
+            implementation(libs.coil.svg)
+
+            // Essenty
+            implementation(libs.essenty.lifecycle.coroutines)
+
+            // Decompose
+            api(libs.decompose)
+            implementation(libs.decompose.compose.extensions)
+
+            // MVIKotlin
+            implementation(libs.mvikotlin)
+            api(libs.mvikotlin.main)
+            implementation(libs.mvikotlin.extensions.coroutines)
+
+            // Ktor and Kotlinx Serialization through Ktor
+            implementation(libs.bundles.ktor)
+
+            // Koin
+            implementation(project.dependencies.platform(libs.koin.bom))
+            implementation(libs.koin.core)
+
+            // DataStore
+            implementation(libs.androidx.datastore)
+            implementation(libs.androidx.datastore.preferences)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
@@ -52,6 +101,14 @@ kotlin {
         jvmMain.dependencies {
             implementation(compose.desktop.currentOs)
             implementation(libs.kotlinx.coroutinesSwing)
+
+            // Ktor
+            implementation(libs.ktor.client.java)
+        }
+        iosMain.dependencies {
+            api(compose.components.resources)
+            // Ktor
+            implementation(libs.ktor.client.darwin)
         }
     }
 }
