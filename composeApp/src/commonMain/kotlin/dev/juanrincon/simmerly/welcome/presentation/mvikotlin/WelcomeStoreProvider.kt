@@ -1,19 +1,29 @@
 package dev.juanrincon.simmerly.welcome.presentation.mvikotlin
 
+import app.tracktion.core.domain.util.onError
 import com.arkivanov.mvikotlin.core.store.Reducer
 import com.arkivanov.mvikotlin.core.store.Store
 import com.arkivanov.mvikotlin.core.store.StoreFactory
 import com.arkivanov.mvikotlin.extensions.coroutines.CoroutineExecutor
 import dev.juanrincon.simmerly.auth.domain.AuthRepository
-import dev.juanrincon.simmerly.welcome.presentation.mvikotlin.WelcomeStoreProvider.Message.*
+import dev.juanrincon.simmerly.auth.domain.LoginError
+import dev.juanrincon.simmerly.welcome.presentation.mvikotlin.WelcomeStoreProvider.Message.LoadingStateChanged
+import dev.juanrincon.simmerly.welcome.presentation.mvikotlin.WelcomeStoreProvider.Message.LoginButtonStateChanged
+import dev.juanrincon.simmerly.welcome.presentation.mvikotlin.WelcomeStoreProvider.Message.PasswordChanged
+import dev.juanrincon.simmerly.welcome.presentation.mvikotlin.WelcomeStoreProvider.Message.ServerAddressChanged
+import dev.juanrincon.simmerly.welcome.presentation.mvikotlin.WelcomeStoreProvider.Message.UsernameChanged
 import kotlinx.coroutines.launch
+import simmerly.composeapp.generated.resources.Res
+import simmerly.composeapp.generated.resources.login_failed
+import simmerly.composeapp.generated.resources.something_went_wrong
+import simmerly.composeapp.generated.resources.unreachable_server_address
 
 class WelcomeStoreProvider(
     private val storeFactory: StoreFactory,
     private val authRepository: AuthRepository
 ) {
     fun provide(): WelcomeStore = object : WelcomeStore,
-        Store<WelcomeStore.Intent, WelcomeStore.State, Nothing> by storeFactory.create(
+        Store<WelcomeStore.Intent, WelcomeStore.State, WelcomeStore.Label> by storeFactory.create(
             name = "WelcomeStore",
             initialState = WelcomeStore.State(),
             bootstrapper = null,
@@ -30,7 +40,7 @@ class WelcomeStoreProvider(
     }
 
     private inner class WelcomeExecutorImpl :
-        CoroutineExecutor<WelcomeStore.Intent, Unit, WelcomeStore.State, Message, Nothing>() {
+        CoroutineExecutor<WelcomeStore.Intent, Unit, WelcomeStore.State, Message, WelcomeStore.Label>() {
 
         override fun executeIntent(intent: WelcomeStore.Intent) = when (intent) {
             is WelcomeStore.Intent.OnServerAddressChanged -> {
@@ -55,13 +65,25 @@ class WelcomeStoreProvider(
         }
 
         private fun logInUser(serverAddress: String, username: String, password: String) {
-            dispatch(Message.LoadingStateChanged(true))
+            if (state().isLoading) {
+                return
+            }
+            dispatch(LoadingStateChanged(true))
             scope.launch {
                 var formattedServerAddress = serverAddress
                 if (!formattedServerAddress.startsWith("http://") && !formattedServerAddress.startsWith("https://")) {
                     formattedServerAddress = "https://$formattedServerAddress"
                 }
-                authRepository.login(formattedServerAddress, username, password)
+                authRepository.login(formattedServerAddress, username, password).onError { error ->
+                    val message = when (error) {
+                        LoginError.InvalidCredentials -> Res.string.login_failed
+                        LoginError.UnresolvedAddress,
+                        LoginError.NetworkError -> Res.string.unreachable_server_address
+                        LoginError.UnknownError -> Res.string.something_went_wrong
+                    }
+                    publish(WelcomeStore.Label.LoginFailed(message))
+                    dispatch(LoadingStateChanged(false))
+                }
             }
         }
 
@@ -69,7 +91,7 @@ class WelcomeStoreProvider(
             val isEnabled = state().serverAddress.isNotBlank() &&
                 state().username.isNotBlank() &&
                 state().password.isNotBlank()
-            dispatch(Message.LoginButtonStateChanged(isEnabled))
+            dispatch(LoginButtonStateChanged(isEnabled))
         }
     }
 

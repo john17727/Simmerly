@@ -22,6 +22,7 @@ package app.tracktion.core.domain.util
 sealed interface DataError : Error {
     sealed interface NetworkError<out E> : DataError {
         data object RequestTimeout : NetworkError<Nothing>
+        data object UnresolvedAddress : NetworkError<Nothing>
         data class BadRequest<E>(val data: E?) : NetworkError<E>
         data object Unauthorized : NetworkError<Nothing>
         data object Conflict : NetworkError<Nothing>

@@ -6,6 +6,7 @@ import io.ktor.client.call.body
 import io.ktor.client.statement.HttpResponse
 import io.ktor.util.network.UnresolvedAddressException
 import kotlinx.serialization.SerializationException
+import kotlin.jvm.javaClass
 
 suspend inline fun <reified S, reified E> networkHandler(
     call: () -> HttpResponse,
@@ -17,6 +18,11 @@ suspend inline fun <reified S, reified E> networkHandler(
     } catch (e: SerializationException) {
         return Result.Error(DataError.NetworkError.Serialization)
     } catch (e: Exception) {
+        // Check for the Java-specific exception by its fully qualified name
+        // This relies on the class being available at runtime on the platform
+        if (e::class.simpleName == "UnknownHostException") {
+            return Result.Error(DataError.NetworkError.UnresolvedAddress)
+        }
         return Result.Error(DataError.NetworkError.Unknown)
     }
 

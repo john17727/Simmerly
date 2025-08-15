@@ -62,7 +62,8 @@ import simmerly.composeapp.generated.resources.welcome_background
 fun WelcomeScreen(
     state: WelcomeStore.State,
     onEvent: (WelcomeStore.Intent) -> Unit,
-    windowSizeClass: WindowSizeClass
+    windowSizeClass: WindowSizeClass,
+    modifier: Modifier = Modifier
 ) {
     val keyboardController = LocalSoftwareKeyboardController.current
     LaunchedEffect(state.isLoading) {
@@ -70,7 +71,7 @@ fun WelcomeScreen(
             keyboardController?.hide()
         }
     }
-    Box(modifier = Modifier.fillMaxSize()) {
+    Box(modifier = modifier) {
         Image(
             painter = painterResource(Res.drawable.welcome_background),
             contentDescription = "Welcome background",
