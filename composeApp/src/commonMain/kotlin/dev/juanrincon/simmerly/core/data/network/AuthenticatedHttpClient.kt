@@ -1,7 +1,7 @@
 package dev.juanrincon.simmerly.core.data.network
 
 import app.tracktion.core.domain.util.Result
-import dev.juanrincon.simmerly.auth.domain.SessionStorage
+import dev.juanrincon.simmerly.core.data.network.utils.DynamicBaseUrl
 import dev.juanrincon.simmerly.core.domain.network.BaseUrlProvider
 import dev.juanrincon.simmerly.core.domain.network.TokenProvider
 import io.ktor.client.HttpClient
@@ -14,12 +14,8 @@ import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.defaultRequest
 import io.ktor.client.plugins.logging.LogLevel
 import io.ktor.client.plugins.logging.Logging
-import io.ktor.client.request.HttpRequestBuilder
 import io.ktor.http.ContentType
-import io.ktor.http.Url
 import io.ktor.http.contentType
-import io.ktor.http.encodedPath
-import io.ktor.http.takeFrom
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
 
@@ -66,5 +62,9 @@ fun createAuthenticatedHttpClient(
             }
         }
     }
-    install(DynamicBaseUrl(baseUrlProvider))
+    install(DynamicBaseUrl) {
+        dynamicBaseUrlProvider = {
+            baseUrlProvider.current()
+        }
+    }
 }
