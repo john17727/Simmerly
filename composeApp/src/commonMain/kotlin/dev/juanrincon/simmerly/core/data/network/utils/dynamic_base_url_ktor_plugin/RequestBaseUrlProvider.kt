@@ -15,33 +15,24 @@ fun BaseUrlConfig.request(block: RequestBaseUrlConfig.() -> Unit = { buildUrl = 
 
 @KtorDsl
 class RequestBaseUrlConfig {
-    internal var buildUrl: ((String, String) -> URLBuilder)? = null
+    internal var buildUrl: ((URLBuilder, String) -> URLBuilder)? = null
 
-    fun buildUrl(block: ((String, String) -> URLBuilder)?) {
+    fun buildUrl(block: ((URLBuilder, String) -> URLBuilder)?) {
         buildUrl = block
     }
 }
 
 class RequestBaseUrlProvider(
-    private val buildUrl: ((String, String) -> URLBuilder)?
+    private val buildUrl: ((URLBuilder, String) -> URLBuilder)?
 ) : BaseUrlProvider {
     override suspend fun buildBaseUrl(request: HttpRequestBuilder) {
-        val overrideUrlString = request.attributes.getOrNull(BaseUrlOverride)
-        val originalRequestPath = request.url.encodedPath
-        if (overrideUrlString != null) {
-            try {
-                val newUrl = if (buildUrl != null) {
-                    buildUrl(overrideUrlString, originalRequestPath)
-                } else {
-                    defaultBuildUrl(
-                        overrideUrlString,
-                        originalRequestPath
-                    )
-                }
-                request.url.takeFrom(newUrl) // Apply the rewritten URL
-            } catch (e: ParseException) {
-                println("Warning: Malformed dynamic base URL: ${e.message}")
-            }
-        }
+        val original = URLBuilder(request.url)
+        val override = request.attributes.getOrNull(BaseUrlOverride)
+        val baseValue = override ?: return
+
+        val newUrl = (buildUrl?.invoke(original, baseValue))
+            ?: rebaseUrlPreservingQueryAndFragment(original,baseValue)
+
+        request.url.takeFrom(newUrl)
     }
 }
