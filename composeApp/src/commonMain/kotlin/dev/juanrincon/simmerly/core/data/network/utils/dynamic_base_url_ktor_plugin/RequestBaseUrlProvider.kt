@@ -2,37 +2,55 @@ package dev.juanrincon.simmerly.core.data.network.utils.dynamic_base_url_ktor_pl
 
 import io.ktor.client.request.HttpRequestBuilder
 import io.ktor.http.URLBuilder
-import io.ktor.http.encodedPath
-import io.ktor.http.parsing.ParseException
-import io.ktor.http.takeFrom
+import io.ktor.http.Url
 import io.ktor.utils.io.KtorDsl
+
+/**
+ * Configures the base URL for individual requests.
+ * This allows overriding the global base URL for specific requests.
+ *
+ * @param block A lambda to configure the request-specific base URL.
+ */
 
 fun BaseUrlConfig.request(block: RequestBaseUrlConfig.() -> Unit = { buildUrl = null }) {
     with(RequestBaseUrlConfig().apply(block)) {
-        this@request.provider = RequestBaseUrlProvider(buildUrl)
+        this@request.provider = RequestBaseUrlProvider(buildUrl, buildUrlString)
     }
 }
 
 @KtorDsl
 class RequestBaseUrlConfig {
-    internal var buildUrl: ((URLBuilder, String) -> URLBuilder)? = null
+    internal var buildUrl: ((URLBuilder, Url) -> URLBuilder)? = null
+    internal var buildUrlString: ((URLBuilder, String) -> URLBuilder)? = null
 
-    fun buildUrl(block: ((URLBuilder, String) -> URLBuilder)?) {
-        buildUrl = block
-    }
+    /**
+     * Sets a lambda that builds the URL using a `Url` object.
+     * The lambda receives the current [URLBuilder] and the base [Url] as input,
+     * and should return the modified [URLBuilder].
+     *
+     * @param block A lambda that takes a [URLBuilder] and a [Url] and returns a [URLBuilder].
+     */
+    fun buildUrl(block: ((URLBuilder, Url) -> URLBuilder)?) { buildUrl = block }
+    /**
+     * Sets a lambda that builds the URL using a base URL string.
+     * The lambda receives the current [URLBuilder] and the base URL [String] as input,
+     * and should return the modified [URLBuilder].
+     *
+     * @param block A lambda that takes a [URLBuilder] and a base URL [String] and returns a [URLBuilder].
+     */
+    fun buildUrlString(block: ((URLBuilder, String) -> URLBuilder)?) { buildUrlString = block }
 }
 
 class RequestBaseUrlProvider(
-    private val buildUrl: ((URLBuilder, String) -> URLBuilder)?
+    private val buildUrl: ((URLBuilder, Url) -> URLBuilder)?,
+    private val buildUrlString: ((URLBuilder, String) -> URLBuilder)?
 ) : BaseUrlProvider {
-    override suspend fun buildBaseUrl(request: HttpRequestBuilder) {
-        val original = URLBuilder(request.url)
-        val override = request.attributes.getOrNull(BaseUrlOverride)
-        val baseValue = override ?: return
 
-        val newUrl = (buildUrl?.invoke(original, baseValue))
-            ?: rebaseUrlPreservingQueryAndFragment(original,baseValue)
-
-        request.url.takeFrom(newUrl)
+    override suspend fun resolveBase(request: HttpRequestBuilder): Url? {
+        request.attributes.getOrNull(BaseUrlOverrideUrl)?.let { return it }
+        request.attributes.getOrNull(BaseUrlOverride)?.let { s ->
+            return runCatching { Url(s) }.getOrNull()
+        }
+        return null
     }
 }

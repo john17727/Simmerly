@@ -63,7 +63,7 @@ fun createAuthenticatedHttpClient(
     }
     install(DynamicBaseUrl) {
         listener {
-            loadBaseUrls {
+            loadBaseUrl {
                 sessionDatastore.getServerAddress()
             }
         }
