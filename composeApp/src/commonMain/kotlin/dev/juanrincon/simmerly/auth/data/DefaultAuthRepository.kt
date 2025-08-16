@@ -2,24 +2,21 @@ package dev.juanrincon.simmerly.auth.data
 
 import app.tracktion.core.domain.util.DataError
 import app.tracktion.core.domain.util.EmptyResult
-import app.tracktion.core.domain.util.Result
 import app.tracktion.core.domain.util.asEmptyDataResult
-import app.tracktion.core.domain.util.fold
-import app.tracktion.core.domain.util.map
 import app.tracktion.core.domain.util.mapError
 import app.tracktion.core.domain.util.onSuccess
 import dev.juanrincon.simmerly.auth.data.network.AuthNetworkClient
 import dev.juanrincon.simmerly.auth.domain.AuthRepository
 import dev.juanrincon.simmerly.auth.domain.AuthState
 import dev.juanrincon.simmerly.auth.domain.LoginError
-import dev.juanrincon.simmerly.auth.domain.SessionStorage
+import dev.juanrincon.simmerly.auth.domain.SessionDataStore
 import kotlinx.coroutines.flow.Flow
 
 class DefaultAuthRepository(
-    val sessionStorage: SessionStorage,
+    val sessionDatastore: SessionDataStore,
     val networkClient: AuthNetworkClient
 ) : AuthRepository {
-    override fun observeAuthState(): Flow<AuthState> = sessionStorage.isAuthenticated()
+    override fun observeAuthState(): Flow<AuthState> = sessionDatastore.isAuthenticated()
 
     override suspend fun login(
         serverAddress: String,
@@ -27,8 +24,8 @@ class DefaultAuthRepository(
         password: String
     ): EmptyResult<LoginError> =
         networkClient.logIn(serverAddress, username, password).onSuccess {
-            sessionStorage.setServerAddress(serverAddress)
-            sessionStorage.setToken(it)
+            sessionDatastore.setServerAddress(serverAddress)
+            sessionDatastore.setToken(it)
         }.mapError { error ->
             when (error) {
                 is DataError.NetworkError.BadRequest<*>,
