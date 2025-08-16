@@ -99,6 +99,21 @@ class BaseUrlConfig {
         setOf(URLProtocol.HTTP, URLProtocol.HTTPS, URLProtocol.WS, URLProtocol.WSS)
 }
 
+/**
+ * A Ktor client plugin for dynamically setting or overriding the base URL of HTTP requests.
+ *
+ * This plugin allows you to:
+ *  - Define a default base URL provider that can determine the base URL at runtime.
+ *  - Override the base URL on a per-request basis.
+ *  - Control whether to rewrite absolute URLs or only relative ones.
+ *  - Customize how request paths are combined with the base path.
+ *  - Preserve WebSocket (WS/WSS) protocols during rewriting.
+ *  - Specify which URL schemes (protocols) are allowed for rewriting.
+ *
+ * **Configuration:**
+ *  - Use the `DynamicBaseUrl` plugin in your Ktor `HttpClient` configuration.
+ *  - Configure its behavior using the [BaseUrlConfig] block.
+ */
 val DynamicBaseUrl: ClientPlugin<BaseUrlConfig> =
     createClientPlugin("DynamicBaseUrl", ::BaseUrlConfig) {
         val provider = pluginConfig.provider
