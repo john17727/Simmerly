@@ -8,6 +8,8 @@ interface SessionStorage {
 
     suspend fun getServerAddress(): String?
 
+    fun observeServerAddress(): Flow<String?>
+
     suspend fun getToken(): String?
 
     suspend fun setToken(token: String)

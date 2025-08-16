@@ -2,6 +2,8 @@ package dev.juanrincon.simmerly.core.data.network
 
 import app.tracktion.core.domain.util.Result
 import dev.juanrincon.simmerly.auth.domain.SessionStorage
+import dev.juanrincon.simmerly.core.domain.network.BaseUrlProvider
+import dev.juanrincon.simmerly.core.domain.network.TokenProvider
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.HttpClientEngine
 import io.ktor.client.plugins.HttpTimeout
@@ -21,9 +23,10 @@ import io.ktor.http.takeFrom
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
 
-fun createHttpClient(
+fun createAuthenticatedHttpClient(
     engine: HttpClientEngine,
-    sessionStorage: SessionStorage,
+    baseUrlProvider: BaseUrlProvider,
+    tokenProvider: TokenProvider
 ) = HttpClient(engine) {
     install(HttpTimeout) {
         requestTimeoutMillis = 10000
@@ -41,39 +44,27 @@ fun createHttpClient(
     }
     defaultRequest {
         contentType(ContentType.Application.Json)
+        url("https://fallback.com") // Will be replaced
     }
     install(Auth) {
         bearer {
             loadTokens {
-                val latestToken = sessionStorage.getToken() ?: ""
+                val latestToken = tokenProvider.getToken() ?: ""
                 BearerTokens(latestToken, latestToken)
             }
             refreshTokens {
-                val latestToken = sessionStorage.getToken() ?: ""
-                val serverAddress = sessionStorage.getServerAddress() ?: ""
+                val latestToken = tokenProvider.getToken() ?: ""
+                val serverAddress = baseUrlProvider.current() ?: ""
                 val sessionClient = SessionClient(client, serverAddress)
                 val newToken =
                     when (val result = sessionClient.refreshToken(latestToken)) {
                         is Result.Error -> ""
                         is Result.Success -> result.data
                     }
-                sessionStorage.setToken(newToken)
+                tokenProvider.setToken(newToken)
                 BearerTokens(newToken, newToken)
-            }
-            sendWithoutRequest { request ->
-                val authPaths = listOf("/api/auth/token")
-                authPaths.any { path -> request.url.encodedPath.contains(path) }
             }
         }
     }
-}
-
-expect fun getPlatformEngine(): HttpClientEngine
-
-fun HttpRequestBuilder.withApiUrl(baseUrl: String, path: String) {
-
-    url {
-        takeFrom(Url(baseUrl)) // Use Ktor's Url to parse the base
-        encodedPath = this.encodedPath + path // Append the specific endpoint path
-    }
+    install(DynamicBaseUrl(baseUrlProvider))
 }
