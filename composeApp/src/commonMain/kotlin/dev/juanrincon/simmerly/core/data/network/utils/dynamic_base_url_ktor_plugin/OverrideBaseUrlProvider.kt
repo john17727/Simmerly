@@ -12,14 +12,14 @@ import io.ktor.utils.io.KtorDsl
  * @param block A lambda to configure the request-specific base URL.
  */
 
-fun BaseUrlConfig.request(block: RequestBaseUrlConfig.() -> Unit = { buildUrl = null }) {
-    with(RequestBaseUrlConfig().apply(block)) {
-        this@request.provider = RequestBaseUrlProvider(buildUrl, buildUrlString)
+fun BaseUrlConfig.override(block: OverrideBaseUrlConfig.() -> Unit = { buildUrl = null }) {
+    with(OverrideBaseUrlConfig().apply(block)) {
+        this@override.provider = OverrideBaseUrlProvider(buildUrl, buildUrlString)
     }
 }
 
 @KtorDsl
-class RequestBaseUrlConfig {
+class OverrideBaseUrlConfig {
     internal var buildUrl: ((URLBuilder, Url) -> URLBuilder)? = null
     internal var buildUrlString: ((URLBuilder, String) -> URLBuilder)? = null
 
@@ -41,7 +41,7 @@ class RequestBaseUrlConfig {
     fun buildUrlString(block: ((URLBuilder, String) -> URLBuilder)?) { buildUrlString = block }
 }
 
-class RequestBaseUrlProvider(
+class OverrideBaseUrlProvider(
     private val buildUrl: ((URLBuilder, Url) -> URLBuilder)?,
     private val buildUrlString: ((URLBuilder, String) -> URLBuilder)?
 ) : BaseUrlProvider {

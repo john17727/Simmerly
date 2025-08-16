@@ -1,7 +1,7 @@
 package dev.juanrincon.simmerly.core.data.network
 
 import dev.juanrincon.simmerly.core.data.network.utils.dynamic_base_url_ktor_plugin.DynamicBaseUrl
-import dev.juanrincon.simmerly.core.data.network.utils.dynamic_base_url_ktor_plugin.request
+import dev.juanrincon.simmerly.core.data.network.utils.dynamic_base_url_ktor_plugin.override
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.HttpClientEngine
 import io.ktor.client.plugins.HttpTimeout
@@ -11,8 +11,6 @@ import io.ktor.client.plugins.logging.LogLevel
 import io.ktor.client.plugins.logging.Logger
 import io.ktor.client.plugins.logging.Logging
 import io.ktor.client.plugins.logging.SIMPLE
-import io.ktor.http.ContentType
-import io.ktor.http.contentType
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
 
@@ -38,6 +36,6 @@ fun createUnauthenticatedHttpClient(
         url("https://fallback.com") // Will be replaced
     }
     install(DynamicBaseUrl) {
-        request()
+        override()
     }
 }

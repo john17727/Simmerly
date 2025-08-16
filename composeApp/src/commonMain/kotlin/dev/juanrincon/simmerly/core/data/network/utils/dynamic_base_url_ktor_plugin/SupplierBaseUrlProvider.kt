@@ -9,17 +9,17 @@ import io.ktor.utils.io.KtorDsl
  * Configures a [BaseUrlProvider] that dynamically provides the base URL using a listener-based approach.
  * This allows the base URL to be updated at runtime.
  *
- * @param block A lambda that configures the [ListenerBaseUrlConfig].
+ * @param block A lambda that configures the [SupplierBaseUrlConfig].
  */
 
-fun BaseUrlConfig.listener(block: ListenerBaseUrlConfig.() -> Unit) {
-    with(ListenerBaseUrlConfig().apply(block)) {
-        this@listener.provider = ListenerBaseUrlProvider(loadBaseUrl, buildUrl, buildUrlString)
+fun BaseUrlConfig.supplier(block: SupplierBaseUrlConfig.() -> Unit) {
+    with(SupplierBaseUrlConfig().apply(block)) {
+        this@supplier.provider = SupplierBaseUrlProvider(loadBaseUrl, buildUrl, buildUrlString)
     }
 }
 
 @KtorDsl
-class ListenerBaseUrlConfig {
+class SupplierBaseUrlConfig {
     internal var loadBaseUrl: suspend () -> String? = { null }
 
     // Prefer typed hook
@@ -53,7 +53,7 @@ class ListenerBaseUrlConfig {
     fun buildUrlString(block: ((URLBuilder, String) -> URLBuilder)?) { buildUrlString = block }
 }
 
-class ListenerBaseUrlProvider(
+class SupplierBaseUrlProvider(
     loadBaseUrl: suspend () -> String?,
     private val buildUrl: ((URLBuilder, Url) -> URLBuilder)?,
     private val buildUrlString: ((URLBuilder, String) -> URLBuilder)?
