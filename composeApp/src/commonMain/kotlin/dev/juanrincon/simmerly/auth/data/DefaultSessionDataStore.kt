@@ -5,13 +5,13 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import dev.juanrincon.simmerly.auth.domain.AuthState
-import dev.juanrincon.simmerly.auth.domain.SessionStorage
+import dev.juanrincon.simmerly.auth.domain.SessionDataStore
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 
-class DataStoreSessionStorage(private val preferences: DataStore<Preferences>) : SessionStorage {
+class DefaultSessionDataStore(private val preferences: DataStore<Preferences>) : SessionDataStore {
     override suspend fun setServerAddress(address: String) {
         preferences.edit { store -> store[stringPreferencesKey(SERVER_ADDRESS_KEY)] = address }
     }
@@ -44,7 +44,7 @@ class DataStoreSessionStorage(private val preferences: DataStore<Preferences>) :
         preferences.data.map { preferences -> preferences[stringPreferencesKey(SERVER_ADDRESS_KEY)] }
             .distinctUntilChanged()
 
-    companion object {
+    companion object Companion {
         const val TOKEN_KEY = "token"
         const val SERVER_ADDRESS_KEY = "server_address"
     }

@@ -2,7 +2,7 @@ package dev.juanrincon.simmerly.auth.domain
 
 import kotlinx.coroutines.flow.Flow
 
-interface SessionStorage {
+interface SessionDataStore {
 
     suspend fun setServerAddress(address: String)
 

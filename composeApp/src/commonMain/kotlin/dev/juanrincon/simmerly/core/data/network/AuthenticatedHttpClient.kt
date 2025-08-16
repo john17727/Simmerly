@@ -1,9 +1,9 @@
 package dev.juanrincon.simmerly.core.data.network
 
 import app.tracktion.core.domain.util.Result
-import dev.juanrincon.simmerly.core.data.network.utils.DynamicBaseUrl
-import dev.juanrincon.simmerly.core.domain.network.BaseUrlProvider
-import dev.juanrincon.simmerly.core.domain.network.TokenProvider
+import dev.juanrincon.simmerly.auth.domain.SessionDataStore
+import dev.juanrincon.simmerly.core.data.network.utils.dynamic_base_url_ktor_plugin.DynamicBaseUrl
+import dev.juanrincon.simmerly.core.data.network.utils.dynamic_base_url_ktor_plugin.listener
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.HttpClientEngine
 import io.ktor.client.plugins.HttpTimeout
@@ -21,8 +21,7 @@ import kotlinx.serialization.json.Json
 
 fun createAuthenticatedHttpClient(
     engine: HttpClientEngine,
-    baseUrlProvider: BaseUrlProvider,
-    tokenProvider: TokenProvider
+    sessionDatastore: SessionDataStore
 ) = HttpClient(engine) {
     install(HttpTimeout) {
         requestTimeoutMillis = 10000
@@ -45,26 +44,28 @@ fun createAuthenticatedHttpClient(
     install(Auth) {
         bearer {
             loadTokens {
-                val latestToken = tokenProvider.getToken() ?: ""
+                val latestToken = sessionDatastore.getToken() ?: ""
                 BearerTokens(latestToken, latestToken)
             }
             refreshTokens {
-                val latestToken = tokenProvider.getToken() ?: ""
-                val serverAddress = baseUrlProvider.current() ?: ""
+                val latestToken = sessionDatastore.getToken() ?: ""
+                val serverAddress = sessionDatastore.getServerAddress() ?: ""
                 val sessionClient = SessionClient(client, serverAddress)
                 val newToken =
                     when (val result = sessionClient.refreshToken(latestToken)) {
                         is Result.Error -> ""
                         is Result.Success -> result.data
                     }
-                tokenProvider.setToken(newToken)
+                sessionDatastore.setToken(newToken)
                 BearerTokens(newToken, newToken)
             }
         }
     }
     install(DynamicBaseUrl) {
-        dynamicBaseUrlProvider = {
-            baseUrlProvider.current()
+        listener {
+            loadBaseUrls {
+                sessionDatastore.getServerAddress()
+            }
         }
     }
 }
