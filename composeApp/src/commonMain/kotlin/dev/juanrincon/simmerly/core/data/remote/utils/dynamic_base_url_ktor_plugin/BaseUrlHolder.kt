@@ -1,4 +1,4 @@
-package dev.juanrincon.simmerly.core.data.network.utils.dynamic_base_url_ktor_plugin
+package dev.juanrincon.simmerly.core.data.remote.utils.dynamic_base_url_ktor_plugin
 
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock

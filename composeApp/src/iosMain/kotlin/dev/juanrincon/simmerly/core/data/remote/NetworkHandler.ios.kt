@@ -1,4 +1,4 @@
-package dev.juanrincon.simmerly.core.data.network
+package dev.juanrincon.simmerly.core.data.remote
 
 import app.tracktion.core.domain.util.DataError
 import platform.Foundation.NSError

@@ -1,9 +1,9 @@
-package dev.juanrincon.simmerly.core.data.network
+package dev.juanrincon.simmerly.core.data.remote
 
 import app.tracktion.core.domain.util.Result
 import dev.juanrincon.simmerly.auth.domain.SessionDataStore
-import dev.juanrincon.simmerly.core.data.network.utils.dynamic_base_url_ktor_plugin.DynamicBaseUrl
-import dev.juanrincon.simmerly.core.data.network.utils.dynamic_base_url_ktor_plugin.supplier
+import dev.juanrincon.simmerly.core.data.remote.utils.dynamic_base_url_ktor_plugin.DynamicBaseUrl
+import dev.juanrincon.simmerly.core.data.remote.utils.dynamic_base_url_ktor_plugin.supplier
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.HttpClientEngine
 import io.ktor.client.plugins.HttpTimeout

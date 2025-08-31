@@ -1,7 +1,7 @@
-package dev.juanrincon.simmerly.core.data.network
+package dev.juanrincon.simmerly.core.data.remote
 
-import dev.juanrincon.simmerly.core.data.network.utils.dynamic_base_url_ktor_plugin.DynamicBaseUrl
-import dev.juanrincon.simmerly.core.data.network.utils.dynamic_base_url_ktor_plugin.override
+import dev.juanrincon.simmerly.core.data.remote.utils.dynamic_base_url_ktor_plugin.DynamicBaseUrl
+import dev.juanrincon.simmerly.core.data.remote.utils.dynamic_base_url_ktor_plugin.override
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.HttpClientEngine
 import io.ktor.client.plugins.HttpTimeout

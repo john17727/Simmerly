@@ -1,4 +1,4 @@
-package dev.juanrincon.simmerly.core.data.network
+package dev.juanrincon.simmerly.core.data.remote
 
 import app.tracktion.core.domain.util.DataError
 import app.tracktion.core.domain.util.Result
@@ -8,7 +8,6 @@ import dev.juanrincon.simmerly.auth.data.network.dto.AuthTokenResponse
 import io.ktor.client.HttpClient
 import io.ktor.client.request.get
 import io.ktor.client.request.headers
-import io.ktor.client.request.post
 
 internal class SessionClient(private val httpClient: HttpClient, private val baseUrl: String) {
 

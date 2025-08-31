@@ -1,4 +1,4 @@
-package dev.juanrincon.simmerly.core.data.network.dto
+package dev.juanrincon.simmerly.core.data.remote.dto
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
