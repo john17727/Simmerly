@@ -1,9 +1,9 @@
-package dev.juanrincon.simmerly.recipes.data.network.dtos
+package dev.juanrincon.simmerly.recipes.data.network.dto
 
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class RecipeDto(
+data class RecipeSummaryDto(
     val id: String,
     val userId: String,
     val householdId: String,

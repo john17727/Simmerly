@@ -1,0 +1,14 @@
+package dev.juanrincon.simmerly.recipes.data.network.dto
+
+import kotlinx.serialization.Serializable
+
+@Serializable
+data class SettingsDto(
+    val public: Boolean,
+    val showNutrition: Boolean,
+    val showAssets: Boolean,
+    val landscapeView: Boolean,
+    val disableComments: Boolean,
+    val disableAmount: Boolean,
+    val locked: Boolean
+)

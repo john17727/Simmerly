@@ -1,9 +1,9 @@
-package dev.juanrincon.simmerly.recipes.data.network.dtos
+package dev.juanrincon.simmerly.recipes.data.network.dto
 
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class CategoryDto(
+data class TagDto(
     val id: String,
     val groupId: String,
     val name: String,
