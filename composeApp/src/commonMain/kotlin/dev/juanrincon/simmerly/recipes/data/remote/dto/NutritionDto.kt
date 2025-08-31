@@ -7,7 +7,7 @@ data class NutritionDto(
     val calories: String?,
     val carbohydrateContent: String?,
     val cholesterolContent: String?,
-    val fatContent: String,
+    val fatContent: String?,
     val fiberContent: String?,
     val proteinContent: String,
     val saturatedFatContent: String?,
