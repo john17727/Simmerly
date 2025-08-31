@@ -1,4 +1,4 @@
-package dev.juanrincon.simmerly.datastore
+package dev.juanrincon.simmerly.core.datastore
 
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences

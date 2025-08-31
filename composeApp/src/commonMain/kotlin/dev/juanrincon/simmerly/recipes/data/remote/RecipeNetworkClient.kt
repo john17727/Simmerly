@@ -1,11 +1,11 @@
-package dev.juanrincon.simmerly.recipes.data.network
+package dev.juanrincon.simmerly.recipes.data.remote
 
 import app.tracktion.core.domain.util.DataError
 import app.tracktion.core.domain.util.Result
 import dev.juanrincon.simmerly.core.data.remote.dto.ItemListDto
 import dev.juanrincon.simmerly.core.data.remote.networkHandler
-import dev.juanrincon.simmerly.recipes.data.network.dto.RecipeDetailDto
-import dev.juanrincon.simmerly.recipes.data.network.dto.RecipeSummaryDto
+import dev.juanrincon.simmerly.recipes.data.remote.dto.RecipeDetailDto
+import dev.juanrincon.simmerly.recipes.data.remote.dto.RecipeSummaryDto
 import io.ktor.client.HttpClient
 import io.ktor.client.request.get
 import io.ktor.client.request.parameter

@@ -10,7 +10,7 @@ import org.koin.dsl.module
 val AuthClient = named("auth")
 val PublicClient = named("public")
 
-val networkModule = module {
+val remoteModule = module {
     single<HttpClient>(qualifier = AuthClient) {
         createAuthenticatedHttpClient(getPlatformEngine(), get())
     }
