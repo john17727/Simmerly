@@ -103,6 +103,14 @@ kotlin {
             // Room
             implementation(libs.androidx.room.runtime)
             implementation(libs.androidx.sqlite.bundled)
+
+            // Paging 3
+            // OFFICIAL PAGING 3 - CORE LOGIC
+            // For Pager, PagingSource, RemoteMediator, etc. in repository.
+            implementation(libs.androidx.paging)
+            // CASH APP PAGING - COMPOSE MULTIPLATFORM UI
+            // Provides the multiplatform collectAsLazyPagingItems() for UI.
+            implementation(libs.cashapp.paging)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
