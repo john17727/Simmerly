@@ -10,5 +10,6 @@ data class InstructionEntity(
     @ColumnInfo(name = "recipe_id") val recipeId: String,
     val title: String,
     val summary: String,
-    val text: String
+    val text: String,
+    val ingredients: List<String>
 )
