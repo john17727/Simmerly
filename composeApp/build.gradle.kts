@@ -103,6 +103,7 @@ kotlin {
             // Room
             implementation(libs.androidx.room.runtime)
             implementation(libs.androidx.sqlite.bundled)
+            implementation(libs.androidx.room.paging)
 
             // Paging 3
             // OFFICIAL PAGING 3 - CORE LOGIC

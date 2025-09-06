@@ -19,8 +19,8 @@ interface RecipeDao {
      * Provides a PagingSource for the Paging 3 library to read from the database.
      * The list is ordered by creation date to ensure a consistent UI.
      */
-    @Query("SELECT * FROM recipes ORDER BY created_at DESC limit :limit offset :offset")
-    fun getAll(limit: Int, offset: Int): List<RecipeEntity>
+    @Query("SELECT * FROM recipes ORDER BY created_at DESC")
+    fun getRecipesPaged(): PagingSource<Int, RecipeEntity>
 
     /**
      * Observes a single recipe with all its relations (tags, ingredients, etc.).

@@ -8,7 +8,6 @@ import androidx.paging.map
 import app.tracktion.core.domain.util.Result
 import dev.juanrincon.simmerly.auth.domain.LoginError
 import dev.juanrincon.simmerly.core.data.paging.NetworkRemoteMediator
-import dev.juanrincon.simmerly.core.data.paging.SqlDelightPagingSource
 import dev.juanrincon.simmerly.recipes.data.local.RecipeDao
 import dev.juanrincon.simmerly.recipes.data.mappers.toDomain
 import dev.juanrincon.simmerly.recipes.data.mappers.toEntity
@@ -16,8 +15,6 @@ import dev.juanrincon.simmerly.recipes.data.remote.RecipeNetworkClient
 import dev.juanrincon.simmerly.recipes.domain.RecipeRepository
 import dev.juanrincon.simmerly.recipes.domain.model.RecipeDetail
 import dev.juanrincon.simmerly.recipes.domain.model.RecipeSummary
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
@@ -51,14 +48,7 @@ class SimmerlyRecipeRepository(
                 recipeDao.clearAll()
             }
         ),
-        pagingSourceFactory = {
-            SqlDelightPagingSource(
-                query = { limit, offset ->
-                    recipeDao.getAll(limit, offset)
-                },
-                dispatcher = Dispatchers.IO
-            )
-        }
+        pagingSourceFactory = { recipeDao.getRecipesPaged() }
     ).flow
         .map { pagingData ->
             pagingData.map { recipeEntity ->
