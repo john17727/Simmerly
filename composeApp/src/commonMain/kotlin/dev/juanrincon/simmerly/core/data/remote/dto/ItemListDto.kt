@@ -12,4 +12,6 @@ data class ItemListDto<T>(
     @SerialName("total_pages")
     val totalPages: Int,
     val items: List<T>,
+    val next: Int?,
+    val previous: Int?
 )

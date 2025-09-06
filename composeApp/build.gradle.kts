@@ -107,10 +107,8 @@ kotlin {
             // Paging 3
             // OFFICIAL PAGING 3 - CORE LOGIC
             // For Pager, PagingSource, RemoteMediator, etc. in repository.
-            implementation(libs.androidx.paging)
-            // CASH APP PAGING - COMPOSE MULTIPLATFORM UI
-            // Provides the multiplatform collectAsLazyPagingItems() for UI.
-            implementation(libs.cashapp.paging)
+            implementation(libs.androidx.paging.common)
+            implementation(libs.androidx.paging.compose)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
