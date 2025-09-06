@@ -9,7 +9,9 @@ import androidx.room.Upsert
 import dev.juanrincon.simmerly.recipes.data.local.entity.RecipeEntity
 import dev.juanrincon.simmerly.recipes.data.local.model.RecipeDetailWithRelations
 import kotlinx.coroutines.flow.Flow
+import kotlin.time.ExperimentalTime
 
+@OptIn(ExperimentalTime::class)
 @Dao
 interface RecipeDao {
 

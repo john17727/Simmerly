@@ -7,19 +7,19 @@ import dev.juanrincon.simmerly.recipes.data.local.entity.CategoryEntity
 import dev.juanrincon.simmerly.recipes.data.local.entity.RecipeEntity
 
 @Entity(
-    tableName = "recipe_tag_cross_ref",
-    primaryKeys = ["recipeId", "tagId"],
+    tableName = "recipe_category_cross_ref",
+    primaryKeys = ["recipe_id", "category_id"],
     foreignKeys = [
         ForeignKey(
             entity = RecipeEntity::class,
             parentColumns = ["id"],
-            childColumns = ["recipeId"],
+            childColumns = ["recipe_id"],
             onDelete = ForeignKey.CASCADE // If a recipe is deleted, delete its links
         ),
         ForeignKey(
             entity = CategoryEntity::class,
             parentColumns = ["id"],
-            childColumns = ["categoryId"],
+            childColumns = ["category_id"],
             onDelete = ForeignKey.CASCADE // If a category is deleted, remove it from all recipes
         )
     ]

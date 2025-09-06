@@ -8,18 +8,18 @@ import dev.juanrincon.simmerly.recipes.data.local.entity.ToolEntity
 
 @Entity(
     tableName = "recipe_tool_cross_ref",
-    primaryKeys = ["recipeId", "toolId"],
+    primaryKeys = ["recipe_id", "tool_id"],
     foreignKeys = [
         ForeignKey(
             entity = RecipeEntity::class,
             parentColumns = ["id"],
-            childColumns = ["recipeId"],
+            childColumns = ["recipe_id"],
             onDelete = ForeignKey.CASCADE // If a recipe is deleted, delete its links
         ),
         ForeignKey(
             entity = ToolEntity::class,
             parentColumns = ["id"],
-            childColumns = ["toolId"],
+            childColumns = ["tool_id"],
             onDelete = ForeignKey.CASCADE // If a tool is deleted, remove it from all recipes
         )
     ]

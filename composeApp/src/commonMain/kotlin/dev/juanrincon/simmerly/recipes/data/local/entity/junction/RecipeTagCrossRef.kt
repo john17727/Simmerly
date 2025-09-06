@@ -8,18 +8,18 @@ import dev.juanrincon.simmerly.recipes.data.local.entity.TagEntity
 
 @Entity(
     tableName = "recipe_tag_cross_ref",
-    primaryKeys = ["recipeId", "tagId"],
+    primaryKeys = ["recipe_id", "tag_id"],
     foreignKeys = [
         ForeignKey(
             entity = RecipeEntity::class,
             parentColumns = ["id"],
-            childColumns = ["recipeId"],
+            childColumns = ["recipe_id"],
             onDelete = ForeignKey.CASCADE // If a recipe is deleted, delete its links
         ),
         ForeignKey(
             entity = TagEntity::class,
             parentColumns = ["id"],
-            childColumns = ["tagId"],
+            childColumns = ["tag_id"],
             onDelete = ForeignKey.CASCADE // If a tag is deleted, remove it from all recipes
         )
     ]

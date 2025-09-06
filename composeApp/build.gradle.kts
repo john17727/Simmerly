@@ -125,6 +125,14 @@ kotlin {
             // Ktor
             implementation(libs.ktor.client.darwin)
         }
+
+        all {
+            /*
+            Room generates file without this annotation tag. This lines tells it to
+            not ignore the annotation.
+             */
+            languageSettings.optIn("kotlin.time.ExperimentalTime")
+        }
     }
 }
 
