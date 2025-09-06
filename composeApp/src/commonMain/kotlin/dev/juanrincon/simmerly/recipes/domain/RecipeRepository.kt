@@ -1,5 +1,6 @@
 package dev.juanrincon.simmerly.recipes.domain
 
+import androidx.paging.PagingData
 import app.tracktion.core.domain.util.Result
 import dev.juanrincon.simmerly.auth.domain.LoginError
 import dev.juanrincon.simmerly.recipes.domain.model.RecipeDetail
@@ -8,7 +9,7 @@ import kotlinx.coroutines.flow.Flow
 
 interface RecipeRepository {
 
-    fun getRecipes(): Flow<Result<List<RecipeSummary>, LoginError.NetworkError>>
+    fun getRecipes(pageSize: Int): Flow<PagingData<RecipeSummary>>
 
     suspend fun getRecipe(id: String): Result<RecipeDetail, LoginError.NetworkError>
 }

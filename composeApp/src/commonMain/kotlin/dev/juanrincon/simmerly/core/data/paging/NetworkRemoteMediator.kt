@@ -12,8 +12,8 @@ import okio.IOException
 @OptIn(ExperimentalPagingApi::class)
 class NetworkRemoteMediator<N, D : Any, E : RootError>(
     private val remoteQuery: suspend (page: Int, perPage: Int) -> Result<N, E>,
-    private val localQuery: suspend (D) -> Unit,
-    private val remoteToLocal: (N) -> D,
+    private val localQuery: suspend (List<D>) -> Unit,
+    private val remoteToLocal: (N) -> List<D>,
     private val isEndOfPaginationReached: (N) -> Boolean,
     private val clearLocalData: suspend () -> Unit
 ) : RemoteMediator<Int, D>() {

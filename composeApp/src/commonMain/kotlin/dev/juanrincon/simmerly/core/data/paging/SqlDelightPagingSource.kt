@@ -8,33 +8,28 @@ import kotlin.coroutines.CoroutineContext
 
 /**
  * A generic PagingSource for fetching paginated data from an SQLDelight query.
- * This is the modern, recommended approach for KMP since androidx.paging:paging-common
- * became a multiplatform library.
  *
  * @param T The type of the items to be loaded.
- * @param pageSize The number of items to load per page. This is used to calculate prevKey
- *                 and to cap the initial load size.
  * @param query A lambda function that takes a limit and an offset and returns a list of items
  *              from the database. This is where you call your SQLDelight query's `executeAsList()`.
  * @param dispatcher The CoroutineContext (typically a background dispatcher like Dispatchers.IO)
  *                   on which the database query should be executed.
  */
 class SqlDelightPagingSource<T : Any>(
-    private val pageSize: Int,
-    private val query: (limit: Long, offset: Long) -> List<T>,
+    private val query: (limit: Int, offset: Int) -> List<T>,
     private val dispatcher: CoroutineContext
-) : PagingSource<Long, T>() {
+) : PagingSource<Int, T>() {
 
-    override suspend fun load(params: LoadParams<Long>): LoadResult<Long, T> = try {
-        val offset = params.key ?: 0L
-        val limit = params.loadSize.toLong().coerceAtMost(pageSize.toLong())
+    override suspend fun load(params: LoadParams<Int>): LoadResult<Int, T> = try {
+        val offset = params.key ?: 0
+        val limit = params.loadSize
 
         val items = withContext(dispatcher) {
             query(limit, offset)
         }
 
         val nextKey = if (items.size < limit) null else offset + items.size
-        val prevKey = if (offset == 0L) null else (offset - pageSize).coerceAtLeast(0L)
+        val prevKey = if (offset == 0) null else (offset - limit).coerceAtLeast(0)
 
         LoadResult.Page(
             data = items,
@@ -45,11 +40,11 @@ class SqlDelightPagingSource<T : Any>(
         LoadResult.Error(t)
     }
 
-    override fun getRefreshKey(state: PagingState<Long, T>): Long? {
+    override fun getRefreshKey(state: PagingState<Int, T>): Int? { // <-- Return type is Int?
         // A standard implementation for getRefreshKey
         return state.anchorPosition?.let { anchorPosition ->
             val anchorPage = state.closestPageToPosition(anchorPosition)
-            anchorPage?.prevKey?.plus(pageSize) ?: anchorPage?.nextKey?.minus(pageSize)
+            anchorPage?.prevKey?.plus(state.config.pageSize) ?: anchorPage?.nextKey?.minus(state.config.pageSize)
         }
     }
 }
