@@ -6,21 +6,23 @@ import androidx.room.RoomDatabase
 import androidx.room.RoomDatabaseConstructor
 import androidx.room.TypeConverters
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
-import dev.juanrincon.simmerly.recipes.data.local.RecipeDao
-import dev.juanrincon.simmerly.recipes.data.local.entity.CategoryEntity
-import dev.juanrincon.simmerly.recipes.data.local.entity.CommentEntity
-import dev.juanrincon.simmerly.recipes.data.local.entity.FoodEntity
-import dev.juanrincon.simmerly.recipes.data.local.entity.IngredientEntity
-import dev.juanrincon.simmerly.recipes.data.local.entity.InstructionEntity
-import dev.juanrincon.simmerly.recipes.data.local.entity.NoteEntity
-import dev.juanrincon.simmerly.recipes.data.local.entity.RecipeEntity
-import dev.juanrincon.simmerly.recipes.data.local.entity.TagEntity
-import dev.juanrincon.simmerly.recipes.data.local.entity.ToolEntity
-import dev.juanrincon.simmerly.recipes.data.local.entity.UnitEntity
-import dev.juanrincon.simmerly.recipes.data.local.entity.UserEntity
-import dev.juanrincon.simmerly.recipes.data.local.entity.junction.RecipeCategoryCrossRef
-import dev.juanrincon.simmerly.recipes.data.local.entity.junction.RecipeTagCrossRef
-import dev.juanrincon.simmerly.recipes.data.local.entity.junction.RecipeToolCrossRef
+import dev.juanrincon.simmerly.recipes.data.local.recipe.RecipeDao
+import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.CategoryEntity
+import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.CommentEntity
+import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.FoodEntity
+import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.IngredientEntity
+import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.InstructionEntity
+import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.NoteEntity
+import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.RecipeEntity
+import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.TagEntity
+import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.ToolEntity
+import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.UnitEntity
+import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.UserEntity
+import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.junction.RecipeCategoryCrossRef
+import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.junction.RecipeTagCrossRef
+import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.junction.RecipeToolCrossRef
+import dev.juanrincon.simmerly.recipes.data.local.metadata.RecipeRemoteKey
+import dev.juanrincon.simmerly.recipes.data.local.metadata.RecipeRemoteKeyDao
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlin.time.ExperimentalTime
@@ -40,7 +42,8 @@ import kotlin.time.ExperimentalTime
         UserEntity::class,
         RecipeCategoryCrossRef::class,
         RecipeTagCrossRef::class,
-        RecipeToolCrossRef::class
+        RecipeToolCrossRef::class,
+        RecipeRemoteKey::class
     ],
     version = 1
 )
@@ -49,6 +52,8 @@ import kotlin.time.ExperimentalTime
 @ConstructedBy(SimmerlyDatabaseConstructor::class)
 abstract class SimmerlyDatabase : RoomDatabase() {
     abstract fun recipeDao(): RecipeDao
+
+    abstract fun recipeRemoteKeyDao(): RecipeRemoteKeyDao
 }
 
 @Suppress("KotlinNoActualForExpect")

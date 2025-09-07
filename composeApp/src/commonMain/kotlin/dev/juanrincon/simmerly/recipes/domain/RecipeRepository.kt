@@ -9,7 +9,7 @@ import kotlinx.coroutines.flow.Flow
 
 interface RecipeRepository {
 
-    fun getRecipes(pageSize: Int): Flow<PagingData<RecipeSummary>>
+    fun getRecipes(pageSize: Int = 50): Flow<PagingData<RecipeSummary>>
 
     suspend fun getRecipe(id: String): Result<RecipeDetail, LoginError.NetworkError>
 }

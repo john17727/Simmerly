@@ -1,10 +1,10 @@
-package dev.juanrincon.simmerly.recipes.data.local.model
+package dev.juanrincon.simmerly.recipes.data.local.recipe.model
 
 import androidx.room.Embedded
 import androidx.room.Relation
-import dev.juanrincon.simmerly.recipes.data.local.entity.FoodEntity
-import dev.juanrincon.simmerly.recipes.data.local.entity.IngredientEntity
-import dev.juanrincon.simmerly.recipes.data.local.entity.UnitEntity
+import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.FoodEntity
+import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.IngredientEntity
+import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.UnitEntity
 
 data class IngredientWithRelations(
     @Embedded

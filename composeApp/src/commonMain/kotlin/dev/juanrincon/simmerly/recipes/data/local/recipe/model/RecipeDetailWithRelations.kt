@@ -1,19 +1,19 @@
-package dev.juanrincon.simmerly.recipes.data.local.model
+package dev.juanrincon.simmerly.recipes.data.local.recipe.model
 
 import androidx.room.Embedded
 import androidx.room.Junction
 import androidx.room.Relation
-import dev.juanrincon.simmerly.recipes.data.local.entity.CategoryEntity
-import dev.juanrincon.simmerly.recipes.data.local.entity.CommentEntity
-import dev.juanrincon.simmerly.recipes.data.local.entity.IngredientEntity
-import dev.juanrincon.simmerly.recipes.data.local.entity.InstructionEntity
-import dev.juanrincon.simmerly.recipes.data.local.entity.NoteEntity
-import dev.juanrincon.simmerly.recipes.data.local.entity.RecipeEntity
-import dev.juanrincon.simmerly.recipes.data.local.entity.TagEntity
-import dev.juanrincon.simmerly.recipes.data.local.entity.ToolEntity
-import dev.juanrincon.simmerly.recipes.data.local.entity.junction.RecipeCategoryCrossRef
-import dev.juanrincon.simmerly.recipes.data.local.entity.junction.RecipeTagCrossRef
-import dev.juanrincon.simmerly.recipes.data.local.entity.junction.RecipeToolCrossRef
+import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.CategoryEntity
+import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.CommentEntity
+import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.IngredientEntity
+import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.InstructionEntity
+import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.NoteEntity
+import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.RecipeEntity
+import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.TagEntity
+import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.ToolEntity
+import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.junction.RecipeCategoryCrossRef
+import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.junction.RecipeTagCrossRef
+import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.junction.RecipeToolCrossRef
 
 data class RecipeDetailWithRelations(
     @Embedded

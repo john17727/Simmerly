@@ -1,4 +1,4 @@
-package dev.juanrincon.simmerly.recipes.data.local
+package dev.juanrincon.simmerly.recipes.data.local.recipe
 
 import androidx.paging.PagingSource
 import androidx.room.Dao
@@ -6,8 +6,8 @@ import androidx.room.Delete
 import androidx.room.Query
 import androidx.room.Transaction
 import androidx.room.Upsert
-import dev.juanrincon.simmerly.recipes.data.local.entity.RecipeEntity
-import dev.juanrincon.simmerly.recipes.data.local.model.RecipeDetailWithRelations
+import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.RecipeEntity
+import dev.juanrincon.simmerly.recipes.data.local.recipe.model.RecipeDetailWithRelations
 import kotlinx.coroutines.flow.Flow
 import kotlin.time.ExperimentalTime
 

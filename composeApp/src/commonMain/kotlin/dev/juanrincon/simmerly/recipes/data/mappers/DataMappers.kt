@@ -1,9 +1,9 @@
 package dev.juanrincon.simmerly.recipes.data.mappers
 
 import dev.juanrincon.simmerly.core.domain.dateStringToInstant
-import dev.juanrincon.simmerly.recipes.data.local.entity.NutritionEntity
-import dev.juanrincon.simmerly.recipes.data.local.entity.RecipeEntity
-import dev.juanrincon.simmerly.recipes.data.local.entity.SettingsEntity
+import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.NutritionEntity
+import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.RecipeEntity
+import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.SettingsEntity
 import dev.juanrincon.simmerly.recipes.data.remote.dto.RecipeSummaryDto
 import kotlin.time.ExperimentalTime
 import kotlin.time.Instant

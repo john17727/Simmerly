@@ -1,4 +1,4 @@
-package dev.juanrincon.simmerly.recipes.data.local.entity
+package dev.juanrincon.simmerly.recipes.data.local.recipe.entity
 
 import androidx.room.ColumnInfo
 

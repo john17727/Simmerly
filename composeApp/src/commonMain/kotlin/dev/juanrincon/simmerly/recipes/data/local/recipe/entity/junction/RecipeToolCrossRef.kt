@@ -1,10 +1,10 @@
-package dev.juanrincon.simmerly.recipes.data.local.entity.junction
+package dev.juanrincon.simmerly.recipes.data.local.recipe.entity.junction
 
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.ForeignKey
-import dev.juanrincon.simmerly.recipes.data.local.entity.RecipeEntity
-import dev.juanrincon.simmerly.recipes.data.local.entity.ToolEntity
+import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.RecipeEntity
+import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.ToolEntity
 
 @Entity(
     tableName = "recipe_tool_cross_ref",
