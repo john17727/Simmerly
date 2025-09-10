@@ -7,7 +7,7 @@ import com.arkivanov.mvikotlin.extensions.coroutines.labels
 import com.arkivanov.mvikotlin.extensions.coroutines.stateFlow
 import dev.juanrincon.simmerly.auth.domain.AuthRepository
 import dev.juanrincon.simmerly.welcome.presentation.mvikotlin.WelcomeStore
-import dev.juanrincon.simmerly.welcome.presentation.mvikotlin.WelcomeStoreProvider
+import dev.juanrincon.simmerly.welcome.presentation.mvikotlin.WelcomeStoreFactory
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
@@ -17,7 +17,7 @@ class DefaultWelcomeComponent(
     storeFactory: StoreFactory,
     private val authRepository: AuthRepository
 ) : WelcomeComponent, ComponentContext by componentContext {
-    private val store = instanceKeeper.getStore { WelcomeStoreProvider(storeFactory, authRepository).provide() }
+    private val store = instanceKeeper.getStore { WelcomeStoreFactory(storeFactory, authRepository).create() }
 
     @OptIn(ExperimentalCoroutinesApi::class)
     override val state: StateFlow<WelcomeStore.State> = store.stateFlow

@@ -5,7 +5,7 @@ import androidx.compose.ui.Modifier
 import com.arkivanov.decompose.extensions.compose.stack.Children
 import com.arkivanov.decompose.extensions.compose.stack.animation.fade
 import com.arkivanov.decompose.extensions.compose.stack.animation.stackAnimation
-import dev.juanrincon.simmerly.recipes.presentation.decompose.RecipesContent
+import dev.juanrincon.simmerly.recipes.presentation.list.decompose.RecipesContent
 
 @Composable
 fun AppContent(component: AppComponent, modifier: Modifier = Modifier) {

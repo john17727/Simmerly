@@ -2,7 +2,7 @@ package dev.juanrincon.simmerly.navigation.app
 
 import com.arkivanov.decompose.router.stack.ChildStack
 import com.arkivanov.decompose.value.Value
-import dev.juanrincon.simmerly.recipes.presentation.decompose.RecipesComponent
+import dev.juanrincon.simmerly.recipes.presentation.list.decompose.RecipesComponent
 
 interface AppComponent {
     val stack: Value<ChildStack<*, Child>>

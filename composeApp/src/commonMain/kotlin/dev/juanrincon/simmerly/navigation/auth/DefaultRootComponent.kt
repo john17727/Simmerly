@@ -24,8 +24,7 @@ class DefaultRootComponent(
     val storeFactory: StoreFactory,
     private val authRepository: AuthRepository
 ) : RootComponent,
-    ComponentContext by componentContext,
-    KoinComponent {
+    ComponentContext by componentContext {
 
     private val navigation = StackNavigation<AuthConfiguration>()
 
@@ -84,7 +83,8 @@ class DefaultRootComponent(
 
             AuthConfiguration.App -> RootComponent.Child.AppChild(
                 DefaultAppComponent(
-                    componentContext
+                    componentContext,
+                    storeFactory
                 )
             )
         }

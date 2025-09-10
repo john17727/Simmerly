@@ -6,14 +6,20 @@ import com.arkivanov.decompose.router.stack.StackNavigation
 import com.arkivanov.decompose.router.stack.childStack
 import com.arkivanov.decompose.router.stack.popTo
 import com.arkivanov.decompose.value.Value
-import dev.juanrincon.simmerly.navigation.auth.RootComponent
-import dev.juanrincon.simmerly.recipes.presentation.decompose.DefaultRecipesComponent
+import com.arkivanov.mvikotlin.core.store.StoreFactory
+import dev.juanrincon.simmerly.recipes.domain.RecipeRepository
+import dev.juanrincon.simmerly.recipes.presentation.list.decompose.DefaultRecipesComponent
 import kotlinx.serialization.Serializable
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.get
 
-class DefaultAppComponent(componentContext: ComponentContext) : AppComponent,
-    ComponentContext by componentContext {
+class DefaultAppComponent(
+    componentContext: ComponentContext,
+    val storeFactory: StoreFactory,
+) : AppComponent,
+    ComponentContext by componentContext, KoinComponent {
 
-        private val navigation = StackNavigation<AppConfiguration>()
+    private val navigation = StackNavigation<AppConfiguration>()
 
     override val stack: Value<ChildStack<*, AppComponent.Child>> = childStack(
         source = navigation,
@@ -23,10 +29,15 @@ class DefaultAppComponent(componentContext: ComponentContext) : AppComponent,
         childFactory = ::createChild
     )
 
-    private fun createChild(config: AppConfiguration, componentContext: ComponentContext): AppComponent.Child = when(config) {
+    private fun createChild(
+        config: AppConfiguration,
+        componentContext: ComponentContext
+    ): AppComponent.Child = when (config) {
         AppConfiguration.Recipes -> AppComponent.Child.RecipesChild(
             DefaultRecipesComponent(
-                componentContext
+                componentContext,
+                storeFactory,
+                get<RecipeRepository>()
             )
         )
     }
