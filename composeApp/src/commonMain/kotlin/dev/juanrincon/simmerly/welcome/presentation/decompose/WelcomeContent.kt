@@ -5,13 +5,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.windowsizeclass.WindowSizeClass
+import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.window.core.layout.WindowSizeClass
 import dev.juanrincon.simmerly.welcome.presentation.WelcomeScreen
 import dev.juanrincon.simmerly.welcome.presentation.mvikotlin.WelcomeStore
 import kotlinx.coroutines.flow.collectLatest
@@ -22,7 +23,6 @@ import org.jetbrains.compose.resources.stringResource
 fun WelcomeContent(
     welcomeComponent: WelcomeComponent,
     modifier: Modifier = Modifier,
-    windowSizeClass: WindowSizeClass
 ) {
     val state by welcomeComponent.state.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -47,7 +47,6 @@ fun WelcomeContent(
         WelcomeScreen(
             state = state,
             onEvent = welcomeComponent::onEvent,
-            windowSizeClass = windowSizeClass,
             // Pass innerPadding if WelcomeScreen is the direct child of Scaffold
             modifier = Modifier.fillMaxSize()
         )

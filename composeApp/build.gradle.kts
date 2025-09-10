@@ -51,9 +51,6 @@ kotlin {
             // Ktor
             implementation(libs.ktor.client.android)
 
-            // Window Size Class
-            implementation(libs.androidx.material3.windowSizeClass)
-
             // Koin
             implementation(libs.koin.android)
         }
@@ -66,7 +63,6 @@ kotlin {
             implementation(compose.components.uiToolingPreview)
             implementation(libs.androidx.lifecycle.viewmodelCompose)
             implementation(libs.androidx.lifecycle.runtimeCompose)
-            implementation(libs.jetbrains.material3.windowSizeClass)
             implementation(compose.materialIconsExtended)
 
             // Coil
@@ -103,6 +99,9 @@ kotlin {
             // Room
             implementation(libs.androidx.room.runtime)
             implementation(libs.androidx.sqlite.bundled)
+
+            // Material 3 Adaptive
+            implementation(libs.adaptive)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
