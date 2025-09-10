@@ -7,4 +7,5 @@ import org.koin.dsl.module
 
 val localModule = module {
     single<SimmerlyDatabase> { getRoomDatabase(get()) }
+    single<RecipeDao> { get<SimmerlyDatabase>().recipeDao() }
 }

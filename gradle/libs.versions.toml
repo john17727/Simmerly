@@ -27,7 +27,6 @@ kotlinx-datetime = "0.7.1"
 room = "2.7.2"
 sqlite = "2.5.2"
 androidx-paging = "3.4.0-alpha03"
-cashapp-paging = "3.3.0-alpha02-0.5.1"
 
 [libraries]
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
@@ -68,7 +67,6 @@ androidx-room-compiler = { module = "androidx.room:room-compiler", version.ref =
 androidx-room-paging = { module = "androidx.room:room-paging", version.ref = "room" }
 androidx-paging-common = { module = "androidx.paging:paging-common", version.ref = "androidx-paging" }
 androidx-paging-compose = { module = "androidx.paging:paging-compose", version.ref = "androidx-paging" }
-cashapp-paging-compose = { module = "app.cash.paging:paging-compose-common", version.ref = "cashapp-paging" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }

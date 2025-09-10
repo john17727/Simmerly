@@ -1,6 +1,5 @@
 package dev.juanrincon.simmerly.recipes.data.local.recipe
 
-import androidx.paging.PagingSource
 import androidx.room.Dao
 import androidx.room.Delete
 import androidx.room.Query
@@ -20,7 +19,7 @@ interface RecipeDao {
      * The list is ordered by creation date to ensure a consistent UI.
      */
     @Query("SELECT * FROM recipes ORDER BY created_at DESC")
-    fun getRecipesPaged(): PagingSource<Int, RecipeEntity>
+    fun getRecipes(): Flow<List<RecipeEntity>>
 
     /**
      * Observes a single recipe with all its relations (tags, ingredients, etc.).

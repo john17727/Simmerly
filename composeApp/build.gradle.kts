@@ -103,13 +103,6 @@ kotlin {
             // Room
             implementation(libs.androidx.room.runtime)
             implementation(libs.androidx.sqlite.bundled)
-            implementation(libs.androidx.room.paging)
-
-            // Paging 3
-            implementation(libs.androidx.paging.common)
-            // Causes IR Lowering Failure in iOS build, check back in future versions
-//            implementation(libs.androidx.paging.compose)
-//            implementation(libs.cashapp.paging.compose)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)

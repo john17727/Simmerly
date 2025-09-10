@@ -1,7 +1,6 @@
 package dev.juanrincon.simmerly.recipes.presentation.list.mvikotlin
 
-import androidx.paging.PagingData
-import androidx.paging.cachedIn
+import app.tracktion.core.domain.util.fold
 import com.arkivanov.mvikotlin.core.store.Reducer
 import com.arkivanov.mvikotlin.core.store.Store
 import com.arkivanov.mvikotlin.core.store.StoreFactory
@@ -11,8 +10,12 @@ import dev.juanrincon.simmerly.recipes.domain.RecipeRepository
 import dev.juanrincon.simmerly.recipes.domain.model.RecipeSummary
 import dev.juanrincon.simmerly.recipes.presentation.list.mvikotlin.RecipesStore.Intent
 import dev.juanrincon.simmerly.recipes.presentation.list.mvikotlin.RecipesStore.Label
+import dev.juanrincon.simmerly.recipes.presentation.list.mvikotlin.RecipesStore.Label.*
 import dev.juanrincon.simmerly.recipes.presentation.list.mvikotlin.RecipesStore.State
-import kotlinx.coroutines.flow.Flow
+import dev.juanrincon.simmerly.recipes.presentation.list.mvikotlin.RecipesStoreFactory.Msg.*
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 
 internal class RecipesStoreFactory(
@@ -34,8 +37,10 @@ internal class RecipesStoreFactory(
     }
 
     private sealed interface Msg {
+        data class Loading(val isLoading: Boolean) : Msg
         data class SearchQueryChanged(val query: String) : Msg
-        data class RecipesFlowUpdated(val recipesFlow: Flow<PagingData<RecipeSummary>>) : Msg
+        data class RecipesUpdated(val recipes: List<RecipeSummary>) : Msg
+        data class PageData(val nextPage: Int?) : Msg
     }
 
     private class BootstrapperImpl : CoroutineBootstrapper<Action>() {
@@ -44,30 +49,59 @@ internal class RecipesStoreFactory(
         }
     }
 
-    private class ExecutorImpl(private val repository: RecipeRepository) : CoroutineExecutor<Intent, Action, State, Msg, Label>() {
-        override fun executeIntent(intent: Intent) = when (intent) {
-            is Intent.OnRecipeClicked -> publish(Label.RecipeClicked(intent.recipeId))
-            Intent.OnRefresh -> TODO()
-            is Intent.OnSearchQueryChanged -> dispatch(Msg.SearchQueryChanged(intent.query))
+    private class ExecutorImpl(private val repository: RecipeRepository) :
+        CoroutineExecutor<Intent, Action, State, Msg, Label>() {
+        override fun executeIntent(intent: Intent) {
+            when (intent) {
+                is Intent.OnRecipeClicked -> publish(RecipeClicked(intent.recipeId))
+                Intent.OnRefresh -> loadRecipes(1, refresh = true)
+                is Intent.OnSearchQueryChanged -> dispatch(SearchQueryChanged(intent.query))
+                Intent.OnLoadMore -> {
+                    state().nextPage?.let {
+                        loadRecipes(it)
+                    }
+                }
+            }
         }
 
         override fun executeAction(action: Action) = when (action) {
-            Action.LoadRecipes -> updateRecipes()
+            Action.LoadRecipes -> observeRecipes()
         }
 
-        private fun updateRecipes() {
-            scope.launch {
-                val newRecipesFlow = repository.getRecipes().cachedIn(scope)
-                dispatch(Msg.RecipesFlowUpdated(newRecipesFlow))
-            }
+        private fun observeRecipes() {
+            repository.recipes()
+                .distinctUntilChanged()
+                .onEach { list ->
+                    if (list.isEmpty()) {
+                       loadRecipes(1)
+                    } else {
+                        dispatch(RecipesUpdated(list))
+                    }
+                }.launchIn(scope)
+        }
+
+        private fun loadRecipes(page: Int, refresh: Boolean = false) {
+           scope.launch {
+               repository.loadRecipes(page, refresh = refresh).fold(
+                   onSuccess = {
+                       dispatch(PageData(nextPage = it.next))
+                       dispatch(Loading(false))
+                   },
+                   onFailure = {
+                       dispatch(Loading(false))
+                   }
+               )
+           }
         }
     }
 
     private object ReducerImpl : Reducer<State, Msg> {
-        override fun State.reduce(message: Msg): State =
-            when (message) {
-                is Msg.SearchQueryChanged -> copy(searchQuery = message.query)
-                is Msg.RecipesFlowUpdated -> copy(recipes = message.recipesFlow)
+        override fun State.reduce(msg: Msg): State =
+            when (msg) {
+                is SearchQueryChanged -> copy(searchQuery = msg.query)
+                is RecipesUpdated -> copy(recipes = msg.recipes)
+                is Loading -> copy(isLoading = msg.isLoading)
+                is PageData -> copy(nextPage = msg.nextPage)
             }
     }
 }

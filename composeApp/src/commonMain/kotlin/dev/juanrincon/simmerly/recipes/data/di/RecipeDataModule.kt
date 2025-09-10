@@ -8,5 +8,5 @@ import org.koin.dsl.module
 
 val recipeDataModule = module {
     single<RecipeNetworkClient> { RecipeNetworkClient(get(qualifier = AuthClient)) }
-    single<RecipeRepository> { SimmerlyRecipeRepository(get(), get()) }
+    single<RecipeRepository> { SimmerlyRecipeRepository(get(), get(), get()) }
 }

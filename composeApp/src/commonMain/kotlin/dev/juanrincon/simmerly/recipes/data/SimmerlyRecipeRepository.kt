@@ -1,91 +1,53 @@
 package dev.juanrincon.simmerly.recipes.data
 
-import androidx.paging.ExperimentalPagingApi
-import androidx.paging.LoadType
-import androidx.paging.Pager
-import androidx.paging.PagingConfig
-import androidx.paging.PagingData
-import androidx.paging.map
-import androidx.room.immediateTransaction
-import androidx.room.useWriterConnection
 import app.tracktion.core.domain.util.Result
-import dev.juanrincon.simmerly.auth.domain.LoginError
-import dev.juanrincon.simmerly.core.data.local.SimmerlyDatabase
-import dev.juanrincon.simmerly.core.data.paging.NetworkRemoteMediator
-import dev.juanrincon.simmerly.recipes.data.local.metadata.RecipeRemoteKey
+import app.tracktion.core.domain.util.fold
+import dev.juanrincon.simmerly.auth.domain.SessionDataStore
+import dev.juanrincon.simmerly.recipes.data.local.recipe.RecipeDao
 import dev.juanrincon.simmerly.recipes.data.mappers.toDomain
 import dev.juanrincon.simmerly.recipes.data.mappers.toEntity
+import dev.juanrincon.simmerly.recipes.data.mappers.toPaginationData
 import dev.juanrincon.simmerly.recipes.data.remote.RecipeNetworkClient
 import dev.juanrincon.simmerly.recipes.domain.RecipeRepository
+import dev.juanrincon.simmerly.recipes.domain.RecipesError
+import dev.juanrincon.simmerly.recipes.domain.model.PaginationData
 import dev.juanrincon.simmerly.recipes.domain.model.RecipeDetail
 import dev.juanrincon.simmerly.recipes.domain.model.RecipeSummary
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.map
-import kotlin.time.Clock
+import kotlinx.coroutines.flow.combine
 
 class SimmerlyRecipeRepository(
     private val networkClient: RecipeNetworkClient,
-    private val database: SimmerlyDatabase
+    private val recipeDao: RecipeDao,
+    private val sessionDataStore: SessionDataStore
 ) : RecipeRepository {
 
-    @OptIn(ExperimentalPagingApi::class)
-    override fun getRecipes(pageSize: Int): Flow<PagingData<RecipeSummary>> = Pager(
-        config = PagingConfig(
-            pageSize = pageSize,
-            enablePlaceholders = false
-        ),
-        remoteMediator = NetworkRemoteMediator(
-            remoteQuery = { page, perPage ->
-                networkClient.getRecipes(page, perPage)
-            },
-            saveRemoteData = { loadType, response ->
-                val entities = response.items.map { it.toEntity() }
-                val keys = response.items.map { recipe ->
-                    RecipeRemoteKey(
-                        recipe.id,
-                        response.previous,
-                        response.next,
-                        Clock.System.now()
-                    )
-                }
-
-                database.useWriterConnection { transactor ->
-                    transactor.immediateTransaction {
-                        if (loadType == LoadType.REFRESH) {
-                            database.recipeDao().clearAll()
-                            database.recipeRemoteKeyDao().clearRemoteKeys()
-                        }
-                        database.recipeDao().upsertAll(entities)
-                        database.recipeRemoteKeyDao().upsertAll(keys)
-                    }
-                }
-            },
-            isEndOfPaginationReached = { networkResponse ->
-                // Logic to check if you're at the last page
-                networkResponse.next == null
-            },
-            checkInvalidation = {
-                val lastUpdated =
-                    database.recipeRemoteKeyDao().getCreationTime()?.toEpochMilliseconds() ?: 0L
-                (Clock.System.now().toEpochMilliseconds() - lastUpdated) > CACHE_TIMEOUT_MILLIS
-            },
-            getNextPageKey = { lastItem ->
-                database.recipeRemoteKeyDao().getRemoteKeyByRecipeId(lastItem?.id ?: "")?.nextKey
-            }
-        ),
-        pagingSourceFactory = { database.recipeDao().getRecipesPaged() }
-    ).flow
-        .map { pagingData ->
-            pagingData.map { recipeEntity ->
-                recipeEntity.toDomain()
-            }
+    override fun recipes(): Flow<List<RecipeSummary>> = sessionDataStore.observeServerAddress()
+        .combine(recipeDao.getRecipes()) { address, recipes ->
+            recipes.map { it.toDomain(address) }
         }
 
-    override suspend fun getRecipe(id: String): Result<RecipeDetail, LoginError.NetworkError> {
-        TODO("Not yet implemented")
+    override suspend fun loadRecipes(
+        page: Int,
+        perPage: Int,
+        refresh: Boolean
+    ): Result<PaginationData, RecipesError> {
+        if (refresh) {
+            recipeDao.clearAll()
+        }
+        return networkClient.getRecipes(page, perPage).fold(
+            onSuccess = { response ->
+                recipeDao.upsertAll(response.items.map { it.toEntity() })
+                Result.Success(response.toPaginationData())
+            },
+            onFailure = {
+                Result.Error(RecipesError.FetchError)
+            }
+        )
+
     }
 
-    companion object {
-        const val CACHE_TIMEOUT_MILLIS = 3_600_000L
+    override suspend fun getRecipe(id: String): Result<RecipeDetail, RecipesError> {
+        TODO("Not yet implemented")
     }
 }
