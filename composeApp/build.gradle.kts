@@ -107,7 +107,9 @@ kotlin {
 
             // Paging 3
             implementation(libs.androidx.paging.common)
-            implementation(libs.androidx.paging.compose)
+            // Causes IR Lowering Failure in iOS build, check back in future versions
+//            implementation(libs.androidx.paging.compose)
+//            implementation(libs.cashapp.paging.compose)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)

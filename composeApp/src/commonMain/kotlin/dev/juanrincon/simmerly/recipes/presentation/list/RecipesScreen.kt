@@ -7,7 +7,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.paging.compose.collectAsLazyPagingItems
 import dev.juanrincon.simmerly.recipes.presentation.list.mvikotlin.RecipesStore
 
 @Composable
@@ -16,7 +15,7 @@ fun RecipesScreen(
     onEvent: (RecipesStore.Intent) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val lazyPagingItems = state.recipes.collectAsLazyPagingItems()
+//    val lazyPagingItems = state.recipes.collectAsLazyPagingItems()
     Column(
         modifier = Modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally,
