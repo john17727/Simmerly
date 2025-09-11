@@ -101,7 +101,8 @@ fun RecipeCard(recipe: RecipeSummary, onClick: () -> Unit, modifier: Modifier = 
     ) {
         Row(
             horizontalArrangement = Arrangement.spacedBy(16.dp),
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.padding(8.dp)
         ) {
             AsyncImage(
                 recipe.image,
