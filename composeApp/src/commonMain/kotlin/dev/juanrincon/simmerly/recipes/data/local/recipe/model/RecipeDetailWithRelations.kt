@@ -60,10 +60,11 @@ data class RecipeDetailWithRelations(
     val ingredients: List<IngredientWithRelations>,
 
     @Relation(
+        entity = InstructionEntity::class,
         parentColumn = "id",
         entityColumn = "recipe_id",
     )
-    val instructions: List<InstructionEntity>,
+    val instructions: List<InstructionWithRelations>,
 
     @Relation(
         parentColumn = "id",
