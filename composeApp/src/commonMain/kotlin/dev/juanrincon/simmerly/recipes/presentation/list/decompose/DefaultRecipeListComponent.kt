@@ -6,8 +6,8 @@ import com.arkivanov.mvikotlin.core.store.StoreFactory
 import com.arkivanov.mvikotlin.extensions.coroutines.labels
 import com.arkivanov.mvikotlin.extensions.coroutines.stateFlow
 import dev.juanrincon.simmerly.recipes.domain.RecipeRepository
-import dev.juanrincon.simmerly.recipes.presentation.list.mvikotlin.RecipesStore
-import dev.juanrincon.simmerly.recipes.presentation.list.mvikotlin.RecipesStoreFactory
+import dev.juanrincon.simmerly.recipes.presentation.list.mvikotlin.RecipeListStore
+import dev.juanrincon.simmerly.recipes.presentation.list.mvikotlin.RecipeListStoreFactory
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
@@ -20,11 +20,11 @@ class DefaultRecipeListComponent(
     ComponentContext by componentContext {
 
     private val store =
-        instanceKeeper.getStore { RecipesStoreFactory(storeFactory, repository).create() }
+        instanceKeeper.getStore { RecipeListStoreFactory(storeFactory, repository).create() }
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    override val state: StateFlow<RecipesStore.State> = store.stateFlow
-    override val labels: Flow<RecipesStore.Label> = store.labels
+    override val state: StateFlow<RecipeListStore.State> = store.stateFlow
+    override val labels: Flow<RecipeListStore.Label> = store.labels
 
-    override fun onEvent(event: RecipesStore.Intent) = store.accept(event)
+    override fun onEvent(event: RecipeListStore.Intent) = store.accept(event)
 }
