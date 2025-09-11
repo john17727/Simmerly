@@ -20,11 +20,9 @@ suspend inline fun <reified S, reified E> networkHandler(
         return Result.Error(DataError.NetworkError.Serialization)
     } catch (e: SocketTimeoutException) {
         return Result.Error(DataError.NetworkError.UnresolvedAddress)
-    }
-    catch (e: HttpRequestTimeoutException) {
+    } catch (e: HttpRequestTimeoutException) {
        return Result.Error(DataError.NetworkError.RequestTimeout)
-    }
-    catch (e: Exception) {
+    } catch (e: Exception) {
         // Check for the Java-specific exception by its fully qualified name
         // This relies on the class being available at runtime on the platform
         return Result.Error(mapPlatformException(e))

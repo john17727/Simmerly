@@ -5,13 +5,15 @@ import com.arkivanov.mvikotlin.core.store.Store
 import com.arkivanov.mvikotlin.core.store.StoreFactory
 import com.arkivanov.mvikotlin.extensions.coroutines.CoroutineBootstrapper
 import com.arkivanov.mvikotlin.extensions.coroutines.CoroutineExecutor
+import dev.juanrincon.simmerly.recipes.domain.RecipeRepository
 import dev.juanrincon.simmerly.recipes.presentation.details.mvikotlin.RecipeDetailsStore.Intent
 import dev.juanrincon.simmerly.recipes.presentation.details.mvikotlin.RecipeDetailsStore.Label
 import dev.juanrincon.simmerly.recipes.presentation.details.mvikotlin.RecipeDetailsStore.State
 
 internal class RecipeDetailsStoreFactory(
     private val recipeId: String,
-    private val storeFactory: StoreFactory
+    private val storeFactory: StoreFactory,
+    private val repository: RecipeRepository
 ) {
 
     fun create(): RecipeDetailsStore =
@@ -19,7 +21,7 @@ internal class RecipeDetailsStoreFactory(
             name = "RecipeDetailsStore",
             initialState = State(),
             bootstrapper = BootstrapperImpl(),
-            executorFactory = ::ExecutorImpl,
+            executorFactory = { ExecutorImpl(recipeId, repository) },
             reducer = ReducerImpl
         ) {}
 
@@ -35,13 +37,21 @@ internal class RecipeDetailsStoreFactory(
         }
     }
 
-    private class ExecutorImpl : CoroutineExecutor<Intent, Action, State, Msg, Label>() {
+    private class ExecutorImpl(
+        private val recipeId: String,
+        private val repository: RecipeRepository
+    ) : CoroutineExecutor<Intent, Action, State, Msg, Label>() {
         override fun executeIntent(intent: Intent) {
             TODO()
         }
 
         override fun executeAction(action: Action) {
-           TODO()
+            when (action) {
+                Action.LoadRecipe -> {
+//                    val recipe = repository.getRecipe(recipeId)
+//                    dispatch(Msg.RecipeLoaded(recipe))
+                }
+            }
         }
     }
 

@@ -22,6 +22,7 @@ room = "2.7.2"
 sqlite = "2.5.2"
 androidx-paging = "3.4.0-alpha03"
 adaptive = "1.2.0-alpha06"
+store = "5.1.0-alpha06"
 
 [libraries]
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
@@ -62,6 +63,7 @@ androidx-room-paging = { module = "androidx.room:room-paging", version.ref = "ro
 androidx-paging-common = { module = "androidx.paging:paging-common", version.ref = "androidx-paging" }
 androidx-paging-compose = { module = "androidx.paging:paging-compose", version.ref = "androidx-paging" }
 adaptive = { module = "org.jetbrains.compose.material3.adaptive:adaptive", version.ref = "adaptive" }
+store = { module = "org.mobilenativefoundation.store:store5", version.ref = "store" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }

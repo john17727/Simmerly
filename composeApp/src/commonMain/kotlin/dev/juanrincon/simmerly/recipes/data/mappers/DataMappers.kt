@@ -71,9 +71,9 @@ fun ItemListDto<*>.toPaginationData() = PaginationData(
     previous = previous
 )
 
-fun RecipeDetailDto.toEntityWithRelations() {
+fun RecipeDetailDto.toEntityWithRelations(): RecipeDetailWithRelations {
     val ingredients = recipeIngredient.map { it.toEntityWithRelations(this.id) }
-    RecipeDetailWithRelations(
+    return RecipeDetailWithRelations(
         recipe = this.toEntity(),
         categories = recipeCategory.map { it.toEntity() },
         tags = tags.map { it.toEntity() },
