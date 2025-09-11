@@ -11,5 +11,4 @@ data class InstructionEntity(
     val title: String,
     val summary: String,
     val text: String,
-    val ingredients: List<String>
 )

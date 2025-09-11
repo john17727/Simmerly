@@ -10,7 +10,7 @@ data class Food(
     val pluralName: String,
     val description: String,
     val labelId: String,
-    val label: Label,
+//    val label: Label, // TODO: Maybe add label, might not need it
     val createdAt: Instant,
     val updatedAt: Instant
 )

@@ -19,7 +19,7 @@ interface RecipeDao {
      * The list is ordered by creation date to ensure a consistent UI.
      */
     @Query("SELECT * FROM recipes ORDER BY created_at DESC")
-    fun getRecipes(): Flow<List<RecipeEntity>>
+    fun observeRecipeList(): Flow<List<RecipeEntity>>
 
     /**
      * Observes a single recipe with all its relations (tags, ingredients, etc.).
@@ -29,6 +29,9 @@ interface RecipeDao {
     @Transaction
     @Query("SELECT * FROM recipes WHERE id = :id")
     fun observeRecipeDetail(id: String): Flow<RecipeDetailWithRelations>
+
+    @Upsert
+    suspend fun upsert(recipe: RecipeEntity)
 
     /**
      * Inserts or updates a list of recipes.

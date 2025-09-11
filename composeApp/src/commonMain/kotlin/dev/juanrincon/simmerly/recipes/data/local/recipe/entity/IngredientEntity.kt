@@ -40,5 +40,4 @@ data class IngredientEntity(
     val display: String,
     val title: String?,
     @ColumnInfo(name = "original_text") val originalText: String?,
-    @ColumnInfo(name = "reference_id") val referenceId: String
 )

@@ -23,7 +23,7 @@ class SimmerlyRecipeRepository(
 ) : RecipeRepository {
 
     override fun recipes(): Flow<List<RecipeSummary>> = sessionDataStore.observeServerAddress()
-        .combine(recipeDao.getRecipes()) { address, recipes ->
+        .combine(recipeDao.observeRecipeList()) { address, recipes ->
             recipes.map { it.toDomain(address) }
         }
 

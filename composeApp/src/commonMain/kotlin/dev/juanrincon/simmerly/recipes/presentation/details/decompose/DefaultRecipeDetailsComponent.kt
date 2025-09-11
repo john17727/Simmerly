@@ -21,7 +21,7 @@ class DefaultRecipeDetailsComponent(
     private val repository: RecipeRepository
 ) : RecipeDetailsComponent,
     ComponentContext by componentContext {
-    private val store = instanceKeeper.getStore { RecipeDetailsStoreFactory(recipeId, storeFactory).create() }
+    private val store = instanceKeeper.getStore { RecipeDetailsStoreFactory(recipeId, storeFactory, repository).create() }
 
     @OptIn(ExperimentalCoroutinesApi::class)
     override val state: StateFlow<State> = store.stateFlow
