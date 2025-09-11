@@ -12,6 +12,7 @@ data class InstructionWithRelations(
     val instruction: InstructionEntity,
 
     @Relation(
+        entity = IngredientEntity::class,
         parentColumn = "id",
         entityColumn = "id",
         associateBy = Junction(
@@ -20,5 +21,5 @@ data class InstructionWithRelations(
             entityColumn = "ingredient_id"
         )
     )
-    val ingredients: List<IngredientEntity>
+    val ingredients: List<IngredientWithRelations>
 )
