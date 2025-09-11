@@ -1,7 +1,6 @@
 package dev.juanrincon.simmerly.recipes.presentation.list
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -11,11 +10,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material.icons.filled.Star
-import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material.icons.rounded.Star
 import androidx.compose.material.icons.rounded.Timer
 import androidx.compose.material3.Card
@@ -27,7 +23,6 @@ import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
@@ -36,19 +31,18 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import dev.juanrincon.simmerly.recipes.domain.model.RecipeSummary
-import dev.juanrincon.simmerly.recipes.presentation.list.mvikotlin.RecipesStore
+import dev.juanrincon.simmerly.recipes.presentation.list.mvikotlin.RecipeListStore
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun RecipesScreen(
-    state: RecipesStore.State,
-    onEvent: (RecipesStore.Intent) -> Unit,
+fun RecipeListScreen(
+    state: RecipeListStore.State,
+    onEvent: (RecipeListStore.Intent) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val lazyListState = rememberLazyListState()
@@ -60,7 +54,7 @@ fun RecipesScreen(
                 // Check if the last visible item is near the end of the list
                 // A buffer of 5 items is used to load data before the user reaches the absolute end
                 if (lastVisibleItemIndex != null && lastVisibleItemIndex >= state.recipes.size - 5 && !state.isLoading) {
-                    onEvent(RecipesStore.Intent.OnLoadMore)
+                    onEvent(RecipeListStore.Intent.OnLoadMore)
                 }
             }
     }
@@ -69,7 +63,7 @@ fun RecipesScreen(
             LargeTopAppBar(
                 title = { Text("Recipes") },
                 actions = {
-                    IconButton(onClick = { onEvent(RecipesStore.Intent.OnRefresh) }) {
+                    IconButton(onClick = { onEvent(RecipeListStore.Intent.OnRefresh) }) {
                         Icon(Icons.Default.Refresh, contentDescription = null)
                     }
                 },

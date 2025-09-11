@@ -8,24 +8,24 @@ import com.arkivanov.mvikotlin.extensions.coroutines.CoroutineBootstrapper
 import com.arkivanov.mvikotlin.extensions.coroutines.CoroutineExecutor
 import dev.juanrincon.simmerly.recipes.domain.RecipeRepository
 import dev.juanrincon.simmerly.recipes.domain.model.RecipeSummary
-import dev.juanrincon.simmerly.recipes.presentation.list.mvikotlin.RecipesStore.Intent
-import dev.juanrincon.simmerly.recipes.presentation.list.mvikotlin.RecipesStore.Label
-import dev.juanrincon.simmerly.recipes.presentation.list.mvikotlin.RecipesStore.Label.*
-import dev.juanrincon.simmerly.recipes.presentation.list.mvikotlin.RecipesStore.State
-import dev.juanrincon.simmerly.recipes.presentation.list.mvikotlin.RecipesStoreFactory.Msg.*
+import dev.juanrincon.simmerly.recipes.presentation.list.mvikotlin.RecipeListStore.Intent
+import dev.juanrincon.simmerly.recipes.presentation.list.mvikotlin.RecipeListStore.Label
+import dev.juanrincon.simmerly.recipes.presentation.list.mvikotlin.RecipeListStore.Label.*
+import dev.juanrincon.simmerly.recipes.presentation.list.mvikotlin.RecipeListStore.State
+import dev.juanrincon.simmerly.recipes.presentation.list.mvikotlin.RecipeListStoreFactory.Msg.*
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 
-internal class RecipesStoreFactory(
+internal class RecipeListStoreFactory(
     private val storeFactory: StoreFactory,
     private val repository: RecipeRepository
 ) {
 
-    fun create(): RecipesStore =
-        object : RecipesStore, Store<Intent, State, Label> by storeFactory.create(
-            name = "RecipesStore",
+    fun create(): RecipeListStore =
+        object : RecipeListStore, Store<Intent, State, Label> by storeFactory.create(
+            name = "RecipeListStore",
             initialState = State(),
             bootstrapper = BootstrapperImpl(),
             executorFactory = { ExecutorImpl(repository) },

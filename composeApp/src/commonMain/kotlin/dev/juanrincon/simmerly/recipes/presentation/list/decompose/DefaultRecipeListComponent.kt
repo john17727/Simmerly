@@ -12,11 +12,11 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 
-class DefaultRecipesComponent(
+class DefaultRecipeListComponent(
     componentContext: ComponentContext,
     storeFactory: StoreFactory,
     private val repository: RecipeRepository
-) : RecipesComponent,
+) : RecipeListComponent,
     ComponentContext by componentContext {
 
     private val store =

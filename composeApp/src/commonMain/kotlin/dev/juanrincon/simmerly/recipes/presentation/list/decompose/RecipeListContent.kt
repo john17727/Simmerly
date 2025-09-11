@@ -3,10 +3,10 @@ package dev.juanrincon.simmerly.recipes.presentation.list.decompose
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import dev.juanrincon.simmerly.recipes.presentation.list.RecipesScreen
+import dev.juanrincon.simmerly.recipes.presentation.list.RecipeListScreen
 
 @Composable
-fun RecipesContent(component: RecipesComponent) {
+fun RecipesListContent(component: RecipeListComponent) {
     val state by component.state.collectAsState()
-    RecipesScreen(state = state, onEvent = component::onEvent)
+    RecipeListScreen(state = state, onEvent = component::onEvent)
 }

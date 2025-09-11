@@ -8,7 +8,7 @@ import com.arkivanov.decompose.router.stack.popTo
 import com.arkivanov.decompose.value.Value
 import com.arkivanov.mvikotlin.core.store.StoreFactory
 import dev.juanrincon.simmerly.recipes.domain.RecipeRepository
-import dev.juanrincon.simmerly.recipes.presentation.list.decompose.DefaultRecipesComponent
+import dev.juanrincon.simmerly.recipes.presentation.list.decompose.DefaultRecipeListComponent
 import kotlinx.serialization.Serializable
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.get
@@ -34,7 +34,7 @@ class DefaultAppComponent(
         componentContext: ComponentContext
     ): AppComponent.Child = when (config) {
         AppConfiguration.Recipes -> AppComponent.Child.RecipesChild(
-            DefaultRecipesComponent(
+            DefaultRecipeListComponent(
                 componentContext,
                 storeFactory,
                 get<RecipeRepository>()

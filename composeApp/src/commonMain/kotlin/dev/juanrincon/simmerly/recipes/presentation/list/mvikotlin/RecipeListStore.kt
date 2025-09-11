@@ -2,11 +2,8 @@ package dev.juanrincon.simmerly.recipes.presentation.list.mvikotlin
 
 import com.arkivanov.mvikotlin.core.store.Store
 import dev.juanrincon.simmerly.recipes.domain.model.RecipeSummary
-import dev.juanrincon.simmerly.recipes.presentation.list.mvikotlin.RecipesStore.Intent
-import dev.juanrincon.simmerly.recipes.presentation.list.mvikotlin.RecipesStore.Label
-import dev.juanrincon.simmerly.recipes.presentation.list.mvikotlin.RecipesStore.State
 
-interface RecipesStore : Store<Intent, State, Label> {
+interface RecipeListStore : Store<RecipeListStore.Intent, RecipeListStore.State, RecipeListStore.Label> {
 
     sealed interface Intent {
         data object OnRefresh : Intent
