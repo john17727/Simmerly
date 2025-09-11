@@ -15,7 +15,8 @@ import kotlinx.coroutines.flow.StateFlow
 class DefaultRecipeListComponent(
     componentContext: ComponentContext,
     storeFactory: StoreFactory,
-    private val repository: RecipeRepository
+    private val repository: RecipeRepository,
+    val onRecipeSelected: (String) -> Unit
 ) : RecipeListComponent,
     ComponentContext by componentContext {
 
@@ -27,4 +28,8 @@ class DefaultRecipeListComponent(
     override val labels: Flow<RecipeListStore.Label> = store.labels
 
     override fun onEvent(event: RecipeListStore.Intent) = store.accept(event)
+
+    override fun onOutput(output: RecipeListStore.Output) = when (output) {
+        is RecipeListStore.Output.SelectedRecipe -> onRecipeSelected(output.recipeId)
+    }
 }

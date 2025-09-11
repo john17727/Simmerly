@@ -5,7 +5,7 @@ import androidx.compose.ui.Modifier
 import com.arkivanov.decompose.extensions.compose.stack.Children
 import com.arkivanov.decompose.extensions.compose.stack.animation.fade
 import com.arkivanov.decompose.extensions.compose.stack.animation.stackAnimation
-import dev.juanrincon.simmerly.recipes.presentation.list.decompose.RecipesListContent
+import dev.juanrincon.simmerly.recipes.presentation.decompose.RecipesContent
 
 @Composable
 fun AppContent(component: AppComponent, modifier: Modifier = Modifier) {
@@ -15,7 +15,7 @@ fun AppContent(component: AppComponent, modifier: Modifier = Modifier) {
         animation = stackAnimation(fade()),
     ) {
         when(val child = it.instance) {
-            is AppComponent.Child.RecipesChild -> RecipesListContent(child.component)
+            is AppComponent.Child.RecipesChild -> RecipesContent(child.component)
         }
     }
 }

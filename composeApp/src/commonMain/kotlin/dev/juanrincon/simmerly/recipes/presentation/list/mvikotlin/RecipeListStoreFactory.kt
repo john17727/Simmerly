@@ -53,7 +53,6 @@ internal class RecipeListStoreFactory(
         CoroutineExecutor<Intent, Action, State, Msg, Label>() {
         override fun executeIntent(intent: Intent) {
             when (intent) {
-                is Intent.OnRecipeClicked -> publish(RecipeClicked(intent.recipeId))
                 Intent.OnRefresh -> loadRecipes(1, refresh = true)
                 is Intent.OnSearchQueryChanged -> dispatch(SearchQueryChanged(intent.query))
                 Intent.OnLoadMore -> {

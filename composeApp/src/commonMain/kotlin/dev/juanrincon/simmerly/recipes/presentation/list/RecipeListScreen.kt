@@ -43,6 +43,7 @@ import dev.juanrincon.simmerly.recipes.presentation.list.mvikotlin.RecipeListSto
 fun RecipeListScreen(
     state: RecipeListStore.State,
     onEvent: (RecipeListStore.Intent) -> Unit,
+    onOutput: (RecipeListStore.Output) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val lazyListState = rememberLazyListState()
@@ -81,16 +82,21 @@ fun RecipeListScreen(
             modifier = Modifier.padding(paddingValues)
         ) {
             items(state.recipes) { item ->
-                RecipeCard(item, modifier = Modifier.fillMaxWidth())
+                RecipeCard(
+                    item,
+                    onClick = { onOutput(RecipeListStore.Output.SelectedRecipe(item.id)) },
+                    modifier = Modifier.fillMaxWidth()
+                )
             }
         }
     }
 }
 
 @Composable
-fun RecipeCard(recipe: RecipeSummary, modifier: Modifier = Modifier) {
+fun RecipeCard(recipe: RecipeSummary, onClick: () -> Unit, modifier: Modifier = Modifier) {
     Card(
         modifier = modifier,
+        onClick = onClick,
         colors = CardDefaults.cardColors().copy(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Row(

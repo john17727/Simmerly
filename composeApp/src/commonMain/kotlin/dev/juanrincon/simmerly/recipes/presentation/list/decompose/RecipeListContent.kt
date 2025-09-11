@@ -6,7 +6,7 @@ import androidx.compose.runtime.getValue
 import dev.juanrincon.simmerly.recipes.presentation.list.RecipeListScreen
 
 @Composable
-fun RecipesListContent(component: RecipeListComponent) {
+fun RecipeListContent(component: RecipeListComponent) {
     val state by component.state.collectAsState()
-    RecipeListScreen(state = state, onEvent = component::onEvent)
+    RecipeListScreen(state = state, onEvent = component::onEvent, onOutput = component::onOutput)
 }

@@ -8,7 +8,6 @@ interface RecipeListStore : Store<RecipeListStore.Intent, RecipeListStore.State,
     sealed interface Intent {
         data object OnRefresh : Intent
         data object OnLoadMore : Intent
-        data class OnRecipeClicked(val recipeId: String) : Intent
         data class OnSearchQueryChanged(val query: String) : Intent
     }
 
@@ -20,6 +19,9 @@ interface RecipeListStore : Store<RecipeListStore.Intent, RecipeListStore.State,
     )
 
     sealed interface Label {
-        data class RecipeClicked(val recipeId: String) : Label
+    }
+
+    sealed interface Output {
+        data class SelectedRecipe(val recipeId: String) : Output
     }
 }

@@ -10,4 +10,6 @@ interface RecipeListComponent {
     val labels: Flow<RecipeListStore.Label>
 
     fun onEvent(event: RecipeListStore.Intent)
+
+    fun onOutput(output: RecipeListStore.Output)
 }

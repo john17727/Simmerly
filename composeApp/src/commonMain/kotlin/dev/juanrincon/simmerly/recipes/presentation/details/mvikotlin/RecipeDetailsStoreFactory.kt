@@ -10,6 +10,7 @@ import dev.juanrincon.simmerly.recipes.presentation.details.mvikotlin.RecipeDeta
 import dev.juanrincon.simmerly.recipes.presentation.details.mvikotlin.RecipeDetailsStore.State
 
 internal class RecipeDetailsStoreFactory(
+    private val recipeId: String,
     private val storeFactory: StoreFactory
 ) {
 
@@ -23,6 +24,7 @@ internal class RecipeDetailsStoreFactory(
         ) {}
 
     private sealed interface Action {
+        data object LoadRecipe : Action
     }
 
     private sealed interface Msg {
@@ -34,16 +36,19 @@ internal class RecipeDetailsStoreFactory(
     }
 
     private class ExecutorImpl : CoroutineExecutor<Intent, Action, State, Msg, Label>() {
-        override fun executeIntent(intent: Intent, getState: () -> State) {
+        override fun executeIntent(intent: Intent) {
+            TODO()
         }
 
-        override fun executeAction(action: Action, getState: () -> State) {
+        override fun executeAction(action: Action) {
+           TODO()
         }
     }
 
     private object ReducerImpl : Reducer<State, Msg> {
-        override fun State.reduce(message: Msg): State =
-            when (message) {
+        override fun State.reduce(msg: Msg): State =
+            when (msg) {
+                else -> copy()
             }
     }
 }

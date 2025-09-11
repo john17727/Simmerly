@@ -5,6 +5,7 @@ import com.arkivanov.mvikotlin.core.instancekeeper.getStore
 import com.arkivanov.mvikotlin.core.store.StoreFactory
 import com.arkivanov.mvikotlin.extensions.coroutines.labels
 import com.arkivanov.mvikotlin.extensions.coroutines.stateFlow
+import dev.juanrincon.simmerly.recipes.domain.RecipeRepository
 import dev.juanrincon.simmerly.recipes.presentation.details.mvikotlin.RecipeDetailsStore.Intent
 import dev.juanrincon.simmerly.recipes.presentation.details.mvikotlin.RecipeDetailsStore.Label
 import dev.juanrincon.simmerly.recipes.presentation.details.mvikotlin.RecipeDetailsStore.State
@@ -14,11 +15,13 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 
 class DefaultRecipeDetailsComponent(
+    private val recipeId: String,
     componentContext: ComponentContext,
-    storeFactory: StoreFactory
+    storeFactory: StoreFactory,
+    private val repository: RecipeRepository
 ) : RecipeDetailsComponent,
     ComponentContext by componentContext {
-    private val store = instanceKeeper.getStore { RecipeDetailsStoreFactory(storeFactory).create() }
+    private val store = instanceKeeper.getStore { RecipeDetailsStoreFactory(recipeId, storeFactory).create() }
 
     @OptIn(ExperimentalCoroutinesApi::class)
     override val state: StateFlow<State> = store.stateFlow
