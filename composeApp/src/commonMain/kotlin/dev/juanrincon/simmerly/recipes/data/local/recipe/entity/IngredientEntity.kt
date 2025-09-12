@@ -34,7 +34,7 @@ data class IngredientEntity(
     val quantity: Double,
     @ColumnInfo(name = "unit_id", index = true) val unitId: String?,
     @ColumnInfo(name = "food_id", index = true) val foodId: String?,
-    val note: String,
+    val note: String?,
     @ColumnInfo(name = "is_food") val isFood: Boolean,
     @ColumnInfo(name = "disable_amount") val disableAmount: Boolean,
     val display: String,

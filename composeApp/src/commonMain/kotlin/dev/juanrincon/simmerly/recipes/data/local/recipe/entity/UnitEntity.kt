@@ -11,7 +11,7 @@ import kotlin.time.Instant
 data class UnitEntity(
     @PrimaryKey val id: String,
     val name: String,
-    @ColumnInfo(name = "plural_name") val pluralName: String,
+    @ColumnInfo(name = "plural_name") val pluralName: String?,
     val description: String,
     val fraction: Boolean,
     val abbreviation: String,

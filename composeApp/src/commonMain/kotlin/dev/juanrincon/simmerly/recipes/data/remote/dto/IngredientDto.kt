@@ -7,7 +7,7 @@ data class IngredientDto(
     val quantity: Double,
     val unit: UnitDto?,
     val food: FoodDto?,
-    val note: String,
+    val note: String?,
     val isFood: Boolean,
     val disableAmount: Boolean,
     val display: String,

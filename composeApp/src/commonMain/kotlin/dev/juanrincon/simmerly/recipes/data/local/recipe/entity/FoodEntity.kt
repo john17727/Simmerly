@@ -11,9 +11,9 @@ import kotlin.time.Instant
 data class FoodEntity(
     @PrimaryKey val id: String,
     val name: String,
-    @ColumnInfo(name = "plural_name") val pluralName: String,
+    @ColumnInfo(name = "plural_name") val pluralName: String?,
     val description: String,
-    @ColumnInfo(name = "label_id") val labelId: String,
+    @ColumnInfo(name = "label_id") val labelId: String?,
     @ColumnInfo(name = "created_at") val createdAt: Instant,
     @ColumnInfo(name = "updated_at") val updatedAt: Instant
 )

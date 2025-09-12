@@ -12,6 +12,7 @@ import dev.juanrincon.simmerly.recipes.data.mappers.toPaginationData
 import dev.juanrincon.simmerly.recipes.data.remote.RecipeNetworkClient
 import dev.juanrincon.simmerly.recipes.data.store.RecipeStore
 import dev.juanrincon.simmerly.recipes.data.store.RecipeStoreFactory
+import dev.juanrincon.simmerly.recipes.domain.LoadingResult
 import dev.juanrincon.simmerly.recipes.domain.RecipeRepository
 import dev.juanrincon.simmerly.recipes.domain.RecipesError
 import dev.juanrincon.simmerly.recipes.domain.model.PaginationData
@@ -64,12 +65,13 @@ class SimmerlyRecipeRepository(
         TODO("Not yet implemented")
     }
 
-    override fun recipeDetails(id: String): Flow<Result<RecipeDetail, RecipesError>> = store.stream(StoreReadRequest.fresh(id)).map { response ->
+    override fun recipeDetails(id: String): Flow<Result<LoadingResult<RecipeDetail>, RecipesError>> = store.stream(StoreReadRequest.fresh(id)).map { response ->
         when (response) {
-            is StoreReadResponse.Data<*> -> Result.Success(response.value as RecipeDetail)
+            is StoreReadResponse.Data<*> -> Result.Success(LoadingResult.Loaded(response.value as RecipeDetail))
             is StoreReadResponse.Error.Custom<*> -> Result.Error(RecipesError.FetchError)
             is StoreReadResponse.Error.Exception,
             is StoreReadResponse.Error.Message -> Result.Error(RecipesError.UnknownError)
+            is StoreReadResponse.Loading -> Result.Success(LoadingResult.Loading)
             else -> throw IllegalStateException()
         }
     }

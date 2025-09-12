@@ -78,7 +78,7 @@ fun RecipeListScreen(
         LazyColumn(
             state = lazyListState,
             contentPadding = PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
             modifier = Modifier.padding(paddingValues)
         ) {
             items(state.recipes) { item ->

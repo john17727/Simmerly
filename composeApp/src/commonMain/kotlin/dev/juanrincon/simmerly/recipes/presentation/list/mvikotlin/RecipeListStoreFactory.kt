@@ -72,7 +72,7 @@ internal class RecipeListStoreFactory(
                 .distinctUntilChanged()
                 .onEach { list ->
                     if (list.isEmpty()) {
-                       loadRecipes(1)
+                        loadRecipes(1)
                     } else {
                         dispatch(RecipesUpdated(list))
                     }
@@ -80,17 +80,16 @@ internal class RecipeListStoreFactory(
         }
 
         private fun loadRecipes(page: Int, refresh: Boolean = false) {
-           scope.launch {
-               repository.loadRecipes(page, refresh = refresh).fold(
-                   onSuccess = {
-                       dispatch(PageData(nextPage = it.next))
-                       dispatch(Loading(false))
-                   },
-                   onFailure = {
-                       dispatch(Loading(false))
-                   }
-               )
-           }
+            scope.launch {
+                repository.loadRecipes(page, refresh = refresh).fold(
+                    onSuccess = {
+                        dispatch(PageData(nextPage = it.next))
+                    },
+                    onFailure = {
+                        dispatch(Loading(false))
+                    }
+                )
+            }
         }
     }
 
@@ -98,9 +97,9 @@ internal class RecipeListStoreFactory(
         override fun State.reduce(msg: Msg): State =
             when (msg) {
                 is SearchQueryChanged -> copy(searchQuery = msg.query)
-                is RecipesUpdated -> copy(recipes = msg.recipes)
+                is RecipesUpdated -> copy(recipes = msg.recipes, isLoading = false)
                 is Loading -> copy(isLoading = msg.isLoading)
-                is PageData -> copy(nextPage = msg.nextPage)
+                is PageData -> copy(nextPage = msg.nextPage, isLoading = false)
             }
     }
 }

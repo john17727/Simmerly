@@ -6,7 +6,7 @@ import kotlinx.serialization.Serializable
 data class UnitDto(
     val id: String,
     val name: String,
-    val pluralName: String,
+    val pluralName: String?,
     val description: String,
     val fraction: Boolean,
     val abbreviation: String,

@@ -15,5 +15,5 @@ interface RecipeRepository {
 
     suspend fun getRecipe(id: String): Result<RecipeDetail, RecipesError>
 
-    fun recipeDetails(id: String): Flow<Result<RecipeDetail, RecipesError>>
+    fun recipeDetails(id: String): Flow<Result<LoadingResult<RecipeDetail>, RecipesError>>
 }
