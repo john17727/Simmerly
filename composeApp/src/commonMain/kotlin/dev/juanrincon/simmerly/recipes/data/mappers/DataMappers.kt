@@ -14,6 +14,8 @@ import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.SettingsEntity
 import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.TagEntity
 import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.ToolEntity
 import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.UnitEntity
+import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.UserEntity
+import dev.juanrincon.simmerly.recipes.data.local.recipe.model.CommentWithRelations
 import dev.juanrincon.simmerly.recipes.data.local.recipe.model.IngredientWithRelations
 import dev.juanrincon.simmerly.recipes.data.local.recipe.model.InstructionWithRelations
 import dev.juanrincon.simmerly.recipes.data.local.recipe.model.RecipeDetailWithRelations
@@ -30,6 +32,7 @@ import dev.juanrincon.simmerly.recipes.data.remote.dto.SettingsDto
 import dev.juanrincon.simmerly.recipes.data.remote.dto.TagDto
 import dev.juanrincon.simmerly.recipes.data.remote.dto.ToolDto
 import dev.juanrincon.simmerly.recipes.data.remote.dto.UnitDto
+import dev.juanrincon.simmerly.recipes.data.remote.dto.UserDto
 import dev.juanrincon.simmerly.recipes.domain.model.PaginationData
 import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
@@ -81,7 +84,7 @@ fun RecipeDetailDto.toEntityWithRelations(): RecipeDetailWithRelations {
         ingredients = ingredients,
         instructions = recipeInstructions.map { it.toEntityWithRelations(this.id, ingredients) },
         notes = notes.map { it.toEntity(this.id) },
-        comments = comments.map { it.toEntity() }
+        comments = comments.map { it.toEntityWithRelations() }
     )
 }
 
@@ -218,12 +221,16 @@ fun InstructionDto.toEntity(recipeId: String) = InstructionEntity(
 )
 
 fun NoteDto.toEntity(recipeId: String) = NoteEntity(
-    id = null,
+    id = 0,
     title = title,
     text = text,
     recipeId = recipeId
 )
 
+fun CommentDto.toEntityWithRelations() = CommentWithRelations(
+    comment = this.toEntity(),
+    user = user.toEntity()
+)
 
 fun CommentDto.toEntity() = CommentEntity(
     id = id,
@@ -233,4 +240,10 @@ fun CommentDto.toEntity() = CommentEntity(
     updatedAt = Instant.parse(updatedAt),
     userId = userId
 )
-    
+
+fun UserDto.toEntity() = UserEntity(
+    id = id,
+    username = username,
+    admin = admin,
+    fullName = fullName
+)

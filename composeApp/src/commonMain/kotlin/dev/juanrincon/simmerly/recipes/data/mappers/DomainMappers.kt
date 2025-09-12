@@ -3,6 +3,8 @@ package dev.juanrincon.simmerly.recipes.data.mappers
 import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.CategoryEntity
 import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.CommentEntity
 import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.FoodEntity
+import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.IngredientEntity
+import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.InstructionEntity
 import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.NoteEntity
 import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.NutritionEntity
 import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.RecipeEntity
@@ -10,6 +12,8 @@ import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.SettingsEntity
 import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.TagEntity
 import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.ToolEntity
 import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.UnitEntity
+import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.UserEntity
+import dev.juanrincon.simmerly.recipes.data.local.recipe.model.CommentWithRelations
 import dev.juanrincon.simmerly.recipes.data.local.recipe.model.IngredientWithRelations
 import dev.juanrincon.simmerly.recipes.data.local.recipe.model.InstructionWithRelations
 import dev.juanrincon.simmerly.recipes.data.local.recipe.model.RecipeDetailWithRelations
@@ -26,6 +30,7 @@ import dev.juanrincon.simmerly.recipes.domain.model.Settings
 import dev.juanrincon.simmerly.recipes.domain.model.Tag
 import dev.juanrincon.simmerly.recipes.domain.model.Tool
 import dev.juanrincon.simmerly.recipes.domain.model.Unit
+import dev.juanrincon.simmerly.recipes.domain.model.User
 
 fun RecipeEntity.toDomain(host: String?): RecipeSummary = RecipeSummary(
     id = id,
@@ -129,7 +134,7 @@ fun InstructionWithRelations.toDomain(): Instruction = Instruction(
     title = instruction.title,
     summary = instruction.summary,
     text = instruction.text,
-    associatedIngredients = ingredients.map { it.toDomain().food?.name ?: "" }
+    associatedIngredients = ingredients.map { it.toDomain() }
 )
 
 fun NutritionEntity.toDomain(): Nutrition = Nutrition(
@@ -157,15 +162,192 @@ fun SettingsEntity.toDomain(): Settings = Settings(
 )
 
 fun NoteEntity.toDomain(): Note = Note(
+    id = id,
     title = title,
     text = text
 )
 
-fun CommentEntity.toDomain(): Comment = Comment(
-    text = text,
+fun CommentWithRelations.toDomain(): Comment = Comment(
+    text = comment.text,
+    id = comment.id,
+    createdAt = comment.createdAt,
+    updatedAt = comment.updatedAt,
+    user = user.toDomain()
+)
+
+fun UserEntity.toDomain(): User = User(
     id = id,
+    username = username,
+    admin = admin,
+    fullName = fullName
+)
+
+fun RecipeDetail.toEntityWithRelations(): RecipeDetailWithRelations = RecipeDetailWithRelations(
+    recipe = this.toEntity(),
+    categories = categories.map { it.toEntity() },
+    tags = tags.map { it.toEntity() },
+    tools = tools.map { it.toEntity() },
+    ingredients = ingredients.map { it.toEntityWithRelations(id) },
+    instructions = instructions.map { it.toEntityWithRelations(this.id) },
+    notes = notes.map { it.toEntity(this.id) },
+    comments = comments.map { it.toEntityWithRelations(this.id) }
+)
+
+fun RecipeDetail.toEntity(): RecipeEntity = RecipeEntity(
+    id = id,
+    userId = userId,
+    householdId = householdId,
+    groupId = groupId,
+    name = name,
+    slug = "",
+    image = image,
+    servings = servings,
+    yieldQuantity = recipeYieldQuantity,
+    yield = recipeYield,
+    totalTime = totalTime,
+    prepTime = prepTime,
+    cookTime = cookTime,
+    performTime = performTime,
+    description = description,
+    rating = rating,
+    originalUrl = originalUrl,
+    dateAdded = dateAdded,
+    dateUpdated = dateUpdated,
     createdAt = createdAt,
     updatedAt = updatedAt,
+    lastMade = lastMade,
+    nutrition = nutrition.toEntity(),
+    settings = settings.toEntity()
+)
+
+fun Nutrition.toEntity(): NutritionEntity = NutritionEntity(
+    calories = calories,
+    carbohydrates = carbohydrateContent,
+    cholesterol = cholesterolContent,
+    fat = fatContent,
+    fiber = fiberContent,
+    protein = proteinContent,
+    saturatedFat = saturatedFatContent,
+    sodium = sodiumContent,
+    sugar = sugarContent,
+    transFat = transFatContent,
+    unsaturatedFat = unsaturatedFatContent
+)
+
+fun Settings.toEntity(): SettingsEntity = SettingsEntity(
+    public = public,
+    showNutrition = showNutrition,
+    showAssets = showAssets,
+    landscapeView = landscapeView,
+    disableComments = disableComments,
+    disableAmount = disableAmount,
+    locked = locked
+)
+
+fun Category.toEntity(): CategoryEntity = CategoryEntity(
+    id = id,
+    groupId = groupId,
+    name = name,
+    slug = ""
+)
+
+fun Tag.toEntity(): TagEntity = TagEntity(
+    id = id,
+    groupId = groupId,
+    name = name,
+    slug = ""
+)
+
+fun Tool.toEntity(): ToolEntity = ToolEntity(
+    id = id,
+    groupId = groupId,
+    name = name,
+    slug = ""
+)
+
+fun Ingredient.toEntityWithRelations(recipeId: String): IngredientWithRelations =
+    IngredientWithRelations(
+        ingredient = this.toEntity(recipeId),
+        unit = unit?.toEntity(),
+        food = food?.toEntity()
+    )
+
+fun Ingredient.toEntity(recipeId: String): IngredientEntity = IngredientEntity(
+    id = referenceId,
+    recipeId = recipeId,
+    quantity = quantity,
+    unitId = unit?.id,
+    foodId = food?.id,
+    note = note,
+    isFood = isFood,
+    disableAmount = disableAmount,
+    display = display,
+    title = title,
+    originalText = originalText
+)
+
+fun Unit.toEntity(): UnitEntity = UnitEntity(
+    id = id,
+    name = name,
+    pluralName = pluralName,
+    description = description,
+    fraction = fraction,
+    abbreviation = abbreviation,
+    pluralAbbreviation = pluralAbbreviation,
+    useAbbreviation = useAbbreviation,
+    createdAt = createdAt,
+    updatedAt = updatedAt
+)
+
+fun Food.toEntity(): FoodEntity = FoodEntity(
+    id = id,
+    name = name,
+    pluralName = pluralName,
+    description = description,
+    labelId = labelId,
+    createdAt = createdAt,
+    updatedAt = updatedAt
+)
+
+fun Instruction.toEntityWithRelations(recipeId: String): InstructionWithRelations = InstructionWithRelations(
+    instruction = this.toEntity(recipeId),
+    ingredients = associatedIngredients.map { it.toEntityWithRelations(recipeId) }
+)
+
+fun Instruction.toEntity(recipeId: String): InstructionEntity = InstructionEntity(
+    id = id,
+    recipeId = recipeId,
+    title = title,
+    summary = summary,
+    text = text
+)
+
+fun Note.toEntity(recipeId: String): NoteEntity = NoteEntity(
+    id = id,
+    title = title,
+    text = text,
+    recipeId = recipeId
+)
+
+fun Comment.toEntityWithRelations(recipeId: String): CommentWithRelations = CommentWithRelations(
+    comment = this.toEntity(recipeId),
+    user = user.toEntity()
+)
+
+fun Comment.toEntity(recipeId: String): CommentEntity = CommentEntity(
+    id = id,
+    recipeId = recipeId,
+    text = text,
+    createdAt = createdAt,
+    updatedAt = updatedAt,
+    userId = user.id
+)
+
+fun User.toEntity(): UserEntity = UserEntity(
+    id = id,
+    username = username,
+    admin = admin,
+    fullName = fullName
 )
 
 private fun createRecipeImageUrl(host: String?, id: String): String {

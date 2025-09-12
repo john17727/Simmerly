@@ -9,5 +9,5 @@ data class Comment(
     val id: String,
     val createdAt: Instant,
     val updatedAt: Instant,
-//    val user: User //TODO: Add user
+    val user: User
 )

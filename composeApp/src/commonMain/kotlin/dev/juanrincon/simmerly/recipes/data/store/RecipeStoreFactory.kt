@@ -15,26 +15,26 @@ import org.mobilenativefoundation.store.core5.ExperimentalStoreApi
 import org.mobilenativefoundation.store.store5.Bookkeeper
 import org.mobilenativefoundation.store.store5.Converter
 import org.mobilenativefoundation.store.store5.Fetcher
-import org.mobilenativefoundation.store.store5.MutableStore
-import org.mobilenativefoundation.store.store5.MutableStoreBuilder
 import org.mobilenativefoundation.store.store5.SourceOfTruth
+import org.mobilenativefoundation.store.store5.Store
+import org.mobilenativefoundation.store.store5.StoreBuilder
 import org.mobilenativefoundation.store.store5.Updater
 import org.mobilenativefoundation.store.store5.UpdaterResult
 
 
-typealias RecipeStore = MutableStore<String, RecipeDetail>
+typealias RecipeStore = Store<String, RecipeDetail>
 
-class PostStoreFactory(
+class RecipeStoreFactory(
     private val client: RecipeNetworkClient,
     private val recipeDao: RecipeDao,
     private val sessionDataStore: SessionDataStore
 ) {
 
-    fun create(): RecipeStore = MutableStoreBuilder.from(
+    fun create(): RecipeStore = StoreBuilder.from(
         fetcher = createFetcher(),
         sourceOfTruth = createSourceOfTruth(),
         converter = createConverter()
-    ).build(updater = createUpdater())
+    ).build()
 
     private fun createFetcher(): Fetcher<String, RecipeDetailDto> =
         Fetcher.ofResult { recipeId ->
@@ -58,6 +58,9 @@ class PostStoreFactory(
         Converter.Builder<RecipeDetailDto, RecipeDetailWithRelations, RecipeDetail>()
             .fromNetworkToLocal { recipeDto ->
                 recipeDto.toEntityWithRelations()
+            }
+            .fromOutputToLocal { recipeDetail ->
+                recipeDetail.toEntityWithRelations()
             }
             .build()
 

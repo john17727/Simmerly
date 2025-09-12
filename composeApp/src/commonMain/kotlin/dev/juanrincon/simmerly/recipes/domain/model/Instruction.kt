@@ -5,5 +5,5 @@ data class Instruction(
     val title: String,
     val summary: String,
     val text: String,
-    val associatedIngredients: List<String>
+    val associatedIngredients: List<Ingredient>
 )

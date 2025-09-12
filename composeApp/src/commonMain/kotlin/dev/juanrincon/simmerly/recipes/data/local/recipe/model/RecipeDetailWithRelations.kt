@@ -73,8 +73,9 @@ data class RecipeDetailWithRelations(
     val notes: List<NoteEntity>,
 
     @Relation(
+        entity = CommentEntity::class,
         parentColumn = "id",
         entityColumn = "recipe_id",
     )
-    val comments: List<CommentEntity>,
+    val comments: List<CommentWithRelations>,
 )

@@ -23,6 +23,7 @@ import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.junction.RecipeT
 import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.junction.RecipeToolCrossRef
 import dev.juanrincon.simmerly.recipes.data.local.metadata.RecipeRemoteKey
 import dev.juanrincon.simmerly.recipes.data.local.metadata.RecipeRemoteKeyDao
+import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.junction.InstructionIngredientCrossRef
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlin.time.ExperimentalTime
@@ -43,6 +44,7 @@ import kotlin.time.ExperimentalTime
         RecipeCategoryCrossRef::class,
         RecipeTagCrossRef::class,
         RecipeToolCrossRef::class,
+        InstructionIngredientCrossRef::class,
         RecipeRemoteKey::class
     ],
     version = 1
