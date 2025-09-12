@@ -2,7 +2,11 @@
 
 package dev.juanrincon.simmerly.recipes.data.store
 
+import androidx.room.immediateTransaction
+import androidx.room.useWriterConnection
 import dev.juanrincon.simmerly.auth.domain.SessionDataStore
+import dev.juanrincon.simmerly.core.data.local.SimmerlyDatabase
+import dev.juanrincon.simmerly.recipes.data.local.recipe.IngredientDao
 import dev.juanrincon.simmerly.recipes.data.local.recipe.RecipeDao
 import dev.juanrincon.simmerly.recipes.data.local.recipe.model.RecipeDetailWithRelations
 import dev.juanrincon.simmerly.recipes.data.mappers.toDomain
@@ -26,9 +30,12 @@ typealias RecipeStore = Store<String, RecipeDetail>
 
 class RecipeStoreFactory(
     private val client: RecipeNetworkClient,
-    private val recipeDao: RecipeDao,
+    private val database: SimmerlyDatabase,
     private val sessionDataStore: SessionDataStore
 ) {
+
+    private val recipeDao = database.recipeDao()
+    private val ingredientDao = database.ingredientDao()
 
     fun create(): RecipeStore = StoreBuilder.from(
         fetcher = createFetcher(),
@@ -50,7 +57,18 @@ class RecipeStoreFactory(
                     }
             },
             writer = { recipeId, response ->
-                recipeDao.upsert(response.recipe)
+                database.useWriterConnection { writerTransaction ->
+                    writerTransaction.immediateTransaction {
+                        recipeDao.upsert(response.recipe)
+                        val units = response.ingredients.mapNotNull { it.unit }
+                        if (units.isNotEmpty()) database.unitDao().upsertAll(units)
+
+                        val foods = response.ingredients.mapNotNull { it.food }
+                        if (foods.isNotEmpty()) database.foodDao().upsertAll(foods)
+
+                        ingredientDao.upsertAll(response.ingredients.map { it.ingredient })
+                    }
+                }
             }
         )
 

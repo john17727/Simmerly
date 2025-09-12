@@ -5,6 +5,8 @@ import app.tracktion.core.domain.util.Result
 import app.tracktion.core.domain.util.fold
 import dev.juanrincon.simmerly.auth.domain.LoginError
 import dev.juanrincon.simmerly.auth.domain.SessionDataStore
+import dev.juanrincon.simmerly.core.data.local.SimmerlyDatabase
+import dev.juanrincon.simmerly.recipes.data.local.recipe.IngredientDao
 import dev.juanrincon.simmerly.recipes.data.local.recipe.RecipeDao
 import dev.juanrincon.simmerly.recipes.data.mappers.toDomain
 import dev.juanrincon.simmerly.recipes.data.mappers.toEntity
@@ -30,11 +32,12 @@ import org.mobilenativefoundation.store.store5.impl.extensions.fresh
 @OptIn(ExperimentalStoreApi::class)
 class SimmerlyRecipeRepository(
     private val networkClient: RecipeNetworkClient,
-    private val recipeDao: RecipeDao,
+    private val database: SimmerlyDatabase,
     private val sessionDataStore: SessionDataStore,
 ) : RecipeRepository {
+    private val recipeDao = database.recipeDao()
 
-    private val store: RecipeStore = RecipeStoreFactory(networkClient, recipeDao, sessionDataStore).create()
+    private val store: RecipeStore = RecipeStoreFactory(networkClient, database, sessionDataStore).create()
 
     override fun recipes(): Flow<List<RecipeSummary>> = sessionDataStore.observeServerAddress()
         .combine(recipeDao.observeRecipeList()) { address, recipes ->
