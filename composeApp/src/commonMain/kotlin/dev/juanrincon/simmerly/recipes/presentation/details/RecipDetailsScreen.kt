@@ -3,9 +3,15 @@ package dev.juanrincon.simmerly.recipes.presentation.details
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -15,9 +21,16 @@ import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
 import androidx.window.core.layout.WindowSizeClass
+import coil3.compose.AsyncImage
 import dev.juanrincon.simmerly.recipes.domain.model.Ingredient
 import dev.juanrincon.simmerly.recipes.domain.model.RecipeDetail
+import dev.juanrincon.simmerly.recipes.presentation.details.models.IngredientUi
+import dev.juanrincon.simmerly.recipes.presentation.details.models.RecipeDetailUi
 import dev.juanrincon.simmerly.recipes.presentation.details.mvikotlin.RecipeDetailsStore
 import dev.juanrincon.simmerly.theme.Simmerly.Card
 import org.jetbrains.compose.ui.tooling.preview.Preview
@@ -57,14 +70,35 @@ fun RecipeDetailsScreen(
 }
 
 @Composable
-private fun ExpandedView(recipe: RecipeDetail, modifier: Modifier = Modifier) {
-    Column(modifier = modifier) {
+private fun ExpandedView(recipe: RecipeDetailUi, modifier: Modifier = Modifier) {
+    Row(
+        modifier = modifier.padding(EXPANDED_CARD_PADDING),
+        horizontalArrangement = Arrangement.spacedBy(EXPANDED_CARD_PADDING)
+    ) {
         Card(
-            modifier = Modifier.fillMaxHeight(),
+            modifier = Modifier.fillMaxHeight().widthIn(200.dp, 350.dp),
             colors = CardDefaults.cardColors()
                 .copy(containerColor = MaterialTheme.colorScheme.surface)
         ) {
-            IngredientList(recipe.ingredients, recipe.settings.disableAmount)
+            IngredientList(recipe.ingredients)
+        }
+        Column(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(EXPANDED_CARD_PADDING)
+        ) {
+            AsyncImage(
+                recipe.image,
+                contentDescription = null,
+                contentScale = ContentScale.FillWidth,
+                modifier = Modifier.fillMaxWidth().weight(1f).clip(MaterialTheme.shapes.medium)
+            )
+            Card(
+                modifier = Modifier.fillMaxWidth().weight(1f),
+                colors = CardDefaults.cardColors()
+                    .copy(containerColor = MaterialTheme.colorScheme.surface)
+            ) {
+
+            }
         }
     }
 }
@@ -75,19 +109,40 @@ private fun CompactView() {
 }
 
 @Composable
-private fun IngredientList(ingredients: List<Ingredient>, amountsDisabled: Boolean) {
-    ingredients.forEach {
-        if (amountsDisabled) {
-            Text(it.display)
-        } else {
-            Row {
-                Text(it.quantity.toString())
-                Text(it.unit.toString())
-                Text(it.food?.name ?: it.display)
-            }
+private fun IngredientList(ingredients: List<IngredientUi>) {
+    LazyColumn(
+        contentPadding = PaddingValues(16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        stickyHeader {
+            Text("Ingredients", style = MaterialTheme.typography.headlineMedium)
+        }
+        items(ingredients) { ingredient ->
+            IngredientEntry(ingredient, modifier = Modifier.fillMaxWidth())
         }
     }
 }
+
+@Composable
+private fun IngredientEntry(ingredient: IngredientUi, modifier: Modifier = Modifier) {
+    Row(
+        modifier = modifier,
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column {
+            Text(ingredient.name)
+            ingredient.note?.let { note ->
+                Text(note, style = MaterialTheme.typography.bodySmall)
+            }
+        }
+        ingredient.quantity?.let {
+            Text(it, fontWeight = FontWeight.Bold)
+        }
+    }
+}
+
+val EXPANDED_CARD_PADDING = 16.dp
 
 @Preview
 @Composable

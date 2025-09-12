@@ -10,6 +10,8 @@ import dev.juanrincon.simmerly.recipes.domain.LoadingResult
 import dev.juanrincon.simmerly.recipes.domain.RecipeRepository
 import dev.juanrincon.simmerly.recipes.domain.RecipesError
 import dev.juanrincon.simmerly.recipes.domain.model.RecipeDetail
+import dev.juanrincon.simmerly.recipes.presentation.details.mappers.toRecipeDetailUi
+import dev.juanrincon.simmerly.recipes.presentation.details.models.RecipeDetailUi
 import dev.juanrincon.simmerly.recipes.presentation.details.mvikotlin.RecipeDetailsStore.Intent
 import dev.juanrincon.simmerly.recipes.presentation.details.mvikotlin.RecipeDetailsStore.Label
 import dev.juanrincon.simmerly.recipes.presentation.details.mvikotlin.RecipeDetailsStore.State
@@ -39,7 +41,7 @@ internal class RecipeDetailsStoreFactory(
 
     private sealed interface Msg {
         data object Loading : Msg
-        data class RecipeUpdated(val recipe: RecipeDetail) : Msg
+        data class RecipeUpdated(val recipe: RecipeDetailUi) : Msg
     }
 
     private class BootstrapperImpl(val recipeId: String) : CoroutineBootstrapper<Action>() {
@@ -71,7 +73,7 @@ internal class RecipeDetailsStoreFactory(
                             when (result.data) {
                                 is LoadingResult.Loaded<RecipeDetail> -> dispatch(
                                     RecipeUpdated(
-                                        result.data.data
+                                        result.data.data.toRecipeDetailUi()
                                     )
                                 )
 
