@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
@@ -27,12 +26,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.window.core.layout.WindowSizeClass
 import coil3.compose.AsyncImage
-import dev.juanrincon.simmerly.recipes.domain.model.Ingredient
-import dev.juanrincon.simmerly.recipes.domain.model.RecipeDetail
 import dev.juanrincon.simmerly.recipes.presentation.details.models.IngredientUi
 import dev.juanrincon.simmerly.recipes.presentation.details.models.RecipeDetailUi
 import dev.juanrincon.simmerly.recipes.presentation.details.mvikotlin.RecipeDetailsStore
-import dev.juanrincon.simmerly.theme.Simmerly.Card
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
 @Composable
@@ -72,7 +68,7 @@ fun RecipeDetailsScreen(
 @Composable
 private fun ExpandedView(recipe: RecipeDetailUi, modifier: Modifier = Modifier) {
     Row(
-        modifier = modifier.padding(EXPANDED_CARD_PADDING),
+        modifier = modifier.padding(start = 8.dp),
         horizontalArrangement = Arrangement.spacedBy(EXPANDED_CARD_PADDING)
     ) {
         Card(
@@ -89,7 +85,7 @@ private fun ExpandedView(recipe: RecipeDetailUi, modifier: Modifier = Modifier) 
             AsyncImage(
                 recipe.image,
                 contentDescription = null,
-                contentScale = ContentScale.FillWidth,
+                contentScale = ContentScale.Crop,
                 modifier = Modifier.fillMaxWidth().weight(1f).clip(MaterialTheme.shapes.medium)
             )
             Card(

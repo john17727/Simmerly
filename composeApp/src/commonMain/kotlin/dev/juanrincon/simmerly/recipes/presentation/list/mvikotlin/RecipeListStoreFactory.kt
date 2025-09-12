@@ -41,6 +41,7 @@ internal class RecipeListStoreFactory(
         data class SearchQueryChanged(val query: String) : Msg
         data class RecipesUpdated(val recipes: List<RecipeSummary>) : Msg
         data class PageData(val nextPage: Int?) : Msg
+        data class SelectedRecipe(val recipeId: String) : Msg
     }
 
     private class BootstrapperImpl : CoroutineBootstrapper<Action>() {
@@ -60,6 +61,8 @@ internal class RecipeListStoreFactory(
                         loadRecipes(it)
                     }
                 }
+
+                is Intent.OnRecipeSelected -> dispatch(SelectedRecipe(intent.recipeId))
             }
         }
 
@@ -100,6 +103,7 @@ internal class RecipeListStoreFactory(
                 is RecipesUpdated -> copy(recipes = msg.recipes, isLoading = false)
                 is Loading -> copy(isLoading = msg.isLoading)
                 is PageData -> copy(nextPage = msg.nextPage, isLoading = false)
+                is SelectedRecipe -> copy(selectedRecipeId = msg.recipeId)
             }
     }
 }

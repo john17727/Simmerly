@@ -13,7 +13,11 @@ import com.arkivanov.decompose.router.panels.ChildPanelsMode
 fun ChildPanelsModeChangedEffect(onModeChanged: (ChildPanelsMode) -> Unit) {
     val windowSize = currentWindowAdaptiveInfo().windowSizeClass
     val mode =
-        if (windowSize.isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_EXPANDED_LOWER_BOUND)) ChildPanelsMode.DUAL else ChildPanelsMode.SINGLE
+        if (windowSize.isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_EXPANDED_LOWER_BOUND)) {
+            ChildPanelsMode.DUAL
+        } else {
+            ChildPanelsMode.SINGLE
+        }
 
     DisposableEffect(mode) {
         onModeChanged(mode)

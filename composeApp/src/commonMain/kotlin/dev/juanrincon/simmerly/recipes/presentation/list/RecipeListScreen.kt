@@ -1,5 +1,6 @@
 package dev.juanrincon.simmerly.recipes.presentation.list
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -8,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
@@ -24,6 +26,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -34,7 +37,9 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
+import androidx.window.core.layout.WindowSizeClass
 import coil3.compose.AsyncImage
+import dev.juanrincon.simmerly.core.presentation.ifTrue
 import dev.juanrincon.simmerly.recipes.domain.model.RecipeSummary
 import dev.juanrincon.simmerly.recipes.presentation.list.mvikotlin.RecipeListStore
 
@@ -46,6 +51,7 @@ fun RecipeListScreen(
     onOutput: (RecipeListStore.Output) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val windowSizeClass = currentWindowAdaptiveInfo().windowSizeClass
     val lazyListState = rememberLazyListState()
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
 
@@ -73,30 +79,97 @@ fun RecipeListScreen(
                 scrollBehavior = scrollBehavior
             )
         },
-        modifier = modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
-    ) { paddingValues ->
-        LazyColumn(
-            state = lazyListState,
-            contentPadding = PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-            modifier = Modifier.padding(paddingValues)
+        modifier = modifier.nestedScroll(scrollBehavior.nestedScrollConnection).ifTrue(
+            windowSizeClass.isWidthAtLeastBreakpoint(
+                WindowSizeClass.WIDTH_DP_EXPANDED_LOWER_BOUND
+            )
         ) {
-            items(state.recipes) { item ->
-                RecipeCard(
-                    item,
-                    onClick = { onOutput(RecipeListStore.Output.SelectedRecipe(item.id)) },
-                    modifier = Modifier.fillMaxWidth()
-                )
-            }
+            padding(end = 8.dp).then(clip(shape = MaterialTheme.shapes.medium))
+        },
+    ) { paddingValues ->
+        if (windowSizeClass.isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_EXPANDED_LOWER_BOUND)) {
+            SelectableList(
+                state.recipes,
+                selected = state.selectedRecipeId,
+                onOutput = onOutput,
+                onSelected = { onEvent(RecipeListStore.Intent.OnRecipeSelected(it)) },
+                state = lazyListState,
+                modifier = Modifier.padding(paddingValues)
+            )
+        } else {
+            List(
+                state.recipes,
+                onOutput,
+                lazyListState,
+                modifier = Modifier.padding(paddingValues)
+            )
         }
     }
 }
 
 @Composable
-fun RecipeCard(recipe: RecipeSummary, onClick: () -> Unit, modifier: Modifier = Modifier) {
+fun SelectableList(
+    recipes: List<RecipeSummary>,
+    selected: String,
+    onOutput: (RecipeListStore.Output) -> Unit,
+    onSelected: (String) -> Unit,
+    state: LazyListState,
+    modifier: Modifier = Modifier
+) {
+    LazyColumn(
+        state = state,
+        contentPadding = PaddingValues(16.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+        modifier = modifier
+    ) {
+        items(recipes) { item ->
+            RecipeCard(
+                item,
+                selected = item.id == selected,
+                onClick = {
+                    onOutput(RecipeListStore.Output.SelectedRecipe(item.id))
+                    onSelected(item.id)
+                },
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
+    }
+}
+
+@Composable
+fun List(
+    recipes: List<RecipeSummary>,
+    onOutput: (RecipeListStore.Output) -> Unit,
+    lazyListState: LazyListState,
+    modifier: Modifier = Modifier
+) {
+    LazyColumn(
+        state = lazyListState,
+        contentPadding = PaddingValues(16.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+        modifier = modifier
+    ) {
+        items(recipes) { item ->
+            RecipeCard(
+                item,
+                onClick = { onOutput(RecipeListStore.Output.SelectedRecipe(item.id)) },
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
+    }
+}
+
+@Composable
+fun RecipeCard(
+    recipe: RecipeSummary,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    selected: Boolean = false,
+) {
     Card(
         modifier = modifier,
         onClick = onClick,
+        border = if (selected) BorderStroke(2.dp, MaterialTheme.colorScheme.primary) else null,
         colors = CardDefaults.cardColors().copy(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Row(
