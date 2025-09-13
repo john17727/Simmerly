@@ -1,10 +1,11 @@
 package dev.juanrincon.simmerly.core.data.remote
 
-import app.tracktion.core.domain.util.Result
+import dev.juanrincon.simmerly.auth.data.network.dto.AuthTokenResponse
 import dev.juanrincon.simmerly.auth.domain.SessionDataStore
 import dev.juanrincon.simmerly.core.data.remote.utils.dynamic_base_url_ktor_plugin.DynamicBaseUrl
 import dev.juanrincon.simmerly.core.data.remote.utils.dynamic_base_url_ktor_plugin.supplier
 import io.ktor.client.HttpClient
+import io.ktor.client.call.body
 import io.ktor.client.engine.HttpClientEngine
 import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.auth.Auth
@@ -16,6 +17,8 @@ import io.ktor.client.plugins.logging.LogLevel
 import io.ktor.client.plugins.logging.Logger
 import io.ktor.client.plugins.logging.Logging
 import io.ktor.client.plugins.logging.SIMPLE
+import io.ktor.client.request.get
+import io.ktor.client.request.headers
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import io.ktor.http.isSuccess
@@ -57,16 +60,45 @@ fun createAuthenticatedHttpClient(
                 }
             }
             refreshTokens {
-                val latestToken = sessionDatastore.getToken() ?: ""
-                val serverAddress = sessionDatastore.getServerAddress() ?: ""
-                val sessionClient = SessionClient(client, serverAddress)
-                val newToken =
-                    when (val result = sessionClient.refreshToken(latestToken)) {
-                        is Result.Error -> ""
-                        is Result.Success -> result.data
+                val serverAddress = sessionDatastore.getServerAddress() ?: return@refreshTokens null
+                val oldRefresh = oldTokens?.refreshToken ?: return@refreshTokens null
+
+                // Option A: explicit status check
+                val response = try {
+                    client.get("$serverAddress/api/auth/refresh") {
+                        markAsRefreshTokenRequest()
+                        headers {
+                            append("Authorization", "Bearer $oldRefresh")
+                        }
                     }
-                sessionDatastore.setToken(newToken)
-                BearerTokens(newToken, newToken)
+                } catch (e: Exception) {
+                    // Network/serialization error -> treat as refresh failure
+                    sessionDatastore.clear()
+                    return@refreshTokens null
+                }
+
+                if (!response.status.isSuccess()) {
+                    // Refresh denied -> logout
+                    sessionDatastore.clear()
+                    return@refreshTokens null
+                }
+
+                val tokenResult: AuthTokenResponse = try {
+                    response.body()
+                } catch (e: Exception) {
+                    sessionDatastore.clear()
+                    return@refreshTokens null
+                }
+
+                val accessToken = tokenResult.token // or tokenResult.accessToken
+
+                if (accessToken.isBlank()) {
+                    sessionDatastore.clear()
+                    return@refreshTokens null
+                }
+
+                sessionDatastore.setToken(accessToken)
+                BearerTokens(accessToken, accessToken)
             }
         }
     }
