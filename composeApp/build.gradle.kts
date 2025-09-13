@@ -106,6 +106,9 @@ kotlin {
 
             // Store 5
             implementation(libs.store)
+
+            // Compose Rich Text
+            implementation(libs.compose.rich.text)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)

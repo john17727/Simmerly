@@ -5,10 +5,12 @@ import dev.juanrincon.simmerly.core.utils.format
 import dev.juanrincon.simmerly.core.utils.nullIfEmpty
 import dev.juanrincon.simmerly.recipes.domain.model.Food
 import dev.juanrincon.simmerly.recipes.domain.model.Ingredient
+import dev.juanrincon.simmerly.recipes.domain.model.Instruction
 import dev.juanrincon.simmerly.recipes.domain.model.RecipeDetail
 import dev.juanrincon.simmerly.recipes.domain.model.Unit
 import dev.juanrincon.simmerly.recipes.presentation.details.models.FoodUi
 import dev.juanrincon.simmerly.recipes.presentation.details.models.IngredientUi
+import dev.juanrincon.simmerly.recipes.presentation.details.models.InstructionUi
 import dev.juanrincon.simmerly.recipes.presentation.details.models.RecipeDetailUi
 import dev.juanrincon.simmerly.recipes.presentation.details.models.UnitUi
 
@@ -18,6 +20,7 @@ fun RecipeDetail.toRecipeDetailUi(): RecipeDetailUi = RecipeDetailUi(
     image = image,
     servings = servings,
     ingredients = ingredients.map { it.toIngredientUi() },
+    instructions = instructions.mapIndexed { index, instruction -> instruction.toInstructionUi(index + 1) },
     settings = settings
 )
 
@@ -42,3 +45,17 @@ fun Unit.toUnitUi(): UnitUi = UnitUi(
     pluralAbbreviation = pluralAbbreviation,
     useAbbreviation = useAbbreviation
 )
+
+fun Instruction.toInstructionUi(step: Int): InstructionUi = InstructionUi(
+    id = id,
+    title = formatInstructionTitle(title, step),
+    summary = summary.nullIfEmpty(),
+    text = text,
+    associatedIngredients = associatedIngredients.map { it.toIngredientUi() }
+)
+
+private fun formatInstructionTitle(title: String, step: Int): String = if (title.isBlank()) {
+    "Step $step"
+} else {
+    title.capitalizeWords()
+}

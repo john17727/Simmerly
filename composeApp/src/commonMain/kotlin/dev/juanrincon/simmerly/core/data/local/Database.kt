@@ -25,6 +25,7 @@ import dev.juanrincon.simmerly.recipes.data.local.metadata.RecipeRemoteKey
 import dev.juanrincon.simmerly.recipes.data.local.metadata.RecipeRemoteKeyDao
 import dev.juanrincon.simmerly.recipes.data.local.recipe.FoodDao
 import dev.juanrincon.simmerly.recipes.data.local.recipe.IngredientDao
+import dev.juanrincon.simmerly.recipes.data.local.recipe.InstructionDao
 import dev.juanrincon.simmerly.recipes.data.local.recipe.UnitDao
 import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.junction.InstructionIngredientCrossRef
 import kotlinx.coroutines.Dispatchers
@@ -63,6 +64,8 @@ abstract class SimmerlyDatabase : RoomDatabase() {
     abstract fun unitDao(): UnitDao
 
     abstract fun foodDao(): FoodDao
+
+    abstract fun instructionDao(): InstructionDao
 
     abstract fun recipeRemoteKeyDao(): RecipeRemoteKeyDao
 }

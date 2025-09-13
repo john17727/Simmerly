@@ -14,21 +14,24 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Remove
-import androidx.compose.material3.Card
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.window.core.layout.WindowSizeClass
+import com.mohamedrejeb.richeditor.model.rememberRichTextState
+import com.mohamedrejeb.richeditor.ui.material3.RichText
 import dev.juanrincon.simmerly.core.presentation.ifTrue
 import dev.juanrincon.simmerly.core.presentation.shimmer
 import dev.juanrincon.simmerly.recipes.presentation.details.models.IngredientUi
+import dev.juanrincon.simmerly.recipes.presentation.details.models.InstructionUi
 import dev.juanrincon.simmerly.recipes.presentation.details.models.RecipeDetailUi
 import dev.juanrincon.simmerly.recipes.presentation.details.mvikotlin.RecipeDetailsStore
 import org.jetbrains.compose.ui.tooling.preview.Preview
@@ -66,6 +69,11 @@ fun RecipeDetailsScreen(
 }
 
 @Composable
+private fun CompactView() {
+
+}
+
+@Composable
 private fun ExpandedView(
     state: RecipeDetailsStore.State,
     onEvent: (RecipeDetailsStore.Intent) -> Unit,
@@ -94,16 +102,19 @@ private fun ExpandedView(
                     )
                 }
         )
-        Column(
-            modifier = Modifier.weight(0.7f),
-            verticalArrangement = Arrangement.spacedBy(EXPANDED_CARD_PADDING)
-        ) {
-//            AsyncImage(
-//                recipe.image,
-//                contentDescription = null,
-//                contentScale = ContentScale.Crop,
-//                modifier = Modifier.fillMaxWidth().weight(1f).clip(MaterialTheme.shapes.medium)
-//                    .ifTrue(loading) {
+        InstructionList(
+            instructions = state.recipe.instructions,
+            modifier = Modifier.background(
+                color = MaterialTheme.colorScheme.surfaceContainer,
+                shape = MaterialTheme.shapes.medium
+            ).weight(0.7f),
+        )
+//        Column(
+//            verticalArrangement = Arrangement.spacedBy(EXPANDED_CARD_PADDING)
+//        ) {
+//            Card(
+//                modifier = Modifier.fillMaxWidth().weight(1f)
+//                    .ifTrue(state.loading) {
 //                        shimmer(
 //                            colors = listOf(
 //                                MaterialTheme.colorScheme.surfaceContainer,
@@ -113,29 +124,11 @@ private fun ExpandedView(
 //                            shape = MaterialTheme.shapes.medium
 //                        )
 //                    }
-//            )
-            Card(
-                modifier = Modifier.fillMaxWidth().weight(1f)
-                    .ifTrue(state.loading) {
-                        shimmer(
-                            colors = listOf(
-                                MaterialTheme.colorScheme.surfaceContainer,
-                                MaterialTheme.colorScheme.surfaceContainerHighest,
-                                MaterialTheme.colorScheme.surfaceContainer,
-                            ),
-                            shape = MaterialTheme.shapes.medium
-                        )
-                    }
-            ) {
-
-            }
-        }
+//            ) {
+//
+//            }
+//        }
     }
-}
-
-@Composable
-private fun CompactView() {
-
 }
 
 @Composable
@@ -186,6 +179,31 @@ private fun IngredientList(
 }
 
 @Composable
+private fun InstructionList(
+    instructions: List<InstructionUi>,
+    modifier: Modifier = Modifier
+) {
+    LazyColumn(
+        contentPadding = PaddingValues(16.dp),
+        verticalArrangement = Arrangement.spacedBy(32.dp),
+        modifier = modifier
+    ) {
+        stickyHeader {
+            Column(
+                modifier = Modifier.fillMaxWidth()
+                    .background(color = MaterialTheme.colorScheme.surfaceContainer)
+                    .padding(top = 16.dp, bottom = 8.dp)
+            ) {
+                Text("Instructions", style = MaterialTheme.typography.headlineMedium)
+            }
+        }
+        items(instructions) { instruction ->
+            InstructionEntry(instruction, modifier = Modifier.fillMaxWidth())
+        }
+    }
+}
+
+@Composable
 private fun IngredientEntry(ingredient: IngredientUi, modifier: Modifier = Modifier) {
     Row(
         modifier = modifier,
@@ -205,6 +223,28 @@ private fun IngredientEntry(ingredient: IngredientUi, modifier: Modifier = Modif
         ingredient.formattedQuantity?.let {
             Text(it, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
         }
+    }
+}
+
+@Composable
+private fun InstructionEntry(instruction: InstructionUi, modifier: Modifier = Modifier) {
+    val richTextState = rememberRichTextState()
+    LaunchedEffect(instruction.text) {
+        richTextState.setMarkdown(instruction.text)
+    }
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp), modifier = modifier) {
+        Text(instruction.title, style = MaterialTheme.typography.headlineSmall)
+        Row {
+            instruction.associatedIngredients.forEach {
+                Text(it.formattedDisplay, style = MaterialTheme.typography.bodySmall)
+            }
+        }
+        RichText(
+            state = richTextState,
+//        imageLoader = Coil3ImageLoader,
+            modifier = Modifier
+                .fillMaxWidth()
+        )
     }
 }
 

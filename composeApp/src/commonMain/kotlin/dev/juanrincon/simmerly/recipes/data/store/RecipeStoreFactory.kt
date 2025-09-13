@@ -36,6 +36,7 @@ class RecipeStoreFactory(
 
     private val recipeDao = database.recipeDao()
     private val ingredientDao = database.ingredientDao()
+    private val instructionsDao = database.instructionDao()
 
     fun create(): RecipeStore = StoreBuilder.from(
         fetcher = createFetcher(),
@@ -67,6 +68,7 @@ class RecipeStoreFactory(
                         if (foods.isNotEmpty()) database.foodDao().upsertAll(foods)
 
                         ingredientDao.upsertAll(response.ingredients.map { it.ingredient })
+                        instructionsDao.upsertAll(response.instructions.map { it.instruction })
                     }
                 }
             }

@@ -9,6 +9,7 @@ data class RecipeDetailUi(
     val image: String,
     val servings: Double,
     val ingredients: List<IngredientUi>,
+    val instructions: List<InstructionUi>,
     val settings: Settings
 ) {
 
@@ -27,6 +28,7 @@ data class RecipeDetailUi(
             image = "",
             servings = 0.0,
             ingredients = emptyList(),
+            instructions = emptyList(),
             settings = Settings(
                 public = true,
                 showNutrition = false,
