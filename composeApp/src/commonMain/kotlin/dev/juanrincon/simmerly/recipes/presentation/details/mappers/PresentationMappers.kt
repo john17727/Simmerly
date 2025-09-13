@@ -1,7 +1,6 @@
 package dev.juanrincon.simmerly.recipes.presentation.details.mappers
 
 import dev.juanrincon.simmerly.core.utils.capitalizeWords
-import dev.juanrincon.simmerly.core.utils.format
 import dev.juanrincon.simmerly.core.utils.nullIfEmpty
 import dev.juanrincon.simmerly.recipes.domain.model.Food
 import dev.juanrincon.simmerly.recipes.domain.model.Ingredient
@@ -21,6 +20,7 @@ fun RecipeDetail.toRecipeDetailUi(): RecipeDetailUi = RecipeDetailUi(
     servings = servings,
     ingredients = ingredients.map { it.toIngredientUi() },
     instructions = instructions.mapIndexed { index, instruction -> instruction.toInstructionUi(index + 1) },
+    nutrition = nutrition,
     settings = settings
 )
 

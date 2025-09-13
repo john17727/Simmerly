@@ -1,6 +1,7 @@
 package dev.juanrincon.simmerly.recipes.presentation.details
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -30,6 +31,7 @@ import com.mohamedrejeb.richeditor.model.rememberRichTextState
 import com.mohamedrejeb.richeditor.ui.material3.RichText
 import dev.juanrincon.simmerly.core.presentation.ifTrue
 import dev.juanrincon.simmerly.core.presentation.shimmer
+import dev.juanrincon.simmerly.recipes.domain.model.Nutrition
 import dev.juanrincon.simmerly.recipes.presentation.details.models.IngredientUi
 import dev.juanrincon.simmerly.recipes.presentation.details.models.InstructionUi
 import dev.juanrincon.simmerly.recipes.presentation.details.models.RecipeDetailUi
@@ -83,25 +85,35 @@ private fun ExpandedView(
         modifier = modifier,
         horizontalArrangement = Arrangement.spacedBy(EXPANDED_CARD_PADDING)
     ) {
-        IngredientList(
-            recipe = state.recipe,
-            onRemoveServingButtonClick = { onEvent(RecipeDetailsStore.Intent.RemoveServing) },
-            onAddServingButtonClick = { onEvent(RecipeDetailsStore.Intent.AddServing) },
-            modifier = Modifier.background(
-                color = MaterialTheme.colorScheme.surfaceContainer,
-                shape = MaterialTheme.shapes.medium
-            ).weight(0.3f)
-                .ifTrue(state.loading) {
-                    fillMaxHeight().shimmer(
-                        colors = listOf(
-                            MaterialTheme.colorScheme.surfaceContainer,
-                            MaterialTheme.colorScheme.surfaceContainerHighest,
-                            MaterialTheme.colorScheme.surfaceContainer,
-                        ),
+        Column(modifier = Modifier.weight(0.3f).fillMaxHeight(), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+            IngredientList(
+                recipe = state.recipe,
+                onRemoveServingButtonClick = { onEvent(RecipeDetailsStore.Intent.RemoveServing) },
+                onAddServingButtonClick = { onEvent(RecipeDetailsStore.Intent.AddServing) },
+                modifier = Modifier.background(
+                    color = MaterialTheme.colorScheme.surfaceContainer,
+                    shape = MaterialTheme.shapes.medium
+                )
+                    .ifTrue(state.loading) {
+                        fillMaxHeight().shimmer(
+                            colors = listOf(
+                                MaterialTheme.colorScheme.surfaceContainer,
+                                MaterialTheme.colorScheme.surfaceContainerHighest,
+                                MaterialTheme.colorScheme.surfaceContainer,
+                            ),
+                            shape = MaterialTheme.shapes.medium
+                        )
+                    }
+            )
+            AnimatedVisibility(state.recipe.settings.showNutrition) {
+                NutritionView(
+                    state.recipe.nutrition, modifier = Modifier.background(
+                        color = MaterialTheme.colorScheme.surfaceContainer,
                         shape = MaterialTheme.shapes.medium
-                    )
-                }
-        )
+                    ).padding(top = 32.dp, bottom = 16.dp, start = 16.dp, end = 16.dp)
+                )
+            }
+        }
         InstructionList(
             instructions = state.recipe.instructions,
             modifier = Modifier.background(
@@ -109,25 +121,61 @@ private fun ExpandedView(
                 shape = MaterialTheme.shapes.medium
             ).weight(0.7f),
         )
-//        Column(
-//            verticalArrangement = Arrangement.spacedBy(EXPANDED_CARD_PADDING)
-//        ) {
-//            Card(
-//                modifier = Modifier.fillMaxWidth().weight(1f)
-//                    .ifTrue(state.loading) {
-//                        shimmer(
-//                            colors = listOf(
-//                                MaterialTheme.colorScheme.surfaceContainer,
-//                                MaterialTheme.colorScheme.surfaceContainerHighest,
-//                                MaterialTheme.colorScheme.surfaceContainer,
-//                            ),
-//                            shape = MaterialTheme.shapes.medium
-//                        )
-//                    }
-//            ) {
-//
-//            }
-//        }
+    }
+}
+
+@Composable
+fun NutritionView(nutrition: Nutrition, modifier: Modifier = Modifier) {
+    Column(
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+        modifier = modifier
+    ) {
+        Text("Nutrition", style = MaterialTheme.typography.headlineMedium)
+        nutrition.calories?.let {
+            NutritionEntry("Calories", it, modifier = Modifier.fillMaxWidth())
+        }
+        nutrition.carbohydrateContent?.let {
+            NutritionEntry("Carbohydrates", it, modifier = Modifier.fillMaxWidth())
+        }
+        nutrition.cholesterolContent?.let {
+            NutritionEntry("Cholesterol", it, modifier = Modifier.fillMaxWidth())
+        }
+        nutrition.fatContent?.let {
+            NutritionEntry("Fat", it, modifier = Modifier.fillMaxWidth())
+        }
+        nutrition.fiberContent?.let {
+            NutritionEntry("Fiber", it, modifier = Modifier.fillMaxWidth())
+        }
+        nutrition.proteinContent?.let {
+            NutritionEntry("Protein", it, modifier = Modifier.fillMaxWidth())
+        }
+        nutrition.saturatedFatContent?.let {
+            NutritionEntry("Saturated Fat", it, modifier = Modifier.fillMaxWidth())
+        }
+        nutrition.sodiumContent?.let {
+            NutritionEntry("Sodium", it, modifier = Modifier.fillMaxWidth())
+        }
+        nutrition.sugarContent?.let {
+            NutritionEntry("Sugar", it, modifier = Modifier.fillMaxWidth())
+        }
+        nutrition.transFatContent?.let {
+            NutritionEntry("Trans Fat", it, modifier = Modifier.fillMaxWidth())
+        }
+        nutrition.unsaturatedFatContent?.let {
+            NutritionEntry("Unsaturated Fat", it, modifier = Modifier.fillMaxWidth())
+        }
+    }
+}
+
+@Composable
+private fun NutritionEntry(
+    title: String,
+    value: String,
+    modifier: Modifier = Modifier
+) {
+    Row(modifier = modifier, horizontalArrangement = Arrangement.SpaceBetween) {
+        Text(title)
+        Text(value)
     }
 }
 
@@ -241,7 +289,7 @@ private fun InstructionEntry(instruction: InstructionUi, modifier: Modifier = Mo
         }
         RichText(
             state = richTextState,
-//        imageLoader = Coil3ImageLoader,
+//        imageLoader = Coil3ImageLoader, // TODO: Add image loader
             modifier = Modifier
                 .fillMaxWidth()
         )

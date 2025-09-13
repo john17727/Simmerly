@@ -1,6 +1,7 @@
 package dev.juanrincon.simmerly.recipes.presentation.details.models
 
 import dev.juanrincon.simmerly.core.utils.format
+import dev.juanrincon.simmerly.recipes.domain.model.Nutrition
 import dev.juanrincon.simmerly.recipes.domain.model.Settings
 
 data class RecipeDetailUi(
@@ -10,6 +11,7 @@ data class RecipeDetailUi(
     val servings: Double,
     val ingredients: List<IngredientUi>,
     val instructions: List<InstructionUi>,
+    val nutrition: Nutrition,
     val settings: Settings
 ) {
 
@@ -29,6 +31,19 @@ data class RecipeDetailUi(
             servings = 0.0,
             ingredients = emptyList(),
             instructions = emptyList(),
+            nutrition = Nutrition(
+                calories = "",
+                carbohydrateContent = "",
+                cholesterolContent = "",
+                fatContent = "",
+                fiberContent = "",
+                proteinContent = "",
+                saturatedFatContent = "",
+                sodiumContent = "",
+                sugarContent = "",
+                transFatContent = "",
+                unsaturatedFatContent = ""
+            ),
             settings = Settings(
                 public = true,
                 showNutrition = false,
