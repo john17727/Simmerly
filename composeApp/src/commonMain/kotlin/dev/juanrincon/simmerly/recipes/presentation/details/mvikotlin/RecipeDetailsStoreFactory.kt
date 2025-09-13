@@ -29,7 +29,7 @@ internal class RecipeDetailsStoreFactory(
     fun create(): RecipeDetailsStore =
         object : RecipeDetailsStore, Store<Intent, State, Label> by storeFactory.create(
             name = "RecipeDetailsStore",
-            initialState = State.Loading,
+            initialState = State(),
             bootstrapper = BootstrapperImpl(recipeId),
             executorFactory = { ExecutorImpl(repository) },
             reducer = ReducerImpl
@@ -88,8 +88,8 @@ internal class RecipeDetailsStoreFactory(
     private object ReducerImpl : Reducer<State, Msg> {
         override fun State.reduce(msg: Msg): State =
             when (msg) {
-                is RecipeUpdated -> State.Content(msg.recipe)
-                is Msg.Loading -> State.Loading
+                is RecipeUpdated -> copy(loading = false, recipe = msg.recipe)
+                is Msg.Loading -> copy(loading = true)
             }
     }
 }
