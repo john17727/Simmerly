@@ -53,6 +53,7 @@ import androidx.window.core.layout.WindowSizeClass
 import coil3.compose.AsyncImage
 import coil3.compose.LocalPlatformContext
 import coil3.request.ImageRequest
+import dev.juanrincon.simmerly.core.presentation.ifTrue
 import dev.juanrincon.simmerly.recipes.domain.model.RecipeSummary
 import dev.juanrincon.simmerly.recipes.presentation.list.mvikotlin.RecipeListStore
 
@@ -114,16 +115,19 @@ fun SelectableList(
         modifier = modifier.clip(shape = MaterialTheme.shapes.medium)
     ) {
         items(recipes, key = { it.id }) { item ->
+            val isSelected = item.id == selected
             RecipeCard(
                 item,
-                selected = item.id == selected,
+                selected = isSelected,
                 onClick = {
                     onOutput(RecipeListStore.Output.SelectedRecipe(item.id))
                     onSelected(item.id)
                 },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .animateItem()
+                    .animateItem().ifTrue(isSelected) {
+                        padding(vertical = 32.dp)
+                    }
             )
         }
     }
@@ -192,7 +196,7 @@ fun RecipeCard(
             if (isSelected) {
                 Column(
                     verticalArrangement = Arrangement.spacedBy(8.dp),
-                    modifier = Modifier.padding(8.dp)
+                    modifier = Modifier.padding(bottom = 8.dp)
                 ) {
                     AsyncImage(
                         model = ImageRequest.Builder(LocalPlatformContext.current)
@@ -209,14 +213,22 @@ fun RecipeCard(
                         recipe.name,
                         style = MaterialTheme.typography.titleMedium,
                         maxLines = 2,
-                        overflow = TextOverflow.Ellipsis
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.padding(horizontal = 8.dp)
                     )
-                    RecipeMetaRow(recipe.rating, recipe.totalTime, recipe.prepTime, recipe.performTime)
+                    RecipeMetaRow(
+                        recipe.rating,
+                        recipe.totalTime,
+                        recipe.prepTime,
+                        recipe.performTime,
+                        modifier = Modifier.padding(horizontal = 8.dp)
+                    )
                     if (recipe.description.isNotBlank()) {
                         Text(
                             recipe.description,
                             style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.secondary
+                            color = MaterialTheme.colorScheme.secondary,
+                            modifier = Modifier.padding(horizontal = 8.dp)
                         )
                     }
                 }
