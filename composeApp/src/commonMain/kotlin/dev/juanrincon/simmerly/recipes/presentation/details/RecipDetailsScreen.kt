@@ -11,20 +11,21 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material3.Card
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.window.core.layout.WindowSizeClass
-import coil3.compose.AsyncImage
 import dev.juanrincon.simmerly.core.presentation.ifTrue
 import dev.juanrincon.simmerly.core.presentation.shimmer
 import dev.juanrincon.simmerly.recipes.presentation.details.models.IngredientUi
@@ -48,7 +49,11 @@ fun RecipeDetailsScreen(
                     )
                 ) { isExpanded ->
                     if (isExpanded) {
-                        ExpandedView(state.recipe, state.loading, modifier.padding(start = 16.dp))
+                        ExpandedView(
+                            state = state,
+                            onEvent = onEvent,
+                            modifier.padding(start = 16.dp)
+                        )
                     } else {
                         CompactView()
                     }
@@ -61,18 +66,26 @@ fun RecipeDetailsScreen(
 }
 
 @Composable
-private fun ExpandedView(recipe: RecipeDetailUi, loading: Boolean, modifier: Modifier = Modifier) {
+private fun ExpandedView(
+    state: RecipeDetailsStore.State,
+    onEvent: (RecipeDetailsStore.Intent) -> Unit,
+    modifier: Modifier = Modifier
+) {
     Row(
         modifier = modifier,
         horizontalArrangement = Arrangement.spacedBy(EXPANDED_CARD_PADDING)
     ) {
         IngredientList(
-            recipe.ingredients,
+            state.recipe.ingredients,
+            serving = state.recipe.formattedServings,
+            disabledAmount = state.recipe.settings.disableAmount,
+            onRemoveServingButtonClick = { onEvent(RecipeDetailsStore.Intent.RemoveServing) },
+            onAddServingButtonClick = { onEvent(RecipeDetailsStore.Intent.AddServing) },
             modifier = Modifier.background(
                 color = MaterialTheme.colorScheme.surfaceContainer,
                 shape = MaterialTheme.shapes.medium
             ).weight(0.3f)
-                .ifTrue(loading) {
+                .ifTrue(state.loading) {
                     fillMaxHeight().shimmer(
                         colors = listOf(
                             MaterialTheme.colorScheme.surfaceContainer,
@@ -105,7 +118,7 @@ private fun ExpandedView(recipe: RecipeDetailUi, loading: Boolean, modifier: Mod
 //            )
             Card(
                 modifier = Modifier.fillMaxWidth().weight(1f)
-                    .ifTrue(loading) {
+                    .ifTrue(state.loading) {
                         shimmer(
                             colors = listOf(
                                 MaterialTheme.colorScheme.surfaceContainer,
@@ -128,15 +141,46 @@ private fun CompactView() {
 }
 
 @Composable
-private fun IngredientList(ingredients: List<IngredientUi>, modifier: Modifier = Modifier) {
+private fun IngredientList(
+    ingredients: List<IngredientUi>,
+    onAddServingButtonClick: () -> Unit,
+    onRemoveServingButtonClick: () -> Unit,
+    serving: String,
+    disabledAmount: Boolean,
+    modifier: Modifier = Modifier
+) {
     LazyColumn(
         contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
         modifier = modifier
     ) {
         stickyHeader {
-            Column(modifier = Modifier.fillMaxWidth().padding(top = 16.dp)) {
+            Column(
+                modifier = Modifier.fillMaxWidth()
+                    .background(color = MaterialTheme.colorScheme.surfaceContainer)
+                    .padding(top = 16.dp, bottom = 8.dp)
+            ) {
                 Text("Ingredients", style = MaterialTheme.typography.headlineMedium)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(serving, color = MaterialTheme.colorScheme.primary)
+                    if (!disabledAmount) {
+                        Row {
+                            IconButton(
+                                onClick = onRemoveServingButtonClick,
+                                enabled = ingredients.size > 1
+                            ) {
+                                Icon(Icons.Default.Remove, contentDescription = null)
+                            }
+                            IconButton(onClick = onAddServingButtonClick) {
+                                Icon(Icons.Default.Add, contentDescription = null)
+                            }
+                        }
+                    }
+                }
             }
         }
         items(ingredients) { ingredient ->
@@ -153,7 +197,7 @@ private fun IngredientEntry(ingredient: IngredientUi, modifier: Modifier = Modif
         verticalAlignment = Alignment.Top
     ) {
         Column {
-            Text(ingredient.name)
+            Text(ingredient.formattedDisplay)
             ingredient.note?.let { note ->
                 Text(
                     note,
@@ -162,7 +206,7 @@ private fun IngredientEntry(ingredient: IngredientUi, modifier: Modifier = Modif
                 )
             }
         }
-        ingredient.quantity?.let {
+        ingredient.formattedQuantity?.let {
             Text(it, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
         }
     }

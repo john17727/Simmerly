@@ -10,6 +10,8 @@ import dev.juanrincon.simmerly.recipes.presentation.details.mvikotlin.RecipeDeta
 interface RecipeDetailsStore : Store<Intent, State, Label> {
 
     sealed interface Intent {
+        data object AddServing : Intent
+        data object RemoveServing : Intent
     }
 
     data class State(

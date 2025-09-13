@@ -19,6 +19,7 @@ import dev.juanrincon.simmerly.recipes.presentation.details.mvikotlin.RecipeDeta
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import kotlin.math.round
 
 internal class RecipeDetailsStoreFactory(
     private val recipeId: String,
@@ -53,8 +54,9 @@ internal class RecipeDetailsStoreFactory(
     private class ExecutorImpl(
         private val repository: RecipeRepository
     ) : CoroutineExecutor<Intent, Action, State, Msg, Label>() {
-        override fun executeIntent(intent: Intent) {
-            TODO()
+        override fun executeIntent(intent: Intent) = when (intent) {
+            Intent.AddServing -> updateServing(state().recipe.servings + 1)
+            Intent.RemoveServing -> updateServing(state().recipe.servings - 1)
         }
 
         override fun executeAction(action: Action) {
@@ -82,6 +84,31 @@ internal class RecipeDetailsStoreFactory(
                         }
                     }
                 }.launchIn(scope)
+        }
+        private fun updateServing(newServings: Double) {
+            val current = state().recipe
+            if (current == RecipeDetailUi.emptyRecipe) return
+
+            // Avoid 0 or negative servings; adjust bounds as needed
+            val clamped = newServings.coerceAtLeast(1.0)
+            if (clamped == current.servings) return
+
+            val factor = clamped / current.servings
+
+            val updatedIngredients = current.ingredients.map { ingredient ->
+                // If your IngredientUi quantity can be null, guard it here
+                val newQty = (ingredient.quantity * factor)
+                // Optional: round to sensible precision for display
+                val rounded = (round(newQty * 100.0) / 100.0)
+                ingredient.copy(quantity = rounded)
+            }
+
+            val updatedRecipe = current.copy(
+                servings = clamped,
+                ingredients = updatedIngredients
+            )
+
+            dispatch(RecipeUpdated(updatedRecipe))
         }
     }
 
