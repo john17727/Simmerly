@@ -21,27 +21,31 @@ data class IngredientUi(
         display
     }
 
-    val formattedQuantity = if (unit != null) {
-        val name = if (unit.useAbbreviation == true) {
-            unit.abbreviation
+    val formattedQuantity = if (food != null) {
+        if (unit != null) {
+            val name = if (unit.useAbbreviation) {
+                unit.abbreviation
+            } else {
+                unit.name
+            }
+            val pluralName = if (unit.useAbbreviation) {
+                unit.pluralAbbreviation
+            } else {
+                unit.pluralName ?: unit.name
+            }
+            val formattedQuantity = quantity.format(1)
+            val formattedUnit = if (quantity > 1.0) {
+                (pluralName ?: name).nullIfEmpty()
+            } else {
+                name.nullIfEmpty()
+            }
+            if (formattedUnit == null) {
+                formattedQuantity
+            } else {
+                "$formattedQuantity $formattedUnit"
+            }
         } else {
-            unit.name
-        }
-        val pluralName = if (unit.useAbbreviation == true) {
-            unit.pluralAbbreviation
-        } else {
-            unit.pluralName ?: unit.name
-        }
-        val formattedQuantity = quantity.format(1)
-        val formattedUnit = if (quantity > 1.0) {
-            (pluralName ?: name).nullIfEmpty()
-        } else {
-            name.nullIfEmpty()
-        }
-        if (formattedUnit == null) {
-            formattedQuantity
-        } else {
-            "$formattedQuantity $formattedUnit"
+            quantity.format(1)
         }
     } else {
         null

@@ -38,7 +38,9 @@ fun RecipeEntity.toDomain(host: String?): RecipeSummary = RecipeSummary(
     image = createRecipeImageUrl(host, id),
     tags = listOf(),
     rating = rating,
-    cookTime = abbreviateTime(totalTime),
+    totalTime = abbreviateTime(totalTime),
+    prepTime = abbreviateNullableTime(prepTime),
+    performTime = abbreviateNullableTime(performTime),
     description = description
 )
 
@@ -349,6 +351,12 @@ private fun createRecipeImageUrl(host: String?, id: String): String {
     if (host == null) return ""
     return "$host/api/media/recipes/$id/images/original.webp"
 }
+
+private fun abbreviateNullableTime(time: String?): String? = if (time != null) {
+        abbreviateTime(time)
+    } else {
+        null
+    }
 
 private fun abbreviateTime(time: String): String = when {
     time.lowercase().contains("hour") -> time.replace("hour", "h")

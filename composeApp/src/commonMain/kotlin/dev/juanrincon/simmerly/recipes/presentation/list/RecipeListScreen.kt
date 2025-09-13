@@ -8,11 +8,8 @@ import androidx.compose.animation.core.spring
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
@@ -25,31 +22,26 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.relocation.BringIntoViewRequester
 import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.rounded.LocalDining
+import androidx.compose.material.icons.rounded.LocalFireDepartment
 import androidx.compose.material.icons.rounded.Star
 import androidx.compose.material.icons.rounded.Timer
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
-import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.role
@@ -61,7 +53,6 @@ import androidx.window.core.layout.WindowSizeClass
 import coil3.compose.AsyncImage
 import coil3.compose.LocalPlatformContext
 import coil3.request.ImageRequest
-import dev.juanrincon.simmerly.core.presentation.ifTrue
 import dev.juanrincon.simmerly.recipes.domain.model.RecipeSummary
 import dev.juanrincon.simmerly.recipes.presentation.list.mvikotlin.RecipeListStore
 
@@ -80,7 +71,8 @@ fun RecipeListScreen(
         derivedStateOf {
             if (state.isLoading) return@derivedStateOf false
             val info = lazyListState.layoutInfo
-            val lastVisible = info.visibleItemsInfo.lastOrNull()?.index ?: return@derivedStateOf false
+            val lastVisible =
+                info.visibleItemsInfo.lastOrNull()?.index ?: return@derivedStateOf false
             val remaining = (state.recipes.size - 1) - lastVisible
             remaining <= 5 && lazyListState.isScrollInProgress
         }
@@ -219,7 +211,7 @@ fun RecipeCard(
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis
                     )
-                    RecipeMetaRow(recipe.rating, recipe.cookTime)
+                    RecipeMetaRow(recipe.rating, recipe.totalTime, recipe.prepTime, recipe.performTime)
                     if (recipe.description.isNotBlank()) {
                         Text(
                             recipe.description,
@@ -249,7 +241,10 @@ fun RecipeCard(
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
                         )
-                        RecipeMetaRow(recipe.rating, recipe.cookTime)
+                        RecipeLimitedMetaRow(
+                            recipe.rating,
+                            recipe.totalTime
+                        )
                     }
                 }
             }
@@ -260,6 +255,8 @@ fun RecipeCard(
 @Composable
 private fun RecipeMetaRow(
     rating: Double?,
+    totalTime: String?,
+    prepTime: String?,
     cookTime: String?,
     modifier: Modifier = Modifier
 ) {
@@ -281,7 +278,76 @@ private fun RecipeMetaRow(
                 Text(it.toString(), style = MaterialTheme.typography.bodySmall)
             }
         }
+        totalTime?.let {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                Icon(
+                    Icons.Rounded.Timer,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(16.dp)
+                )
+                Text(it, style = MaterialTheme.typography.bodySmall)
+            }
+        }
+        prepTime?.let {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                Icon(
+                    Icons.Rounded.LocalDining,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(16.dp)
+                )
+                Text(it, style = MaterialTheme.typography.bodySmall)
+            }
+        }
         cookTime?.let {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                Icon(
+                    Icons.Rounded.LocalFireDepartment,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(16.dp)
+                )
+                Text(it, style = MaterialTheme.typography.bodySmall)
+            }
+        }
+    }
+}
+
+@Composable
+private fun RecipeLimitedMetaRow(
+    rating: Double?,
+    totalTime: String?,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = modifier
+    ) {
+        rating?.let {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                Icon(
+                    Icons.Rounded.Star,
+                    contentDescription = null,
+                    modifier = Modifier.size(16.dp)
+                )
+                Text(it.toString(), style = MaterialTheme.typography.bodySmall)
+            }
+        }
+        totalTime?.let {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(4.dp)

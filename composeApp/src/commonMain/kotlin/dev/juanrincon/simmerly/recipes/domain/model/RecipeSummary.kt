@@ -6,6 +6,8 @@ data class RecipeSummary(
     val image: String,
     val tags: List<Tag>,
     val rating: Double?,
-    val cookTime: String?,
+    val totalTime: String?,
+    val prepTime: String?,
+    val performTime: String?,
     val description: String
 )
