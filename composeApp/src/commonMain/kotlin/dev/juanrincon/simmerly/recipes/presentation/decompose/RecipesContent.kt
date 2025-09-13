@@ -14,14 +14,13 @@ import com.arkivanov.decompose.extensions.compose.experimental.panels.ChildPanel
 import com.arkivanov.decompose.extensions.compose.experimental.panels.HorizontalChildPanelsLayout
 import com.arkivanov.decompose.extensions.compose.experimental.stack.animation.fade
 import com.arkivanov.decompose.router.panels.ChildPanelsMode
-import dev.juanrincon.simmerly.core.presentation.ifElse
 import dev.juanrincon.simmerly.core.presentation.ifTrue
 import dev.juanrincon.simmerly.recipes.presentation.details.decompose.RecipeDetailsContent
 import dev.juanrincon.simmerly.recipes.presentation.list.decompose.RecipeListContent
 
 @OptIn(ExperimentalDecomposeApi::class)
 @Composable
-fun RecipesContent(component: RecipesComponent) {
+fun RecipesContent(component: RecipesComponent, modifier: Modifier = Modifier) {
     var panelMode by remember { mutableStateOf(ChildPanelsMode.SINGLE) }
 
     ChildPanelsModeChangedEffect { mode ->
@@ -36,12 +35,12 @@ fun RecipesContent(component: RecipesComponent) {
         detailsChild = {
             RecipeDetailsContent(it.instance)
         },
-        layout = remember { HorizontalChildPanelsLayout(dualWeights = Pair(1F, 3F)) },
+        layout = remember { HorizontalChildPanelsLayout(dualWeights = Pair(0.30F, 0.70F)) },
         animators = remember { ChildPanelsAnimators(fade()) },
-        modifier = Modifier.ifTrue(
+        modifier = modifier.ifTrue(
             condition = panelMode == ChildPanelsMode.DUAL
         ) {
-            padding(16.dp)
+            padding(bottom = 16.dp, start = 16.dp, end = 16.dp)
         }
     )
 }

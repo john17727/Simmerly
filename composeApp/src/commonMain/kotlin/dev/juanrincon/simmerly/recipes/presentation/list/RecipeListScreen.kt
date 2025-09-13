@@ -1,6 +1,7 @@
 package dev.juanrincon.simmerly.recipes.presentation.list
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -53,7 +54,6 @@ fun RecipeListScreen(
 ) {
     val windowSizeClass = currentWindowAdaptiveInfo().windowSizeClass
     val lazyListState = rememberLazyListState()
-    val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
 
     LaunchedEffect(lazyListState) {
         snapshotFlow { lazyListState.layoutInfo.visibleItemsInfo.lastOrNull()?.index }
@@ -65,45 +65,22 @@ fun RecipeListScreen(
                 }
             }
     }
-    Scaffold(
-        topBar = {
-            LargeTopAppBar(
-                title = { Text("Recipes") },
-                actions = {
-                    IconButton(onClick = { onEvent(RecipeListStore.Intent.OnRefresh) }) {
-                        Icon(Icons.Default.Refresh, contentDescription = null)
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors()
-                    .copy(scrolledContainerColor = MaterialTheme.colorScheme.surface),
-                scrollBehavior = scrollBehavior
-            )
-        },
-        modifier = modifier.nestedScroll(scrollBehavior.nestedScrollConnection).ifTrue(
-            windowSizeClass.isWidthAtLeastBreakpoint(
-                WindowSizeClass.WIDTH_DP_EXPANDED_LOWER_BOUND
-            )
-        ) {
-            padding(end = 8.dp).then(clip(shape = MaterialTheme.shapes.medium))
-        },
-    ) { paddingValues ->
-        if (windowSizeClass.isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_EXPANDED_LOWER_BOUND)) {
-            SelectableList(
-                state.recipes,
-                selected = state.selectedRecipeId,
-                onOutput = onOutput,
-                onSelected = { onEvent(RecipeListStore.Intent.OnRecipeSelected(it)) },
-                state = lazyListState,
-                modifier = Modifier.padding(paddingValues)
-            )
-        } else {
-            List(
-                state.recipes,
-                onOutput,
-                lazyListState,
-                modifier = Modifier.padding(paddingValues)
-            )
-        }
+    if (windowSizeClass.isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_EXPANDED_LOWER_BOUND)) {
+        SelectableList(
+            state.recipes,
+            selected = state.selectedRecipeId,
+            onOutput = onOutput,
+            onSelected = { onEvent(RecipeListStore.Intent.OnRecipeSelected(it)) },
+            state = lazyListState,
+            modifier = modifier
+        )
+    } else {
+        List(
+            state.recipes,
+            onOutput,
+            lazyListState,
+            modifier = modifier
+        )
     }
 }
 
@@ -118,9 +95,8 @@ fun SelectableList(
 ) {
     LazyColumn(
         state = state,
-        contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
-        modifier = modifier
+        modifier = modifier.clip(shape = MaterialTheme.shapes.medium)
     ) {
         items(recipes) { item ->
             RecipeCard(
@@ -145,9 +121,8 @@ fun List(
 ) {
     LazyColumn(
         state = lazyListState,
-        contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
-        modifier = modifier
+        modifier = modifier.clip(shape = MaterialTheme.shapes.medium)
     ) {
         items(recipes) { item ->
             RecipeCard(
@@ -170,7 +145,6 @@ fun RecipeCard(
         modifier = modifier,
         onClick = onClick,
         border = if (selected) BorderStroke(2.dp, MaterialTheme.colorScheme.primary) else null,
-        colors = CardDefaults.cardColors().copy(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Row(
             horizontalArrangement = Arrangement.spacedBy(16.dp),

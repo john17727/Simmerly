@@ -47,6 +47,11 @@ val SimmerlyLightColorScheme = lightColorScheme(
     onSurface = Simmerly.TextPrimary,
     surfaceVariant = Simmerly.Card,
     onSurfaceVariant = Simmerly.TextSecondary,
+    surfaceContainerLowest = Color(0xFFFCFDFE),
+    surfaceContainerLow = Simmerly.Card,
+    surfaceContainer = Color(0xFFEEF1F5),
+    surfaceContainerHigh = Simmerly.Divider,
+    surfaceContainerHighest = Simmerly.Outline,
 
     outline = Simmerly.Outline,
     outlineVariant = Simmerly.Divider,
@@ -88,6 +93,11 @@ val SimmerlyDarkColorScheme = darkColorScheme(
     onSurface = Color(0xFFEDEFF2),
     surfaceVariant = Color(0xFF2A2D32),
     onSurfaceVariant = Color(0xFFC9CDD3),
+    surfaceContainerLowest = Color(0xFF0E1012),
+    surfaceContainerLow = Color(0xFF16191C),
+    surfaceContainer = Color(0xFF24282E),
+    surfaceContainerHigh = Color(0xFF32363D),
+    surfaceContainerHighest = Color(0xFF3F444B),
 
     outline = Color(0xFF8E939B),
     outlineVariant = Color(0xFF3A3E45),

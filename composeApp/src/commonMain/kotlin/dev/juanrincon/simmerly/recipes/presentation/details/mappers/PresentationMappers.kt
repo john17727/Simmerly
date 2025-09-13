@@ -29,7 +29,7 @@ fun Ingredient.toIngredientUi(): IngredientUi {
         IngredientUi(
             quantity = null,
             name = display,
-            note = note?.nullIfEmpty()
+            note = if (display == note) null else note?.nullIfEmpty()
         )
     }
 }

@@ -1,6 +1,7 @@
 package dev.juanrincon.simmerly.recipes.presentation.details
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -56,7 +57,7 @@ fun RecipeDetailsScreen(
                 )
             ) { isExpanded ->
                 if (isExpanded) {
-                    ExpandedView(state.recipe, modifier)
+                    ExpandedView(state.recipe, modifier.padding(start = 16.dp))
                 } else {
                     CompactView()
                 }
@@ -68,18 +69,18 @@ fun RecipeDetailsScreen(
 @Composable
 private fun ExpandedView(recipe: RecipeDetailUi, modifier: Modifier = Modifier) {
     Row(
-        modifier = modifier.padding(start = 8.dp),
+        modifier = modifier,
         horizontalArrangement = Arrangement.spacedBy(EXPANDED_CARD_PADDING)
     ) {
-        Card(
-            modifier = Modifier.fillMaxHeight().widthIn(200.dp, 350.dp),
-            colors = CardDefaults.cardColors()
-                .copy(containerColor = MaterialTheme.colorScheme.surface)
-        ) {
-            IngredientList(recipe.ingredients)
-        }
+        IngredientList(
+            recipe.ingredients,
+            modifier = Modifier.background(
+                color = MaterialTheme.colorScheme.surfaceContainer,
+                shape = MaterialTheme.shapes.medium
+            ).weight(0.3f)
+        )
         Column(
-            modifier = Modifier.weight(1f),
+            modifier = Modifier.weight(0.7f),
             verticalArrangement = Arrangement.spacedBy(EXPANDED_CARD_PADDING)
         ) {
             AsyncImage(
@@ -90,8 +91,6 @@ private fun ExpandedView(recipe: RecipeDetailUi, modifier: Modifier = Modifier) 
             )
             Card(
                 modifier = Modifier.fillMaxWidth().weight(1f),
-                colors = CardDefaults.cardColors()
-                    .copy(containerColor = MaterialTheme.colorScheme.surface)
             ) {
 
             }
@@ -105,10 +104,11 @@ private fun CompactView() {
 }
 
 @Composable
-private fun IngredientList(ingredients: List<IngredientUi>) {
+private fun IngredientList(ingredients: List<IngredientUi>, modifier: Modifier = Modifier) {
     LazyColumn(
         contentPadding = PaddingValues(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+        modifier = modifier
     ) {
         stickyHeader {
             Text("Ingredients", style = MaterialTheme.typography.headlineMedium)
@@ -124,12 +124,16 @@ private fun IngredientEntry(ingredient: IngredientUi, modifier: Modifier = Modif
     Row(
         modifier = modifier,
         horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.Top
     ) {
         Column {
             Text(ingredient.name)
             ingredient.note?.let { note ->
-                Text(note, style = MaterialTheme.typography.bodySmall)
+                Text(
+                    note,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.tertiary
+                )
             }
         }
         ingredient.quantity?.let {
