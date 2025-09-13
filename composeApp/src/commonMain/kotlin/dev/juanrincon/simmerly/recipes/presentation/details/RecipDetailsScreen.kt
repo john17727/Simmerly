@@ -76,9 +76,7 @@ private fun ExpandedView(
         horizontalArrangement = Arrangement.spacedBy(EXPANDED_CARD_PADDING)
     ) {
         IngredientList(
-            state.recipe.ingredients,
-            serving = state.recipe.formattedServings,
-            disabledAmount = state.recipe.settings.disableAmount,
+            recipe = state.recipe,
             onRemoveServingButtonClick = { onEvent(RecipeDetailsStore.Intent.RemoveServing) },
             onAddServingButtonClick = { onEvent(RecipeDetailsStore.Intent.AddServing) },
             modifier = Modifier.background(
@@ -142,11 +140,9 @@ private fun CompactView() {
 
 @Composable
 private fun IngredientList(
-    ingredients: List<IngredientUi>,
+    recipe: RecipeDetailUi,
     onAddServingButtonClick: () -> Unit,
     onRemoveServingButtonClick: () -> Unit,
-    serving: String,
-    disabledAmount: Boolean,
     modifier: Modifier = Modifier
 ) {
     LazyColumn(
@@ -166,12 +162,12 @@ private fun IngredientList(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(serving, color = MaterialTheme.colorScheme.primary)
-                    if (!disabledAmount) {
+                    Text(recipe.formattedServings, color = MaterialTheme.colorScheme.primary)
+                    if (recipe.isParsed) {
                         Row {
                             IconButton(
                                 onClick = onRemoveServingButtonClick,
-                                enabled = ingredients.size > 1
+                                enabled = recipe.servings > 1
                             ) {
                                 Icon(Icons.Default.Remove, contentDescription = null)
                             }
@@ -183,7 +179,7 @@ private fun IngredientList(
                 }
             }
         }
-        items(ingredients) { ingredient ->
+        items(recipe.ingredients) { ingredient ->
             IngredientEntry(ingredient, modifier = Modifier.fillMaxWidth())
         }
     }

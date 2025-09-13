@@ -135,7 +135,6 @@ fun SettingsDto.toEntity() = SettingsEntity(
     showAssets = showAssets,
     landscapeView = landscapeView,
     disableComments = disableComments,
-    disableAmount = disableAmount,
     locked = locked
 )
 
@@ -174,8 +173,6 @@ fun IngredientDto.toEntity(recipeId: String) = IngredientEntity(
     unitId = unit?.id,
     foodId = food?.id,
     note = note,
-    isFood = isFood,
-    disableAmount = disableAmount,
     display = display,
     title = title,
     originalText = originalText

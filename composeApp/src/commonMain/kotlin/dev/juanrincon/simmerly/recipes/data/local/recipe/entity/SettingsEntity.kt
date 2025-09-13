@@ -8,7 +8,6 @@ data class SettingsEntity(
     @ColumnInfo(name = "show_assets") val showAssets: Boolean?,
     @ColumnInfo(name = "landscape_view") val landscapeView: Boolean?,
     @ColumnInfo("disable_comments") val disableComments: Boolean?,
-    @ColumnInfo("disable_amount") val disableAmount: Boolean?,
     val locked: Boolean?
 ) {
     companion object {
@@ -18,7 +17,6 @@ data class SettingsEntity(
             showAssets = null,
             landscapeView = null,
             disableComments = null,
-            disableAmount = null,
             locked = null
         )
     }

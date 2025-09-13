@@ -6,6 +6,5 @@ data class Settings(
     val showAssets: Boolean,
     val landscapeView: Boolean,
     val disableComments: Boolean,
-    val disableAmount: Boolean,
     val locked: Boolean
 )

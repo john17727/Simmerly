@@ -12,6 +12,8 @@ data class RecipeDetailUi(
     val settings: Settings
 ) {
 
+    val isParsed = ingredients.any { it.food != null }
+
     val formattedServings = if (servings > 1.0) {
         "${servings.format(1)} servings"
     } else {
@@ -31,7 +33,6 @@ data class RecipeDetailUi(
                 showAssets = false,
                 landscapeView = false,
                 disableComments = false,
-                disableAmount = true,
                 locked = false
             )
         )

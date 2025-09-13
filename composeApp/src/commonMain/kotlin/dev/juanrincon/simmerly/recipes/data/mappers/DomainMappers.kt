@@ -98,8 +98,6 @@ fun IngredientWithRelations.toDomain(): Ingredient = Ingredient(
     unit = unit?.toDomain(),
     food = food?.toDomain(),
     note = ingredient.note,
-    isFood = ingredient.isFood,
-    disableAmount = ingredient.disableAmount,
     display = ingredient.display,
     title = ingredient.title,
     originalText = ingredient.originalText,
@@ -157,7 +155,6 @@ fun SettingsEntity.toDomain(): Settings = Settings(
     showAssets = showAssets ?: false,
     landscapeView = landscapeView ?: false,
     disableComments = disableComments ?: false,
-    disableAmount = disableAmount ?: true,
     locked = locked ?: false
 )
 
@@ -240,7 +237,6 @@ fun Settings.toEntity(): SettingsEntity = SettingsEntity(
     showAssets = showAssets,
     landscapeView = landscapeView,
     disableComments = disableComments,
-    disableAmount = disableAmount,
     locked = locked
 )
 
@@ -279,8 +275,6 @@ fun Ingredient.toEntity(recipeId: String): IngredientEntity = IngredientEntity(
     unitId = unit?.id,
     foodId = food?.id,
     note = note,
-    isFood = isFood,
-    disableAmount = disableAmount,
     display = display,
     title = title,
     originalText = originalText

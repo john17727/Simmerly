@@ -24,7 +24,6 @@ fun RecipeDetail.toRecipeDetailUi(): RecipeDetailUi = RecipeDetailUi(
 fun Ingredient.toIngredientUi(): IngredientUi = IngredientUi(
     quantity = quantity,
     display = display,
-    isFood = isFood,
     food = food?.toFoodUi(),
     unit = unit?.toUnitUi(),
     note = if (display == note) null else note?.nullIfEmpty()

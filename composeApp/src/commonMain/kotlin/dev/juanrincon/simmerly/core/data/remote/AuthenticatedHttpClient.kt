@@ -18,6 +18,7 @@ import io.ktor.client.plugins.logging.Logging
 import io.ktor.client.plugins.logging.SIMPLE
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
+import io.ktor.http.isSuccess
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
 
@@ -47,8 +48,13 @@ fun createAuthenticatedHttpClient(
     install(Auth) {
         bearer {
             loadTokens {
-                val latestToken = sessionDatastore.getToken() ?: ""
-                BearerTokens(latestToken, latestToken)
+                val token = sessionDatastore.getToken().orEmpty()
+                if (token.isBlank()) {
+                    null
+                } else {
+                    // Single-token model → use the same token for access & refresh
+                    BearerTokens(token, token)
+                }
             }
             refreshTokens {
                 val latestToken = sessionDatastore.getToken() ?: ""

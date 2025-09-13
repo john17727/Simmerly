@@ -8,8 +8,6 @@ data class IngredientDto(
     val unit: UnitDto?,
     val food: FoodDto?,
     val note: String?,
-    val isFood: Boolean,
-    val disableAmount: Boolean,
     val display: String,
     val title: String?,
     val originalText: String?,
