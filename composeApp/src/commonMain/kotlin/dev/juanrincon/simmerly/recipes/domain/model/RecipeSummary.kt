@@ -7,4 +7,5 @@ data class RecipeSummary(
     val tags: List<Tag>,
     val rating: Double?,
     val cookTime: String?,
+    val description: String
 )

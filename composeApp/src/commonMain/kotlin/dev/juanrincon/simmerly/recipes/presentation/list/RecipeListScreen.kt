@@ -1,5 +1,13 @@
 package dev.juanrincon.simmerly.recipes.presentation.list
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.SizeTransform
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -7,12 +15,15 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.relocation.BringIntoViewRequester
+import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.rounded.Star
@@ -31,15 +42,25 @@ import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.snapshotFlow
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.window.core.layout.WindowSizeClass
 import coil3.compose.AsyncImage
+import coil3.compose.LocalPlatformContext
+import coil3.request.ImageRequest
 import dev.juanrincon.simmerly.core.presentation.ifTrue
 import dev.juanrincon.simmerly.recipes.domain.model.RecipeSummary
 import dev.juanrincon.simmerly.recipes.presentation.list.mvikotlin.RecipeListStore
@@ -55,15 +76,17 @@ fun RecipeListScreen(
     val windowSizeClass = currentWindowAdaptiveInfo().windowSizeClass
     val lazyListState = rememberLazyListState()
 
-    LaunchedEffect(lazyListState) {
-        snapshotFlow { lazyListState.layoutInfo.visibleItemsInfo.lastOrNull()?.index }
-            .collect { lastVisibleItemIndex ->
-                // Check if the last visible item is near the end of the list
-                // A buffer of 5 items is used to load data before the user reaches the absolute end
-                if (lastVisibleItemIndex != null && lastVisibleItemIndex >= state.recipes.size - 5 && !state.isLoading) {
-                    onEvent(RecipeListStore.Intent.OnLoadMore)
-                }
-            }
+    val shouldLoadMore by remember(lazyListState, state.recipes.size, state.isLoading) {
+        derivedStateOf {
+            if (state.isLoading) return@derivedStateOf false
+            val info = lazyListState.layoutInfo
+            val lastVisible = info.visibleItemsInfo.lastOrNull()?.index ?: return@derivedStateOf false
+            val remaining = (state.recipes.size - 1) - lastVisible
+            remaining <= 5 && lazyListState.isScrollInProgress
+        }
+    }
+    LaunchedEffect(shouldLoadMore) {
+        if (shouldLoadMore) onEvent(RecipeListStore.Intent.OnLoadMore)
     }
     if (windowSizeClass.isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_EXPANDED_LOWER_BOUND)) {
         SelectableList(
@@ -98,7 +121,7 @@ fun SelectableList(
         verticalArrangement = Arrangement.spacedBy(8.dp),
         modifier = modifier.clip(shape = MaterialTheme.shapes.medium)
     ) {
-        items(recipes) { item ->
+        items(recipes, key = { it.id }) { item ->
             RecipeCard(
                 item,
                 selected = item.id == selected,
@@ -106,7 +129,9 @@ fun SelectableList(
                     onOutput(RecipeListStore.Output.SelectedRecipe(item.id))
                     onSelected(item.id)
                 },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .animateItem()
             )
         }
     }
@@ -124,11 +149,11 @@ fun List(
         verticalArrangement = Arrangement.spacedBy(8.dp),
         modifier = modifier.clip(shape = MaterialTheme.shapes.medium)
     ) {
-        items(recipes) { item ->
+        items(recipes, key = { it.id }) { item ->
             RecipeCard(
                 item,
                 onClick = { onOutput(RecipeListStore.Output.SelectedRecipe(item.id)) },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth().animateItem()
             )
         }
     }
@@ -141,56 +166,133 @@ fun RecipeCard(
     modifier: Modifier = Modifier,
     selected: Boolean = false,
 ) {
+    val bringIntoViewRequester = remember { BringIntoViewRequester() }
+    LaunchedEffect(selected) {
+        if (selected) {
+            // Wait one frame so the expanded content is composed and measured
+            withFrameNanos { }
+            bringIntoViewRequester.bringIntoView()
+        }
+    }
     Card(
-        modifier = modifier,
-        onClick = onClick,
-        border = if (selected) BorderStroke(2.dp, MaterialTheme.colorScheme.primary) else null,
-    ) {
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(8.dp)
-        ) {
-            AsyncImage(
-                recipe.image,
-                contentDescription = null,
-                contentScale = ContentScale.Crop,
-                modifier = Modifier.size(100.dp).clip(MaterialTheme.shapes.medium)
+        modifier = modifier
+            .bringIntoViewRequester(bringIntoViewRequester)
+            .animateContentSize(
+                animationSpec = spring(
+                    dampingRatio = Spring.DampingRatioNoBouncy,
+                    stiffness = Spring.StiffnessMediumLow
+                )
             )
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text(recipe.name, style = MaterialTheme.typography.titleMedium)
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
+            .semantics {
+                stateDescription = if (selected) "Expanded" else "Collapsed"
+                role = Role.Button
+            },
+        onClick = onClick,
+        colors = CardDefaults.cardColors().copy(containerColor = MaterialTheme.colorScheme.surface)
+    ) {
+        AnimatedContent(
+            selected,
+            transitionSpec = {
+                fadeIn() togetherWith fadeOut() using SizeTransform(clip = false)
+            },
+            label = "RecipeCardExpand"
+        ) { isSelected ->
+            if (isSelected) {
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.padding(8.dp)
                 ) {
-                    recipe.rating?.let {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(4.dp)
-                        ) {
-                            Icon(
-                                Icons.Rounded.Star,
-                                contentDescription = null,
-                                modifier = Modifier.size(16.dp)
-                            )
-                            Text(it.toString(), style = MaterialTheme.typography.bodySmall)
-                        }
-                    }
-                    recipe.cookTime?.let {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(4.dp)
-                        ) {
-                            Icon(
-                                Icons.Rounded.Timer,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.size(16.dp)
-                            )
-                            Text(it, style = MaterialTheme.typography.bodySmall)
-                        }
+                    AsyncImage(
+                        model = ImageRequest.Builder(LocalPlatformContext.current)
+                            .data(recipe.image)
+                            .build(),
+                        contentDescription = null,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(200.dp, 400.dp)
+                            .clip(MaterialTheme.shapes.medium)
+                    )
+                    Text(
+                        recipe.name,
+                        style = MaterialTheme.typography.titleMedium,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    RecipeMetaRow(recipe.rating, recipe.cookTime)
+                    if (recipe.description.isNotBlank()) {
+                        Text(
+                            recipe.description,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.secondary
+                        )
                     }
                 }
+            } else {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.padding(8.dp)
+                ) {
+                    AsyncImage(
+                        model = ImageRequest.Builder(LocalPlatformContext.current)
+                            .data(recipe.image)
+                            .build(),
+                        contentDescription = null,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.size(100.dp).clip(MaterialTheme.shapes.medium)
+                    )
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text(
+                            recipe.name,
+                            style = MaterialTheme.typography.titleMedium,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                        RecipeMetaRow(recipe.rating, recipe.cookTime)
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun RecipeMetaRow(
+    rating: Double?,
+    cookTime: String?,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = modifier
+    ) {
+        rating?.let {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                Icon(
+                    Icons.Rounded.Star,
+                    contentDescription = null,
+                    modifier = Modifier.size(16.dp)
+                )
+                Text(it.toString(), style = MaterialTheme.typography.bodySmall)
+            }
+        }
+        cookTime?.let {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                Icon(
+                    Icons.Rounded.Timer,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(16.dp)
+                )
+                Text(it, style = MaterialTheme.typography.bodySmall)
             }
         }
     }

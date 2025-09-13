@@ -38,7 +38,8 @@ fun RecipeEntity.toDomain(host: String?): RecipeSummary = RecipeSummary(
     image = createRecipeImageUrl(host, id),
     tags = listOf(),
     rating = rating,
-    cookTime = abbreviateTime(totalTime)
+    cookTime = abbreviateTime(totalTime),
+    description = description
 )
 
 fun RecipeDetailWithRelations.toDomain(host: String?): RecipeDetail = RecipeDetail(
