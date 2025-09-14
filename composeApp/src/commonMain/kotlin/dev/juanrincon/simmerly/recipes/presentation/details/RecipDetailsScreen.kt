@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -32,7 +31,6 @@ import com.mohamedrejeb.richeditor.model.rememberRichTextState
 import com.mohamedrejeb.richeditor.ui.material3.RichText
 import dev.juanrincon.simmerly.core.presentation.ifTrue
 import dev.juanrincon.simmerly.core.presentation.shimmer
-import dev.juanrincon.simmerly.recipes.domain.model.Nutrition
 import dev.juanrincon.simmerly.recipes.presentation.details.models.IngredientUi
 import dev.juanrincon.simmerly.recipes.presentation.details.models.InstructionUi
 import dev.juanrincon.simmerly.recipes.presentation.details.models.NutritionUi
@@ -88,7 +86,7 @@ private fun ExpandedView(
         horizontalArrangement = Arrangement.spacedBy(EXPANDED_CARD_PADDING)
     ) {
         Column(modifier = Modifier.weight(0.4f).fillMaxHeight(), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-            IngredientList(
+            IngredientAndToolView(
                 recipe = state.recipe,
                 onRemoveServingButtonClick = { onEvent(RecipeDetailsStore.Intent.RemoveServing) },
                 onAddServingButtonClick = { onEvent(RecipeDetailsStore.Intent.AddServing) },
@@ -118,7 +116,7 @@ private fun ExpandedView(
                 )
             }
         }
-        InstructionList(
+        InstructionView(
             instructions = state.recipe.instructions,
             modifier = Modifier.background(
                 color = MaterialTheme.colorScheme.surfaceContainer,
@@ -184,7 +182,7 @@ private fun NutritionEntry(
 }
 
 @Composable
-private fun IngredientList(
+private fun IngredientAndToolView(
     recipe: RecipeDetailUi,
     onAddServingButtonClick: () -> Unit,
     onRemoveServingButtonClick: () -> Unit,
@@ -227,11 +225,19 @@ private fun IngredientList(
         items(recipe.ingredients) { ingredient ->
             IngredientEntry(ingredient, modifier = Modifier.fillMaxWidth())
         }
+        if (recipe.tools.isNotEmpty()) {
+            item {
+                Text("Tools", style = MaterialTheme.typography.headlineMedium)
+            }
+        }
+        items(recipe.tools) { tool ->
+            Text(tool.name, style = MaterialTheme.typography.bodyMedium)
+        }
     }
 }
 
 @Composable
-private fun InstructionList(
+private fun InstructionView(
     instructions: List<InstructionUi>,
     modifier: Modifier = Modifier
 ) {

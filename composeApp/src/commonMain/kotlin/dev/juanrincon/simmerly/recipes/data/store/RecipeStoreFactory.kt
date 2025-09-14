@@ -8,6 +8,7 @@ import dev.juanrincon.simmerly.auth.domain.SessionDataStore
 import dev.juanrincon.simmerly.core.data.local.SimmerlyDatabase
 import dev.juanrincon.simmerly.recipes.data.local.recipe.IngredientDao
 import dev.juanrincon.simmerly.recipes.data.local.recipe.RecipeDao
+import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.junction.RecipeToolCrossRef
 import dev.juanrincon.simmerly.recipes.data.local.recipe.model.RecipeDetailWithRelations
 import dev.juanrincon.simmerly.recipes.data.mappers.toDomain
 import dev.juanrincon.simmerly.recipes.data.mappers.toEntityWithRelations
@@ -37,6 +38,8 @@ class RecipeStoreFactory(
     private val recipeDao = database.recipeDao()
     private val ingredientDao = database.ingredientDao()
     private val instructionsDao = database.instructionDao()
+    private val toolsDao = database.toolDao()
+    private val recipeToolDao = database.recipeToolDao()
 
     fun create(): RecipeStore = StoreBuilder.from(
         fetcher = createFetcher(),
@@ -69,6 +72,17 @@ class RecipeStoreFactory(
 
                         ingredientDao.upsertAll(response.ingredients.map { it.ingredient })
                         instructionsDao.upsertAll(response.instructions.map { it.instruction })
+                        toolsDao.upsertAll(response.tools)
+                        // Refresh cross‑refs for this recipe
+                        val recipeId = response.recipe.id
+                        val toolRefs = response.tools.map { tool ->
+                            RecipeToolCrossRef(
+                                recipeId = recipeId,
+                                toolId = tool.id
+                            )
+                        }
+                        recipeToolDao.clearForRecipe(recipeId)
+                        recipeToolDao.insertAll(toolRefs)
                     }
                 }
             }

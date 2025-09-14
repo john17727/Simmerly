@@ -3,6 +3,7 @@ package dev.juanrincon.simmerly.recipes.presentation.details.models
 import dev.juanrincon.simmerly.core.utils.format
 import dev.juanrincon.simmerly.recipes.domain.model.Nutrition
 import dev.juanrincon.simmerly.recipes.domain.model.Settings
+import dev.juanrincon.simmerly.recipes.domain.model.Tool
 
 data class RecipeDetailUi(
     val id: String,
@@ -11,6 +12,7 @@ data class RecipeDetailUi(
     val servings: Double,
     val ingredients: List<IngredientUi>,
     val instructions: List<InstructionUi>,
+    val tools: List<Tool>,
     val nutrition: NutritionUi,
     val settings: Settings
 ) {
@@ -44,6 +46,7 @@ data class RecipeDetailUi(
                 transFatContent = "",
                 unsaturatedFatContent = ""
             ),
+            tools = emptyList(),
             settings = Settings(
                 public = true,
                 showNutrition = false,
