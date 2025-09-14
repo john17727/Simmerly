@@ -85,7 +85,7 @@ private fun ExpandedView(
         modifier = modifier,
         horizontalArrangement = Arrangement.spacedBy(EXPANDED_CARD_PADDING)
     ) {
-        Column(modifier = Modifier.weight(0.3f).fillMaxHeight(), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        Column(modifier = Modifier.weight(0.35f).fillMaxHeight(), verticalArrangement = Arrangement.spacedBy(16.dp)) {
             IngredientList(
                 recipe = state.recipe,
                 onRemoveServingButtonClick = { onEvent(RecipeDetailsStore.Intent.RemoveServing) },
@@ -119,7 +119,7 @@ private fun ExpandedView(
             modifier = Modifier.background(
                 color = MaterialTheme.colorScheme.surfaceContainer,
                 shape = MaterialTheme.shapes.medium
-            ).weight(0.7f),
+            ).weight(0.65f),
         )
     }
 }
@@ -258,7 +258,7 @@ private fun IngredientEntry(ingredient: IngredientUi, modifier: Modifier = Modif
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.Top
     ) {
-        Column {
+        Column(modifier = Modifier.fillMaxWidth(0.6f)) {
             Text(ingredient.formattedDisplay)
             ingredient.note?.let { note ->
                 Text(

@@ -1,11 +1,16 @@
 package dev.juanrincon.simmerly.recipes.presentation.decompose
 
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.arkivanov.decompose.ExperimentalDecomposeApi
@@ -34,6 +39,15 @@ fun RecipesContent(component: RecipesComponent, modifier: Modifier = Modifier) {
         },
         detailsChild = {
             RecipeDetailsContent(it.instance)
+        },
+        secondPanelPlaceholder = {
+            Column(
+                modifier = Modifier.fillMaxSize(),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text("Select a recipe to see details")
+            }
         },
         layout = remember { HorizontalChildPanelsLayout(dualWeights = Pair(0.30F, 0.70F)) },
         animators = remember { ChildPanelsAnimators(fade()) },
