@@ -4,7 +4,7 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class IngredientDto(
-    val quantity: Double,
+    val quantity: Double?,
     val unit: UnitDto?,
     val food: FoodDto?,
     val note: String?,

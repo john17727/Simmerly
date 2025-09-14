@@ -11,7 +11,7 @@ data class RecipeDetailUi(
     val servings: Double,
     val ingredients: List<IngredientUi>,
     val instructions: List<InstructionUi>,
-    val nutrition: Nutrition,
+    val nutrition: NutritionUi,
     val settings: Settings
 ) {
 
@@ -31,7 +31,7 @@ data class RecipeDetailUi(
             servings = 0.0,
             ingredients = emptyList(),
             instructions = emptyList(),
-            nutrition = Nutrition(
+            nutrition = NutritionUi(
                 calories = "",
                 carbohydrateContent = "",
                 cholesterolContent = "",

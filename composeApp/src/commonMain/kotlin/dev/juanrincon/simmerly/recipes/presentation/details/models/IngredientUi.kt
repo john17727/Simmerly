@@ -5,14 +5,14 @@ import dev.juanrincon.simmerly.core.utils.format
 import dev.juanrincon.simmerly.core.utils.nullIfEmpty
 
 data class IngredientUi(
-    val quantity: Double,
+    val quantity: Double?,
     val display: String,
     val food: FoodUi?,
     val unit: UnitUi?,
     val note: String?
 ) {
     val formattedDisplay: String = if (food != null) {
-        if (quantity > 1.0) {
+        if ((quantity ?: 2.0) > 1.0) {
             (food.pluralName ?: food.name).capitalizeWords()
         } else {
             (food.name).capitalizeWords()
@@ -33,8 +33,8 @@ data class IngredientUi(
             } else {
                 unit.pluralName ?: unit.name
             }
-            val formattedQuantity = quantity.format(1)
-            val formattedUnit = if (quantity > 1.0) {
+            val formattedQuantity = quantity?.format(2)
+            val formattedUnit = if ((quantity ?: 0.0) > 1.0) {
                 (pluralName ?: name).nullIfEmpty()
             } else {
                 name.nullIfEmpty()
@@ -45,7 +45,7 @@ data class IngredientUi(
                 "$formattedQuantity $formattedUnit"
             }
         } else {
-            quantity.format(1)
+            quantity?.format(2)
         }
     } else {
         null

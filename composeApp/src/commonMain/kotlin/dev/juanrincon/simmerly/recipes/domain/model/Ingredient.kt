@@ -1,7 +1,7 @@
 package dev.juanrincon.simmerly.recipes.domain.model
 
 data class Ingredient(
-    val quantity: Double,
+    val quantity: Double?,
     val unit: Unit?,
     val food: Food?,
     val note: String?,

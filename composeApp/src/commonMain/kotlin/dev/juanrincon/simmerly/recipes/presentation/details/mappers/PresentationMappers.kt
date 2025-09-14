@@ -5,11 +5,13 @@ import dev.juanrincon.simmerly.core.utils.nullIfEmpty
 import dev.juanrincon.simmerly.recipes.domain.model.Food
 import dev.juanrincon.simmerly.recipes.domain.model.Ingredient
 import dev.juanrincon.simmerly.recipes.domain.model.Instruction
+import dev.juanrincon.simmerly.recipes.domain.model.Nutrition
 import dev.juanrincon.simmerly.recipes.domain.model.RecipeDetail
 import dev.juanrincon.simmerly.recipes.domain.model.Unit
 import dev.juanrincon.simmerly.recipes.presentation.details.models.FoodUi
 import dev.juanrincon.simmerly.recipes.presentation.details.models.IngredientUi
 import dev.juanrincon.simmerly.recipes.presentation.details.models.InstructionUi
+import dev.juanrincon.simmerly.recipes.presentation.details.models.NutritionUi
 import dev.juanrincon.simmerly.recipes.presentation.details.models.RecipeDetailUi
 import dev.juanrincon.simmerly.recipes.presentation.details.models.UnitUi
 
@@ -20,7 +22,7 @@ fun RecipeDetail.toRecipeDetailUi(): RecipeDetailUi = RecipeDetailUi(
     servings = servings,
     ingredients = ingredients.map { it.toIngredientUi() },
     instructions = instructions.mapIndexed { index, instruction -> instruction.toInstructionUi(index + 1) },
-    nutrition = nutrition,
+    nutrition = nutrition.toNutritionUi(),
     settings = settings
 )
 
@@ -53,6 +55,28 @@ fun Instruction.toInstructionUi(step: Int): InstructionUi = InstructionUi(
     text = text,
     associatedIngredients = associatedIngredients.map { it.toIngredientUi() }
 )
+
+fun Nutrition.toNutritionUi(): NutritionUi = NutritionUi(
+    calories = calories,
+    carbohydrateContent = formatToGrams(carbohydrateContent),
+    cholesterolContent = formatToMilligrams(cholesterolContent),
+    fatContent = formatToGrams(fatContent),
+    fiberContent = formatToGrams(fiberContent),
+    proteinContent = formatToGrams(proteinContent),
+    saturatedFatContent = formatToGrams(saturatedFatContent),
+    sodiumContent = formatToMilligrams(sodiumContent),
+    sugarContent = formatToGrams(sugarContent),
+    transFatContent = formatToGrams(transFatContent),
+    unsaturatedFatContent = formatToGrams(unsaturatedFatContent)
+)
+
+private fun formatToGrams(nutrition: String?): String? = nutrition?.let {
+    "$it grams"
+}
+
+private fun formatToMilligrams(nutrition: String?): String? = nutrition?.let {
+    "$it milligrams"
+}
 
 private fun formatInstructionTitle(title: String, step: Int): String = if (title.isBlank()) {
     "Step $step"

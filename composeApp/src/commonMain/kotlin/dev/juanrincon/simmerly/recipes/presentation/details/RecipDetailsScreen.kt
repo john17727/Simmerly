@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -34,6 +35,7 @@ import dev.juanrincon.simmerly.core.presentation.shimmer
 import dev.juanrincon.simmerly.recipes.domain.model.Nutrition
 import dev.juanrincon.simmerly.recipes.presentation.details.models.IngredientUi
 import dev.juanrincon.simmerly.recipes.presentation.details.models.InstructionUi
+import dev.juanrincon.simmerly.recipes.presentation.details.models.NutritionUi
 import dev.juanrincon.simmerly.recipes.presentation.details.models.RecipeDetailUi
 import dev.juanrincon.simmerly.recipes.presentation.details.mvikotlin.RecipeDetailsStore
 import org.jetbrains.compose.ui.tooling.preview.Preview
@@ -85,7 +87,7 @@ private fun ExpandedView(
         modifier = modifier,
         horizontalArrangement = Arrangement.spacedBy(EXPANDED_CARD_PADDING)
     ) {
-        Column(modifier = Modifier.weight(0.35f).fillMaxHeight(), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        Column(modifier = Modifier.weight(0.4f).fillMaxHeight(), verticalArrangement = Arrangement.spacedBy(16.dp)) {
             IngredientList(
                 recipe = state.recipe,
                 onRemoveServingButtonClick = { onEvent(RecipeDetailsStore.Intent.RemoveServing) },
@@ -103,6 +105,8 @@ private fun ExpandedView(
                             ),
                             shape = MaterialTheme.shapes.medium
                         )
+                    }.ifTrue(state.recipe.settings.showNutrition) {
+                        weight(1f)
                     }
             )
             AnimatedVisibility(state.recipe.settings.showNutrition) {
@@ -119,13 +123,13 @@ private fun ExpandedView(
             modifier = Modifier.background(
                 color = MaterialTheme.colorScheme.surfaceContainer,
                 shape = MaterialTheme.shapes.medium
-            ).weight(0.65f),
+            ).weight(0.6f),
         )
     }
 }
 
 @Composable
-fun NutritionView(nutrition: Nutrition, modifier: Modifier = Modifier) {
+fun NutritionView(nutrition: NutritionUi, modifier: Modifier = Modifier) {
     Column(
         verticalArrangement = Arrangement.spacedBy(8.dp),
         modifier = modifier

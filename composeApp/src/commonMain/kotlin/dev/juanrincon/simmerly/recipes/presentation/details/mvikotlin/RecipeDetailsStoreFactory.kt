@@ -96,6 +96,7 @@ internal class RecipeDetailsStoreFactory(
             val factor = clamped / current.servings
 
             val updatedIngredients = current.ingredients.map { ingredient ->
+                if (ingredient.quantity == null) return@map ingredient
                 // If your IngredientUi quantity can be null, guard it here
                 val newQty = (ingredient.quantity * factor)
                 // Optional: round to sensible precision for display

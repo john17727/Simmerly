@@ -31,7 +31,7 @@ import androidx.room.PrimaryKey
 data class IngredientEntity(
     @PrimaryKey val id: String,
     @ColumnInfo(name = "recipe_id", index = true) val recipeId: String,
-    val quantity: Double,
+    val quantity: Double?,
     @ColumnInfo(name = "unit_id", index = true) val unitId: String?,
     @ColumnInfo(name = "food_id", index = true) val foodId: String?,
     val note: String?,
