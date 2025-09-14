@@ -6,8 +6,6 @@ import androidx.room.immediateTransaction
 import androidx.room.useWriterConnection
 import dev.juanrincon.simmerly.auth.domain.SessionDataStore
 import dev.juanrincon.simmerly.core.data.local.SimmerlyDatabase
-import dev.juanrincon.simmerly.recipes.data.local.recipe.IngredientDao
-import dev.juanrincon.simmerly.recipes.data.local.recipe.RecipeDao
 import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.junction.RecipeToolCrossRef
 import dev.juanrincon.simmerly.recipes.data.local.recipe.model.RecipeDetailWithRelations
 import dev.juanrincon.simmerly.recipes.data.mappers.toDomain
@@ -40,6 +38,7 @@ class RecipeStoreFactory(
     private val instructionsDao = database.instructionDao()
     private val toolsDao = database.toolDao()
     private val recipeToolDao = database.recipeToolDao()
+    private val noteDao = database.noteDao()
 
     fun create(): RecipeStore = StoreBuilder.from(
         fetcher = createFetcher(),
@@ -72,6 +71,8 @@ class RecipeStoreFactory(
 
                         ingredientDao.upsertAll(response.ingredients.map { it.ingredient })
                         instructionsDao.upsertAll(response.instructions.map { it.instruction })
+                        noteDao.deleteByRecipeId(recipeId)
+                        noteDao.upsertAll(response.notes)
                         toolsDao.upsertAll(response.tools)
                         // Refresh cross‑refs for this recipe
                         val recipeId = response.recipe.id

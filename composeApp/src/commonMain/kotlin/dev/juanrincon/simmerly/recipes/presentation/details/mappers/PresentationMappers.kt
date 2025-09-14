@@ -24,6 +24,7 @@ fun RecipeDetail.toRecipeDetailUi(): RecipeDetailUi = RecipeDetailUi(
     instructions = instructions.mapIndexed { index, instruction -> instruction.toInstructionUi(index + 1) },
     nutrition = nutrition.toNutritionUi(),
     tools = tools,
+    notes = notes,
     settings = settings
 )
 

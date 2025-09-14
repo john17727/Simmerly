@@ -6,7 +6,16 @@ import androidx.room.RoomDatabase
 import androidx.room.RoomDatabaseConstructor
 import androidx.room.TypeConverters
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
+import dev.juanrincon.simmerly.recipes.data.local.metadata.RecipeRemoteKey
+import dev.juanrincon.simmerly.recipes.data.local.metadata.RecipeRemoteKeyDao
+import dev.juanrincon.simmerly.recipes.data.local.recipe.FoodDao
+import dev.juanrincon.simmerly.recipes.data.local.recipe.IngredientDao
+import dev.juanrincon.simmerly.recipes.data.local.recipe.InstructionDao
+import dev.juanrincon.simmerly.recipes.data.local.recipe.NoteDao
 import dev.juanrincon.simmerly.recipes.data.local.recipe.RecipeDao
+import dev.juanrincon.simmerly.recipes.data.local.recipe.RecipeToolDao
+import dev.juanrincon.simmerly.recipes.data.local.recipe.ToolDao
+import dev.juanrincon.simmerly.recipes.data.local.recipe.UnitDao
 import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.CategoryEntity
 import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.CommentEntity
 import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.FoodEntity
@@ -18,18 +27,10 @@ import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.TagEntity
 import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.ToolEntity
 import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.UnitEntity
 import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.UserEntity
+import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.junction.InstructionIngredientCrossRef
 import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.junction.RecipeCategoryCrossRef
 import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.junction.RecipeTagCrossRef
 import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.junction.RecipeToolCrossRef
-import dev.juanrincon.simmerly.recipes.data.local.metadata.RecipeRemoteKey
-import dev.juanrincon.simmerly.recipes.data.local.metadata.RecipeRemoteKeyDao
-import dev.juanrincon.simmerly.recipes.data.local.recipe.FoodDao
-import dev.juanrincon.simmerly.recipes.data.local.recipe.IngredientDao
-import dev.juanrincon.simmerly.recipes.data.local.recipe.InstructionDao
-import dev.juanrincon.simmerly.recipes.data.local.recipe.RecipeToolDao
-import dev.juanrincon.simmerly.recipes.data.local.recipe.ToolDao
-import dev.juanrincon.simmerly.recipes.data.local.recipe.UnitDao
-import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.junction.InstructionIngredientCrossRef
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlin.time.ExperimentalTime
@@ -72,6 +73,8 @@ abstract class SimmerlyDatabase : RoomDatabase() {
     abstract fun toolDao(): ToolDao
 
     abstract fun recipeToolDao(): RecipeToolDao
+
+    abstract fun noteDao(): NoteDao
 
     abstract fun recipeRemoteKeyDao(): RecipeRemoteKeyDao
 }

@@ -4,12 +4,16 @@ import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
@@ -31,6 +35,7 @@ import com.mohamedrejeb.richeditor.model.rememberRichTextState
 import com.mohamedrejeb.richeditor.ui.material3.RichText
 import dev.juanrincon.simmerly.core.presentation.ifTrue
 import dev.juanrincon.simmerly.core.presentation.shimmer
+import dev.juanrincon.simmerly.recipes.domain.model.Note
 import dev.juanrincon.simmerly.recipes.presentation.details.models.IngredientUi
 import dev.juanrincon.simmerly.recipes.presentation.details.models.InstructionUi
 import dev.juanrincon.simmerly.recipes.presentation.details.models.NutritionUi
@@ -85,7 +90,10 @@ private fun ExpandedView(
         modifier = modifier,
         horizontalArrangement = Arrangement.spacedBy(EXPANDED_CARD_PADDING)
     ) {
-        Column(modifier = Modifier.weight(0.4f).fillMaxHeight(), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        Column(
+            modifier = Modifier.fillMaxHeight().width(325.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
             IngredientAndToolView(
                 recipe = state.recipe,
                 onRemoveServingButtonClick = { onEvent(RecipeDetailsStore.Intent.RemoveServing) },
@@ -112,17 +120,67 @@ private fun ExpandedView(
                     state.recipe.nutrition, modifier = Modifier.background(
                         color = MaterialTheme.colorScheme.surfaceContainer,
                         shape = MaterialTheme.shapes.medium
-                    ).padding(top = 32.dp, bottom = 16.dp, start = 16.dp, end = 16.dp)
+                    ).wrapContentHeight(unbounded = true) // allow shrinking to content height
+                        .padding(top = 32.dp, bottom = 16.dp, start = 16.dp, end = 16.dp)
                 )
             }
         }
-        InstructionView(
-            instructions = state.recipe.instructions,
-            modifier = Modifier.background(
-                color = MaterialTheme.colorScheme.surfaceContainer,
-                shape = MaterialTheme.shapes.medium
-            ).weight(0.6f),
-        )
+        Column(
+            modifier = Modifier.fillMaxHeight().weight(1f),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            InstructionView(
+                instructions = state.recipe.instructions,
+                modifier = Modifier.background(
+                    color = MaterialTheme.colorScheme.surfaceContainer,
+                    shape = MaterialTheme.shapes.medium
+                ).weight(1f)
+            )
+            if (state.recipe.notes.isNotEmpty()) {
+                BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
+                    NotesView(
+                        state.recipe.notes,
+                        modifier = Modifier.background(
+                            color = MaterialTheme.colorScheme.surfaceContainer,
+                            shape = MaterialTheme.shapes.medium
+                        ).wrapContentHeight(unbounded = true) // allow shrinking to content height
+                            .heightIn(max = maxHeight / 3) // but never exceed half of the parent
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun NotesView(notes: List<Note>, modifier: Modifier = Modifier) {
+    LazyColumn(
+        contentPadding = PaddingValues(16.dp),
+        verticalArrangement = Arrangement.spacedBy(32.dp),
+        modifier = modifier
+    ) {
+        stickyHeader {
+            Column(
+                modifier = Modifier.fillMaxWidth()
+                    .background(color = MaterialTheme.colorScheme.surfaceContainer)
+                    .padding(top = 16.dp, bottom = 8.dp)
+            ) {
+                Text("Notes", style = MaterialTheme.typography.headlineMedium)
+            }
+        }
+        items(notes, key = { it.id }) { note ->
+            NoteEntry(note, modifier = Modifier.fillMaxWidth())
+        }
+    }
+}
+
+@Composable
+fun NoteEntry(note: Note, modifier: Modifier = Modifier) {
+    Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        if (note.title.isNotEmpty()) {
+            Text(note.title, style = MaterialTheme.typography.titleLarge)
+        }
+        Text(note.text, style = MaterialTheme.typography.bodyMedium)
     }
 }
 
