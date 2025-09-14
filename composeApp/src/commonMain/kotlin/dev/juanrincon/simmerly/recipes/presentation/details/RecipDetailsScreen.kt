@@ -285,7 +285,11 @@ private fun IngredientAndToolView(
         }
         if (recipe.tools.isNotEmpty()) {
             item {
-                Text("Tools", style = MaterialTheme.typography.headlineMedium)
+                Text(
+                    "Tools",
+                    style = MaterialTheme.typography.headlineMedium,
+                    modifier = Modifier.padding(top = 16.dp)
+                )
             }
         }
         items(recipe.tools) { tool ->

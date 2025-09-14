@@ -2,9 +2,6 @@ package dev.juanrincon.simmerly.recipes.presentation.list
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.SizeTransform
-import androidx.compose.animation.animateContentSize
-import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.spring
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
@@ -43,10 +40,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.semantics.role
-import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.window.core.layout.WindowSizeClass
@@ -170,69 +163,60 @@ fun RecipeCard(
             bringIntoViewRequester.bringIntoView()
         }
     }
-    Card(
-        modifier = modifier
-            .bringIntoViewRequester(bringIntoViewRequester)
-            .animateContentSize(
-                animationSpec = spring(
-                    dampingRatio = Spring.DampingRatioNoBouncy,
-                    stiffness = Spring.StiffnessMediumLow
+    AnimatedContent(
+        selected,
+        transitionSpec = {
+            fadeIn() togetherWith fadeOut() using SizeTransform(clip = false)
+        },
+        label = "RecipeCardExpand"
+    ) { isSelected ->
+        if (isSelected) {
+            Column(
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+                modifier = Modifier.padding(vertical = 32.dp)
+                    .bringIntoViewRequester(bringIntoViewRequester),
+            ) {
+                AsyncImage(
+                    model = ImageRequest.Builder(LocalPlatformContext.current)
+                        .data(recipe.image)
+                        .build(),
+                    contentDescription = null,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(200.dp, 400.dp)
+                        .clip(MaterialTheme.shapes.medium)
                 )
-            )
-            .semantics {
-                stateDescription = if (selected) "Expanded" else "Collapsed"
-                role = Role.Button
-            },
-        onClick = onClick,
-        colors = CardDefaults.cardColors().copy(containerColor = MaterialTheme.colorScheme.surface)
-    ) {
-        AnimatedContent(
-            selected,
-            transitionSpec = {
-                fadeIn() togetherWith fadeOut() using SizeTransform(clip = false)
-            },
-            label = "RecipeCardExpand"
-        ) { isSelected ->
-            if (isSelected) {
-                Column(
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                    modifier = Modifier.padding(bottom = 8.dp)
-                ) {
-                    AsyncImage(
-                        model = ImageRequest.Builder(LocalPlatformContext.current)
-                            .data(recipe.image)
-                            .build(),
-                        contentDescription = null,
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .heightIn(200.dp, 400.dp)
-                            .clip(MaterialTheme.shapes.medium)
-                    )
+                Text(
+                    recipe.name,
+                    style = MaterialTheme.typography.titleLarge,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.padding(horizontal = 8.dp)
+                )
+                RecipeMetaRow(
+                    recipe.rating,
+                    recipe.totalTime,
+                    recipe.prepTime,
+                    recipe.performTime,
+                    modifier = Modifier.padding(horizontal = 8.dp)
+                )
+                if (recipe.description.isNotBlank()) {
                     Text(
-                        recipe.name,
-                        style = MaterialTheme.typography.titleMedium,
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis,
+                        recipe.description,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.secondary,
                         modifier = Modifier.padding(horizontal = 8.dp)
                     )
-                    RecipeMetaRow(
-                        recipe.rating,
-                        recipe.totalTime,
-                        recipe.prepTime,
-                        recipe.performTime,
-                        modifier = Modifier.padding(horizontal = 8.dp)
-                    )
-                    if (recipe.description.isNotBlank()) {
-                        Text(
-                            recipe.description,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.secondary,
-                            modifier = Modifier.padding(horizontal = 8.dp)
-                        )
-                    }
                 }
-            } else {
+            }
+        } else {
+            Card(
+                modifier = modifier,
+                onClick = onClick,
+                colors = CardDefaults.cardColors()
+                    .copy(containerColor = MaterialTheme.colorScheme.surface)
+            ) {
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(16.dp),
                     verticalAlignment = Alignment.CenterVertically,
