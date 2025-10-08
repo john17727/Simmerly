@@ -69,6 +69,7 @@ class RecipeStoreFactory(
                         val foods = response.ingredients.mapNotNull { it.food }
                         if (foods.isNotEmpty()) database.foodDao().upsertAll(foods)
 
+                        ingredientDao.deleteByRecipeId(recipeId)
                         ingredientDao.upsertAll(response.ingredients.map { it.ingredient })
                         instructionsDao.upsertAll(response.instructions.map { it.instruction })
                         noteDao.deleteByRecipeId(recipeId)

@@ -176,7 +176,7 @@ fun NotesView(notes: List<Note>, modifier: Modifier = Modifier) {
 
 @Composable
 fun NoteEntry(note: Note, modifier: Modifier = Modifier) {
-    Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(4.dp)) {
+    Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(6.dp)) {
         if (note.title.isNotEmpty()) {
             Text(note.title, style = MaterialTheme.typography.titleLarge)
         }

@@ -60,7 +60,7 @@ fun RecipeSummaryDto.toEntity() = RecipeEntity(
     dateUpdated = Instant.parse(dateUpdated),
     createdAt = Instant.parse(createdAt),
     updatedAt = Instant.parse(updatedAt),
-    lastMade = lastMade?.let { dateStringToInstant(it) },
+    lastMade = lastMade?.let { Instant.parse(it) },
     nutrition = NutritionEntity.empty(),
     settings = SettingsEntity.empty()
 )
@@ -110,7 +110,7 @@ fun RecipeDetailDto.toEntity() = RecipeEntity(
     dateUpdated = Instant.parse(dateUpdated),
     createdAt = Instant.parse(createdAt),
     updatedAt = Instant.parse(updatedAt),
-    lastMade = lastMade?.let { dateStringToInstant(it) },
+    lastMade = lastMade?.let { Instant.parse(it) },
     nutrition = nutrition.toEntity(),
     settings = settings.toEntity()
 )
