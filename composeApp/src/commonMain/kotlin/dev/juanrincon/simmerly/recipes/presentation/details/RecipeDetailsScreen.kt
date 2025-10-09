@@ -4,18 +4,14 @@ import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Remove
@@ -87,11 +83,13 @@ private fun ExpandedView(
     modifier: Modifier = Modifier
 ) {
     Row(
-        modifier = modifier,
+        modifier = modifier
+            .fillMaxWidth()
+            .verticalScroll(rememberScrollState()),
         horizontalArrangement = Arrangement.spacedBy(EXPANDED_CARD_PADDING)
     ) {
         Column(
-            modifier = Modifier.fillMaxHeight().widthIn(200.dp, 300.dp),
+            modifier = Modifier.widthIn(200.dp, 300.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             IngredientAndToolView(
@@ -124,7 +122,7 @@ private fun ExpandedView(
             }
         }
         Column(
-            modifier = Modifier.fillMaxHeight().weight(1f),
+            modifier = Modifier.weight(1f),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             InstructionView(
@@ -132,19 +130,18 @@ private fun ExpandedView(
                 modifier = Modifier.background(
                     color = MaterialTheme.colorScheme.surface,
                     shape = MaterialTheme.shapes.medium
-                ).weight(1f)
+                )
             )
             if (state.recipe.notes.isNotEmpty()) {
-                BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
-                    NotesView(
-                        state.recipe.notes,
-                        modifier = Modifier.background(
+                NotesView(
+                    state.recipe.notes,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(
                             color = MaterialTheme.colorScheme.surface,
                             shape = MaterialTheme.shapes.medium
-                        ).wrapContentHeight(unbounded = true) // allow shrinking to content height
-                            .heightIn(max = maxHeight / 3) // but never exceed half of the parent
-                    )
-                }
+                        )
+                )
             }
         }
     }
@@ -152,21 +149,18 @@ private fun ExpandedView(
 
 @Composable
 fun NotesView(notes: List<Note>, modifier: Modifier = Modifier) {
-    LazyColumn(
-        contentPadding = PaddingValues(16.dp),
-        verticalArrangement = Arrangement.spacedBy(32.dp),
-        modifier = modifier
+    Column(
+        modifier = modifier.padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(32.dp)
     ) {
-        stickyHeader {
-            Column(
-                modifier = Modifier.fillMaxWidth()
-                    .background(color = MaterialTheme.colorScheme.surfaceContainer)
-                    .padding(top = 16.dp, bottom = 8.dp)
-            ) {
-                Text("Notes", style = MaterialTheme.typography.headlineSmall)
-            }
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 16.dp, bottom = 8.dp)
+        ) {
+            Text("Notes", style = MaterialTheme.typography.headlineSmall)
         }
-        items(notes, key = { it.id }) { note ->
+        notes.forEach { note ->
             NoteEntry(note, modifier = Modifier.fillMaxWidth())
         }
     }
@@ -176,7 +170,10 @@ fun NotesView(notes: List<Note>, modifier: Modifier = Modifier) {
 fun NoteEntry(note: Note, modifier: Modifier = Modifier) {
     Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(6.dp)) {
         if (note.title.isNotEmpty()) {
-            Text(note.title, style = MaterialTheme.typography.titleLarge)
+            Text(
+                note.title, style = MaterialTheme.typography.titleLarge,
+                color = MaterialTheme.colorScheme.secondary
+            )
         }
         Text(note.text, style = MaterialTheme.typography.bodyMedium)
     }
@@ -244,53 +241,49 @@ private fun IngredientAndToolView(
     onRemoveServingButtonClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    LazyColumn(
-        contentPadding = PaddingValues(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
-        modifier = modifier
+    Column(
+        modifier = modifier.padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        stickyHeader {
-            Column(
-                modifier = Modifier.fillMaxWidth()
-                    .padding(top = 16.dp, bottom = 8.dp)
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 16.dp, bottom = 8.dp)
+        ) {
+            Text("Ingredients", style = MaterialTheme.typography.headlineSmall)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Text("Ingredients", style = MaterialTheme.typography.headlineSmall)
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(recipe.formattedServings, color = MaterialTheme.colorScheme.primary)
-                    if (recipe.isParsed) {
-                        Row {
-                            IconButton(
-                                onClick = onRemoveServingButtonClick,
-                                enabled = recipe.servings > 1
-                            ) {
-                                Icon(Icons.Default.Remove, contentDescription = null)
-                            }
-                            IconButton(onClick = onAddServingButtonClick) {
-                                Icon(Icons.Default.Add, contentDescription = null)
-                            }
+                Text(recipe.formattedServings, color = MaterialTheme.colorScheme.primary)
+                if (recipe.isParsed) {
+                    Row {
+                        IconButton(
+                            onClick = onRemoveServingButtonClick,
+                            enabled = recipe.servings > 1
+                        ) {
+                            Icon(Icons.Default.Remove, contentDescription = null)
+                        }
+                        IconButton(onClick = onAddServingButtonClick) {
+                            Icon(Icons.Default.Add, contentDescription = null)
                         }
                     }
                 }
             }
         }
-        items(recipe.ingredients) { ingredient ->
+        recipe.ingredients.forEach { ingredient ->
             IngredientEntry(ingredient, modifier = Modifier.fillMaxWidth())
         }
         if (recipe.tools.isNotEmpty()) {
-            item {
-                Text(
-                    "Tools",
-                    style = MaterialTheme.typography.headlineSmall,
-                    modifier = Modifier.padding(top = 16.dp)
-                )
+            Text(
+                "Tools",
+                style = MaterialTheme.typography.headlineSmall,
+                modifier = Modifier.padding(top = 16.dp)
+            )
+            recipe.tools.forEach { tool ->
+                Text(tool.name, style = MaterialTheme.typography.bodyMedium)
             }
-        }
-        items(recipe.tools) { tool ->
-            Text(tool.name, style = MaterialTheme.typography.bodyMedium)
         }
     }
 }
@@ -300,19 +293,18 @@ private fun InstructionView(
     instructions: List<InstructionUi>,
     modifier: Modifier = Modifier
 ) {
-    LazyColumn(
-        contentPadding = PaddingValues(16.dp),
-        verticalArrangement = Arrangement.spacedBy(32.dp),
-        modifier = modifier
+    Column(
+        modifier = modifier.padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(32.dp)
     ) {
-        stickyHeader {
-            Column(
-                modifier = Modifier.fillMaxWidth().padding(top = 16.dp, bottom = 8.dp)
-            ) {
-                Text("Instructions", style = MaterialTheme.typography.headlineSmall)
-            }
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 16.dp, bottom = 8.dp)
+        ) {
+            Text("Instructions", style = MaterialTheme.typography.headlineSmall)
         }
-        items(instructions) { instruction ->
+        instructions.forEach { instruction ->
             InstructionEntry(instruction, modifier = Modifier.fillMaxWidth())
         }
     }
@@ -350,7 +342,7 @@ private fun InstructionEntry(instruction: InstructionUi, modifier: Modifier = Mo
     Column(verticalArrangement = Arrangement.spacedBy(8.dp), modifier = modifier) {
         Text(
             instruction.title,
-            style = MaterialTheme.typography.headlineSmall,
+            style = MaterialTheme.typography.titleLarge,
             color = MaterialTheme.colorScheme.secondary
         )
         Row {
