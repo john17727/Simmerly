@@ -6,7 +6,11 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.wrapContentHeight
@@ -83,13 +87,14 @@ private fun ExpandedView(
     modifier: Modifier = Modifier
 ) {
     Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .verticalScroll(rememberScrollState()),
+        modifier = modifier.fillMaxSize(),
         horizontalArrangement = Arrangement.spacedBy(EXPANDED_CARD_PADDING)
     ) {
         Column(
-            modifier = Modifier.widthIn(200.dp, 300.dp),
+            modifier = Modifier
+                .widthIn(200.dp, 300.dp)
+                .fillMaxHeight()
+                .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             IngredientAndToolView(
@@ -101,7 +106,7 @@ private fun ExpandedView(
                     shape = MaterialTheme.shapes.medium
                 )
                     .ifTrue(state.loading) {
-                        shimmer(
+                        height(600.dp).shimmer(
                             colors = listOf(
                                 MaterialTheme.colorScheme.surfaceContainer,
                                 MaterialTheme.colorScheme.surfaceContainerHighest,
@@ -120,9 +125,13 @@ private fun ExpandedView(
                         .padding(top = 32.dp, bottom = 16.dp, start = 16.dp, end = 16.dp)
                 )
             }
+            Spacer(modifier = Modifier.height(16.dp))
         }
         Column(
-            modifier = Modifier.weight(1f),
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxHeight()
+                .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             InstructionView(
@@ -131,6 +140,16 @@ private fun ExpandedView(
                     color = MaterialTheme.colorScheme.surface,
                     shape = MaterialTheme.shapes.medium
                 )
+                    .ifTrue(state.loading) {
+                        height(800.dp).shimmer(
+                            colors = listOf(
+                                MaterialTheme.colorScheme.surfaceContainer,
+                                MaterialTheme.colorScheme.surfaceContainerHighest,
+                                MaterialTheme.colorScheme.surfaceContainer,
+                            ),
+                            shape = MaterialTheme.shapes.medium
+                        )
+                    }
             )
             if (state.recipe.notes.isNotEmpty()) {
                 NotesView(
@@ -143,6 +162,7 @@ private fun ExpandedView(
                         )
                 )
             }
+            Spacer(modifier = Modifier.height(16.dp))
         }
     }
 }
