@@ -1,32 +1,21 @@
 package dev.juanrincon.simmerly.navigation.app
 
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.unit.dp
-import androidx.window.core.layout.WindowSizeClass
 import com.arkivanov.decompose.extensions.compose.stack.Children
 import com.arkivanov.decompose.extensions.compose.stack.animation.fade
 import com.arkivanov.decompose.extensions.compose.stack.animation.stackAnimation
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
-import dev.juanrincon.simmerly.core.presentation.AppBarConfig
-import dev.juanrincon.simmerly.core.presentation.ifTrue
 import dev.juanrincon.simmerly.recipes.presentation.decompose.RecipesContent
-import dev.juanrincon.simmerly.recipes.presentation.list.mvikotlin.RecipeListStore
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -52,9 +41,11 @@ fun AppContent(component: AppComponent, modifier: Modifier = Modifier) {
                             }
                         }
                     },
+                    colors = TopAppBarDefaults.topAppBarColors().copy(containerColor = MaterialTheme.colorScheme.secondaryContainer)
 //                    scrollBehavior = scrollBehavior
                 )
             },
+            containerColor = MaterialTheme.colorScheme.secondaryContainer,
             modifier = modifier//.nestedScroll(scrollBehavior.nestedScrollConnection)
 //                .ifTrue(
 //                windowSizeClass.isWidthAtLeastBreakpoint(

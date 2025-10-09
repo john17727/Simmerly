@@ -12,7 +12,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -91,7 +91,7 @@ private fun ExpandedView(
         horizontalArrangement = Arrangement.spacedBy(EXPANDED_CARD_PADDING)
     ) {
         Column(
-            modifier = Modifier.fillMaxHeight().width(325.dp),
+            modifier = Modifier.fillMaxHeight().widthIn(200.dp, 300.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             IngredientAndToolView(
@@ -99,11 +99,11 @@ private fun ExpandedView(
                 onRemoveServingButtonClick = { onEvent(RecipeDetailsStore.Intent.RemoveServing) },
                 onAddServingButtonClick = { onEvent(RecipeDetailsStore.Intent.AddServing) },
                 modifier = Modifier.background(
-                    color = MaterialTheme.colorScheme.surfaceContainer,
+                    color = MaterialTheme.colorScheme.surface,
                     shape = MaterialTheme.shapes.medium
                 )
                     .ifTrue(state.loading) {
-                        fillMaxHeight().shimmer(
+                        shimmer(
                             colors = listOf(
                                 MaterialTheme.colorScheme.surfaceContainer,
                                 MaterialTheme.colorScheme.surfaceContainerHighest,
@@ -111,14 +111,12 @@ private fun ExpandedView(
                             ),
                             shape = MaterialTheme.shapes.medium
                         )
-                    }.ifTrue(state.recipe.settings.showNutrition) {
-                        weight(1f)
                     }
             )
             AnimatedVisibility(state.recipe.settings.showNutrition) {
                 NutritionView(
                     state.recipe.nutrition, modifier = Modifier.background(
-                        color = MaterialTheme.colorScheme.surfaceContainer,
+                        color = MaterialTheme.colorScheme.surface,
                         shape = MaterialTheme.shapes.medium
                     ).wrapContentHeight(unbounded = true) // allow shrinking to content height
                         .padding(top = 32.dp, bottom = 16.dp, start = 16.dp, end = 16.dp)
@@ -132,7 +130,7 @@ private fun ExpandedView(
             InstructionView(
                 instructions = state.recipe.instructions,
                 modifier = Modifier.background(
-                    color = MaterialTheme.colorScheme.surfaceContainer,
+                    color = MaterialTheme.colorScheme.surface,
                     shape = MaterialTheme.shapes.medium
                 ).weight(1f)
             )
@@ -141,7 +139,7 @@ private fun ExpandedView(
                     NotesView(
                         state.recipe.notes,
                         modifier = Modifier.background(
-                            color = MaterialTheme.colorScheme.surfaceContainer,
+                            color = MaterialTheme.colorScheme.surface,
                             shape = MaterialTheme.shapes.medium
                         ).wrapContentHeight(unbounded = true) // allow shrinking to content height
                             .heightIn(max = maxHeight / 3) // but never exceed half of the parent
@@ -165,7 +163,7 @@ fun NotesView(notes: List<Note>, modifier: Modifier = Modifier) {
                     .background(color = MaterialTheme.colorScheme.surfaceContainer)
                     .padding(top = 16.dp, bottom = 8.dp)
             ) {
-                Text("Notes", style = MaterialTheme.typography.headlineMedium)
+                Text("Notes", style = MaterialTheme.typography.headlineSmall)
             }
         }
         items(notes, key = { it.id }) { note ->
@@ -190,7 +188,7 @@ fun NutritionView(nutrition: NutritionUi, modifier: Modifier = Modifier) {
         verticalArrangement = Arrangement.spacedBy(8.dp),
         modifier = modifier
     ) {
-        Text("Nutrition", style = MaterialTheme.typography.headlineMedium)
+        Text("Nutrition", style = MaterialTheme.typography.headlineSmall)
         nutrition.calories?.let {
             NutritionEntry("Calories", it, modifier = Modifier.fillMaxWidth())
         }
@@ -235,7 +233,7 @@ private fun NutritionEntry(
 ) {
     Row(modifier = modifier, horizontalArrangement = Arrangement.SpaceBetween) {
         Text(title)
-        Text(value)
+        Text(value, color = MaterialTheme.colorScheme.secondary)
     }
 }
 
@@ -254,10 +252,9 @@ private fun IngredientAndToolView(
         stickyHeader {
             Column(
                 modifier = Modifier.fillMaxWidth()
-                    .background(color = MaterialTheme.colorScheme.surfaceContainer)
                     .padding(top = 16.dp, bottom = 8.dp)
             ) {
-                Text("Ingredients", style = MaterialTheme.typography.headlineMedium)
+                Text("Ingredients", style = MaterialTheme.typography.headlineSmall)
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -287,7 +284,7 @@ private fun IngredientAndToolView(
             item {
                 Text(
                     "Tools",
-                    style = MaterialTheme.typography.headlineMedium,
+                    style = MaterialTheme.typography.headlineSmall,
                     modifier = Modifier.padding(top = 16.dp)
                 )
             }
@@ -310,11 +307,9 @@ private fun InstructionView(
     ) {
         stickyHeader {
             Column(
-                modifier = Modifier.fillMaxWidth()
-                    .background(color = MaterialTheme.colorScheme.surfaceContainer)
-                    .padding(top = 16.dp, bottom = 8.dp)
+                modifier = Modifier.fillMaxWidth().padding(top = 16.dp, bottom = 8.dp)
             ) {
-                Text("Instructions", style = MaterialTheme.typography.headlineMedium)
+                Text("Instructions", style = MaterialTheme.typography.headlineSmall)
             }
         }
         items(instructions) { instruction ->
@@ -325,23 +320,23 @@ private fun InstructionView(
 
 @Composable
 private fun IngredientEntry(ingredient: IngredientUi, modifier: Modifier = Modifier) {
-    Row(
-        modifier = modifier,
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.Top
-    ) {
-        Column(modifier = Modifier.fillMaxWidth(0.6f)) {
-            Text(ingredient.formattedDisplay)
-            ingredient.note?.let { note ->
-                Text(
-                    note,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.secondary
-                )
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Row(
+            modifier = modifier,
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
+            verticalAlignment = Alignment.Top
+        ) {
+            ingredient.formattedQuantity?.let {
+                Text(it, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
             }
+            Text(ingredient.formattedDisplay)
         }
-        ingredient.formattedQuantity?.let {
-            Text(it, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+        ingredient.note?.let { note ->
+            Text(
+                note,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.secondary
+            )
         }
     }
 }
@@ -353,7 +348,11 @@ private fun InstructionEntry(instruction: InstructionUi, modifier: Modifier = Mo
         richTextState.setMarkdown(instruction.text)
     }
     Column(verticalArrangement = Arrangement.spacedBy(8.dp), modifier = modifier) {
-        Text(instruction.title, style = MaterialTheme.typography.headlineSmall)
+        Text(
+            instruction.title,
+            style = MaterialTheme.typography.headlineSmall,
+            color = MaterialTheme.colorScheme.secondary
+        )
         Row {
             instruction.associatedIngredients.forEach {
                 Text(it.formattedDisplay, style = MaterialTheme.typography.bodySmall)

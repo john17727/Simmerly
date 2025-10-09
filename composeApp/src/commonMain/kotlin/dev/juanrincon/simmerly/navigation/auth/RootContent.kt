@@ -16,7 +16,7 @@ fun RootContent(component: RootComponent, modifier: Modifier = Modifier) {
         modifier = modifier,
         animation = stackAnimation(fade()),
     ) {
-        when(val child = it.instance) {
+        when (val child = it.instance) {
             is RootComponent.Child.WelcomeChild -> WelcomeContent(child.component)
             is RootComponent.Child.SplashChild -> SplashScreen()
             is RootComponent.Child.AppChild -> AppContent(child.component)

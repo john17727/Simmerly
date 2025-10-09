@@ -12,6 +12,6 @@ import org.jetbrains.compose.ui.tooling.preview.Preview
 @Preview
 fun App(rootComponent: RootComponent) {
     SimmerlyTheme {
-        RootContent(rootComponent, modifier = Modifier.fillMaxSize(), )
+        RootContent(rootComponent, modifier = Modifier.fillMaxSize())
     }
 }

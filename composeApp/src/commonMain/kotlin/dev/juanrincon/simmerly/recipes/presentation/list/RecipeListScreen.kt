@@ -205,7 +205,7 @@ fun RecipeCard(
                     Text(
                         recipe.description,
                         style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.secondary,
+                        color = MaterialTheme.colorScheme.onSecondaryContainer,
                         modifier = Modifier.padding(horizontal = 8.dp)
                     )
                 }
