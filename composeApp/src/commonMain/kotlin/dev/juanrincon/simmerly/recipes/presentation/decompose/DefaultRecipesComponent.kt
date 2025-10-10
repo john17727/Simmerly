@@ -1,6 +1,7 @@
 package dev.juanrincon.simmerly.recipes.presentation.decompose
 
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Comment
 import androidx.compose.material.icons.filled.Refresh
 import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.decompose.ExperimentalDecomposeApi
@@ -23,7 +24,6 @@ import dev.juanrincon.simmerly.recipes.presentation.details.decompose.RecipeDeta
 import dev.juanrincon.simmerly.recipes.presentation.list.decompose.DefaultRecipeListComponent
 import dev.juanrincon.simmerly.recipes.presentation.list.decompose.RecipeListComponent
 import dev.juanrincon.simmerly.recipes.presentation.list.mvikotlin.RecipeListStore
-import io.ktor.util.valuesOf
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.builtins.serializer
@@ -64,15 +64,8 @@ class DefaultRecipesComponent(componentContext: ComponentContext, storeFactory: 
     override fun setMode(mode: ChildPanelsMode) = nav.setMode(mode)
     override val appBarConfig: Value<AppBarConfig> =
         panels.map { p ->
-            val list = p.main?.instance as? RecipeListComponent
-            val details = p.details?.instance as? RecipeDetailsComponent
-
-            // Helper to build list refresh action
-            fun refreshAction() = AppBarAction(
-                icon = Icons.Default.Refresh,
-                contentDescription = "Refresh",
-                onClick = { list?.onEvent(RecipeListStore.Intent.OnRefresh) }
-            )
+            val list = p.main.instance
+            val details = p.details?.instance
 
             when (p.mode) {
                 ChildPanelsMode.SINGLE -> {
@@ -88,22 +81,25 @@ class DefaultRecipesComponent(componentContext: ComponentContext, storeFactory: 
                     } else {
                         AppBarConfig(
                             title = "Recipes",
-                            actions = listOf(refreshAction())
+                            actions = listOf(refreshAction(list, details))
                         )
                     }
                 }
 
                 ChildPanelsMode.DUAL,
                 ChildPanelsMode.TRIPLE -> {
-//                    val detailsTitle = details?.title
+
                     AppBarConfig(
                         title = "Recipes",
                         showNavigationIcon = false,
                         actions = buildList {
                             // Always keep the list action in split mode
-                            add(refreshAction())
+                            add(refreshAction(list, details))
                             // Optionally add details actions if your details component exposes them
                             // details?.appBarActions?.let { addAll(it) }
+                            if (details != null) {
+                                add(commentsAction(p.mode))
+                            }
                         }
                     )
                 }
@@ -112,4 +108,26 @@ class DefaultRecipesComponent(componentContext: ComponentContext, storeFactory: 
 
     @Serializable
     private data class DetailsConfig(val recipeId: String)
+
+    // Helper to build list refresh action
+    private fun refreshAction(
+        listComponent: RecipeListComponent,
+        detailsComponent: RecipeDetailsComponent?
+    ) = AppBarAction(
+        icon = Icons.Default.Refresh,
+        contentDescription = "Refresh",
+        onClick = { listComponent.onEvent(RecipeListStore.Intent.OnRefresh) }
+    )
+
+    private fun commentsAction(currentMode: ChildPanelsMode) = AppBarAction(
+        icon = Icons.AutoMirrored.Default.Comment,
+        contentDescription = "Comments",
+        onClick = {
+            if (currentMode == ChildPanelsMode.DUAL) {
+                setMode(ChildPanelsMode.TRIPLE)
+            } else {
+                setMode(ChildPanelsMode.DUAL)
+            }
+        }
+    )
 }

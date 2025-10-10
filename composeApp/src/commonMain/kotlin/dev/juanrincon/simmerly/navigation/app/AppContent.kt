@@ -42,20 +42,12 @@ fun AppContent(component: AppComponent, modifier: Modifier = Modifier) {
                         }
                     },
                     colors = TopAppBarDefaults.topAppBarColors().copy(containerColor = MaterialTheme.colorScheme.secondaryContainer)
-//                    scrollBehavior = scrollBehavior
                 )
             },
             containerColor = MaterialTheme.colorScheme.secondaryContainer,
-            modifier = modifier//.nestedScroll(scrollBehavior.nestedScrollConnection)
-//                .ifTrue(
-//                windowSizeClass.isWidthAtLeastBreakpoint(
-//                    WindowSizeClass.WIDTH_DP_EXPANDED_LOWER_BOUND
-//                )
-//            ) {
-//                padding(end = 8.dp).then(clip(shape = MaterialTheme.shapes.medium))
-//            },
+            modifier = modifier
         ) { paddingValues ->
-            when (val child = it.instance) {
+            when (child) {
                 is AppComponent.Child.RecipesChild -> RecipesContent(child.component, modifier = Modifier.padding(paddingValues))
             }
         }

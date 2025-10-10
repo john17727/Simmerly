@@ -49,11 +49,32 @@ fun RecipesContent(component: RecipesComponent, modifier: Modifier = Modifier) {
                 Text("Select a recipe to see details")
             }
         },
-        layout = remember { HorizontalChildPanelsLayout(dualWeights = Pair(0.30F, 0.70F)) },
+        extraChild = {
+            Column(
+                modifier = Modifier.fillMaxSize(),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text("Coming Soon")
+            }
+        },
+        thirdPanelPlaceholder = {
+            Column(
+                modifier = Modifier.fillMaxSize(),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+//                Text("Coming Soon")
+            }
+        },
+        layout = remember {
+            HorizontalChildPanelsLayout(
+                dualWeights = Pair(0.30F, 0.70F),
+                tripleWeights = Triple(0.25F, 0.50F, 0.25F)
+            )
+        },
         animators = remember { ChildPanelsAnimators(fade()) },
-        modifier = modifier.ifTrue(
-            condition = panelMode == ChildPanelsMode.DUAL
-        ) {
+        modifier = modifier.ifTrue(condition = panelMode == ChildPanelsMode.DUAL) {
             padding(start = 16.dp, end = 16.dp)
         }
     )
