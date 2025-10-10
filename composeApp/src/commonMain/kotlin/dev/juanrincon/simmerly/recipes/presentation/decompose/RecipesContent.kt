@@ -15,9 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.arkivanov.decompose.ExperimentalDecomposeApi
 import com.arkivanov.decompose.extensions.compose.experimental.panels.ChildPanels
-import com.arkivanov.decompose.extensions.compose.experimental.panels.ChildPanelsAnimators
 import com.arkivanov.decompose.extensions.compose.experimental.panels.HorizontalChildPanelsLayout
-import com.arkivanov.decompose.extensions.compose.experimental.stack.animation.fade
 import com.arkivanov.decompose.router.panels.ChildPanelsMode
 import dev.juanrincon.simmerly.core.presentation.ifTrue
 import dev.juanrincon.simmerly.recipes.presentation.details.decompose.RecipeDetailsContent
@@ -59,7 +57,6 @@ fun RecipesContent(component: RecipesComponent, modifier: Modifier = Modifier) {
                 tripleWeights = Triple(0.25F, 0.50F, 0.25F)
             )
         },
-        animators = remember { ChildPanelsAnimators(fade()) },
         modifier = modifier.ifTrue(condition = panelMode == ChildPanelsMode.DUAL) {
             padding(start = 16.dp, end = 16.dp)
         }

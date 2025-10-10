@@ -3,6 +3,7 @@ package dev.juanrincon.simmerly.recipes.presentation.decompose
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Comment
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Settings
 import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.decompose.ExperimentalDecomposeApi
 import com.arkivanov.decompose.router.panels.ChildPanels
@@ -18,6 +19,8 @@ import com.arkivanov.decompose.value.operator.map
 import com.arkivanov.mvikotlin.core.store.StoreFactory
 import dev.juanrincon.simmerly.core.presentation.AppBarAction
 import dev.juanrincon.simmerly.core.presentation.AppBarConfig
+import dev.juanrincon.simmerly.core.presentation.activateAndShowExtra
+import dev.juanrincon.simmerly.core.presentation.dismissAndHideExtra
 import dev.juanrincon.simmerly.recipes.domain.RecipeRepository
 import dev.juanrincon.simmerly.recipes.presentation.details.decompose.DefaultRecipeDetailsComponent
 import dev.juanrincon.simmerly.recipes.presentation.details.decompose.RecipeDetailsComponent
@@ -111,7 +114,10 @@ class DefaultRecipesComponent(componentContext: ComponentContext, storeFactory: 
                             // Optionally add details actions if your details component exposes them
                             // details?.appBarActions?.let { addAll(it) }
                             if (details != null) {
-                                add(commentsAction(p.mode))
+                                val recipeIdFromConfig =
+                                    (p.details?.configuration as? DetailsConfig)?.recipeId
+                                recipeIdFromConfig?.let { add(commentsAction(p.mode, it)) }
+                                recipeIdFromConfig?.let { add(settingsAction(p.mode, it)) }
                             }
                         }
                     )
@@ -141,14 +147,26 @@ class DefaultRecipesComponent(componentContext: ComponentContext, storeFactory: 
         onClick = { listComponent.onEvent(RecipeListStore.Intent.OnRefresh) }
     )
 
-    private fun commentsAction(currentMode: ChildPanelsMode) = AppBarAction(
+    private fun commentsAction(currentMode: ChildPanelsMode, recipeId: String) = AppBarAction(
         icon = Icons.AutoMirrored.Default.Comment,
         contentDescription = "Comments",
         onClick = {
             if (currentMode == ChildPanelsMode.DUAL) {
-                setMode(ChildPanelsMode.TRIPLE)
+                nav.activateAndShowExtra(ExtrasConfig(recipeId = recipeId, mode = ExtrasMode.COMMENTS))
             } else {
-                setMode(ChildPanelsMode.DUAL)
+                nav.dismissAndHideExtra()
+            }
+        }
+    )
+
+    private fun settingsAction(currentMode: ChildPanelsMode, recipeId: String) = AppBarAction(
+        icon = Icons.Default.Settings,
+        contentDescription = "Settings",
+        onClick = {
+            if (currentMode == ChildPanelsMode.DUAL) {
+                nav.activateAndShowExtra(ExtrasConfig(recipeId = recipeId, mode = ExtrasMode.SETTINGS))
+            } else {
+                nav.dismissAndHideExtra()
             }
         }
     )

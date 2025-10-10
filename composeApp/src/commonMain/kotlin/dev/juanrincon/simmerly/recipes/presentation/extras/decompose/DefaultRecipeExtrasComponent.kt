@@ -9,14 +9,19 @@ import kotlinx.coroutines.flow.asStateFlow
 
 class DefaultRecipeExtrasComponent(
     private val recipeId: String,
-    mode: DefaultRecipesComponent.ExtrasMode,
+    private val mode: DefaultRecipesComponent.ExtrasMode,
     componentContext: ComponentContext
 ) : RecipeExtrasComponent {
-    private val _state = MutableStateFlow(RecipeExtrasStore.State.Comments(listOf()))
+    private val _state = MutableStateFlow(initialState(mode))
     override val state: StateFlow<RecipeExtrasStore.State> = _state.asStateFlow()
-
 
     override fun onEvent(event: RecipeExtrasStore.Intent) {
         TODO("Not yet implemented")
+    }
+
+    private fun initialState(mode: DefaultRecipesComponent.ExtrasMode) = when (mode) {
+        DefaultRecipesComponent.ExtrasMode.COMMENTS -> RecipeExtrasStore.State.Comments(listOf())
+        DefaultRecipesComponent.ExtrasMode.SETTINGS -> RecipeExtrasStore.State.Settings(false)
+
     }
 }
