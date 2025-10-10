@@ -361,7 +361,7 @@ private fun InstructionEntry(instruction: InstructionUi, modifier: Modifier = Mo
     }
     Column(verticalArrangement = Arrangement.spacedBy(8.dp), modifier = modifier) {
         Text(
-            instruction.title,
+            instruction.summary,
             style = MaterialTheme.typography.titleLarge,
             color = MaterialTheme.colorScheme.secondary
         )

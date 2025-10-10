@@ -70,6 +70,7 @@ class RecipeStoreFactory(
                         if (foods.isNotEmpty()) database.foodDao().upsertAll(foods)
 
                         ingredientDao.deleteByRecipeId(recipeId)
+                        instructionsDao.deleteByRecipeId(recipeId)
                         ingredientDao.upsertAll(response.ingredients.map { it.ingredient })
                         instructionsDao.upsertAll(response.instructions.map { it.instruction })
                         noteDao.deleteByRecipeId(recipeId)

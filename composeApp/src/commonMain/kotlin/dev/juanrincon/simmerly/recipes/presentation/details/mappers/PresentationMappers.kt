@@ -52,8 +52,8 @@ fun Unit.toUnitUi(): UnitUi = UnitUi(
 
 fun Instruction.toInstructionUi(step: Int): InstructionUi = InstructionUi(
     id = id,
-    title = formatInstructionTitle(title, step),
-    summary = summary.nullIfEmpty(),
+    title = title.nullIfEmpty(),
+    summary = formatInstructionStep(summary, step),
     text = text,
     associatedIngredients = associatedIngredients.map { it.toIngredientUi() }
 )
@@ -80,7 +80,7 @@ private fun formatToMilligrams(nutrition: String?): String? = nutrition?.let {
     "$it milligrams"
 }
 
-private fun formatInstructionTitle(title: String, step: Int): String = if (title.isBlank()) {
+private fun formatInstructionStep(title: String, step: Int): String = if (title.isBlank()) {
     "Step $step"
 } else {
     title.capitalizeWords()
