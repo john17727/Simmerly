@@ -21,6 +21,8 @@ import dev.juanrincon.simmerly.core.presentation.AppBarConfig
 import dev.juanrincon.simmerly.recipes.domain.RecipeRepository
 import dev.juanrincon.simmerly.recipes.presentation.details.decompose.DefaultRecipeDetailsComponent
 import dev.juanrincon.simmerly.recipes.presentation.details.decompose.RecipeDetailsComponent
+import dev.juanrincon.simmerly.recipes.presentation.extras.decompose.DefaultRecipeExtrasComponent
+import dev.juanrincon.simmerly.recipes.presentation.extras.decompose.RecipeExtrasComponent
 import dev.juanrincon.simmerly.recipes.presentation.list.decompose.DefaultRecipeListComponent
 import dev.juanrincon.simmerly.recipes.presentation.list.decompose.RecipeListComponent
 import dev.juanrincon.simmerly.recipes.presentation.list.mvikotlin.RecipeListStore
@@ -34,13 +36,17 @@ import org.koin.core.component.get
 class DefaultRecipesComponent(componentContext: ComponentContext, storeFactory: StoreFactory) :
     RecipesComponent, ComponentContext by componentContext, KoinComponent {
 
-    private val nav = PanelsNavigation<Unit, DetailsConfig, Nothing>()
+    private val nav = PanelsNavigation<Unit, DetailsConfig, ExtrasConfig>()
 
     @OptIn(ExperimentalSerializationApi::class)
-    override val panels: Value<ChildPanels<*, RecipeListComponent, *, RecipeDetailsComponent, Nothing, Nothing>> =
+    override val panels: Value<ChildPanels<*, RecipeListComponent, *, RecipeDetailsComponent, *, RecipeExtrasComponent>> =
         childPanels(
             source = nav,
-            serializers = Unit.serializer() to DetailsConfig.serializer(),
+            serializers = Triple(
+                Unit.serializer(),
+                DetailsConfig.serializer(),
+                ExtrasConfig.serializer()
+            ),
             initialPanels = { Panels(main = Unit) },
             handleBackButton = true,
             mainFactory = { _, ctx ->
@@ -57,6 +63,13 @@ class DefaultRecipesComponent(componentContext: ComponentContext, storeFactory: 
                     componentContext = ctx,
                     storeFactory = storeFactory,
                     repository = get<RecipeRepository>()
+                )
+            },
+            extraFactory = { cfg, ctx ->
+                DefaultRecipeExtrasComponent(
+                    recipeId = cfg.recipeId,
+                    mode = cfg.mode,
+                    componentContext = ctx,
                 )
             }
         )
@@ -108,6 +121,15 @@ class DefaultRecipesComponent(componentContext: ComponentContext, storeFactory: 
 
     @Serializable
     private data class DetailsConfig(val recipeId: String)
+
+    @Serializable
+    private data class ExtrasConfig(val recipeId: String, val mode: ExtrasMode)
+
+    @Serializable
+    enum class ExtrasMode {
+        COMMENTS,
+        SETTINGS
+    }
 
     // Helper to build list refresh action
     private fun refreshAction(
