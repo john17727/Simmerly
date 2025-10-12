@@ -128,6 +128,7 @@ class DefaultRecipesComponent(componentContext: ComponentContext, storeFactory: 
                             // Optionally add details actions if your details component exposes them
                             // details?.appBarActions?.let { addAll(it) }
                             if (details != null) {
+                                addAll(details.actions)
                                 val recipeIdFromConfig =
                                     (p.details?.configuration as? DetailsConfig)?.recipeId
                                 recipeIdFromConfig?.let {

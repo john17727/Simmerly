@@ -24,8 +24,6 @@ import dev.juanrincon.simmerly.recipes.presentation.list.decompose.RecipeListCon
 @Composable
 fun RecipesContent(component: RecipesComponent, modifier: Modifier = Modifier) {
     val panels by component.panels.subscribeAsState()
-    var panelMode = panels.mode
-
 
     ChildPanelsModeChangedEffect { mode ->
         component.setMode(mode)
@@ -56,7 +54,7 @@ fun RecipesContent(component: RecipesComponent, modifier: Modifier = Modifier) {
                 tripleWeights = Triple(0.25F, 0.50F, 0.25F)
             )
         },
-        modifier = when (panelMode) {
+        modifier = when (panels.mode) {
             ChildPanelsMode.DUAL -> modifier.padding(start = 16.dp, end = 16.dp)
             ChildPanelsMode.TRIPLE -> modifier.padding(start = 16.dp)
             else -> modifier

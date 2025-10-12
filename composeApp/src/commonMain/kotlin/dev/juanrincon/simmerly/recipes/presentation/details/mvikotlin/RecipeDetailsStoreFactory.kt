@@ -43,6 +43,8 @@ internal class RecipeDetailsStoreFactory(
     private sealed interface Msg {
         data object Loading : Msg
         data class RecipeUpdated(val recipe: RecipeDetailUi) : Msg
+        data object ShowSettings : Msg
+        data object DismissSettings : Msg
     }
 
     private class BootstrapperImpl(val recipeId: String) : CoroutineBootstrapper<Action>() {
@@ -57,6 +59,8 @@ internal class RecipeDetailsStoreFactory(
         override fun executeIntent(intent: Intent) = when (intent) {
             Intent.AddServing -> updateServing(state().recipe.servings + 1)
             Intent.RemoveServing -> updateServing(state().recipe.servings - 1)
+            Intent.ShowSettings -> dispatch(Msg.ShowSettings)
+            Intent.DismissSettings -> dispatch(Msg.DismissSettings)
         }
 
         override fun executeAction(action: Action) {
@@ -118,6 +122,8 @@ internal class RecipeDetailsStoreFactory(
             when (msg) {
                 is RecipeUpdated -> copy(loading = false, recipe = msg.recipe)
                 is Msg.Loading -> copy(loading = true)
+                Msg.ShowSettings -> copy(showSettings = true)
+                Msg.DismissSettings -> copy(showSettings = false)
             }
     }
 }

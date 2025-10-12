@@ -46,7 +46,6 @@ fun main() {
             WindowPlacement.valueOf(p)
         }
         val windowState = rememberWindowState(size = initialSize, placement = initialPlacement)
-        LifecycleController(lifecycle, windowState)
         // Persist when the window leaves composition (app close)
         DisposableEffect(Unit) {
             onDispose {
@@ -58,6 +57,7 @@ fun main() {
                 prefs.put("placement", windowState.placement.name)
             }
         }
+        LifecycleController(lifecycle, windowState)
         Window(
             onCloseRequest = ::exitApplication,
             state = windowState,

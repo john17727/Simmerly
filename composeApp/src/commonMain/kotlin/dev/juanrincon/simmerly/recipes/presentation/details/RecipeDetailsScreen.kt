@@ -16,12 +16,15 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.Switch
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Remove
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.runtime.Composable
@@ -36,6 +39,7 @@ import com.mohamedrejeb.richeditor.ui.material3.RichText
 import dev.juanrincon.simmerly.core.presentation.ifTrue
 import dev.juanrincon.simmerly.core.presentation.shimmer
 import dev.juanrincon.simmerly.recipes.domain.model.Note
+import dev.juanrincon.simmerly.recipes.domain.model.Settings
 import dev.juanrincon.simmerly.recipes.presentation.details.models.IngredientUi
 import dev.juanrincon.simmerly.recipes.presentation.details.models.InstructionUi
 import dev.juanrincon.simmerly.recipes.presentation.details.models.NutritionUi
@@ -43,12 +47,22 @@ import dev.juanrincon.simmerly.recipes.presentation.details.models.RecipeDetailU
 import dev.juanrincon.simmerly.recipes.presentation.details.mvikotlin.RecipeDetailsStore
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RecipeDetailsScreen(
     state: RecipeDetailsStore.State,
     onEvent: (RecipeDetailsStore.Intent) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    if (state.showSettings) {
+        ModalBottomSheet(
+            onDismissRequest = {
+                onEvent(RecipeDetailsStore.Intent.DismissSettings)
+            },
+        ) {
+            SettingsView(state.recipe.settings)
+        }
+    }
     val windowSizeClass = currentWindowAdaptiveInfo().windowSizeClass
     AnimatedContent(state.mode) { mode ->
         when (mode) {
@@ -376,6 +390,42 @@ private fun InstructionEntry(instruction: InstructionUi, modifier: Modifier = Mo
             modifier = Modifier
                 .fillMaxWidth()
         )
+    }
+}
+
+@Composable
+private fun SettingsView(settings: Settings, modifier: Modifier = Modifier) {
+    Column(modifier = modifier.padding(16.dp)) {
+        Text("Recipe Settings", style = MaterialTheme.typography.headlineSmall)
+        Spacer(modifier = Modifier.height(16.dp))
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Switch(checked = settings.public, onCheckedChange = {})
+            Text("Public Recipe")
+        }
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Switch(checked = settings.showNutrition, onCheckedChange = {})
+            Text("Show Nutrition Values")
+        }
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Switch(checked = settings.disableComments, onCheckedChange = {})
+            Text("Disable Comments")
+        }
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Switch(checked = settings.locked, onCheckedChange = {})
+            Text("Locked")
+        }
     }
 }
 
