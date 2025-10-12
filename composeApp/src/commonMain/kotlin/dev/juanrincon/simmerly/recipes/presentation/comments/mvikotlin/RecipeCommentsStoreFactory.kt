@@ -1,5 +1,6 @@
 package dev.juanrincon.simmerly.recipes.presentation.comments.mvikotlin
 
+import app.tracktion.core.domain.util.fold
 import com.arkivanov.mvikotlin.core.store.Reducer
 import com.arkivanov.mvikotlin.core.store.Store
 import com.arkivanov.mvikotlin.core.store.StoreFactory
@@ -26,7 +27,7 @@ internal class RecipeCommentsStoreFactory(
             name = "RecipeCommentsStore",
             initialState = State(),
             bootstrapper = BootstrapperImpl(recipeId),
-            executorFactory = { ExecutorImpl(repository) },
+            executorFactory = { ExecutorImpl(repository, recipeId) },
             reducer = ReducerImpl
         ) {}
 
@@ -45,12 +46,15 @@ internal class RecipeCommentsStoreFactory(
         }
     }
 
-    private class ExecutorImpl(private val repository: RecipeRepository) :
+    private class ExecutorImpl(
+        private val repository: RecipeRepository,
+        private val recipeId: String
+    ) :
         CoroutineExecutor<Intent, Action, State, Msg, Label>() {
         override fun executeIntent(intent: Intent) {
             when (intent) {
                 is Intent.OnCommentTextChanged -> dispatch(Msg.CommentTextChange(intent.text))
-                Intent.OnSendCommentClicked -> TODO()
+                Intent.OnSendCommentClicked -> addComment(recipeId, state().commentText)
             }
         }
 
@@ -69,6 +73,20 @@ internal class RecipeCommentsStoreFactory(
                     }
             }
         }
+
+        private fun addComment(recipeId: String, text: String) {
+            scope.launch {
+                repository.addComment(recipeId, text).fold(
+                    onSuccess = {
+                        dispatch(Msg.CommentTextChange(""))
+                    },
+                    onFailure = {
+                       // TODO: Handle error
+                    }
+                )
+            }
+        }
+
     }
 
     private object ReducerImpl : Reducer<State, Msg> {

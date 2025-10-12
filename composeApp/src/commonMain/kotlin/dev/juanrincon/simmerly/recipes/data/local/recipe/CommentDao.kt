@@ -20,4 +20,8 @@ interface CommentDao {
     @Transaction
     @Query("SELECT * FROM comments WHERE recipe_id = :recipeId ORDER BY created_at ASC")
     fun observeComments(recipeId: String): Flow<List<CommentWithRelations>>
+
+    @Query("DELETE FROM comments WHERE recipe_id = :recipeId")
+    suspend fun deleteByRecipeId(recipeId: String)
+
 }

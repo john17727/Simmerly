@@ -18,4 +18,6 @@ interface RecipeRepository {
     suspend fun getRecipe(id: String): Result<RecipeDetail, RecipesError>
 
     fun recipeDetails(id: String): Flow<Result<LoadingResult<RecipeDetail>, RecipesError>>
+
+    suspend fun addComment(recipeId: String, text: String): Result<Unit, RecipesError>
 }

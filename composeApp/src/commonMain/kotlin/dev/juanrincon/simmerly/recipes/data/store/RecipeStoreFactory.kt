@@ -80,6 +80,7 @@ class RecipeStoreFactory(
                         toolsDao.upsertAll(response.tools)
 
                         userDao.upsertAll(response.comments.map { it.user })
+                        commentDao.deleteByRecipeId(recipeId)
                         commentDao.upsertAll(response.comments.map { it.comment })
                         // Refresh cross‑refs for this recipe
                         val recipeId = response.recipe.id

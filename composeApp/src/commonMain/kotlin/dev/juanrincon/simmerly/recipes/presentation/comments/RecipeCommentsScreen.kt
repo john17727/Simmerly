@@ -50,13 +50,14 @@ fun RecipeCommentsScreen(
             verticalArrangement = Arrangement.Bottom
         ) {
             items(state.comments, key = { it.id }) { comment ->
-                Comment(comment, modifier = Modifier.fillParentMaxWidth())
+                Comment(comment, modifier = Modifier.fillParentMaxWidth().animateItem())
             }
         }
         Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             OutlinedTextField(
                 value = state.commentText,
                 onValueChange = { onEvent(RecipeCommentsStore.Intent.OnCommentTextChanged(it)) },
+                placeholder = { Text(text = "Join the conversation") },
                 modifier = Modifier.weight(1f)
             )
             IconButton(onClick = { onEvent(RecipeCommentsStore.Intent.OnSendCommentClicked) }) {

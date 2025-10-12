@@ -1,7 +1,10 @@
 package dev.juanrincon.simmerly.recipes.data
 
 import app.tracktion.core.domain.util.Result
+import app.tracktion.core.domain.util.asEmptyDataResult
 import app.tracktion.core.domain.util.fold
+import app.tracktion.core.domain.util.mapError
+import app.tracktion.core.domain.util.onSuccess
 import dev.juanrincon.simmerly.auth.domain.SessionDataStore
 import dev.juanrincon.simmerly.core.data.local.SimmerlyDatabase
 import dev.juanrincon.simmerly.recipes.data.mappers.toDomain
@@ -42,9 +45,10 @@ class SimmerlyRecipeRepository(
         }
 
     override fun comments(recipeId: String): Flow<List<Comment>> =
-        sessionDataStore.observeServerAddress().combine(commentDao.observeComments(recipeId)) { address, comments ->
-            comments.map { it.toDomain(address) }
-        }
+        sessionDataStore.observeServerAddress()
+            .combine(commentDao.observeComments(recipeId)) { address, comments ->
+                comments.map { it.toDomain(address) }
+            }
 
     override suspend fun loadRecipes(
         page: Int,
@@ -82,4 +86,12 @@ class SimmerlyRecipeRepository(
                 else -> throw IllegalStateException()
             }
         }
+
+    override suspend fun addComment(
+        recipeId: String,
+        text: String
+    ): Result<Unit, RecipesError> =
+        networkClient.addComment(recipeId, text).onSuccess { comment ->
+            commentDao.upsert(comment.toEntity())
+        }.mapError { RecipesError.UpdateError }.asEmptyDataResult()
 }
