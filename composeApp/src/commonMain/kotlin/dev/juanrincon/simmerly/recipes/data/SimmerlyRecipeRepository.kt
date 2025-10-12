@@ -33,16 +33,18 @@ class SimmerlyRecipeRepository(
     private val recipeDao = database.recipeDao()
     private val commentDao = database.commentDao()
 
-    private val store: RecipeStore = RecipeStoreFactory(networkClient, database, sessionDataStore).create()
+    private val store: RecipeStore =
+        RecipeStoreFactory(networkClient, database, sessionDataStore).create()
 
     override fun recipes(): Flow<List<RecipeSummary>> = sessionDataStore.observeServerAddress()
         .combine(recipeDao.observeRecipeList()) { address, recipes ->
             recipes.map { it.toDomain(address) }
         }
 
-    override fun comments(recipeId: String): Flow<List<Comment>> =  commentDao.observeComments(recipeId).map { comments ->
-        comments.map { it.toDomain() }
-    }
+    override fun comments(recipeId: String): Flow<List<Comment>> =
+        sessionDataStore.observeServerAddress().combine(commentDao.observeComments(recipeId)) { address, comments ->
+            comments.map { it.toDomain(address) }
+        }
 
     override suspend fun loadRecipes(
         page: Int,
@@ -68,14 +70,16 @@ class SimmerlyRecipeRepository(
         TODO("Not yet implemented")
     }
 
-    override fun recipeDetails(id: String): Flow<Result<LoadingResult<RecipeDetail>, RecipesError>> = store.stream(StoreReadRequest.fresh(id)).map { response ->
-        when (response) {
-            is StoreReadResponse.Data<*> -> Result.Success(LoadingResult.Loaded(response.value as RecipeDetail))
-            is StoreReadResponse.Error.Custom<*> -> Result.Error(RecipesError.FetchError)
-            is StoreReadResponse.Error.Exception,
-            is StoreReadResponse.Error.Message -> Result.Error(RecipesError.UnknownError)
-            is StoreReadResponse.Loading -> Result.Success(LoadingResult.Loading)
-            else -> throw IllegalStateException()
+    override fun recipeDetails(id: String): Flow<Result<LoadingResult<RecipeDetail>, RecipesError>> =
+        store.stream(StoreReadRequest.fresh(id)).map { response ->
+            when (response) {
+                is StoreReadResponse.Data<*> -> Result.Success(LoadingResult.Loaded(response.value as RecipeDetail))
+                is StoreReadResponse.Error.Custom<*> -> Result.Error(RecipesError.FetchError)
+                is StoreReadResponse.Error.Exception,
+                is StoreReadResponse.Error.Message -> Result.Error(RecipesError.UnknownError)
+
+                is StoreReadResponse.Loading -> Result.Success(LoadingResult.Loading)
+                else -> throw IllegalStateException()
+            }
         }
-    }
 }

@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
@@ -17,7 +18,12 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
+import coil3.compose.LocalPlatformContext
+import coil3.compose.SubcomposeAsyncImage
+import coil3.request.ImageRequest
 import dev.juanrincon.simmerly.recipes.presentation.comments.models.CommentUi
 import dev.juanrincon.simmerly.recipes.presentation.comments.mvikotlin.RecipeCommentsStore
 import dev.juanrincon.simmerly.theme.SimmerlyTheme
@@ -53,8 +59,25 @@ private fun Comment(comment: CommentUi, modifier: Modifier = Modifier) {
         modifier = modifier.padding(vertical = 12.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        Icon(Icons.Default.AccountCircle, contentDescription = null)
-        Column(modifier = Modifier.fillMaxWidth()) {
+        SubcomposeAsyncImage(
+            model = ImageRequest.Builder(LocalPlatformContext.current)
+                .data(comment.image)
+                .build(),
+            contentDescription = null,
+            error = {
+                Icon(
+                    imageVector = Icons.Default.AccountCircle,
+                    contentDescription = null,
+                    modifier = Modifier.matchParentSize()
+                )
+            },
+            contentScale = ContentScale.Crop,
+            modifier = Modifier.size(24.dp).clip(MaterialTheme.shapes.medium)
+        )
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -84,21 +107,24 @@ fun RecipeCommentsScreenPreview() {
                         author = "Juan Rincon",
                         text = "This is a comment",
                         date = "3 days ago",
-                        isAuthor = true
+                        isAuthor = true,
+                        image = ""
                     ),
                     CommentUi(
                         id = "2",
                         author = "Sara Velasco",
                         text = "This is another comment",
                         date = "2 hours ago",
-                        isAuthor = false
+                        isAuthor = false,
+                        image = ""
                     ),
                     CommentUi(
                         id = "3",
                         author = "Sara Velasco",
                         text = "This is a very long comment about how long comments are great at testing the ui format for long comments",
                         date = "2 hours ago",
-                        isAuthor = false
+                        isAuthor = false,
+                        image = ""
                     )
                 )
             ),

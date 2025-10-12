@@ -75,7 +75,7 @@ fun RecipeDetailWithRelations.toDomain(host: String?): RecipeDetail = RecipeDeta
     settings = recipe.settings.toDomain(),
     assets = listOf(),
     notes = notes.map { it.toDomain() },
-    comments = comments.map { it.toDomain() }
+    comments = comments.map { it.toDomain(host) }
 )
 
 fun CategoryEntity.toDomain(): Category = Category(
@@ -167,19 +167,20 @@ fun NoteEntity.toDomain(): Note = Note(
     text = text
 )
 
-fun CommentWithRelations.toDomain(): Comment = Comment(
+fun CommentWithRelations.toDomain(host: String?): Comment = Comment(
     text = comment.text,
     id = comment.id,
     createdAt = comment.createdAt,
     updatedAt = comment.updatedAt,
-    user = user.toDomain()
+    user = user.toDomain(host)
 )
 
-fun UserEntity.toDomain(): User = User(
+fun UserEntity.toDomain(host: String?): User = User(
     id = id,
     username = username,
     admin = admin,
-    fullName = fullName
+    fullName = fullName,
+    image = createUserImageUrl(host, id)
 )
 
 fun RecipeDetail.toEntityWithRelations(): RecipeDetailWithRelations = RecipeDetailWithRelations(
@@ -350,6 +351,11 @@ fun User.toEntity(): UserEntity = UserEntity(
 private fun createRecipeImageUrl(host: String?, id: String): String {
     if (host == null) return ""
     return "$host/api/media/recipes/$id/images/original.webp"
+}
+
+private fun createUserImageUrl(host: String?, id: String): String {
+    if (host == null) return ""
+    return "$host/api/media/users/$id/profile.webp"
 }
 
 private fun abbreviateNullableTime(time: String?): String? = if (time != null) {

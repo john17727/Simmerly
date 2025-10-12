@@ -5,5 +5,6 @@ data class CommentUi(
     val text: String,
     val author: String,
     val date: String,
-    val isAuthor: Boolean
+    val isAuthor: Boolean,
+    val image: String
 )

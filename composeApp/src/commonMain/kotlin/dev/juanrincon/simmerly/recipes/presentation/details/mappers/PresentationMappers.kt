@@ -83,7 +83,8 @@ fun Comment.toCommentUi(): CommentUi = CommentUi(
     text = text,
     author = user.fullName,
     date = formatCommentDate(createdAt),
-    isAuthor = false // TODO: Implement ability to map if user is author
+    isAuthor = false, // TODO: Implement ability to map if user is author
+    image = user.image
 )
 
 private fun formatCommentDate(date: Instant): String {
