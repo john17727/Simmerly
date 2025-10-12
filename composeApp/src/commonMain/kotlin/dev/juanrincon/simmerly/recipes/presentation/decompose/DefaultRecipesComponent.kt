@@ -4,6 +4,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Comment
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.ui.graphics.vector.ImageVector
 import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.decompose.ExperimentalDecomposeApi
 import com.arkivanov.decompose.router.panels.ChildPanels
@@ -166,36 +167,38 @@ class DefaultRecipesComponent(componentContext: ComponentContext, storeFactory: 
     private fun commentsAction(
         extraMode: ExtraMode?,
         recipeId: String
-    ) = AppBarAction(
+    ) = toggleExtraAction(
         icon = Icons.AutoMirrored.Default.Comment,
         contentDescription = "Comments",
-        onClick = {
-            if (extraMode != ExtraMode.COMMENTS) {
-                nav.activateAndShowExtra(
-                    ExtrasConfig(
-                        recipeId = recipeId,
-                        mode = ExtraMode.COMMENTS
-                    )
-                )
-            } else {
-                nav.dismissAndHideExtra()
-            }
-        }
+        targetMode = ExtraMode.COMMENTS,
+        currentMode = extraMode,
+        recipeId = recipeId,
     )
 
     private fun settingsAction(
         extraMode: ExtraMode?,
         recipeId: String
-    ) = AppBarAction(
+    ) = toggleExtraAction(
         icon = Icons.Default.Settings,
         contentDescription = "Settings",
+        targetMode = ExtraMode.SETTINGS,
+        currentMode = extraMode,
+        recipeId = recipeId,
+    )
+
+    private fun toggleExtraAction(
+        icon: ImageVector,
+        contentDescription: String,
+        targetMode: ExtraMode,
+        currentMode: ExtraMode?,
+        recipeId: String,
+    ) = AppBarAction(
+        icon = icon,
+        contentDescription = contentDescription,
         onClick = {
-            if (extraMode != ExtraMode.SETTINGS) {
+            if (currentMode != targetMode) {
                 nav.activateAndShowExtra(
-                    ExtrasConfig(
-                        recipeId = recipeId,
-                        mode = ExtraMode.SETTINGS
-                    )
+                    ExtrasConfig(recipeId = recipeId, mode = targetMode)
                 )
             } else {
                 nav.dismissAndHideExtra()
