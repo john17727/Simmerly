@@ -39,6 +39,8 @@ class RecipeStoreFactory(
     private val toolsDao = database.toolDao()
     private val recipeToolDao = database.recipeToolDao()
     private val noteDao = database.noteDao()
+    private val commentDao = database.commentDao()
+    private val userDao = database.userDao()
 
     fun create(): RecipeStore = StoreBuilder.from(
         fetcher = createFetcher(),
@@ -76,6 +78,9 @@ class RecipeStoreFactory(
                         noteDao.deleteByRecipeId(recipeId)
                         noteDao.upsertAll(response.notes)
                         toolsDao.upsertAll(response.tools)
+
+                        userDao.upsertAll(response.comments.map { it.user })
+                        commentDao.upsertAll(response.comments.map { it.comment })
                         // Refresh cross‑refs for this recipe
                         val recipeId = response.recipe.id
                         val toolRefs = response.tools.map { tool ->

@@ -8,6 +8,7 @@ import androidx.room.TypeConverters
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import dev.juanrincon.simmerly.recipes.data.local.metadata.RecipeRemoteKey
 import dev.juanrincon.simmerly.recipes.data.local.metadata.RecipeRemoteKeyDao
+import dev.juanrincon.simmerly.recipes.data.local.recipe.CommentDao
 import dev.juanrincon.simmerly.recipes.data.local.recipe.FoodDao
 import dev.juanrincon.simmerly.recipes.data.local.recipe.IngredientDao
 import dev.juanrincon.simmerly.recipes.data.local.recipe.InstructionDao
@@ -16,6 +17,7 @@ import dev.juanrincon.simmerly.recipes.data.local.recipe.RecipeDao
 import dev.juanrincon.simmerly.recipes.data.local.recipe.RecipeToolDao
 import dev.juanrincon.simmerly.recipes.data.local.recipe.ToolDao
 import dev.juanrincon.simmerly.recipes.data.local.recipe.UnitDao
+import dev.juanrincon.simmerly.recipes.data.local.recipe.UserDao
 import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.CategoryEntity
 import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.CommentEntity
 import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.FoodEntity
@@ -77,6 +79,10 @@ abstract class SimmerlyDatabase : RoomDatabase() {
     abstract fun noteDao(): NoteDao
 
     abstract fun recipeRemoteKeyDao(): RecipeRemoteKeyDao
+
+    abstract fun commentDao(): CommentDao
+
+    abstract fun userDao(): UserDao
 }
 
 @Suppress("KotlinNoActualForExpect")

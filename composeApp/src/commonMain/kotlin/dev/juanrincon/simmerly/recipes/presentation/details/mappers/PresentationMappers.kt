@@ -16,6 +16,10 @@ import dev.juanrincon.simmerly.recipes.presentation.details.models.InstructionUi
 import dev.juanrincon.simmerly.recipes.presentation.details.models.NutritionUi
 import dev.juanrincon.simmerly.recipes.presentation.details.models.RecipeDetailUi
 import dev.juanrincon.simmerly.recipes.presentation.details.models.UnitUi
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
+import kotlin.time.Clock
+import kotlin.time.Instant
 
 fun RecipeDetail.toRecipeDetailUi(): RecipeDetailUi = RecipeDetailUi(
     id = id,
@@ -77,22 +81,66 @@ fun Nutrition.toNutritionUi(): NutritionUi = NutritionUi(
 fun Comment.toCommentUi(): CommentUi = CommentUi(
     id = id,
     text = text,
-    user = user.fullName,
-    isUserAuthor = false // TODO: Implement ability to map if user is author
+    author = user.fullName,
+    date = formatCommentDate(createdAt),
+    isAuthor = false // TODO: Implement ability to map if user is author
 )
 
+private fun formatCommentDate(date: Instant): String {
+    val now = Clock.System.now()
+    val diffMillis = now.toEpochMilliseconds() - date.toEpochMilliseconds()
 
-    private fun formatToGrams(nutrition: String?): String? = nutrition?.let {
-        "$it grams"
-    }
+    val minuteMs = 60_000L
+    val hourMs = 60L * minuteMs
+    val dayMs = 24L * hourMs
+    val weekMs = 7L * dayMs
+    val monthMs = 30L * dayMs
 
-            private fun formatToMilligrams(nutrition: String?): String? = nutrition?.let {
-        "$it milligrams"
-    }
-
-            private fun formatInstructionStep(title: String, step: Int): String =
-        if (title.isBlank()) {
-            "Step $step"
-        } else {
-            title.capitalizeWords()
+    return when {
+        diffMillis < minuteMs -> {
+            "Just now"
         }
+        diffMillis < hourMs -> {
+            val minutes = diffMillis / minuteMs
+            val plural = if (minutes == 1L) "" else "s"
+            "$minutes minute$plural ago"
+        }
+        diffMillis < dayMs -> {
+            val hours = diffMillis / hourMs
+            val plural = if (hours == 1L) "" else "s"
+            "$hours hour$plural ago"
+        }
+        diffMillis < weekMs -> {
+            val days = diffMillis / dayMs
+            val plural = if (days == 1L) "" else "s"
+            "$days day$plural ago"
+        }
+        diffMillis < monthMs -> {
+            val weeks = diffMillis / weekMs
+            val plural = if (weeks == 1L) "" else "s"
+            "$weeks week$plural ago"
+        }
+        else -> {
+            val localDateTime = date.toLocalDateTime(TimeZone.currentSystemDefault())
+            val dayName = localDateTime.dayOfWeek.name.lowercase().replaceFirstChar { it.uppercase() }
+            val monthName = localDateTime.month.name.lowercase().replaceFirstChar { it.uppercase() }
+            "$dayName, $monthName ${localDateTime.day}, ${localDateTime.year}"
+        }
+    }
+}
+
+
+private fun formatToGrams(nutrition: String?): String? = nutrition?.let {
+    "$it grams"
+}
+
+private fun formatToMilligrams(nutrition: String?): String? = nutrition?.let {
+    "$it milligrams"
+}
+
+private fun formatInstructionStep(title: String, step: Int): String =
+    if (title.isBlank()) {
+        "Step $step"
+    } else {
+        title.capitalizeWords()
+    }

@@ -75,6 +75,8 @@ class DefaultRecipesComponent(componentContext: ComponentContext, storeFactory: 
                 DefaultRecipeCommentsComponent(
                     recipeId = cfg.recipeId,
                     componentContext = ctx,
+                    storeFactory = storeFactory,
+                    repository = get<RecipeRepository>()
                 )
             }
         )

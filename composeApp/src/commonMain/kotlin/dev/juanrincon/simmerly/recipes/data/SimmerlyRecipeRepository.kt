@@ -31,6 +31,7 @@ class SimmerlyRecipeRepository(
     private val sessionDataStore: SessionDataStore,
 ) : RecipeRepository {
     private val recipeDao = database.recipeDao()
+    private val commentDao = database.commentDao()
 
     private val store: RecipeStore = RecipeStoreFactory(networkClient, database, sessionDataStore).create()
 
@@ -39,7 +40,7 @@ class SimmerlyRecipeRepository(
             recipes.map { it.toDomain(address) }
         }
 
-    override fun comments(recipeId: String): Flow<List<Comment>> =  recipeDao.observeComments(recipeId).map { comments ->
+    override fun comments(recipeId: String): Flow<List<Comment>> =  commentDao.observeComments(recipeId).map { comments ->
         comments.map { it.toDomain() }
     }
 

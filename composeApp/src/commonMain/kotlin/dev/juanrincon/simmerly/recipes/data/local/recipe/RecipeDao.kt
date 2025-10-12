@@ -6,7 +6,6 @@ import androidx.room.Query
 import androidx.room.Transaction
 import androidx.room.Upsert
 import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.RecipeEntity
-import dev.juanrincon.simmerly.recipes.data.local.recipe.model.CommentWithRelations
 import dev.juanrincon.simmerly.recipes.data.local.recipe.model.RecipeDetailWithRelations
 import kotlinx.coroutines.flow.Flow
 import kotlin.time.ExperimentalTime
@@ -30,12 +29,6 @@ interface RecipeDao {
     @Transaction
     @Query("SELECT * FROM recipes WHERE id = :id")
     fun observeRecipeDetail(id: String): Flow<RecipeDetailWithRelations>
-
-    @Transaction
-    @Query("SELECT * FROM comments WHERE recipe_id = :recipeId ORDER BY created_at DESC")
-    fun observeComments(recipeId: String): Flow<List<CommentWithRelations>>
-
-
 
     @Transaction
     @Query("SELECT * FROM recipes WHERE id = :id")
