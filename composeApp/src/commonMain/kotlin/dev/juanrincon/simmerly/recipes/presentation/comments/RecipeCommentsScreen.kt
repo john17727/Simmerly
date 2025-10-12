@@ -92,6 +92,13 @@ fun RecipeCommentsScreenPreview() {
                         text = "This is another comment",
                         date = "2 hours ago",
                         isAuthor = false
+                    ),
+                    CommentUi(
+                        id = "3",
+                        author = "Sara Velasco",
+                        text = "This is a very long comment about how long comments are great at testing the ui format for long comments",
+                        date = "2 hours ago",
+                        isAuthor = false
                     )
                 )
             ),

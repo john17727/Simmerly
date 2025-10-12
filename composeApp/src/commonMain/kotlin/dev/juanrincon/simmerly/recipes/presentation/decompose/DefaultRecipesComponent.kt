@@ -20,6 +20,7 @@ import dev.juanrincon.simmerly.core.presentation.AppBarAction
 import dev.juanrincon.simmerly.core.presentation.AppBarConfig
 import dev.juanrincon.simmerly.core.presentation.activateAndShowExtra
 import dev.juanrincon.simmerly.core.presentation.dismissAndHideExtra
+import dev.juanrincon.simmerly.core.presentation.updateExtra
 import dev.juanrincon.simmerly.recipes.domain.RecipeRepository
 import dev.juanrincon.simmerly.recipes.presentation.comments.decompose.DefaultRecipeCommentsComponent
 import dev.juanrincon.simmerly.recipes.presentation.comments.decompose.RecipeCommentsComponent
@@ -60,7 +61,10 @@ class DefaultRecipesComponent(componentContext: ComponentContext, storeFactory: 
                     componentContext = ctx,
                     storeFactory = storeFactory,
                     repository = get<RecipeRepository>(),
-                    onRecipeSelected = { recipeId -> nav.activateDetails(DetailsConfig(recipeId)) }
+                    onRecipeSelected = { recipeId ->
+                        nav.activateDetails(DetailsConfig(recipeId))
+                        nav.updateExtra(ExtrasConfig(recipeId))
+                    }
                 )
             },
             detailsFactory = { cfg, ctx ->

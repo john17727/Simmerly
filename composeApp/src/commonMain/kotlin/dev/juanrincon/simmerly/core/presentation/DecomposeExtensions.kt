@@ -10,13 +10,8 @@ fun <MC : Any, DC : Any, EC : Any> PanelsNavigator<MC, DC, EC>.dismissAndHideExt
     onComplete: (newState: Panels<MC, DC, EC>, oldState: Panels<MC, DC, EC>) -> Unit = { _, _ -> },
 ) {
     navigate(
-        transformer = { it.copy(extra = null) },
-        onComplete = { _, _ ->
-            navigate(
-                transformer = { it.copy(mode = ChildPanelsMode.DUAL) },
-                onComplete = onComplete
-            )
-        }
+        transformer = { it.copy(extra = null, mode = ChildPanelsMode.DUAL) },
+        onComplete = onComplete
     )
 }
 
@@ -27,6 +22,23 @@ fun <MC : Any, DC : Any, EC : Any> PanelsNavigator<MC, DC, EC>.activateAndShowEx
 ) {
     navigate(
         transformer = { it.copy(extra = extra, mode = ChildPanelsMode.TRIPLE) },
+        onComplete = onComplete
+    )
+}
+
+@OptIn(ExperimentalDecomposeApi::class)
+fun <MC : Any, DC : Any, EC : Any> PanelsNavigator<MC, DC, EC>.updateExtra(
+    extra: EC,
+    onComplete: (newState: Panels<MC, DC, EC>, oldState: Panels<MC, DC, EC>) -> Unit = { _, _ -> },
+) {
+    navigate(
+        transformer = {
+            if (it.extra != null && it.extra != extra) {
+                it.copy(extra = extra)
+            } else {
+                it
+            }
+        },
         onComplete = onComplete
     )
 }
