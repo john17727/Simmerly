@@ -1,4 +1,4 @@
-package dev.juanrincon.simmerly.recipes.presentation.extras.decompose
+package dev.juanrincon.simmerly.recipes.presentation.comments.decompose
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column

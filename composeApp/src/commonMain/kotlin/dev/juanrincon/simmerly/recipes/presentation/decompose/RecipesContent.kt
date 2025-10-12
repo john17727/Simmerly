@@ -18,8 +18,8 @@ import com.arkivanov.decompose.extensions.compose.experimental.panels.ChildPanel
 import com.arkivanov.decompose.extensions.compose.experimental.panels.HorizontalChildPanelsLayout
 import com.arkivanov.decompose.router.panels.ChildPanelsMode
 import dev.juanrincon.simmerly.core.presentation.ifTrue
+import dev.juanrincon.simmerly.recipes.presentation.comments.decompose.RecipeCommentsContent
 import dev.juanrincon.simmerly.recipes.presentation.details.decompose.RecipeDetailsContent
-import dev.juanrincon.simmerly.recipes.presentation.extras.decompose.RecipeCommentsContent
 import dev.juanrincon.simmerly.recipes.presentation.list.decompose.RecipeListContent
 
 @OptIn(ExperimentalDecomposeApi::class)

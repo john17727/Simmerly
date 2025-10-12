@@ -21,10 +21,10 @@ import dev.juanrincon.simmerly.core.presentation.AppBarConfig
 import dev.juanrincon.simmerly.core.presentation.activateAndShowExtra
 import dev.juanrincon.simmerly.core.presentation.dismissAndHideExtra
 import dev.juanrincon.simmerly.recipes.domain.RecipeRepository
+import dev.juanrincon.simmerly.recipes.presentation.comments.decompose.DefaultRecipeCommentsComponent
+import dev.juanrincon.simmerly.recipes.presentation.comments.decompose.RecipeCommentsComponent
 import dev.juanrincon.simmerly.recipes.presentation.details.decompose.DefaultRecipeDetailsComponent
 import dev.juanrincon.simmerly.recipes.presentation.details.decompose.RecipeDetailsComponent
-import dev.juanrincon.simmerly.recipes.presentation.extras.decompose.DefaultRecipeCommentsComponent
-import dev.juanrincon.simmerly.recipes.presentation.extras.decompose.RecipeCommentsComponent
 import dev.juanrincon.simmerly.recipes.presentation.list.decompose.DefaultRecipeListComponent
 import dev.juanrincon.simmerly.recipes.presentation.list.decompose.RecipeListComponent
 import dev.juanrincon.simmerly.recipes.presentation.list.mvikotlin.RecipeListStore

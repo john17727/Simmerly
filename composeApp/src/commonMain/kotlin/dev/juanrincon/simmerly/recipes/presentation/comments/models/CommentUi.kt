@@ -1,4 +1,4 @@
-package dev.juanrincon.simmerly.recipes.presentation.extras.models
+package dev.juanrincon.simmerly.recipes.presentation.comments.models
 
 data class CommentUi(
     val id: String,
