@@ -1,13 +1,9 @@
 package dev.juanrincon.simmerly.recipes.data
 
-import app.tracktion.core.domain.util.DataError
 import app.tracktion.core.domain.util.Result
 import app.tracktion.core.domain.util.fold
-import dev.juanrincon.simmerly.auth.domain.LoginError
 import dev.juanrincon.simmerly.auth.domain.SessionDataStore
 import dev.juanrincon.simmerly.core.data.local.SimmerlyDatabase
-import dev.juanrincon.simmerly.recipes.data.local.recipe.IngredientDao
-import dev.juanrincon.simmerly.recipes.data.local.recipe.RecipeDao
 import dev.juanrincon.simmerly.recipes.data.mappers.toDomain
 import dev.juanrincon.simmerly.recipes.data.mappers.toEntity
 import dev.juanrincon.simmerly.recipes.data.mappers.toPaginationData
@@ -17,17 +13,16 @@ import dev.juanrincon.simmerly.recipes.data.store.RecipeStoreFactory
 import dev.juanrincon.simmerly.recipes.domain.LoadingResult
 import dev.juanrincon.simmerly.recipes.domain.RecipeRepository
 import dev.juanrincon.simmerly.recipes.domain.RecipesError
+import dev.juanrincon.simmerly.recipes.domain.model.Comment
 import dev.juanrincon.simmerly.recipes.domain.model.PaginationData
 import dev.juanrincon.simmerly.recipes.domain.model.RecipeDetail
 import dev.juanrincon.simmerly.recipes.domain.model.RecipeSummary
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.fold
 import kotlinx.coroutines.flow.map
 import org.mobilenativefoundation.store.core5.ExperimentalStoreApi
 import org.mobilenativefoundation.store.store5.StoreReadRequest
 import org.mobilenativefoundation.store.store5.StoreReadResponse
-import org.mobilenativefoundation.store.store5.impl.extensions.fresh
 
 @OptIn(ExperimentalStoreApi::class)
 class SimmerlyRecipeRepository(
@@ -43,6 +38,10 @@ class SimmerlyRecipeRepository(
         .combine(recipeDao.observeRecipeList()) { address, recipes ->
             recipes.map { it.toDomain(address) }
         }
+
+    override fun comments(recipeId: String): Flow<List<Comment>> =  recipeDao.observeComments(recipeId).map { comments ->
+        comments.map { it.toDomain() }
+    }
 
     override suspend fun loadRecipes(
         page: Int,
