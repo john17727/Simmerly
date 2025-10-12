@@ -9,7 +9,7 @@ import kotlinx.coroutines.flow.asStateFlow
 
 class DefaultRecipeExtrasComponent(
     private val recipeId: String,
-    private val mode: DefaultRecipesComponent.ExtrasMode,
+    private val mode: DefaultRecipesComponent.ExtraMode,
     componentContext: ComponentContext
 ) : RecipeExtrasComponent {
     private val _state = MutableStateFlow(initialState(mode))
@@ -19,9 +19,8 @@ class DefaultRecipeExtrasComponent(
         TODO("Not yet implemented")
     }
 
-    private fun initialState(mode: DefaultRecipesComponent.ExtrasMode) = when (mode) {
-        DefaultRecipesComponent.ExtrasMode.COMMENTS -> RecipeExtrasStore.State.Comments(listOf())
-        DefaultRecipesComponent.ExtrasMode.SETTINGS -> RecipeExtrasStore.State.Settings(false)
-
+    private fun initialState(mode: DefaultRecipesComponent.ExtraMode) = when (mode) {
+        DefaultRecipesComponent.ExtraMode.COMMENTS -> RecipeExtrasStore.State.Comments(listOf())
+        DefaultRecipesComponent.ExtraMode.SETTINGS -> RecipeExtrasStore.State.Settings(false)
     }
 }

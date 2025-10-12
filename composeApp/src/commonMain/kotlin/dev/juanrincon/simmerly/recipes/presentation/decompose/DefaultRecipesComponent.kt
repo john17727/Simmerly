@@ -82,6 +82,7 @@ class DefaultRecipesComponent(componentContext: ComponentContext, storeFactory: 
         panels.map { p ->
             val list = p.main.instance
             val details = p.details?.instance
+            val extra = p.extra?.instance
 
             when (p.mode) {
                 ChildPanelsMode.SINGLE -> {
@@ -116,8 +117,23 @@ class DefaultRecipesComponent(componentContext: ComponentContext, storeFactory: 
                             if (details != null) {
                                 val recipeIdFromConfig =
                                     (p.details?.configuration as? DetailsConfig)?.recipeId
-                                recipeIdFromConfig?.let { add(commentsAction(p.mode, it)) }
-                                recipeIdFromConfig?.let { add(settingsAction(p.mode, it)) }
+                                val extraMode = (p.extra?.configuration as? ExtrasConfig)?.mode
+                                recipeIdFromConfig?.let {
+                                    add(
+                                        commentsAction(
+                                            extraMode,
+                                            it
+                                        )
+                                    )
+                                }
+                                recipeIdFromConfig?.let {
+                                    add(
+                                        settingsAction(
+                                            extraMode,
+                                            it
+                                        )
+                                    )
+                                }
                             }
                         }
                     )
@@ -129,10 +145,10 @@ class DefaultRecipesComponent(componentContext: ComponentContext, storeFactory: 
     private data class DetailsConfig(val recipeId: String)
 
     @Serializable
-    private data class ExtrasConfig(val recipeId: String, val mode: ExtrasMode)
+    private data class ExtrasConfig(val recipeId: String, val mode: ExtraMode)
 
     @Serializable
-    enum class ExtrasMode {
+    enum class ExtraMode {
         COMMENTS,
         SETTINGS
     }
@@ -147,24 +163,40 @@ class DefaultRecipesComponent(componentContext: ComponentContext, storeFactory: 
         onClick = { listComponent.onEvent(RecipeListStore.Intent.OnRefresh) }
     )
 
-    private fun commentsAction(currentMode: ChildPanelsMode, recipeId: String) = AppBarAction(
+    private fun commentsAction(
+        extraMode: ExtraMode?,
+        recipeId: String
+    ) = AppBarAction(
         icon = Icons.AutoMirrored.Default.Comment,
         contentDescription = "Comments",
         onClick = {
-            if (currentMode == ChildPanelsMode.DUAL) {
-                nav.activateAndShowExtra(ExtrasConfig(recipeId = recipeId, mode = ExtrasMode.COMMENTS))
+            if (extraMode != ExtraMode.COMMENTS) {
+                nav.activateAndShowExtra(
+                    ExtrasConfig(
+                        recipeId = recipeId,
+                        mode = ExtraMode.COMMENTS
+                    )
+                )
             } else {
                 nav.dismissAndHideExtra()
             }
         }
     )
 
-    private fun settingsAction(currentMode: ChildPanelsMode, recipeId: String) = AppBarAction(
+    private fun settingsAction(
+        extraMode: ExtraMode?,
+        recipeId: String
+    ) = AppBarAction(
         icon = Icons.Default.Settings,
         contentDescription = "Settings",
         onClick = {
-            if (currentMode == ChildPanelsMode.DUAL) {
-                nav.activateAndShowExtra(ExtrasConfig(recipeId = recipeId, mode = ExtrasMode.SETTINGS))
+            if (extraMode != ExtraMode.SETTINGS) {
+                nav.activateAndShowExtra(
+                    ExtrasConfig(
+                        recipeId = recipeId,
+                        mode = ExtraMode.SETTINGS
+                    )
+                )
             } else {
                 nav.dismissAndHideExtra()
             }
