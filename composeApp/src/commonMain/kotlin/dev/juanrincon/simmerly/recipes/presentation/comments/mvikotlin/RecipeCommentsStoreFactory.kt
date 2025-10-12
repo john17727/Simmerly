@@ -36,6 +36,7 @@ internal class RecipeCommentsStoreFactory(
 
     private sealed interface Msg {
         data class CommentsLoaded(val comments: List<CommentUi>) : Msg
+        data class CommentTextChange(val text: String) : Msg
     }
 
     private class BootstrapperImpl(private val recipeId: String) : CoroutineBootstrapper<Action>() {
@@ -47,6 +48,10 @@ internal class RecipeCommentsStoreFactory(
     private class ExecutorImpl(private val repository: RecipeRepository) :
         CoroutineExecutor<Intent, Action, State, Msg, Label>() {
         override fun executeIntent(intent: Intent) {
+            when (intent) {
+                is Intent.OnCommentTextChanged -> dispatch(Msg.CommentTextChange(intent.text))
+                Intent.OnSendCommentClicked -> TODO()
+            }
         }
 
         override fun executeAction(action: Action) {
@@ -67,9 +72,10 @@ internal class RecipeCommentsStoreFactory(
     }
 
     private object ReducerImpl : Reducer<State, Msg> {
-        override fun State.reduce(message: Msg): State =
-            when (message) {
-                is Msg.CommentsLoaded -> copy(comments = message.comments)
+        override fun State.reduce(msg: Msg): State =
+            when (msg) {
+                is Msg.CommentsLoaded -> copy(comments = msg.comments)
+                is Msg.CommentTextChange -> copy(commentText = msg.text)
             }
     }
 }
