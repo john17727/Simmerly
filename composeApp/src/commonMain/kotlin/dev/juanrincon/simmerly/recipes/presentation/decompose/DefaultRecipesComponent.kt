@@ -1,10 +1,8 @@
 package dev.juanrincon.simmerly.recipes.presentation.decompose
 
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.Comment
 import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material.icons.filled.Settings
-import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.material3.Icon
 import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.decompose.ExperimentalDecomposeApi
 import com.arkivanov.decompose.router.panels.ChildPanels
@@ -25,16 +23,20 @@ import dev.juanrincon.simmerly.core.presentation.dismissAndHideExtra
 import dev.juanrincon.simmerly.recipes.domain.RecipeRepository
 import dev.juanrincon.simmerly.recipes.presentation.details.decompose.DefaultRecipeDetailsComponent
 import dev.juanrincon.simmerly.recipes.presentation.details.decompose.RecipeDetailsComponent
-import dev.juanrincon.simmerly.recipes.presentation.extras.decompose.DefaultRecipeExtrasComponent
-import dev.juanrincon.simmerly.recipes.presentation.extras.decompose.RecipeExtrasComponent
+import dev.juanrincon.simmerly.recipes.presentation.extras.decompose.DefaultRecipeCommentsComponent
+import dev.juanrincon.simmerly.recipes.presentation.extras.decompose.RecipeCommentsComponent
 import dev.juanrincon.simmerly.recipes.presentation.list.decompose.DefaultRecipeListComponent
 import dev.juanrincon.simmerly.recipes.presentation.list.decompose.RecipeListComponent
 import dev.juanrincon.simmerly.recipes.presentation.list.mvikotlin.RecipeListStore
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.builtins.serializer
+import org.jetbrains.compose.resources.painterResource
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.get
+import simmerly.composeapp.generated.resources.Res
+import simmerly.composeapp.generated.resources.right_panel_close
+import simmerly.composeapp.generated.resources.right_panel_open
 
 @OptIn(ExperimentalDecomposeApi::class)
 class DefaultRecipesComponent(componentContext: ComponentContext, storeFactory: StoreFactory) :
@@ -43,7 +45,7 @@ class DefaultRecipesComponent(componentContext: ComponentContext, storeFactory: 
     private val nav = PanelsNavigation<Unit, DetailsConfig, ExtrasConfig>()
 
     @OptIn(ExperimentalSerializationApi::class)
-    override val panels: Value<ChildPanels<*, RecipeListComponent, *, RecipeDetailsComponent, *, RecipeExtrasComponent>> =
+    override val panels: Value<ChildPanels<*, RecipeListComponent, *, RecipeDetailsComponent, *, RecipeCommentsComponent>> =
         childPanels(
             source = nav,
             serializers = Triple(
@@ -70,9 +72,8 @@ class DefaultRecipesComponent(componentContext: ComponentContext, storeFactory: 
                 )
             },
             extraFactory = { cfg, ctx ->
-                DefaultRecipeExtrasComponent(
+                DefaultRecipeCommentsComponent(
                     recipeId = cfg.recipeId,
-                    mode = cfg.mode,
                     componentContext = ctx,
                 )
             }
@@ -118,22 +119,8 @@ class DefaultRecipesComponent(componentContext: ComponentContext, storeFactory: 
                             if (details != null) {
                                 val recipeIdFromConfig =
                                     (p.details?.configuration as? DetailsConfig)?.recipeId
-                                val extraMode = (p.extra?.configuration as? ExtrasConfig)?.mode
                                 recipeIdFromConfig?.let {
-                                    add(
-                                        commentsAction(
-                                            extraMode,
-                                            it
-                                        )
-                                    )
-                                }
-                                recipeIdFromConfig?.let {
-                                    add(
-                                        settingsAction(
-                                            extraMode,
-                                            it
-                                        )
-                                    )
+                                    add(toggleExtraAction(extra, it))
                                 }
                             }
                         }
@@ -146,63 +133,38 @@ class DefaultRecipesComponent(componentContext: ComponentContext, storeFactory: 
     private data class DetailsConfig(val recipeId: String)
 
     @Serializable
-    private data class ExtrasConfig(val recipeId: String, val mode: ExtraMode)
-
-    @Serializable
-    enum class ExtraMode {
-        COMMENTS,
-        SETTINGS
-    }
+    private data class ExtrasConfig(val recipeId: String)
 
     // Helper to build list refresh action
     private fun refreshAction(
         listComponent: RecipeListComponent,
         detailsComponent: RecipeDetailsComponent?
     ) = AppBarAction(
-        icon = Icons.Default.Refresh,
-        contentDescription = "Refresh",
+        icon = { Icon(Icons.Default.Refresh, contentDescription = "Refresh") },
         onClick = { listComponent.onEvent(RecipeListStore.Intent.OnRefresh) }
     )
 
-    private fun commentsAction(
-        extraMode: ExtraMode?,
-        recipeId: String
-    ) = toggleExtraAction(
-        icon = Icons.AutoMirrored.Default.Comment,
-        contentDescription = "Comments",
-        targetMode = ExtraMode.COMMENTS,
-        currentMode = extraMode,
-        recipeId = recipeId,
-    )
-
-    private fun settingsAction(
-        extraMode: ExtraMode?,
-        recipeId: String
-    ) = toggleExtraAction(
-        icon = Icons.Default.Settings,
-        contentDescription = "Settings",
-        targetMode = ExtraMode.SETTINGS,
-        currentMode = extraMode,
-        recipeId = recipeId,
-    )
-
-    private fun toggleExtraAction(
-        icon: ImageVector,
-        contentDescription: String,
-        targetMode: ExtraMode,
-        currentMode: ExtraMode?,
-        recipeId: String,
-    ) = AppBarAction(
-        icon = icon,
-        contentDescription = contentDescription,
-        onClick = {
-            if (currentMode != targetMode) {
-                nav.activateAndShowExtra(
-                    ExtrasConfig(recipeId = recipeId, mode = targetMode)
-                )
-            } else {
-                nav.dismissAndHideExtra()
+    private fun toggleExtraAction(extraComponent: RecipeCommentsComponent?, recipeId: String) =
+        AppBarAction(
+            icon = {
+                if (extraComponent != null) {
+                    Icon(
+                        painterResource(Res.drawable.right_panel_close),
+                        contentDescription = "Close Right Panel"
+                    )
+                } else {
+                    Icon(
+                        painterResource(Res.drawable.right_panel_open),
+                        contentDescription = "Open Right Panel"
+                    )
+                }
+            },
+            onClick = {
+                if (extraComponent == null) {
+                    nav.activateAndShowExtra(ExtrasConfig(recipeId))
+                } else {
+                    nav.dismissAndHideExtra()
+                }
             }
-        }
-    )
+        )
 }

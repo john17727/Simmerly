@@ -2,7 +2,6 @@ package dev.juanrincon.simmerly.navigation.app
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -36,9 +35,7 @@ fun AppContent(component: AppComponent, modifier: Modifier = Modifier) {
                     title = { Text(appBarConfig.title) },
                     actions = {
                         appBarConfig.actions.forEach { action ->
-                            IconButton(onClick = action.onClick) {
-                                Icon(action.icon, contentDescription = action.contentDescription)
-                            }
+                            IconButton(onClick = action.onClick, content = action.icon)
                         }
                     },
                     colors = TopAppBarDefaults.topAppBarColors().copy(containerColor = MaterialTheme.colorScheme.secondaryContainer)

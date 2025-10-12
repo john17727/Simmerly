@@ -2,13 +2,13 @@ package dev.juanrincon.simmerly.core.presentation
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.graphics.vector.ImageVector
 
 @Immutable
 data class AppBarAction(
-    val icon: ImageVector,
-    val contentDescription: String?,
+    val icon: @Composable () -> Unit,
     val onClick: () -> Unit,
 )
 

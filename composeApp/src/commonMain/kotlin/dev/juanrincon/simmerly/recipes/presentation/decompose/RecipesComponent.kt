@@ -6,13 +6,13 @@ import com.arkivanov.decompose.router.panels.ChildPanelsMode
 import com.arkivanov.decompose.value.Value
 import dev.juanrincon.simmerly.core.presentation.AppBarConfig
 import dev.juanrincon.simmerly.recipes.presentation.details.decompose.RecipeDetailsComponent
-import dev.juanrincon.simmerly.recipes.presentation.extras.decompose.RecipeExtrasComponent
+import dev.juanrincon.simmerly.recipes.presentation.extras.decompose.RecipeCommentsComponent
 import dev.juanrincon.simmerly.recipes.presentation.list.decompose.RecipeListComponent
 
 @OptIn(ExperimentalDecomposeApi::class)
 interface RecipesComponent {
 
-    val panels: Value<ChildPanels<*, RecipeListComponent, *, RecipeDetailsComponent, *, RecipeExtrasComponent>>
+    val panels: Value<ChildPanels<*, RecipeListComponent, *, RecipeDetailsComponent, *, RecipeCommentsComponent>>
 
     fun setMode(mode: ChildPanelsMode)
 

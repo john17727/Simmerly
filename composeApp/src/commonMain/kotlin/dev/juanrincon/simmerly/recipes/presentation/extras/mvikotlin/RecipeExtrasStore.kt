@@ -11,10 +11,9 @@ interface RecipeExtrasStore : Store<Intent, State, Label> {
     sealed interface Intent {
     }
 
-    sealed interface State {
-        data class Comments(val comments: List<CommentUi>): State
-        data class Settings(val settings: Boolean): State
-    }
+    data class State(
+        val comments: List<CommentUi> = emptyList(),
+    )
 
     sealed interface Label {
     }
