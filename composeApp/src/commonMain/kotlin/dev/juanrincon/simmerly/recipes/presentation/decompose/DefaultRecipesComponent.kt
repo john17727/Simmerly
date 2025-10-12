@@ -85,7 +85,12 @@ class DefaultRecipesComponent(componentContext: ComponentContext, storeFactory: 
             }
         )
 
-    override fun setMode(mode: ChildPanelsMode) = nav.setMode(mode)
+    override fun setMode(mode: ChildPanelsMode) {
+        if (mode == ChildPanelsMode.SINGLE) {
+            nav.dismissAndHideExtra()
+        }
+        nav.setMode(mode)
+    }
     override val appBarConfig: Value<AppBarConfig> =
         panels.map { p ->
             val list = p.main.instance

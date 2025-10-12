@@ -7,17 +7,15 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.arkivanov.decompose.ExperimentalDecomposeApi
 import com.arkivanov.decompose.extensions.compose.experimental.panels.ChildPanels
 import com.arkivanov.decompose.extensions.compose.experimental.panels.HorizontalChildPanelsLayout
+import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.arkivanov.decompose.router.panels.ChildPanelsMode
-import dev.juanrincon.simmerly.core.presentation.ifTrue
 import dev.juanrincon.simmerly.recipes.presentation.comments.decompose.RecipeCommentsContent
 import dev.juanrincon.simmerly.recipes.presentation.details.decompose.RecipeDetailsContent
 import dev.juanrincon.simmerly.recipes.presentation.list.decompose.RecipeListContent
@@ -25,11 +23,12 @@ import dev.juanrincon.simmerly.recipes.presentation.list.decompose.RecipeListCon
 @OptIn(ExperimentalDecomposeApi::class)
 @Composable
 fun RecipesContent(component: RecipesComponent, modifier: Modifier = Modifier) {
-    var panelMode by remember { mutableStateOf(ChildPanelsMode.SINGLE) }
+    val panels by component.panels.subscribeAsState()
+    var panelMode = panels.mode
+
 
     ChildPanelsModeChangedEffect { mode ->
         component.setMode(mode)
-        panelMode = mode
     }
     ChildPanels(
         panels = component.panels,
@@ -57,8 +56,10 @@ fun RecipesContent(component: RecipesComponent, modifier: Modifier = Modifier) {
                 tripleWeights = Triple(0.25F, 0.50F, 0.25F)
             )
         },
-        modifier = modifier.ifTrue(condition = panelMode == ChildPanelsMode.DUAL) {
-            padding(start = 16.dp, end = 16.dp)
+        modifier = when (panelMode) {
+            ChildPanelsMode.DUAL -> modifier.padding(start = 16.dp, end = 16.dp)
+            ChildPanelsMode.TRIPLE -> modifier.padding(start = 16.dp)
+            else -> modifier
         }
     )
 }
