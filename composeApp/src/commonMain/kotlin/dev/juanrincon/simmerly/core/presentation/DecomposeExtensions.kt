@@ -4,6 +4,10 @@ import com.arkivanov.decompose.ExperimentalDecomposeApi
 import com.arkivanov.decompose.router.panels.ChildPanelsMode
 import com.arkivanov.decompose.router.panels.Panels
 import com.arkivanov.decompose.router.panels.PanelsNavigator
+import com.arkivanov.decompose.value.Value
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.callbackFlow
 
 @OptIn(ExperimentalDecomposeApi::class)
 fun <MC : Any, DC : Any, EC : Any> PanelsNavigator<MC, DC, EC>.dismissAndHideExtra(
@@ -41,4 +45,10 @@ fun <MC : Any, DC : Any, EC : Any> PanelsNavigator<MC, DC, EC>.updateExtra(
         },
         onComplete = onComplete
     )
+}
+
+fun <T : Any> Value<T>.asFlow(): Flow<T> = callbackFlow {
+    val disposable = subscribe { trySend(it).isSuccess }
+    trySend(value)
+    awaitClose { disposable.cancel() }
 }

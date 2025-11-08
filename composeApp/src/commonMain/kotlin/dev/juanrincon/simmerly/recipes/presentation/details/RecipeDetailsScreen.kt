@@ -16,7 +16,6 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.Switch
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Remove
@@ -25,6 +24,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.runtime.Composable
@@ -400,28 +400,28 @@ private fun SettingsView(settings: Settings, modifier: Modifier = Modifier) {
         Spacer(modifier = Modifier.height(16.dp))
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+            horizontalArrangement = Arrangement.spacedBy(SETTINGS_OPTION_SPACING)
         ) {
             Switch(checked = settings.public, onCheckedChange = {})
             Text("Public Recipe")
         }
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+            horizontalArrangement = Arrangement.spacedBy(SETTINGS_OPTION_SPACING)
         ) {
             Switch(checked = settings.showNutrition, onCheckedChange = {})
             Text("Show Nutrition Values")
         }
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+            horizontalArrangement = Arrangement.spacedBy(SETTINGS_OPTION_SPACING)
         ) {
             Switch(checked = settings.disableComments, onCheckedChange = {})
             Text("Disable Comments")
         }
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+            horizontalArrangement = Arrangement.spacedBy(SETTINGS_OPTION_SPACING)
         ) {
             Switch(checked = settings.locked, onCheckedChange = {})
             Text("Locked")
@@ -430,6 +430,8 @@ private fun SettingsView(settings: Settings, modifier: Modifier = Modifier) {
 }
 
 val EXPANDED_CARD_PADDING = 16.dp
+val SETTINGS_OPTION_SPACING = 16.dp
+
 
 @Preview
 @Composable

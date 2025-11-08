@@ -15,5 +15,7 @@ interface RecipeDetailsComponent {
 
     fun onEvent(event: Intent)
 
-    val actions: List<AppBarAction>
+    val commentsEnabled: StateFlow<Boolean>
+
+    val appBarActions: List<AppBarAction>
 }

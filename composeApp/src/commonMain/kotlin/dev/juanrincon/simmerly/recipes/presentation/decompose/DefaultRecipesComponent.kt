@@ -13,12 +13,14 @@ import com.arkivanov.decompose.router.panels.activateDetails
 import com.arkivanov.decompose.router.panels.childPanels
 import com.arkivanov.decompose.router.panels.pop
 import com.arkivanov.decompose.router.panels.setMode
+import com.arkivanov.decompose.value.MutableValue
 import com.arkivanov.decompose.value.Value
-import com.arkivanov.decompose.value.operator.map
+import com.arkivanov.essenty.lifecycle.coroutines.coroutineScope
 import com.arkivanov.mvikotlin.core.store.StoreFactory
 import dev.juanrincon.simmerly.core.presentation.AppBarAction
 import dev.juanrincon.simmerly.core.presentation.AppBarConfig
 import dev.juanrincon.simmerly.core.presentation.activateAndShowExtra
+import dev.juanrincon.simmerly.core.presentation.asFlow
 import dev.juanrincon.simmerly.core.presentation.dismissAndHideExtra
 import dev.juanrincon.simmerly.core.presentation.updateExtra
 import dev.juanrincon.simmerly.recipes.domain.RecipeRepository
@@ -29,6 +31,12 @@ import dev.juanrincon.simmerly.recipes.presentation.details.decompose.RecipeDeta
 import dev.juanrincon.simmerly.recipes.presentation.list.decompose.DefaultRecipeListComponent
 import dev.juanrincon.simmerly.recipes.presentation.list.decompose.RecipeListComponent
 import dev.juanrincon.simmerly.recipes.presentation.list.mvikotlin.RecipeListStore
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.builtins.serializer
@@ -39,7 +47,7 @@ import simmerly.composeapp.generated.resources.Res
 import simmerly.composeapp.generated.resources.right_panel_close
 import simmerly.composeapp.generated.resources.right_panel_open
 
-@OptIn(ExperimentalDecomposeApi::class)
+@OptIn(ExperimentalDecomposeApi::class, ExperimentalCoroutinesApi::class)
 class DefaultRecipesComponent(componentContext: ComponentContext, storeFactory: StoreFactory) :
     RecipesComponent, ComponentContext by componentContext, KoinComponent {
 
@@ -63,7 +71,6 @@ class DefaultRecipesComponent(componentContext: ComponentContext, storeFactory: 
                     repository = get<RecipeRepository>(),
                     onRecipeSelected = { recipeId ->
                         nav.activateDetails(DetailsConfig(recipeId))
-                        nav.updateExtra(ExtrasConfig(recipeId))
                     }
                 )
             },
@@ -91,55 +98,102 @@ class DefaultRecipesComponent(componentContext: ComponentContext, storeFactory: 
         }
         nav.setMode(mode)
     }
-    override val appBarConfig: Value<AppBarConfig> =
-        panels.map { p ->
-            val list = p.main.instance
-            val details = p.details?.instance
-            val extra = p.extra?.instance
 
-            when (p.mode) {
-                ChildPanelsMode.SINGLE -> {
-                    if (details != null) {
-                        // Pull the recipe title from the details component’s state (expose it as Value/StateFlow there)
-                        val title = "Details" //(details.title ?: "Details")
-                        AppBarConfig(
-                            title = title,
-                            showNavigationIcon = true,
-                            onNavigationClick = { nav.pop() },
-                            actions = emptyList(),
+    private val _appBarConfig = MutableValue(AppBarConfig(title = "Recipes", actions = emptyList()))
+    override val appBarConfig: Value<AppBarConfig> = _appBarConfig
+
+    init {
+        coroutineScope().launch {
+            panels.asFlow().flatMapLatest { p ->
+                val list = p.main.instance
+                val details = p.details?.instance
+                val extra = p.extra?.instance
+
+                // Build a base config for each mode
+                val baseSingle = AppBarConfig(
+                    title = if (details != null) "Details" else "Recipes",
+                    showNavigationIcon = details != null,
+                    onNavigationClick = if (details != null) ({ nav.pop() }) else null,
+                    actions = if (details == null) listOf(
+                        refreshAction(
+                            list,
+                            details
                         )
-                    } else {
-                        AppBarConfig(
-                            title = "Recipes",
-                            actions = listOf(refreshAction(list, details))
-                        )
-                    }
-                }
+                    ) else emptyList()
+                )
 
-                ChildPanelsMode.DUAL,
-                ChildPanelsMode.TRIPLE -> {
+                val baseSplit = AppBarConfig(
+                    title = "Recipes",
+                    showNavigationIcon = false,
+                    actions = listOf(refreshAction(list, details))
+                )
 
-                    AppBarConfig(
-                        title = "Recipes",
-                        showNavigationIcon = false,
-                        actions = buildList {
-                            // Always keep the list action in split mode
-                            add(refreshAction(list, details))
-                            // Optionally add details actions if your details component exposes them
-                            // details?.appBarActions?.let { addAll(it) }
-                            if (details != null) {
-                                addAll(details.actions)
-                                val recipeIdFromConfig =
-                                    (p.details?.configuration as? DetailsConfig)?.recipeId
-                                recipeIdFromConfig?.let {
-                                    add(toggleExtraAction(extra, it))
+                when (p.mode) {
+                    ChildPanelsMode.SINGLE -> flowOf(baseSingle)
+                    ChildPanelsMode.DUAL, ChildPanelsMode.TRIPLE -> {
+                        // Combine the child’s dynamic actions and commentsEnabled
+                        details?.commentsEnabled?.map { enabled ->
+
+                            val actions = buildList {
+                                add(refreshAction(list, details))
+                                addAll(details.appBarActions)
+                                if (enabled) {
+                                    (p.details?.configuration as? DetailsConfig)?.recipeId?.let {
+                                        add(toggleExtraAction(extra, it))
+                                    }
                                 }
                             }
+                            baseSplit.copy(actions = actions)
                         }
-                    )
+                            ?: flowOf(baseSplit)
+                    }
                 }
-            }
+            }.collect { _appBarConfig.value = it }
         }
+
+        coroutineScope().launch {
+            panels.asFlow()
+                .flatMapLatest { p ->
+                    val details = p.details?.instance
+                    val hasExtra = p.extra != null
+
+                    // If there is no details component, emit a single value meaning "nothing to dismiss"
+                    val enabledFlow = details?.commentsEnabled ?: flowOf(true)
+
+                    enabledFlow
+                        .distinctUntilChanged() // avoid redundant repeats from the same details
+                        .map { enabled -> enabled to hasExtra }
+                }
+                .distinctUntilChanged() // avoid re-triggering when (enabled, hasExtra) pair didn’t change
+                .collect { (enabled, hasExtra) ->
+                    if (!enabled && hasExtra) {
+                        nav.dismissAndHideExtra()
+                    }
+                }
+        }
+
+        coroutineScope().launch {
+            panels.asFlow()
+                .flatMapLatest { p ->
+                    val details = p.details
+                    val enabledFlow = details?.instance?.commentsEnabled ?: flowOf(false)
+                    val recipeId = (details?.configuration as? DetailsConfig)?.recipeId
+
+                    enabledFlow
+                        .distinctUntilChanged() // only react when enabled flips
+                        .map { enabled -> enabled to recipeId }
+                }
+                .distinctUntilChanged() // avoid reprocessing same pair
+                .collect { (enabled, recipeId) ->
+                    if (enabled) {
+                        recipeId?.let { id ->
+                            // Prepare or refresh the extra for the current recipe
+                            nav.updateExtra(ExtrasConfig(id))
+                        }
+                    }
+                }
+        }
+    }
 
     @Serializable
     private data class DetailsConfig(val recipeId: String)
