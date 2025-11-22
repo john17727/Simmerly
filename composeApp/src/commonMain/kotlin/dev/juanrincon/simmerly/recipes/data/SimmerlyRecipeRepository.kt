@@ -14,14 +14,15 @@ import dev.juanrincon.simmerly.recipes.data.mappers.toEntityWithRelations
 import dev.juanrincon.simmerly.recipes.data.mappers.toPaginationData
 import dev.juanrincon.simmerly.recipes.data.remote.RecipeNetworkClient
 import dev.juanrincon.simmerly.recipes.domain.LoadingResult
+import dev.juanrincon.simmerly.recipes.domain.RecipeListResult
 import dev.juanrincon.simmerly.recipes.domain.RecipeRepository
 import dev.juanrincon.simmerly.recipes.domain.RecipesError
 import dev.juanrincon.simmerly.recipes.domain.model.Comment
 import dev.juanrincon.simmerly.recipes.domain.model.PaginationData
 import dev.juanrincon.simmerly.recipes.domain.model.RecipeDetail
-import dev.juanrincon.simmerly.recipes.domain.model.RecipeSummary
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
@@ -41,10 +42,46 @@ class SimmerlyRecipeRepository(
     private val userDao = database.userDao()
 
 
-    override fun recipes(): Flow<List<RecipeSummary>> = sessionDataStore.observeServerAddress()
-        .combine(recipeDao.observeRecipeList()) { address, recipes ->
-            recipes.map { it.toDomain(address) }
+    override fun recipeList(
+        page: Int,
+        perPage: Int,
+        refresh: Boolean
+    ): Flow<Result<LoadingResult<RecipeListResult>, RecipesError>> = flow {
+        // Start with loading
+        emit(Result.Success(LoadingResult.Loading))
+
+        // Optionally clear for a hard refresh
+        if (refresh) {
+            recipeDao.clearAll()
         }
+
+        var pagination: PaginationData? = null
+
+        // Fetch from network and persist
+        val networkResult = networkClient.getRecipes(page, perPage)
+        networkResult.fold(
+            onSuccess = { response ->
+                recipeDao.upsertAll(response.items.map { it.toEntity() })
+                pagination = response.toPaginationData()
+            },
+            onFailure = {
+                // Surface fetch error but continue to emit cached/updated DB data
+                emit(Result.Error(RecipesError.FetchError))
+            }
+        )
+
+        // Now emit the DB-backed list
+        val dbFlow = sessionDataStore.observeServerAddress()
+            .combine(recipeDao.observeRecipeList()) { address, recipes ->
+                recipes.map { it.toDomain(address) }
+            }
+            .map { list ->
+                Result.Success(LoadingResult.Loaded(RecipeListResult(list, pagination)))
+            }
+            .distinctUntilChanged()
+
+        emitAll(dbFlow)
+    }
 
     override fun comments(recipeId: String): Flow<List<Comment>> =
         sessionDataStore.observeServerAddress()
@@ -52,25 +89,7 @@ class SimmerlyRecipeRepository(
                 comments.map { it.toDomain(address) }
             }
 
-    override suspend fun loadRecipes(
-        page: Int,
-        perPage: Int,
-        refresh: Boolean
-    ): Result<PaginationData, RecipesError> {
-        if (refresh) {
-            recipeDao.clearAll()
-        }
-        return networkClient.getRecipes(page, perPage).fold(
-            onSuccess = { response ->
-                recipeDao.upsertAll(response.items.map { it.toEntity() })
-                Result.Success(response.toPaginationData())
-            },
-            onFailure = {
-                Result.Error(RecipesError.FetchError)
-            }
-        )
-
-    }
+    // removed: loadRecipes(page, perPage, refresh) in favor of unified recipeList()
 
     override fun recipeDetails(id: String): Flow<Result<LoadingResult<RecipeDetail>, RecipesError>> =
         flow {
@@ -126,6 +145,7 @@ class SimmerlyRecipeRepository(
                     entity.toDomain(address)
                 }
                 .map { Result.Success(LoadingResult.Loaded(it)) }
+                .distinctUntilChanged()
 
             emitAll(dbFlow)
         }

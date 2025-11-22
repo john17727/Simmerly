@@ -1,22 +1,24 @@
 package dev.juanrincon.simmerly.recipes.presentation.list.mvikotlin
 
-import app.tracktion.core.domain.util.fold
+import app.tracktion.core.domain.util.Result
 import com.arkivanov.mvikotlin.core.store.Reducer
 import com.arkivanov.mvikotlin.core.store.Store
 import com.arkivanov.mvikotlin.core.store.StoreFactory
 import com.arkivanov.mvikotlin.extensions.coroutines.CoroutineBootstrapper
 import com.arkivanov.mvikotlin.extensions.coroutines.CoroutineExecutor
+import dev.juanrincon.simmerly.recipes.domain.LoadingResult
 import dev.juanrincon.simmerly.recipes.domain.RecipeRepository
 import dev.juanrincon.simmerly.recipes.domain.model.RecipeSummary
 import dev.juanrincon.simmerly.recipes.presentation.list.mvikotlin.RecipeListStore.Intent
 import dev.juanrincon.simmerly.recipes.presentation.list.mvikotlin.RecipeListStore.Label
-import dev.juanrincon.simmerly.recipes.presentation.list.mvikotlin.RecipeListStore.Label.*
 import dev.juanrincon.simmerly.recipes.presentation.list.mvikotlin.RecipeListStore.State
-import dev.juanrincon.simmerly.recipes.presentation.list.mvikotlin.RecipeListStoreFactory.Msg.*
-import kotlinx.coroutines.flow.distinctUntilChanged
+import dev.juanrincon.simmerly.recipes.presentation.list.mvikotlin.RecipeListStoreFactory.Msg.Loading
+import dev.juanrincon.simmerly.recipes.presentation.list.mvikotlin.RecipeListStoreFactory.Msg.PageData
+import dev.juanrincon.simmerly.recipes.presentation.list.mvikotlin.RecipeListStoreFactory.Msg.RecipesUpdated
+import dev.juanrincon.simmerly.recipes.presentation.list.mvikotlin.RecipeListStoreFactory.Msg.SearchQueryChanged
+import dev.juanrincon.simmerly.recipes.presentation.list.mvikotlin.RecipeListStoreFactory.Msg.SelectedRecipe
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.launch
 
 internal class RecipeListStoreFactory(
     private val storeFactory: StoreFactory,
@@ -54,11 +56,11 @@ internal class RecipeListStoreFactory(
         CoroutineExecutor<Intent, Action, State, Msg, Label>() {
         override fun executeIntent(intent: Intent) {
             when (intent) {
-                Intent.OnRefresh -> loadRecipes(1, refresh = true)
+                Intent.OnRefresh -> fetchAndObserve(1, refresh = true)
                 is Intent.OnSearchQueryChanged -> dispatch(SearchQueryChanged(intent.query))
                 Intent.OnLoadMore -> {
                     state().nextPage?.let {
-                        loadRecipes(it)
+                        fetchAndObserve(it)
                     }
                 }
 
@@ -67,32 +69,24 @@ internal class RecipeListStoreFactory(
         }
 
         override fun executeAction(action: Action) = when (action) {
-            Action.LoadRecipes -> observeRecipes()
+            Action.LoadRecipes -> fetchAndObserve(1)
         }
 
-        private fun observeRecipes() {
-            repository.recipes()
-                .distinctUntilChanged()
-                .onEach { list ->
-                    if (list.isEmpty()) {
-                        loadRecipes(1)
-                    } else {
-                        dispatch(RecipesUpdated(list))
+        private fun fetchAndObserve(page: Int, refresh: Boolean = false) {
+            repository.recipeList(page = page, refresh = refresh)
+                .onEach { result ->
+                    when (result) {
+                        is Result.Success -> when (val lr = result.data) {
+                            is LoadingResult.Loading -> dispatch(Loading(true))
+                            is LoadingResult.Loaded -> {
+                                dispatch(RecipesUpdated(lr.data.items))
+                                dispatch(PageData(nextPage = lr.data.pagination?.next))
+                            }
+                        }
+                        is Result.Error -> dispatch(Loading(false))
                     }
-                }.launchIn(scope)
-        }
-
-        private fun loadRecipes(page: Int, refresh: Boolean = false) {
-            scope.launch {
-                repository.loadRecipes(page, refresh = refresh).fold(
-                    onSuccess = {
-                        dispatch(PageData(nextPage = it.next))
-                    },
-                    onFailure = {
-                        dispatch(Loading(false))
-                    }
-                )
-            }
+                }
+                .launchIn(scope)
         }
     }
 

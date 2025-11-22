@@ -2,18 +2,22 @@ package dev.juanrincon.simmerly.recipes.domain
 
 import app.tracktion.core.domain.util.Result
 import dev.juanrincon.simmerly.recipes.domain.model.Comment
-import dev.juanrincon.simmerly.recipes.domain.model.PaginationData
 import dev.juanrincon.simmerly.recipes.domain.model.RecipeDetail
-import dev.juanrincon.simmerly.recipes.domain.model.RecipeSummary
 import kotlinx.coroutines.flow.Flow
 
 interface RecipeRepository {
 
-    fun recipes(): Flow<List<RecipeSummary>>
+    /**
+     * Unified list API: refresh from network (with optional refresh/clear) then emit DB-backed list.
+     * Returns a Flow that starts with Loading, may emit Error on refresh failure, and then Loaded(list + pagination info).
+     */
+    fun recipeList(
+        page: Int,
+        perPage: Int = 50,
+        refresh: Boolean = false
+    ): Flow<Result<LoadingResult<RecipeListResult>, RecipesError>>
 
     fun comments(recipeId: String): Flow<List<Comment>>
-
-    suspend fun loadRecipes(page: Int, perPage: Int = 50, refresh: Boolean = false): Result<PaginationData, RecipesError>
 
     fun recipeDetails(id: String): Flow<Result<LoadingResult<RecipeDetail>, RecipesError>>
 
