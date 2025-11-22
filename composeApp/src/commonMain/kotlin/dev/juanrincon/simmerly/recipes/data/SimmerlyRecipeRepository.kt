@@ -70,10 +70,6 @@ class SimmerlyRecipeRepository(
 
     }
 
-    override suspend fun getRecipe(id: String): Result<RecipeDetail, RecipesError> {
-        TODO("Not yet implemented")
-    }
-
     override fun recipeDetails(id: String): Flow<Result<LoadingResult<RecipeDetail>, RecipesError>> =
         store.stream(StoreReadRequest.fresh(id)).map { response ->
             when (response) {

@@ -33,6 +33,8 @@ class RecipeNetworkClient(private val client: HttpClient) {
         client.get("/api/recipes/$slug")
     }
 
+//    suspend fun updateRecipe()
+
     suspend fun addComment(recipeId: String, comment: String): Result<CommentDto, DataError.NetworkError<Unit>> = networkHandler {
        client.post("/api/comments") {
            setBody(NewCommentDto(recipeId, comment))
