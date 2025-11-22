@@ -22,7 +22,6 @@ room = "2.8.4"
 sqlite = "2.6.2"
 androidx-paging = "3.4.0-alpha04"
 adaptive = "1.2.0"
-store = "5.1.0-alpha07"
 compose-rich-text = "1.0.0-rc13"
 
 [libraries]
@@ -64,7 +63,6 @@ androidx-room-paging = { module = "androidx.room:room-paging", version.ref = "ro
 androidx-paging-common = { module = "androidx.paging:paging-common", version.ref = "androidx-paging" }
 androidx-paging-compose = { module = "androidx.paging:paging-compose", version.ref = "androidx-paging" }
 adaptive = { module = "org.jetbrains.compose.material3.adaptive:adaptive", version.ref = "adaptive" }
-store = { module = "org.mobilenativefoundation.store:store5", version.ref = "store" }
 compose-rich-text = { module = "com.mohamedrejeb.richeditor:richeditor-compose", version.ref = "compose-rich-text" }
 
 [plugins]

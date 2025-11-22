@@ -104,9 +104,6 @@ kotlin {
             // Material 3 Adaptive
             implementation(libs.adaptive)
 
-            // Store 5
-            implementation(libs.store)
-
             // Compose Rich Text
             implementation(libs.compose.rich.text)
         }

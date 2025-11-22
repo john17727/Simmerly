@@ -7,12 +7,12 @@ import app.tracktion.core.domain.util.mapError
 import app.tracktion.core.domain.util.onSuccess
 import dev.juanrincon.simmerly.auth.domain.SessionDataStore
 import dev.juanrincon.simmerly.core.data.local.SimmerlyDatabase
+import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.junction.RecipeToolCrossRef
 import dev.juanrincon.simmerly.recipes.data.mappers.toDomain
 import dev.juanrincon.simmerly.recipes.data.mappers.toEntity
+import dev.juanrincon.simmerly.recipes.data.mappers.toEntityWithRelations
 import dev.juanrincon.simmerly.recipes.data.mappers.toPaginationData
 import dev.juanrincon.simmerly.recipes.data.remote.RecipeNetworkClient
-import dev.juanrincon.simmerly.recipes.data.store.RecipeStore
-import dev.juanrincon.simmerly.recipes.data.store.RecipeStoreFactory
 import dev.juanrincon.simmerly.recipes.domain.LoadingResult
 import dev.juanrincon.simmerly.recipes.domain.RecipeRepository
 import dev.juanrincon.simmerly.recipes.domain.RecipesError
@@ -22,22 +22,24 @@ import dev.juanrincon.simmerly.recipes.domain.model.RecipeDetail
 import dev.juanrincon.simmerly.recipes.domain.model.RecipeSummary
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
-import org.mobilenativefoundation.store.core5.ExperimentalStoreApi
-import org.mobilenativefoundation.store.store5.StoreReadRequest
-import org.mobilenativefoundation.store.store5.StoreReadResponse
 
-@OptIn(ExperimentalStoreApi::class)
 class SimmerlyRecipeRepository(
     private val networkClient: RecipeNetworkClient,
     private val database: SimmerlyDatabase,
     private val sessionDataStore: SessionDataStore,
 ) : RecipeRepository {
     private val recipeDao = database.recipeDao()
+    private val ingredientDao = database.ingredientDao()
+    private val instructionsDao = database.instructionDao()
+    private val toolsDao = database.toolDao()
+    private val recipeToolDao = database.recipeToolDao()
+    private val noteDao = database.noteDao()
     private val commentDao = database.commentDao()
+    private val userDao = database.userDao()
 
-    private val store: RecipeStore =
-        RecipeStoreFactory(networkClient, database, sessionDataStore).create()
 
     override fun recipes(): Flow<List<RecipeSummary>> = sessionDataStore.observeServerAddress()
         .combine(recipeDao.observeRecipeList()) { address, recipes ->
@@ -71,16 +73,61 @@ class SimmerlyRecipeRepository(
     }
 
     override fun recipeDetails(id: String): Flow<Result<LoadingResult<RecipeDetail>, RecipesError>> =
-        store.stream(StoreReadRequest.fresh(id)).map { response ->
-            when (response) {
-                is StoreReadResponse.Data<*> -> Result.Success(LoadingResult.Loaded(response.value as RecipeDetail))
-                is StoreReadResponse.Error.Custom<*> -> Result.Error(RecipesError.FetchError)
-                is StoreReadResponse.Error.Exception,
-                is StoreReadResponse.Error.Message -> Result.Error(RecipesError.UnknownError)
+        flow {
+            // Notify observers we're loading fresh data
+            emit(Result.Success(LoadingResult.Loading))
 
-                is StoreReadResponse.Loading -> Result.Success(LoadingResult.Loading)
-                else -> throw IllegalStateException()
-            }
+            // Try to refresh from network and persist to local DB first
+            val networkResult = networkClient.getRecipe(id)
+            networkResult.fold(
+                onSuccess = { dto ->
+                    val data = dto.toEntityWithRelations()
+                    val recipeId = data.recipe.id
+
+                    // Persist the latest details
+                    recipeDao.upsert(data.recipe)
+
+                    val units = data.ingredients.mapNotNull { it.unit }
+                    if (units.isNotEmpty()) database.unitDao().upsertAll(units)
+
+                    val foods = data.ingredients.mapNotNull { it.food }
+                    if (foods.isNotEmpty()) database.foodDao().upsertAll(foods)
+
+                    ingredientDao.deleteByRecipeId(recipeId)
+                    instructionsDao.deleteByRecipeId(recipeId)
+                    ingredientDao.upsertAll(data.ingredients.map { it.ingredient })
+                    instructionsDao.upsertAll(data.instructions.map { it.instruction })
+
+                    noteDao.deleteByRecipeId(recipeId)
+                    noteDao.upsertAll(data.notes)
+
+                    toolsDao.upsertAll(data.tools)
+
+                    userDao.upsertAll(data.comments.map { it.user })
+                    commentDao.deleteByRecipeId(recipeId)
+                    commentDao.upsertAll(data.comments.map { it.comment })
+
+                    // Refresh cross refs for tools
+                    val refs = data.tools.map { tool ->
+                        RecipeToolCrossRef(recipeId = recipeId, toolId = tool.id)
+                    }
+                    recipeToolDao.clearForRecipe(recipeId)
+                    recipeToolDao.insertAll(refs)
+                },
+                onFailure = {
+                    // Surface fetch error but still proceed to emit cached DB flow next
+                    emit(Result.Error(RecipesError.FetchError))
+                }
+            )
+
+            // Now emit the database-backed flow (latest if refresh succeeded)
+            val dbFlow = sessionDataStore.observeServerAddress()
+                .combine(recipeDao.observeRecipeDetail(id)) { address, entity ->
+                    entity.toDomain(address)
+                }
+                .map { Result.Success(LoadingResult.Loaded(it)) }
+
+            emitAll(dbFlow)
         }
 
     override suspend fun addComment(
