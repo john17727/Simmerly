@@ -30,13 +30,6 @@ kotlin {
             iosTarget.binaries.framework {
                 baseName = "ComposeApp"
                 isStatic = true
-                export(libs.decompose)
-                export(libs.essenty.lifecycle)
-                export(libs.mvikotlin.main)
-                // Optional, only if you need Predictive Back Gesture on Darwin (Apple) targets
-//                export(libs.essenty.backHandler)
-                // Optional, only if you need state preservation on Darwin (Apple) targets
-//                export(libs.essenty.stateKeeper)
             }
         }
 
@@ -63,6 +56,7 @@ kotlin {
             implementation(compose.components.uiToolingPreview)
             implementation(libs.androidx.lifecycle.viewmodelCompose)
             implementation(libs.androidx.lifecycle.runtimeCompose)
+            implementation(libs.androidx.navigation.compose)
             implementation(compose.materialIconsExtended)
 
             // Coil
