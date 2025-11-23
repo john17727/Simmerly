@@ -1,14 +1,59 @@
 package dev.juanrincon.simmerly
 
-import androidx.compose.material.Text
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Modifier
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import dev.juanrincon.simmerly.navigation.auth.App
+import dev.juanrincon.simmerly.navigation.auth.AuthViewModel
+import dev.juanrincon.simmerly.navigation.auth.Login
+import dev.juanrincon.simmerly.navigation.auth.Splash
+import dev.juanrincon.simmerly.splash.presentation.SplashScreen
 import dev.juanrincon.simmerly.theme.SimmerlyTheme
-import org.jetbrains.compose.ui.tooling.preview.Preview
+import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
-@Preview
 fun App() {
     SimmerlyTheme {
-        Text("Hello")
+        SimmerlyApp(modifier = Modifier.fillMaxSize())
+    }
+}
+
+@Composable
+fun SimmerlyApp(
+    viewModel: AuthViewModel = koinViewModel(),
+    navController: NavHostController = rememberNavController(),
+    modifier: Modifier = Modifier
+) {
+    val isAuthenticated by viewModel.isAuthenticated.collectAsState()
+
+    LaunchedEffect(isAuthenticated) {
+        if (isAuthenticated) {
+            navController.navigate(App)
+        } else {
+            navController.navigate(Login)
+        }
+    }
+    NavHost(
+        navController = navController,
+        startDestination = Splash,
+        modifier = modifier
+    ) {
+        composable<Splash> {
+            SplashScreen()
+        }
+        composable<Login> {
+            Text("login")
+        }
+        composable<App> {
+            Text("app")
+        }
     }
 }
