@@ -31,10 +31,10 @@ fun RecipesContent(component: RecipesComponent, modifier: Modifier = Modifier) {
     ChildPanels(
         panels = component.panels,
         mainChild = {
-            RecipeListContent(it.instance)
+            RecipeListContent(it.instance, Modifier.fillMaxSize())
         },
         detailsChild = {
-            RecipeDetailsContent(it.instance)
+            RecipeDetailsContent(it.instance, Modifier.fillMaxSize())
         },
         secondPanelPlaceholder = {
             Column(

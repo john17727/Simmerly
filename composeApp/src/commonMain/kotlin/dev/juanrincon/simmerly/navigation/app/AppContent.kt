@@ -38,10 +38,9 @@ fun AppContent(component: AppComponent, modifier: Modifier = Modifier) {
                             IconButton(onClick = action.onClick, content = action.icon)
                         }
                     },
-                    colors = TopAppBarDefaults.topAppBarColors().copy(containerColor = MaterialTheme.colorScheme.secondaryContainer)
+                    colors = TopAppBarDefaults.topAppBarColors().copy(containerColor = MaterialTheme.colorScheme.background)
                 )
             },
-            containerColor = MaterialTheme.colorScheme.secondaryContainer,
             modifier = modifier
         ) { paddingValues ->
             when (child) {

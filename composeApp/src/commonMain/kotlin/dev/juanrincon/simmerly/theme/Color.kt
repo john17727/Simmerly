@@ -13,6 +13,7 @@ object Simmerly {
     val TextSecondary = Color(0xFF6E7177)
     val Peach = Color(0xFFFFB8A8)   // Tertiary accent (rarely used)
     val Card = Color(0xFFF6F7F9)
+    val Background = Color(0xFFF2F2F2)
     val Divider = Color(0xFFE5E7EA)
     val Outline = Color(0xFFC9CDD3)
     val Canvas = Color(0xFFFFFFFF)
@@ -40,7 +41,7 @@ val SimmerlyLightColorScheme = lightColorScheme(
     errorContainer = Color(0xFFFFDAD6),
     onErrorContainer = Color(0xFF410002),
 
-    background = Simmerly.Canvas,
+    background = Simmerly.Background,
     onBackground = Simmerly.TextPrimary,
 
     surface = Simmerly.Canvas,
