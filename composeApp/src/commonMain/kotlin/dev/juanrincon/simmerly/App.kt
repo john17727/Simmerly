@@ -12,7 +12,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import dev.juanrincon.simmerly.navigation.auth.App
-import dev.juanrincon.simmerly.navigation.auth.AuthViewModel
+import dev.juanrincon.simmerly.navigation.auth.AuthNavigationViewModel
 import dev.juanrincon.simmerly.navigation.auth.Login
 import dev.juanrincon.simmerly.navigation.auth.Splash
 import dev.juanrincon.simmerly.splash.presentation.SplashScreen
@@ -28,7 +28,7 @@ fun App() {
 
 @Composable
 fun SimmerlyApp(
-    viewModel: AuthViewModel = koinViewModel(),
+    viewModel: AuthNavigationViewModel = koinViewModel(),
     navController: NavHostController = rememberNavController(),
     modifier: Modifier = Modifier
 ) {

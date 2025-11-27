@@ -9,7 +9,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 
-class AuthViewModel(
+class AuthNavigationViewModel(
     private val repository: AuthRepository
 ): ViewModel() {
 
