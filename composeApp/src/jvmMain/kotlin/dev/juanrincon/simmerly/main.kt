@@ -8,15 +8,11 @@ import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.WindowPlacement
 import androidx.compose.ui.window.application
 import androidx.compose.ui.window.rememberWindowState
-import com.arkivanov.decompose.extensions.compose.lifecycle.LifecycleController
-import com.arkivanov.essenty.lifecycle.LifecycleRegistry
 import dev.juanrincon.simmerly.di.initKoin
 import java.util.prefs.Preferences
 
 fun main() {
     initKoin()
-    val lifecycle = LifecycleRegistry()
-
     application {
         val prefs = remember { Preferences.userRoot().node("dev.juanrincon.simmerly.window") }
         val initialSize = remember {
@@ -42,7 +38,6 @@ fun main() {
                 prefs.put("placement", windowState.placement.name)
             }
         }
-        LifecycleController(lifecycle, windowState)
         Window(
             onCloseRequest = ::exitApplication,
             state = windowState,

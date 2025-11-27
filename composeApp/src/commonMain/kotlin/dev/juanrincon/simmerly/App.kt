@@ -17,6 +17,7 @@ import dev.juanrincon.simmerly.navigation.auth.Login
 import dev.juanrincon.simmerly.navigation.auth.Splash
 import dev.juanrincon.simmerly.splash.presentation.SplashScreen
 import dev.juanrincon.simmerly.theme.SimmerlyTheme
+import dev.juanrincon.simmerly.welcome.presentation.decompose.WelcomeContent
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
@@ -50,7 +51,7 @@ fun SimmerlyApp(
             SplashScreen()
         }
         composable<Login> {
-            Text("login")
+            WelcomeContent()
         }
         composable<App> {
             Text("app")
