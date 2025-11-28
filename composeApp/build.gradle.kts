@@ -56,6 +56,7 @@ kotlin {
             implementation(libs.androidx.lifecycle.runtimeCompose)
             implementation(libs.androidx.navigation.compose)
             implementation(compose.materialIconsExtended)
+            implementation(compose.material3AdaptiveNavigationSuite)
 
             // Coil
             implementation(libs.coil.compose)
@@ -98,6 +99,8 @@ kotlin {
 
             // Material 3 Adaptive
             implementation(libs.adaptive)
+            implementation(libs.adaptive.layout)
+            implementation(libs.adaptive.navigation)
 
             // Compose Rich Text
             implementation(libs.compose.rich.text)

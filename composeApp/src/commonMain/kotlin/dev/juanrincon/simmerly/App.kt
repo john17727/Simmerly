@@ -1,7 +1,6 @@
 package dev.juanrincon.simmerly
 
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -11,6 +10,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import dev.juanrincon.simmerly.navigation.app.AppContent
 import dev.juanrincon.simmerly.navigation.auth.App
 import dev.juanrincon.simmerly.navigation.auth.AuthNavigationViewModel
 import dev.juanrincon.simmerly.navigation.auth.Login
@@ -54,7 +54,7 @@ fun SimmerlyApp(
             WelcomeContent()
         }
         composable<App> {
-            Text("app")
+            AppContent()
         }
     }
 }

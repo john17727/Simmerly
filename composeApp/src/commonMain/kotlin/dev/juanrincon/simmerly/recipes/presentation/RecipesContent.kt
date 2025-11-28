@@ -1,4 +1,4 @@
-package dev.juanrincon.simmerly.recipes.presentation.decompose
+package dev.juanrincon.simmerly.recipes.presentation
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -17,6 +17,8 @@ import com.arkivanov.decompose.extensions.compose.experimental.panels.Horizontal
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.arkivanov.decompose.router.panels.ChildPanelsMode
 import dev.juanrincon.simmerly.recipes.presentation.comments.decompose.RecipeCommentsContent
+import dev.juanrincon.simmerly.recipes.presentation.decompose.ChildPanelsModeChangedEffect
+import dev.juanrincon.simmerly.recipes.presentation.decompose.RecipesComponent
 import dev.juanrincon.simmerly.recipes.presentation.details.decompose.RecipeDetailsContent
 import dev.juanrincon.simmerly.recipes.presentation.list.decompose.RecipeListContent
 
