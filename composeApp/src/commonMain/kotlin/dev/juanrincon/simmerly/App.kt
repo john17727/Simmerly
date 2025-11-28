@@ -17,7 +17,7 @@ import dev.juanrincon.simmerly.navigation.auth.Login
 import dev.juanrincon.simmerly.navigation.auth.Splash
 import dev.juanrincon.simmerly.splash.presentation.SplashScreen
 import dev.juanrincon.simmerly.theme.SimmerlyTheme
-import dev.juanrincon.simmerly.welcome.presentation.decompose.WelcomeContent
+import dev.juanrincon.simmerly.welcome.presentation.WelcomeContent
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable

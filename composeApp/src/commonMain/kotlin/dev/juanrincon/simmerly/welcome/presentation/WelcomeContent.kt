@@ -1,4 +1,4 @@
-package dev.juanrincon.simmerly.welcome.presentation.decompose
+package dev.juanrincon.simmerly.welcome.presentation
 
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Scaffold
@@ -10,8 +10,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import dev.juanrincon.simmerly.welcome.presentation.WelcomeScreen
-import dev.juanrincon.simmerly.welcome.presentation.WelcomeViewModel
 import dev.juanrincon.simmerly.welcome.presentation.mvikotlin.WelcomeStore
 import kotlinx.coroutines.flow.collectLatest
 import org.jetbrains.compose.resources.getString
