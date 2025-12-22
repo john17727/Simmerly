@@ -9,8 +9,8 @@ plugins {
     alias(libs.plugins.composeCompiler)
     alias(libs.plugins.composeHotReload)
     alias(libs.plugins.kotlinSerialization)
-    alias(libs.plugins.ksp)
     alias(libs.plugins.room)
+    alias(libs.plugins.ksp)
 }
 
 kotlin {
@@ -85,6 +85,7 @@ kotlin {
             implementation(libs.koin.compose)
             implementation(libs.koin.compose.viewmodel)
             implementation(libs.koin.compose.viewmodel.navigation)
+            implementation(libs.koin.compose.navigation3)
 
             // DataStore
             implementation(libs.androidx.datastore)
@@ -104,6 +105,11 @@ kotlin {
 
             // Compose Rich Text
             implementation(libs.compose.rich.text)
+
+            // Navigation
+            implementation(libs.androidx.navigation3.ui)
+            implementation(libs.androidx.navigation3.material3.adaptive)
+            implementation(libs.androidx.lifecycle.viewmodel.navigation3)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
