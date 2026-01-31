@@ -23,6 +23,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil3.compose.LocalPlatformContext
 import coil3.compose.SubcomposeAsyncImage
@@ -30,7 +31,6 @@ import coil3.request.ImageRequest
 import dev.juanrincon.simmerly.recipes.presentation.comments.models.CommentUi
 import dev.juanrincon.simmerly.recipes.presentation.comments.mvikotlin.RecipeCommentsStore
 import dev.juanrincon.simmerly.theme.SimmerlyTheme
-import org.jetbrains.compose.ui.tooling.preview.Preview
 
 @Composable
 fun RecipeCommentsScreen(
