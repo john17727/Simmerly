@@ -94,7 +94,7 @@ private fun Content(
                         ExpandedView(
                             state = state,
                             onEvent = onEvent,
-                            modifier.padding(start = 16.dp)
+                            modifier
                         )
                     } else {
                         CompactView()

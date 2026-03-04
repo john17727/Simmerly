@@ -15,9 +15,11 @@ import androidx.compose.material3.adaptive.navigation3.rememberListDetailSceneSt
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
+import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import androidx.savedstate.serialization.SavedStateConfiguration
 import dev.juanrincon.simmerly.recipes.presentation.details.RecipeDetailsScreen
@@ -69,6 +71,10 @@ private fun RecipesNavDisplay(modifier: Modifier = Modifier) {
         backStack = backStack,
         sceneStrategy = rememberListDetailSceneStrategy(),
         modifier = modifier,
+        entryDecorators = listOf(
+            rememberSaveableStateHolderNavEntryDecorator(),
+            rememberViewModelStoreNavEntryDecorator()
+        ),
         entryProvider = entryProvider {
             entry<RecipeDestinations.List>(
                 metadata = ListDetailSceneStrategy.listPane(
@@ -79,8 +85,9 @@ private fun RecipesNavDisplay(modifier: Modifier = Modifier) {
                     }
                 )
             ) {
-                RecipeListScreen(modifier = Modifier.fillMaxSize(), onRecipeSelected = {
-                    backStack.add(RecipeDestinations.Detail(it))
+                RecipeListScreen(modifier = Modifier.fillMaxSize(), onRecipeSelected = { recipeId ->
+                    backStack.removeAll { it is RecipeDestinations.Detail }
+                    backStack.add(RecipeDestinations.Detail(recipeId))
                 })
             }
             entry<RecipeDestinations.Detail>(
