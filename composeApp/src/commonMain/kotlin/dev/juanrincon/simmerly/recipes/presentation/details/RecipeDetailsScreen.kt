@@ -29,6 +29,8 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -46,10 +48,26 @@ import dev.juanrincon.simmerly.recipes.presentation.details.models.InstructionUi
 import dev.juanrincon.simmerly.recipes.presentation.details.models.NutritionUi
 import dev.juanrincon.simmerly.recipes.presentation.details.models.RecipeDetailUi
 import dev.juanrincon.simmerly.recipes.presentation.details.mvikotlin.RecipeDetailsStore
+import org.koin.compose.viewmodel.koinViewModel
+import org.koin.core.parameter.parametersOf
+
+@Composable
+fun RecipeDetailsScreen(
+    recipeId: String,
+    viewModel: RecipeDetailsViewModel = koinViewModel { parametersOf(recipeId) },
+    modifier: Modifier = Modifier
+) {
+    val state by viewModel.state.collectAsState()
+    Content(
+        state = state,
+        onEvent = viewModel::onEvent,
+        modifier = modifier
+    )
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun RecipeDetailsScreen(
+private fun Content(
     state: RecipeDetailsStore.State,
     onEvent: (RecipeDetailsStore.Intent) -> Unit,
     modifier: Modifier = Modifier

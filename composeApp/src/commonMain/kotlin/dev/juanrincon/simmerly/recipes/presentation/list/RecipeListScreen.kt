@@ -32,6 +32,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -49,10 +50,26 @@ import coil3.request.ImageRequest
 import dev.juanrincon.simmerly.core.presentation.ifTrue
 import dev.juanrincon.simmerly.recipes.domain.model.RecipeSummary
 import dev.juanrincon.simmerly.recipes.presentation.list.mvikotlin.RecipeListStore
+import org.koin.compose.viewmodel.koinViewModel
+
+@Composable
+fun RecipeListScreen(
+    onRecipeSelected: (recipeId: String) -> Unit,
+    viewModel: RecipeListViewModel = koinViewModel(),
+    modifier: Modifier = Modifier
+) {
+    val state by viewModel.state.collectAsState()
+    Content(
+        state = state,
+        onEvent = viewModel::onEvent,
+        onRecipeSelected = onRecipeSelected,
+        modifier = modifier
+    )
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun RecipeListScreen(
+private fun Content(
     state: RecipeListStore.State,
     onEvent: (RecipeListStore.Intent) -> Unit,
     onRecipeSelected: (recipeId: String) -> Unit,

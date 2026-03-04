@@ -10,8 +10,8 @@ import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.ui.NavDisplay
 import androidx.savedstate.serialization.SavedStateConfiguration
-import dev.juanrincon.simmerly.recipes.presentation.details.decompose.RecipeDetailsContent
-import dev.juanrincon.simmerly.recipes.presentation.list.decompose.RecipeListContent
+import dev.juanrincon.simmerly.recipes.presentation.details.RecipeDetailsScreen
+import dev.juanrincon.simmerly.recipes.presentation.list.RecipeListScreen
 import dev.juanrincon.simmerly.recipes.presentation.navigation.RecipeDestinations
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
@@ -44,12 +44,12 @@ fun RecipesContent(modifier: Modifier = Modifier) {
         modifier = modifier,
         entryProvider = entryProvider {
             entry<RecipeDestinations.List> {
-                RecipeListContent(modifier = Modifier.fillMaxSize(), onRecipeSelected = {
+                RecipeListScreen(modifier = Modifier.fillMaxSize(), onRecipeSelected = {
                     backStack.add(RecipeDestinations.Detail(it))
                 })
             }
             entry<RecipeDestinations.Detail> { key ->
-                RecipeDetailsContent(recipeId = key.recipeId, modifier = Modifier.fillMaxSize())
+                RecipeDetailsScreen(recipeId = key.recipeId, modifier = Modifier.fillMaxSize())
             }
         }
     )
