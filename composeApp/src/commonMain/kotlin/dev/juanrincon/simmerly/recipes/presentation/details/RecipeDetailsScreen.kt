@@ -17,8 +17,10 @@ import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Remove
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -28,7 +30,9 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -43,6 +47,7 @@ import dev.juanrincon.simmerly.core.presentation.ifTrue
 import dev.juanrincon.simmerly.core.presentation.shimmer
 import dev.juanrincon.simmerly.recipes.domain.model.Note
 import dev.juanrincon.simmerly.recipes.domain.model.Settings
+import dev.juanrincon.simmerly.recipes.presentation.LocalRecipesTopBarController
 import dev.juanrincon.simmerly.recipes.presentation.details.models.IngredientUi
 import dev.juanrincon.simmerly.recipes.presentation.details.models.InstructionUi
 import dev.juanrincon.simmerly.recipes.presentation.details.models.NutritionUi
@@ -54,6 +59,7 @@ import org.koin.core.parameter.parametersOf
 @Composable
 fun RecipeDetailsScreen(
     recipeId: String,
+    onNavigateBack: () -> Unit = {},
     viewModel: RecipeDetailsViewModel = koinViewModel { parametersOf(recipeId) },
     modifier: Modifier = Modifier
 ) {
@@ -61,6 +67,7 @@ fun RecipeDetailsScreen(
     Content(
         state = state,
         onEvent = viewModel::onEvent,
+        onNavigateBack = onNavigateBack,
         modifier = modifier
     )
 }
@@ -70,6 +77,7 @@ fun RecipeDetailsScreen(
 private fun Content(
     state: RecipeDetailsStore.State,
     onEvent: (RecipeDetailsStore.Intent) -> Unit,
+    onNavigateBack: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     if (state.showSettings) {
@@ -81,20 +89,44 @@ private fun Content(
             SettingsView(state.recipe.settings)
         }
     }
+
+    val controller = LocalRecipesTopBarController.current
     val windowSizeClass = currentWindowAdaptiveInfo().windowSizeClass
+    val isExpanded =
+        windowSizeClass.isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_EXPANDED_LOWER_BOUND)
+
+    SideEffect {
+        if (isExpanded) {
+            controller.title = { Text("Recipes") }
+            controller.navigationIcon = {}
+        } else {
+            controller.title = { Text(state.recipe.title) }
+            controller.navigationIcon = {
+                IconButton(onClick = onNavigateBack) {
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                }
+            }
+        }
+        controller.actions = {
+            IconButton(onClick = { onEvent(RecipeDetailsStore.Intent.ShowSettings) }) {
+                Icon(Icons.Default.Settings, contentDescription = "Settings")
+            }
+        }
+    }
+
+    DisposableEffect(Unit) {
+        onDispose { controller.reset() }
+    }
+
     AnimatedContent(state.mode) { mode ->
         when (mode) {
             RecipeDetailsStore.RecipeMode.READ_ONLY -> {
-                AnimatedContent(
-                    windowSizeClass.isWidthAtLeastBreakpoint(
-                        WindowSizeClass.WIDTH_DP_EXPANDED_LOWER_BOUND
-                    )
-                ) { isExpanded ->
-                    if (isExpanded) {
+                AnimatedContent(isExpanded) { expanded ->
+                    if (expanded) {
                         ExpandedView(
                             state = state,
                             onEvent = onEvent,
-                            modifier
+                            modifier = modifier
                         )
                     } else {
                         CompactView()

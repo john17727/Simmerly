@@ -13,6 +13,8 @@ import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
 import androidx.compose.material3.adaptive.navigation3.ListDetailSceneStrategy
 import androidx.compose.material3.adaptive.navigation3.rememberListDetailSceneStrategy
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -32,17 +34,22 @@ import kotlinx.serialization.modules.polymorphic
 @OptIn(ExperimentalMaterial3AdaptiveApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun RecipesContent(modifier: Modifier = Modifier) {
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Recipes") },
-                colors = TopAppBarDefaults.topAppBarColors()
-                    .copy(containerColor = MaterialTheme.colorScheme.background)
-            )
-        },
-        modifier = modifier
-    ) { paddingValues ->
-        RecipesNavDisplay(modifier = Modifier.fillMaxSize().padding(paddingValues))
+    val topBarController = remember { RecipesTopBarController() }
+    CompositionLocalProvider(LocalRecipesTopBarController provides topBarController) {
+        Scaffold(
+            topBar = {
+                TopAppBar(
+                    title = topBarController.title,
+                    navigationIcon = topBarController.navigationIcon,
+                    actions = topBarController.actions,
+                    colors = TopAppBarDefaults.topAppBarColors()
+                        .copy(containerColor = MaterialTheme.colorScheme.background)
+                )
+            },
+            modifier = modifier
+        ) { paddingValues ->
+            RecipesNavDisplay(modifier = Modifier.fillMaxSize().padding(paddingValues))
+        }
     }
 }
 
@@ -94,7 +101,11 @@ private fun RecipesNavDisplay(modifier: Modifier = Modifier) {
             entry<RecipeDestinations.Detail>(
                 metadata = ListDetailSceneStrategy.detailPane()
             ) { key ->
-                RecipeDetailsScreen(recipeId = key.recipeId, modifier = Modifier.fillMaxSize())
+                RecipeDetailsScreen(
+                    recipeId = key.recipeId,
+                    onNavigateBack = { backStack.removeLastOrNull() },
+                    modifier = Modifier.fillMaxSize()
+                )
             }
         }
     )
