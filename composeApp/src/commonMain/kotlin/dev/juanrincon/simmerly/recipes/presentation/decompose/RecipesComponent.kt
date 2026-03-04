@@ -1,3 +1,0 @@
-package dev.juanrincon.simmerly.recipes.presentation.decompose
-
-interface RecipesComponent

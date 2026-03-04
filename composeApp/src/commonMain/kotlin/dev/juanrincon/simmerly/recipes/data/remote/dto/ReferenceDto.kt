@@ -1,0 +1,8 @@
+package dev.juanrincon.simmerly.recipes.data.remote.dto
+
+import kotlinx.serialization.Serializable
+
+@Serializable
+data class ReferenceDto(
+    val referenceId: String
+)

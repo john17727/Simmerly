@@ -14,14 +14,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.layout.systemBarsPadding
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -30,8 +28,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.windowsizeclass.WindowSizeClass
-import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
+import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -53,6 +50,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
+import androidx.window.core.layout.WindowSizeClass
 import dev.juanrincon.simmerly.welcome.presentation.mvikotlin.WelcomeStore
 import org.jetbrains.compose.resources.painterResource
 import simmerly.composeapp.generated.resources.Res
@@ -63,9 +61,9 @@ import simmerly.composeapp.generated.resources.welcome_background
 fun WelcomeScreen(
     state: WelcomeStore.State,
     onEvent: (WelcomeStore.Intent) -> Unit,
-    windowSizeClass: WindowSizeClass,
     modifier: Modifier = Modifier
 ) {
+    val windowSizeClass = currentWindowAdaptiveInfo().windowSizeClass
     val keyboardController = LocalSoftwareKeyboardController.current
     LaunchedEffect(state.isLoading) {
         if (state.isLoading) {
@@ -83,43 +81,45 @@ fun WelcomeScreen(
                 blendMode = BlendMode.Multiply
             )
         )
-        if (windowSizeClass.widthSizeClass == WindowWidthSizeClass.Compact) {
-            Column(
-                modifier = Modifier.fillMaxSize().systemBarsPadding(),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.SpaceEvenly
-            ) {
-                Logo(modifier = Modifier.fillMaxWidth())
-                Card(
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
-                ) {
-                    Login(state, onEvent, modifier = Modifier.fillMaxWidth())
+        AnimatedContent(windowSizeClass.isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_EXPANDED_LOWER_BOUND)) { isExpanded ->
+            if (isExpanded) {
+                Row(modifier = Modifier.fillMaxSize().systemBarsPadding()) {
+                    Column(
+                        modifier = Modifier.fillMaxHeight().weight(2f),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Spacer(modifier = Modifier.weight(1f))
+                        Logo(modifier = Modifier.weight(3f))
+                    }
+                    Column(
+                        modifier = Modifier.padding(16.dp).background(
+                            color = MaterialTheme.colorScheme.surface,
+                            shape = MaterialTheme.shapes.medium
+                        )
+                            .fillMaxHeight().weight(3f),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        Login(
+                            state,
+                            onEvent,
+                            modifier = Modifier.fillMaxWidth(DESKTOP_ELEMENTS_MAX_WIDTH_FRACTION)
+                        )
+                    }
                 }
-            }
-        } else {
-            Row(modifier = Modifier.fillMaxSize().systemBarsPadding()) {
+            } else {
                 Column(
-                    modifier = Modifier.fillMaxHeight().weight(2f),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Spacer(modifier = Modifier.weight(1f))
-                    Logo(modifier = Modifier.weight(3f))
-                }
-                Column(
-                    modifier = Modifier.padding(16.dp).background(
-                        color = MaterialTheme.colorScheme.surface,
-                        shape = MaterialTheme.shapes.medium
-                    )
-                        .fillMaxHeight().weight(3f),
+                    modifier = Modifier.fillMaxSize().systemBarsPadding(),
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
+                    verticalArrangement = Arrangement.SpaceEvenly
                 ) {
-                    Login(
-                        state,
-                        onEvent,
-                        modifier = Modifier.fillMaxWidth(DESKTOP_ELEMENTS_MAX_WIDTH_FRACTION)
-                    )
+                    Logo(modifier = Modifier.fillMaxWidth())
+                    Card(
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+                    ) {
+                        Login(state, onEvent, modifier = Modifier.fillMaxWidth())
+                    }
                 }
             }
         }

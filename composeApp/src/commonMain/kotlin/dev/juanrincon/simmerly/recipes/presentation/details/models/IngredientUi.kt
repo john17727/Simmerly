@@ -1,0 +1,53 @@
+package dev.juanrincon.simmerly.recipes.presentation.details.models
+
+import dev.juanrincon.simmerly.core.utils.capitalizeWords
+import dev.juanrincon.simmerly.core.utils.format
+import dev.juanrincon.simmerly.core.utils.nullIfEmpty
+
+data class IngredientUi(
+    val quantity: Double?,
+    val display: String,
+    val food: FoodUi?,
+    val unit: UnitUi?,
+    val note: String?
+) {
+    val formattedDisplay: String = if (food != null) {
+        if ((quantity ?: 2.0) > 1.0) {
+            (food.pluralName ?: food.name).capitalizeWords()
+        } else {
+            (food.name).capitalizeWords()
+        }
+    } else {
+        display
+    }
+
+    val formattedQuantity = if (food != null) {
+        if (unit != null) {
+            val name = if (unit.useAbbreviation) {
+                unit.abbreviation
+            } else {
+                unit.name
+            }
+            val pluralName = if (unit.useAbbreviation) {
+                unit.pluralAbbreviation
+            } else {
+                unit.pluralName ?: unit.name
+            }
+            val formattedQuantity = quantity?.format(2)
+            val formattedUnit = if ((quantity ?: 0.0) > 1.0) {
+                (pluralName ?: name).nullIfEmpty()
+            } else {
+                name.nullIfEmpty()
+            }
+            if (formattedUnit == null) {
+                formattedQuantity
+            } else {
+                "$formattedQuantity $formattedUnit"
+            }
+        } else {
+            quantity?.format(2)
+        }
+    } else {
+        null
+    }
+}

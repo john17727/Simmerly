@@ -13,6 +13,7 @@ object Simmerly {
     val TextSecondary = Color(0xFF6E7177)
     val Peach = Color(0xFFFFB8A8)   // Tertiary accent (rarely used)
     val Card = Color(0xFFF6F7F9)
+    val Background = Color(0xFFF2F2F2)
     val Divider = Color(0xFFE5E7EA)
     val Outline = Color(0xFFC9CDD3)
     val Canvas = Color(0xFFFFFFFF)
@@ -40,13 +41,18 @@ val SimmerlyLightColorScheme = lightColorScheme(
     errorContainer = Color(0xFFFFDAD6),
     onErrorContainer = Color(0xFF410002),
 
-    background = Simmerly.Canvas,
+    background = Simmerly.Background,
     onBackground = Simmerly.TextPrimary,
 
     surface = Simmerly.Canvas,
     onSurface = Simmerly.TextPrimary,
     surfaceVariant = Simmerly.Card,
     onSurfaceVariant = Simmerly.TextSecondary,
+    surfaceContainerLowest = Color(0xFFFCFDFE),
+    surfaceContainerLow = Simmerly.Card,
+    surfaceContainer = Color(0xFFEEF1F5),
+    surfaceContainerHigh = Simmerly.Divider,
+    surfaceContainerHighest = Simmerly.Outline,
 
     outline = Simmerly.Outline,
     outlineVariant = Simmerly.Divider,
@@ -88,6 +94,11 @@ val SimmerlyDarkColorScheme = darkColorScheme(
     onSurface = Color(0xFFEDEFF2),
     surfaceVariant = Color(0xFF2A2D32),
     onSurfaceVariant = Color(0xFFC9CDD3),
+    surfaceContainerLowest = Color(0xFF0E1012),
+    surfaceContainerLow = Color(0xFF16191C),
+    surfaceContainer = Color(0xFF24282E),
+    surfaceContainerHigh = Color(0xFF32363D),
+    surfaceContainerHighest = Color(0xFF3F444B),
 
     outline = Color(0xFF8E939B),
     outlineVariant = Color(0xFF3A3E45),

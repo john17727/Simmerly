@@ -1,71 +1,59 @@
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
-import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
-import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
-    alias(libs.plugins.androidApplication)
+    alias(libs.plugins.androidMultiplatformLibrary)
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
     alias(libs.plugins.composeHotReload)
     alias(libs.plugins.kotlinSerialization)
+    alias(libs.plugins.room)
+    alias(libs.plugins.ksp)
 }
 
 kotlin {
-    androidTarget {
-        @OptIn(ExperimentalKotlinGradlePluginApi::class)
-        compilerOptions {
-            jvmTarget.set(JvmTarget.JVM_11)
-        }
+    androidLibrary {
+        namespace = "dev.juanrincon.simmerly.composeApp"
+        compileSdk = libs.versions.android.compileSdk.get().toInt()
+        experimentalProperties["android.experimental.kmp.enableAndroidResources"] = true // Needed for android resource, check later if still needed.
     }
 
     listOf(
-        iosX64(),
         iosArm64(),
         iosSimulatorArm64()
-    ).takeIf { "XCODE_VERSION_MAJOR" in System.getenv().keys } // Export the framework only for Xcode builds
-        ?.forEach { iosTarget ->
-            iosTarget.binaries.framework {
-                baseName = "ComposeApp"
-                isStatic = true
-                export(libs.decompose)
-                export(libs.essenty.lifecycle)
-                export(libs.mvikotlin.main)
-                // Optional, only if you need Predictive Back Gesture on Darwin (Apple) targets
-//                export(libs.essenty.backHandler)
-                // Optional, only if you need state preservation on Darwin (Apple) targets
-//                export(libs.essenty.stateKeeper)
-            }
+    ).forEach { iosTarget ->
+        iosTarget.binaries.framework {
+            baseName = "ComposeApp"
+            isStatic = true
         }
+    }
 
     jvm()
 
     sourceSets {
         androidMain.dependencies {
-            implementation(compose.runtime)
-            implementation(compose.preview)
+            implementation(libs.runtime)
+            implementation(libs.ui.tooling.preview)
             implementation(libs.androidx.activity.compose)
 
             // Ktor
             implementation(libs.ktor.client.android)
 
-            // Window Size Class
-            implementation(libs.androidx.material3.windowSizeClass)
-
             // Koin
             implementation(libs.koin.android)
         }
         commonMain.dependencies {
-            implementation(compose.runtime)
-            implementation(compose.foundation)
-            implementation(compose.material3)
-            implementation(compose.ui)
-            implementation(compose.components.resources)
-            implementation(compose.components.uiToolingPreview)
+            implementation(libs.runtime)
+            implementation(libs.foundation)
+            implementation(libs.material3)
+            implementation(libs.ui)
+            implementation(libs.components.resources)
+            implementation(libs.ui.tooling.preview)
             implementation(libs.androidx.lifecycle.viewmodelCompose)
             implementation(libs.androidx.lifecycle.runtimeCompose)
-            implementation(libs.jetbrains.material3.windowSizeClass)
-            implementation(compose.materialIconsExtended)
+            implementation(libs.androidx.navigation.compose)
+            implementation(libs.material.icons.extended)
+            implementation(libs.material3.adaptive.navigation.suite)
 
             // Coil
             implementation(libs.coil.compose)
@@ -74,10 +62,6 @@ kotlin {
 
             // Essenty
             implementation(libs.essenty.lifecycle.coroutines)
-
-            // Decompose
-            api(libs.decompose)
-            implementation(libs.decompose.compose.extensions)
 
             // MVIKotlin
             implementation(libs.mvikotlin)
@@ -90,10 +74,34 @@ kotlin {
             // Koin
             implementation(project.dependencies.platform(libs.koin.bom))
             implementation(libs.koin.core)
+            implementation(libs.koin.compose)
+            implementation(libs.koin.compose.viewmodel)
+            implementation(libs.koin.compose.viewmodel.navigation)
+            implementation(libs.koin.compose.navigation3)
 
             // DataStore
             implementation(libs.androidx.datastore)
             implementation(libs.androidx.datastore.preferences)
+
+            // Kotlinx DateTime
+            implementation(libs.kotlinx.datetime)
+
+            // Room
+            implementation(libs.androidx.room.runtime)
+            implementation(libs.androidx.sqlite.bundled)
+
+            // Material 3 Adaptive
+            implementation(libs.adaptive)
+            implementation(libs.adaptive.layout)
+            implementation(libs.adaptive.navigation)
+
+            // Compose Rich Text
+            implementation(libs.compose.rich.text)
+
+            // Navigation
+            implementation(libs.androidx.navigation3.ui)
+            implementation(libs.androidx.navigation3.material3.adaptive)
+            implementation(libs.androidx.lifecycle.viewmodel.navigation3)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
@@ -106,42 +114,25 @@ kotlin {
             implementation(libs.ktor.client.java)
         }
         iosMain.dependencies {
-            api(compose.components.resources)
             // Ktor
             implementation(libs.ktor.client.darwin)
         }
-    }
-}
 
-android {
-    namespace = "dev.juanrincon.simmerly"
-    compileSdk = libs.versions.android.compileSdk.get().toInt()
-
-    defaultConfig {
-        applicationId = "dev.juanrincon.simmerly"
-        minSdk = libs.versions.android.minSdk.get().toInt()
-        targetSdk = libs.versions.android.targetSdk.get().toInt()
-        versionCode = 1
-        versionName = "1.0"
-    }
-    packaging {
-        resources {
-            excludes += "/META-INF/{AL2.0,LGPL2.1}"
+        all {
+            /*
+            Room generates file without this annotation tag. This lines tells it to
+            not ignore the annotation.
+             */
+            languageSettings.optIn("kotlin.time.ExperimentalTime")
         }
-    }
-    buildTypes {
-        getByName("release") {
-            isMinifyEnabled = false
-        }
-    }
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
     }
 }
 
 dependencies {
-    debugImplementation(compose.uiTooling)
+    add("kspAndroid", libs.androidx.room.compiler)
+    add("kspIosSimulatorArm64", libs.androidx.room.compiler)
+    add("kspIosArm64", libs.androidx.room.compiler)
+    add("kspJvm", libs.androidx.room.compiler)
 }
 
 compose.desktop {
@@ -154,4 +145,8 @@ compose.desktop {
             packageVersion = "1.0.0"
         }
     }
+}
+
+room {
+    schemaDirectory("$projectDir/schemas")
 }
