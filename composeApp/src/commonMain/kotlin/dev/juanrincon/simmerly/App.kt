@@ -6,18 +6,19 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.navigation.NavHostController
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
-import androidx.navigation.compose.rememberNavController
+import androidx.navigation3.runtime.NavEntry
+import androidx.navigation3.runtime.NavKey
+import androidx.navigation3.runtime.rememberNavBackStack
+import androidx.navigation3.ui.NavDisplay
+import androidx.savedstate.serialization.SavedStateConfiguration
 import dev.juanrincon.simmerly.navigation.app.AppContent
-import dev.juanrincon.simmerly.navigation.auth.App
+import dev.juanrincon.simmerly.navigation.auth.AuthDestinations
 import dev.juanrincon.simmerly.navigation.auth.AuthNavigationViewModel
-import dev.juanrincon.simmerly.navigation.auth.Login
-import dev.juanrincon.simmerly.navigation.auth.Splash
 import dev.juanrincon.simmerly.splash.presentation.SplashScreen
 import dev.juanrincon.simmerly.theme.SimmerlyTheme
 import dev.juanrincon.simmerly.welcome.presentation.WelcomeContent
+import kotlinx.serialization.modules.SerializersModule
+import kotlinx.serialization.modules.polymorphic
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
@@ -30,31 +31,48 @@ fun App() {
 @Composable
 fun SimmerlyApp(
     viewModel: AuthNavigationViewModel = koinViewModel(),
-    navController: NavHostController = rememberNavController(),
     modifier: Modifier = Modifier
 ) {
+    val backStack = rememberNavBackStack(
+        configuration = SavedStateConfiguration {
+            serializersModule = SerializersModule {
+                polymorphic(NavKey::class) {
+                    subclass(AuthDestinations.Login::class, AuthDestinations.Login.serializer())
+                    subclass(AuthDestinations.Splash::class, AuthDestinations.Splash.serializer())
+                    subclass(AuthDestinations.App::class, AuthDestinations.App.serializer())
+                }
+            }
+        },
+        AuthDestinations.Splash
+    )
     val isAuthenticated by viewModel.isAuthenticated.collectAsState()
 
     LaunchedEffect(isAuthenticated) {
-        if (isAuthenticated) {
-            navController.navigate(App)
-        } else {
-            navController.navigate(Login)
-        }
+        backStack.clear()
+        backStack.add(if (isAuthenticated) AuthDestinations.App else AuthDestinations.Login)
     }
-    NavHost(
-        navController = navController,
-        startDestination = Splash,
-        modifier = modifier
-    ) {
-        composable<Splash> {
-            SplashScreen()
+    NavDisplay(
+        backStack = backStack,
+        modifier = modifier,
+        entryProvider = { key ->
+           when (key) {
+              is AuthDestinations.Login -> {
+                  NavEntry(key) {
+                      WelcomeContent()
+                  }
+              }
+               is AuthDestinations.Splash -> {
+                   NavEntry(key) {
+                       SplashScreen()
+                   }
+               }
+               is AuthDestinations.App -> {
+                   NavEntry(key) {
+                       AppContent()
+                   }
+               }
+               else -> error("Unknown key: $key")
+           }
         }
-        composable<Login> {
-            WelcomeContent()
-        }
-        composable<App> {
-            AppContent()
-        }
-    }
+    )
 }
