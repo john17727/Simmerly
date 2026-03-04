@@ -1,5 +1,6 @@
 package dev.juanrincon.simmerly.navigation.app
 
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -15,6 +16,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import dev.juanrincon.simmerly.recipes.presentation.RecipesContent
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -54,9 +56,7 @@ fun AppContent(modifier: Modifier = Modifier) {
             }
         ) {
             when (val destination = currentDestination) {
-                AppDestinations.RECIPES -> {
-                    Text(destination.label.asString())
-                }
+                AppDestinations.RECIPES -> RecipesContent(modifier = Modifier.fillMaxSize())
 
                 AppDestinations.MEAL_PLAN -> {
                     Text(destination.label.asString())

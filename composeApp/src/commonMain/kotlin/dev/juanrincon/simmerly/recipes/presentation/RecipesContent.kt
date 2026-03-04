@@ -1,65 +1,56 @@
 package dev.juanrincon.simmerly.recipes.presentation
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Text
+import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
+import androidx.compose.material3.adaptive.navigation3.rememberListDetailSceneStrategy
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
-import com.arkivanov.decompose.ExperimentalDecomposeApi
-import com.arkivanov.decompose.extensions.compose.experimental.panels.ChildPanels
-import com.arkivanov.decompose.extensions.compose.experimental.panels.HorizontalChildPanelsLayout
-import com.arkivanov.decompose.extensions.compose.subscribeAsState
-import com.arkivanov.decompose.router.panels.ChildPanelsMode
-import dev.juanrincon.simmerly.recipes.presentation.comments.decompose.RecipeCommentsContent
-import dev.juanrincon.simmerly.recipes.presentation.decompose.ChildPanelsModeChangedEffect
-import dev.juanrincon.simmerly.recipes.presentation.decompose.RecipesComponent
+import androidx.navigation3.runtime.NavKey
+import androidx.navigation3.runtime.entryProvider
+import androidx.navigation3.runtime.rememberNavBackStack
+import androidx.navigation3.ui.NavDisplay
+import androidx.savedstate.serialization.SavedStateConfiguration
 import dev.juanrincon.simmerly.recipes.presentation.details.decompose.RecipeDetailsContent
 import dev.juanrincon.simmerly.recipes.presentation.list.decompose.RecipeListContent
+import dev.juanrincon.simmerly.recipes.presentation.navigation.RecipeDestinations
+import kotlinx.serialization.modules.SerializersModule
+import kotlinx.serialization.modules.polymorphic
 
-@OptIn(ExperimentalDecomposeApi::class)
+@OptIn(ExperimentalMaterial3AdaptiveApi::class)
 @Composable
-fun RecipesContent(component: RecipesComponent, modifier: Modifier = Modifier) {
-    val panels by component.panels.subscribeAsState()
-
-    ChildPanelsModeChangedEffect { mode ->
-        component.setMode(mode)
-    }
-    ChildPanels(
-        panels = component.panels,
-        mainChild = {
-            RecipeListContent(it.instance, Modifier.fillMaxSize())
-        },
-        detailsChild = {
-            RecipeDetailsContent(it.instance, Modifier.fillMaxSize())
-        },
-        secondPanelPlaceholder = {
-            Column(
-                modifier = Modifier.fillMaxSize(),
-                verticalArrangement = Arrangement.Center,
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text("Select a recipe to see details")
+fun RecipesContent(modifier: Modifier = Modifier) {
+    val backStack = rememberNavBackStack(
+        configuration = SavedStateConfiguration {
+            serializersModule = SerializersModule {
+                polymorphic(NavKey::class) {
+                    subclass(RecipeDestinations.List::class, RecipeDestinations.List.serializer())
+                    subclass(
+                        RecipeDestinations.Detail::class,
+                        RecipeDestinations.Detail.serializer()
+                    )
+                    subclass(
+                        RecipeDestinations.Comments::class,
+                        RecipeDestinations.Comments.serializer()
+                    )
+                }
             }
         },
-        extraChild = {
-            RecipeCommentsContent(it.instance)
-        },
-        layout = remember {
-            HorizontalChildPanelsLayout(
-                dualWeights = Pair(0.30F, 0.70F),
-                tripleWeights = Triple(0.25F, 0.50F, 0.25F)
-            )
-        },
-        modifier = when (panels.mode) {
-            ChildPanelsMode.DUAL -> modifier.padding(start = 16.dp, end = 16.dp)
-            ChildPanelsMode.TRIPLE -> modifier.padding(start = 16.dp)
-            else -> modifier
+        RecipeDestinations.List
+    )
+
+    NavDisplay(
+        backStack = backStack,
+        sceneStrategy = rememberListDetailSceneStrategy(),
+        modifier = modifier,
+        entryProvider = entryProvider {
+            entry<RecipeDestinations.List> {
+                RecipeListContent(modifier = Modifier.fillMaxSize(), onRecipeSelected = {
+                    backStack.add(RecipeDestinations.Detail(it))
+                })
+            }
+            entry<RecipeDestinations.Detail> { key ->
+                RecipeDetailsContent(recipeId = key.recipeId, modifier = Modifier.fillMaxSize())
+            }
         }
     )
 }

@@ -5,14 +5,20 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import dev.juanrincon.simmerly.recipes.presentation.list.RecipeListScreen
+import dev.juanrincon.simmerly.recipes.presentation.list.RecipeListViewModel
+import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
-fun RecipeListContent(component: RecipeListComponent, modifier: Modifier = Modifier) {
-    val state by component.state.collectAsState()
+fun RecipeListContent(
+    onRecipeSelected: (recipeId: String) -> Unit,
+    viewModel: RecipeListViewModel = koinViewModel(),
+    modifier: Modifier = Modifier
+) {
+    val state by viewModel.state.collectAsState()
     RecipeListScreen(
         state = state,
-        onEvent = component::onEvent,
-        onOutput = component::onOutput,
+        onEvent = viewModel::onEvent,
+        onRecipeSelected = onRecipeSelected,
         modifier = modifier
     )
 }

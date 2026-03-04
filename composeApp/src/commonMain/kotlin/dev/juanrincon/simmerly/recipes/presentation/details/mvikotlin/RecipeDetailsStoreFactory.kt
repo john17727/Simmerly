@@ -21,7 +21,7 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlin.math.round
 
-internal class RecipeDetailsStoreFactory(
+class RecipeDetailsStoreFactory(
     private val recipeId: String,
     private val storeFactory: StoreFactory,
     private val repository: RecipeRepository

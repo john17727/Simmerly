@@ -20,7 +20,7 @@ import dev.juanrincon.simmerly.recipes.presentation.list.mvikotlin.RecipeListSto
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 
-internal class RecipeListStoreFactory(
+class RecipeListStoreFactory(
     private val storeFactory: StoreFactory,
     private val repository: RecipeRepository
 ) {

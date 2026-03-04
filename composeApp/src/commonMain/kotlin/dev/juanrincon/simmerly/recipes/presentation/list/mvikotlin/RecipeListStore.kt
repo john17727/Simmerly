@@ -22,8 +22,4 @@ interface RecipeListStore : Store<RecipeListStore.Intent, RecipeListStore.State,
 
     sealed interface Label {
     }
-
-    sealed interface Output {
-        data class SelectedRecipe(val recipeId: String) : Output
-    }
 }

@@ -55,7 +55,7 @@ import dev.juanrincon.simmerly.recipes.presentation.list.mvikotlin.RecipeListSto
 fun RecipeListScreen(
     state: RecipeListStore.State,
     onEvent: (RecipeListStore.Intent) -> Unit,
-    onOutput: (RecipeListStore.Output) -> Unit,
+    onRecipeSelected: (recipeId: String) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val windowSizeClass = currentWindowAdaptiveInfo().windowSizeClass
@@ -78,7 +78,7 @@ fun RecipeListScreen(
         SelectableList(
             state.recipes,
             selected = state.selectedRecipeId,
-            onOutput = onOutput,
+            onRecipeSelected = onRecipeSelected,
             onSelected = { onEvent(RecipeListStore.Intent.OnRecipeSelected(it)) },
             state = lazyListState,
             modifier = modifier
@@ -86,7 +86,7 @@ fun RecipeListScreen(
     } else {
         List(
             state.recipes,
-            onOutput,
+            onRecipeSelected,
             lazyListState,
             modifier = modifier
         )
@@ -97,7 +97,7 @@ fun RecipeListScreen(
 fun SelectableList(
     recipes: List<RecipeSummary>,
     selected: String,
-    onOutput: (RecipeListStore.Output) -> Unit,
+    onRecipeSelected: (String) -> Unit,
     onSelected: (String) -> Unit,
     state: LazyListState,
     modifier: Modifier = Modifier
@@ -113,7 +113,7 @@ fun SelectableList(
                 item,
                 selected = isSelected,
                 onClick = {
-                    onOutput(RecipeListStore.Output.SelectedRecipe(item.id))
+                    onRecipeSelected(item.id)
                     onSelected(item.id)
                 },
                 modifier = Modifier
@@ -129,7 +129,7 @@ fun SelectableList(
 @Composable
 fun List(
     recipes: List<RecipeSummary>,
-    onOutput: (RecipeListStore.Output) -> Unit,
+    onRecipeSelected: (String) -> Unit,
     lazyListState: LazyListState,
     modifier: Modifier = Modifier
 ) {
@@ -141,7 +141,7 @@ fun List(
         items(recipes, key = { it.id }) { item ->
             RecipeCard(
                 item,
-                onClick = { onOutput(RecipeListStore.Output.SelectedRecipe(item.id)) },
+                onClick = { onRecipeSelected(item.id) },
                 modifier = Modifier.fillMaxWidth().animateItem()
             )
         }
