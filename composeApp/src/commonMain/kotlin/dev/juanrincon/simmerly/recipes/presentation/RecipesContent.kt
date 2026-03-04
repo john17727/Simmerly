@@ -15,6 +15,7 @@ import androidx.compose.material3.adaptive.navigation3.rememberListDetailSceneSt
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
@@ -70,7 +71,7 @@ private fun RecipesNavDisplay(modifier: Modifier = Modifier) {
     NavDisplay(
         backStack = backStack,
         sceneStrategy = rememberListDetailSceneStrategy(),
-        modifier = modifier,
+        modifier = modifier.padding(horizontal = 16.dp),
         entryDecorators = listOf(
             rememberSaveableStateHolderNavEntryDecorator(),
             rememberViewModelStoreNavEntryDecorator()
