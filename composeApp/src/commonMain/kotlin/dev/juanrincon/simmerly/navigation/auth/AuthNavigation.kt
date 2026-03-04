@@ -1,12 +1,16 @@
 package dev.juanrincon.simmerly.navigation.auth
 
+import androidx.navigation3.runtime.NavKey
 import kotlinx.serialization.Serializable
 
 @Serializable
-data object Login
+sealed interface Route: NavKey
 
 @Serializable
-data object App
+data object Login : Route
 
 @Serializable
-data object Splash
+data object App : Route
+
+@Serializable
+data object Splash : Route
