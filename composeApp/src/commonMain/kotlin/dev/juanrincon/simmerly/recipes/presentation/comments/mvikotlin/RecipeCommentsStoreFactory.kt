@@ -16,7 +16,7 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
-internal class RecipeCommentsStoreFactory(
+class RecipeCommentsStoreFactory(
     private val recipeId: String,
     private val storeFactory: StoreFactory,
     private val repository: RecipeRepository

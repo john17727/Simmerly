@@ -63,11 +63,6 @@ kotlin {
             // Essenty
             implementation(libs.essenty.lifecycle.coroutines)
 
-            // Decompose
-            api(libs.decompose)
-            implementation(libs.decompose.extensions.compose)
-            implementation(libs.decompose.extensions.compose.experimental)
-
             // MVIKotlin
             implementation(libs.mvikotlin)
             api(libs.mvikotlin.main)

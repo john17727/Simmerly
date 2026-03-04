@@ -19,6 +19,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -31,9 +33,23 @@ import coil3.request.ImageRequest
 import dev.juanrincon.simmerly.recipes.presentation.comments.models.CommentUi
 import dev.juanrincon.simmerly.recipes.presentation.comments.mvikotlin.RecipeCommentsStore
 import dev.juanrincon.simmerly.theme.SimmerlyTheme
+import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
 fun RecipeCommentsScreen(
+    viewModel: RecipeCommentsViewModel = koinViewModel(),
+    modifier: Modifier = Modifier
+) {
+    val state by viewModel.state.collectAsState()
+    Content(
+        state = state,
+        onEvent = viewModel::onEvent,
+        modifier = modifier
+    )
+}
+
+@Composable
+private fun Content(
     state: RecipeCommentsStore.State,
     onEvent: (RecipeCommentsStore.Intent) -> Unit,
     modifier: Modifier = Modifier
@@ -113,7 +129,7 @@ private fun Comment(comment: CommentUi, modifier: Modifier = Modifier) {
 @Composable
 fun RecipeCommentsScreenPreview() {
     SimmerlyTheme {
-        RecipeCommentsScreen(
+        Content(
             state = RecipeCommentsStore.State(
                 comments = listOf(
                     CommentUi(
