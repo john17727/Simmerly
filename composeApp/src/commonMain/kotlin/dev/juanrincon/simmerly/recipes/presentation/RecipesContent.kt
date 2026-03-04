@@ -1,9 +1,13 @@
 package dev.juanrincon.simmerly.recipes.presentation
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.Text
 import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
+import androidx.compose.material3.adaptive.navigation3.ListDetailSceneStrategy
 import androidx.compose.material3.adaptive.navigation3.rememberListDetailSceneStrategy
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
@@ -43,12 +47,22 @@ fun RecipesContent(modifier: Modifier = Modifier) {
         sceneStrategy = rememberListDetailSceneStrategy(),
         modifier = modifier,
         entryProvider = entryProvider {
-            entry<RecipeDestinations.List> {
+            entry<RecipeDestinations.List>(
+                metadata = ListDetailSceneStrategy.listPane(
+                    detailPlaceholder = {
+                        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                            Text("Select a recipe to see details")
+                        }
+                    }
+                )
+            ) {
                 RecipeListScreen(modifier = Modifier.fillMaxSize(), onRecipeSelected = {
                     backStack.add(RecipeDestinations.Detail(it))
                 })
             }
-            entry<RecipeDestinations.Detail> { key ->
+            entry<RecipeDestinations.Detail>(
+                metadata = ListDetailSceneStrategy.detailPane()
+            ) { key ->
                 RecipeDetailsScreen(recipeId = key.recipeId, modifier = Modifier.fillMaxSize())
             }
         }
