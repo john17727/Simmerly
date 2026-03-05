@@ -14,6 +14,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import dev.juanrincon.simmerly.recipes.presentation.RecipesContent
@@ -23,6 +24,7 @@ fun AppContent(modifier: Modifier = Modifier) {
     var currentDestination by rememberSaveable { mutableStateOf(AppDestinations.RECIPES) }
     val navSuiteType =
         NavigationSuiteScaffoldDefaults.navigationSuiteType(currentWindowAdaptiveInfo())
+    val saveableStateHolder = rememberSaveableStateHolder()
     NavigationSuiteScaffold(
         modifier = modifier,
         navigationSuiteType = navSuiteType,
@@ -47,19 +49,26 @@ fun AppContent(modifier: Modifier = Modifier) {
             }
         }
     ) {
-        when (val destination = currentDestination) {
-            AppDestinations.RECIPES -> RecipesContent(modifier = Modifier.fillMaxSize())
+        // NavigationSuiteScaffold uses a plain `when` block, which fully removes a destination
+        // from the composition tree when switching tabs. Without SaveableStateProvider, all
+        // rememberSaveable state (e.g. nested nav back stacks, scroll positions) is destroyed
+        // and lost when switching away. SaveableStateProvider snapshots and restores that state
+        // per destination, so each tab picks up exactly where it left off.
+        saveableStateHolder.SaveableStateProvider(currentDestination) {
+            when (val destination = currentDestination) {
+                AppDestinations.RECIPES -> RecipesContent(modifier = Modifier.fillMaxSize())
 
-            AppDestinations.MEAL_PLAN -> {
-                Text(destination.label.asString())
-            }
+                AppDestinations.MEAL_PLAN -> {
+                    Text(destination.label.asString())
+                }
 
-            AppDestinations.SHOPPING_LIST -> {
-                Text(destination.label.asString())
-            }
+                AppDestinations.SHOPPING_LIST -> {
+                    Text(destination.label.asString())
+                }
 
-            AppDestinations.PROFILE -> {
-                Text(destination.label.asString())
+                AppDestinations.PROFILE -> {
+                    Text(destination.label.asString())
+                }
             }
         }
     }
