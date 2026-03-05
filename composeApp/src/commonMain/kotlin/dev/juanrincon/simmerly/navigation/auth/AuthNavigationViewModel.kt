@@ -13,11 +13,13 @@ class AuthNavigationViewModel(
     private val repository: AuthRepository
 ): ViewModel() {
 
-    val isAuthenticated: StateFlow<Boolean> = repository.observeAuthState().map { authState ->
+    val isAuthenticated: StateFlow<AuthDestinations> =
+        repository.observeAuthState().map { authState ->
         when (authState) {
-            is AuthState.Authenticated -> true
-            else -> false
+            is AuthState.Authenticated -> AuthDestinations.App
+            AuthState.Loading -> AuthDestinations.Splash
+            AuthState.Unauthenticated -> AuthDestinations.Login
         }
-    }.stateIn(viewModelScope, SharingStarted.Eagerly, false)
+        }.stateIn(viewModelScope, SharingStarted.Eagerly, AuthDestinations.Splash)
 
 }

@@ -45,11 +45,11 @@ fun SimmerlyApp(
         },
         AuthDestinations.Splash
     )
-    val isAuthenticated by viewModel.isAuthenticated.collectAsState()
+    val authenticationState by viewModel.isAuthenticated.collectAsState()
 
-    LaunchedEffect(isAuthenticated) {
+    LaunchedEffect(authenticationState) {
         backStack.clear()
-        backStack.add(if (isAuthenticated) AuthDestinations.App else AuthDestinations.Login)
+        backStack.add(authenticationState)
     }
     NavDisplay(
         backStack = backStack,
