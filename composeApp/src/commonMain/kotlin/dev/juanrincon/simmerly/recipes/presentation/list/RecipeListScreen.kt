@@ -19,8 +19,6 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.relocation.BringIntoViewRequester
 import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.LocalDining
-import androidx.compose.material.icons.rounded.LocalFireDepartment
 import androidx.compose.material.icons.rounded.Star
 import androidx.compose.material.icons.rounded.Timer
 import androidx.compose.material3.Card
@@ -50,6 +48,7 @@ import coil3.request.ImageRequest
 import dev.juanrincon.simmerly.core.presentation.ifTrue
 import dev.juanrincon.simmerly.recipes.domain.model.RecipeSummary
 import dev.juanrincon.simmerly.recipes.presentation.list.mvikotlin.RecipeListStore
+import dev.juanrincon.simmerly.recipes.presentation.shared.RecipeMetaRow
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
@@ -194,9 +193,7 @@ fun RecipeCard(
                     .bringIntoViewRequester(bringIntoViewRequester),
             ) {
                 AsyncImage(
-                    model = ImageRequest.Builder(LocalPlatformContext.current)
-                        .data(recipe.image)
-                        .build(),
+                    model = recipe.image,
                     contentDescription = null,
                     contentScale = ContentScale.Crop,
                     modifier = Modifier
@@ -260,77 +257,6 @@ fun RecipeCard(
                         )
                     }
                 }
-            }
-        }
-    }
-}
-
-@Composable
-private fun RecipeMetaRow(
-    rating: Double?,
-    totalTime: String?,
-    prepTime: String?,
-    cookTime: String?,
-    modifier: Modifier = Modifier
-) {
-    Row(
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = modifier
-    ) {
-        rating?.let {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                Icon(
-                    Icons.Rounded.Star,
-                    contentDescription = null,
-                    modifier = Modifier.size(16.dp)
-                )
-                Text(it.toString(), style = MaterialTheme.typography.bodySmall)
-            }
-        }
-        totalTime?.let {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                Icon(
-                    Icons.Rounded.Timer,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(16.dp)
-                )
-                Text(it, style = MaterialTheme.typography.bodySmall)
-            }
-        }
-        prepTime?.let {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                Icon(
-                    Icons.Rounded.LocalDining,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(16.dp)
-                )
-                Text(it, style = MaterialTheme.typography.bodySmall)
-            }
-        }
-        cookTime?.let {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                Icon(
-                    Icons.Rounded.LocalFireDepartment,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(16.dp)
-                )
-                Text(it, style = MaterialTheme.typography.bodySmall)
             }
         }
     }

@@ -14,6 +14,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -26,7 +28,9 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.PrimaryScrollableTabRow
 import androidx.compose.material3.Switch
+import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.runtime.Composable
@@ -34,13 +38,19 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.window.core.layout.WindowSizeClass
+import coil3.compose.AsyncImage
 import com.mohamedrejeb.richeditor.model.rememberRichTextState
 import com.mohamedrejeb.richeditor.ui.material3.RichText
 import dev.juanrincon.simmerly.core.presentation.ifTrue
@@ -53,6 +63,8 @@ import dev.juanrincon.simmerly.recipes.presentation.details.models.InstructionUi
 import dev.juanrincon.simmerly.recipes.presentation.details.models.NutritionUi
 import dev.juanrincon.simmerly.recipes.presentation.details.models.RecipeDetailUi
 import dev.juanrincon.simmerly.recipes.presentation.details.mvikotlin.RecipeDetailsStore
+import dev.juanrincon.simmerly.recipes.presentation.shared.RecipeMetaRow
+import kotlinx.coroutines.launch
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
 
@@ -129,7 +141,11 @@ private fun Content(
                             modifier = modifier
                         )
                     } else {
-                        CompactView()
+                        CompactView(
+                            state = state,
+                            onEvent = onEvent,
+                            modifier = modifier
+                        )
                     }
                 }
             }
@@ -140,8 +156,176 @@ private fun Content(
 }
 
 @Composable
-private fun CompactView() {
+private fun CompactView(
+    state: RecipeDetailsStore.State,
+    onEvent: (RecipeDetailsStore.Intent) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val recipe = state.recipe
+    val tabs = remember(recipe.notes.isNotEmpty(), recipe.settings.showNutrition) {
+        buildList {
+            add("Ingredients")
+            add("Instructions")
+            if (recipe.notes.isNotEmpty()) add("Notes")
+            if (recipe.settings.showNutrition) add("Nutrition")
+        }
+    }
 
+    val listState = rememberLazyListState()
+    val coroutineScope = rememberCoroutineScope()
+
+    // Content sections start at index 3 (image=0, meta=1, stickyHeader=2, sections=3+)
+    val selectedTabIndex by remember {
+        derivedStateOf {
+            (listState.firstVisibleItemIndex - 3).coerceIn(0, tabs.lastIndex)
+        }
+    }
+
+    LazyColumn(state = listState, modifier = modifier) {
+
+        // Hero image
+        item {
+            AsyncImage(
+                model = recipe.image,
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .fillParentMaxHeight(0.33f)
+                    .clip(MaterialTheme.shapes.medium)
+            )
+        }
+
+        // Description + meta
+        item {
+            Column(modifier = Modifier.padding(horizontal = 8.dp)) {
+                Spacer(modifier = Modifier.height(16.dp))
+                if (recipe.description.isNotBlank()) {
+                    Text(
+                        recipe.description,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSecondaryContainer
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                }
+                RecipeMetaRow(
+                    recipe.rating,
+                    recipe.totalTime,
+                    recipe.prepTime,
+                    recipe.performTime
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+            }
+        }
+
+        // Sticky tab row
+        stickyHeader {
+            PrimaryScrollableTabRow(
+                selectedTabIndex = selectedTabIndex,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                tabs.forEachIndexed { index, title ->
+                    Tab(
+                        selected = selectedTabIndex == index,
+                        onClick = {
+                            coroutineScope.launch {
+                                listState.animateScrollToItem(index + 3)
+                            }
+                        },
+                        text = { Text(title) }
+                    )
+                }
+            }
+        }
+
+        // Ingredients & Tools (always shown, index 3)
+        item {
+            IngredientAndToolView(
+                recipe = recipe,
+                onRemoveServingButtonClick = { onEvent(RecipeDetailsStore.Intent.RemoveServing) },
+                onAddServingButtonClick = { onEvent(RecipeDetailsStore.Intent.AddServing) },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp)
+                    .background(
+                        color = MaterialTheme.colorScheme.surface,
+                        shape = MaterialTheme.shapes.medium
+                    )
+                    .ifTrue(state.loading) {
+                        height(400.dp).shimmer(
+                            colors = listOf(
+                                MaterialTheme.colorScheme.surfaceContainer,
+                                MaterialTheme.colorScheme.surfaceContainerHighest,
+                                MaterialTheme.colorScheme.surfaceContainer,
+                            ),
+                            shape = MaterialTheme.shapes.medium
+                        )
+                    }
+            )
+        }
+
+        // Instructions (always shown, index 4)
+        item {
+            InstructionView(
+                instructions = recipe.instructions,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp)
+                    .background(
+                        color = MaterialTheme.colorScheme.surface,
+                        shape = MaterialTheme.shapes.medium
+                    )
+                    .ifTrue(state.loading) {
+                        height(600.dp).shimmer(
+                            colors = listOf(
+                                MaterialTheme.colorScheme.surfaceContainer,
+                                MaterialTheme.colorScheme.surfaceContainerHighest,
+                                MaterialTheme.colorScheme.surfaceContainer,
+                            ),
+                            shape = MaterialTheme.shapes.medium
+                        )
+                    }
+            )
+        }
+
+        // Notes (conditional)
+        if (recipe.notes.isNotEmpty()) {
+            item {
+                NotesView(
+                    recipe.notes,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp)
+                        .background(
+                            color = MaterialTheme.colorScheme.surface,
+                            shape = MaterialTheme.shapes.medium
+                        )
+                )
+            }
+        }
+
+        // Nutrition (conditional)
+        if (recipe.settings.showNutrition) {
+            item {
+                NutritionView(
+                    recipe.nutrition,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp)
+                        .background(
+                            color = MaterialTheme.colorScheme.surface,
+                            shape = MaterialTheme.shapes.medium
+                        )
+                        .wrapContentHeight(unbounded = true)
+                        .padding(top = 32.dp, bottom = 16.dp, start = 16.dp, end = 16.dp)
+                )
+            }
+        }
+
+        item {
+            Spacer(modifier = Modifier.height(16.dp))
+        }
+    }
 }
 
 @Composable
