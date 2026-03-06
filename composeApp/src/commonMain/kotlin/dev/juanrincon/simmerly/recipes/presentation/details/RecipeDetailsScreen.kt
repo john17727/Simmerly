@@ -5,6 +5,7 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -28,15 +29,16 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SecondaryScrollableTabRow
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -58,7 +60,6 @@ import dev.juanrincon.simmerly.core.presentation.ifTrue
 import dev.juanrincon.simmerly.core.presentation.shimmer
 import dev.juanrincon.simmerly.recipes.domain.model.Note
 import dev.juanrincon.simmerly.recipes.domain.model.Settings
-import dev.juanrincon.simmerly.recipes.presentation.LocalRecipesTopBarController
 import dev.juanrincon.simmerly.recipes.presentation.details.models.IngredientUi
 import dev.juanrincon.simmerly.recipes.presentation.details.models.InstructionUi
 import dev.juanrincon.simmerly.recipes.presentation.details.models.NutritionUi
@@ -103,33 +104,9 @@ private fun Content(
         }
     }
 
-    val controller = LocalRecipesTopBarController.current
     val windowSizeClass = currentWindowAdaptiveInfo().windowSizeClass
     val isExpanded =
         windowSizeClass.isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_EXPANDED_LOWER_BOUND)
-
-    SideEffect {
-        if (isExpanded) {
-            controller.title = { Text("Recipes") }
-            controller.navigationIcon = {}
-        } else {
-            controller.title = { Text(state.recipe.title) }
-            controller.navigationIcon = {
-                IconButton(onClick = onNavigateBack) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
-                }
-            }
-        }
-        controller.actions = {
-            IconButton(onClick = { onEvent(RecipeDetailsStore.Intent.ShowSettings) }) {
-                Icon(Icons.Default.Settings, contentDescription = "Settings")
-            }
-        }
-    }
-
-    DisposableEffect(Unit) {
-        onDispose { controller.reset() }
-    }
 
     AnimatedContent(state.mode) { mode ->
         when (mode) {
@@ -142,11 +119,37 @@ private fun Content(
                             modifier = modifier
                         )
                     } else {
-                        CompactView(
-                            state = state,
-                            onEvent = onEvent,
-                            modifier = modifier
-                        )
+                        Scaffold(
+                            topBar = {
+                                TopAppBar(
+                                    title = { Text(state.recipe.title) },
+                                    navigationIcon = {
+                                        IconButton(onClick = onNavigateBack) {
+                                            Icon(
+                                                Icons.AutoMirrored.Filled.ArrowBack,
+                                                contentDescription = "Back"
+                                            )
+                                        }
+                                    },
+                                    actions = {
+                                        IconButton(onClick = { onEvent(RecipeDetailsStore.Intent.ShowSettings) }) {
+                                            Icon(
+                                                Icons.Default.Settings,
+                                                contentDescription = "Settings"
+                                            )
+                                        }
+                                    },
+                                    colors = TopAppBarDefaults.topAppBarColors()
+                                        .copy(containerColor = MaterialTheme.colorScheme.background)
+                                )
+                            },
+                        ) { paddingValues ->
+                            CompactView(
+                                state = state,
+                                onEvent = onEvent,
+                                modifier = modifier.padding(paddingValues)
+                            )
+                        }
                     }
                 }
             }
@@ -191,7 +194,11 @@ private fun CompactView(
         }
     }
 
-    LazyColumn(state = listState, modifier = modifier) {
+    LazyColumn(
+        state = listState,
+        modifier = modifier,
+        contentPadding = PaddingValues(horizontal = 16.dp)
+    ) {
 
         // Hero image
         item {
@@ -360,7 +367,7 @@ private fun ExpandedView(
     modifier: Modifier = Modifier
 ) {
     Row(
-        modifier = modifier.fillMaxSize(),
+        modifier = modifier.fillMaxSize().padding(top = 16.dp, bottom = 16.dp, end = 16.dp),
         horizontalArrangement = Arrangement.spacedBy(EXPANDED_CARD_PADDING)
     ) {
         Column(
