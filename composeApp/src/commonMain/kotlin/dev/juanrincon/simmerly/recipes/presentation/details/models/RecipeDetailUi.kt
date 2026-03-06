@@ -63,7 +63,7 @@ data class RecipeDetailUi(
                 showNutrition = false,
                 showAssets = false,
                 landscapeView = false,
-                disableComments = false,
+                disableComments = true,
                 locked = false
             )
         )

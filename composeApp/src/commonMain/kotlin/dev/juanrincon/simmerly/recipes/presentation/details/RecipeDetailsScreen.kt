@@ -20,6 +20,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.Comment
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material.icons.filled.Settings
@@ -78,6 +79,7 @@ import org.koin.core.parameter.parametersOf
 fun RecipeDetailsScreen(
     recipeId: String,
     onNavigateBack: () -> Unit = {},
+    onNavigateToComments: (recipeId: String) -> Unit,
     viewModel: RecipeDetailsViewModel = koinViewModel { parametersOf(recipeId) },
     modifier: Modifier = Modifier
 ) {
@@ -86,6 +88,7 @@ fun RecipeDetailsScreen(
         state = state,
         onEvent = viewModel::onEvent,
         onNavigateBack = onNavigateBack,
+        onNavigateToComments = onNavigateToComments,
         modifier = modifier
     )
 }
@@ -96,6 +99,7 @@ private fun Content(
     state: RecipeDetailsStore.State,
     onEvent: (RecipeDetailsStore.Intent) -> Unit,
     onNavigateBack: () -> Unit,
+    onNavigateToComments: (recipeId: String) -> Unit,
     modifier: Modifier = Modifier
 ) {
     if (state.showSettings) {
@@ -136,6 +140,14 @@ private fun Content(
                                         }
                                     },
                                     actions = {
+                                        if (!state.recipe.settings.disableComments) {
+                                            IconButton(onClick = { onNavigateToComments(state.recipe.id) }) {
+                                                Icon(
+                                                    Icons.AutoMirrored.Default.Comment,
+                                                    contentDescription = "Comment"
+                                                )
+                                            }
+                                        }
                                         IconButton(onClick = { onEvent(RecipeDetailsStore.Intent.ShowSettings) }) {
                                             Icon(
                                                 Icons.Default.Settings,
@@ -238,6 +250,13 @@ private fun CompactView(
         item {
             Column(modifier = Modifier.padding(horizontal = 8.dp)) {
                 Spacer(modifier = Modifier.height(16.dp))
+                RecipeMetaRow(
+                    recipe.rating,
+                    recipe.totalTime,
+                    recipe.prepTime,
+                    recipe.performTime
+                )
+                Spacer(modifier = Modifier.height(16.dp))
                 if (recipe.description.isNotBlank()) {
                     Text(
                         recipe.description,
@@ -246,13 +265,6 @@ private fun CompactView(
                     )
                     Spacer(modifier = Modifier.height(16.dp))
                 }
-                RecipeMetaRow(
-                    recipe.rating,
-                    recipe.totalTime,
-                    recipe.prepTime,
-                    recipe.performTime
-                )
-                Spacer(modifier = Modifier.height(16.dp))
             }
         }
 
@@ -740,9 +752,8 @@ private fun InstructionEntry(instruction: InstructionUi, modifier: Modifier = Mo
         }
         RichText(
             state = richTextState,
-//        imageLoader = Coil3ImageLoader, // TODO: Add image loader
-            modifier = Modifier
-                .fillMaxWidth()
+            imageLoader = Coil3ImageLoader,
+            modifier = Modifier.fillMaxWidth()
         )
     }
 }

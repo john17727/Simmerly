@@ -2,7 +2,17 @@ package dev.juanrincon.simmerly.recipes.presentation
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
 import androidx.compose.material3.adaptive.navigation3.ListDetailSceneStrategy
 import androidx.compose.material3.adaptive.navigation3.rememberListDetailSceneStrategy
@@ -16,13 +26,14 @@ import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import androidx.savedstate.serialization.SavedStateConfiguration
+import dev.juanrincon.simmerly.recipes.presentation.comments.RecipeCommentsScreen
 import dev.juanrincon.simmerly.recipes.presentation.details.RecipeDetailsScreen
 import dev.juanrincon.simmerly.recipes.presentation.list.RecipeListScreen
 import dev.juanrincon.simmerly.recipes.presentation.navigation.RecipeDestinations
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
 
-@OptIn(ExperimentalMaterial3AdaptiveApi::class)
+@OptIn(ExperimentalMaterial3AdaptiveApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun RecipesContent(modifier: Modifier = Modifier) {
     val backStack = rememberNavBackStack(
@@ -73,8 +84,35 @@ fun RecipesContent(modifier: Modifier = Modifier) {
                 RecipeDetailsScreen(
                     recipeId = key.recipeId,
                     onNavigateBack = { backStack.removeLastOrNull() },
+                    onNavigateToComments = { backStack.add(RecipeDestinations.Comments(it)) },
                     modifier = Modifier.fillMaxSize()
                 )
+            }
+            entry<RecipeDestinations.Comments>(
+                metadata = ListDetailSceneStrategy.extraPane()
+            ) { key ->
+                Scaffold(
+                    topBar = {
+                        TopAppBar(
+                            title = { Text("Comments") },
+                            navigationIcon = {
+                                IconButton(onClick = { backStack.removeLastOrNull() }) {
+                                    Icon(
+                                        Icons.AutoMirrored.Filled.ArrowBack,
+                                        contentDescription = "Back"
+                                    )
+                                }
+                            },
+                            colors = TopAppBarDefaults.topAppBarColors()
+                                .copy(containerColor = MaterialTheme.colorScheme.background)
+                        )
+                    }
+                ) { paddingValues ->
+                    RecipeCommentsScreen(
+                        recipeId = key.recipeId,
+                        modifier = Modifier.padding(paddingValues)
+                    )
+                }
             }
         }
     )
