@@ -167,9 +167,9 @@ private fun CompactView(
     val listState = rememberLazyListState()
     val coroutineScope = rememberCoroutineScope()
     val density = LocalDensity.current
-    val tabRowHeightPx = remember(density) { with(density) { 48.dp.roundToPx() } }
+    val tabRowHeightPx = remember(density) { with(density) { TAB_ROW_HEIGHT.roundToPx() } }
 
-    // Content sections start at index 3 (image=0, meta=1, stickyHeader=2, sections=3+)
+    // List layout: image(0), meta(1), stickyHeader(2), content sections(3+), trailing Spacer
     val selectedTabIndex by remember(tabs) {
         derivedStateOf {
             // At the very bottom of the list, always select the last tab
@@ -177,14 +177,17 @@ private fun CompactView(
 
             val visibleItems = listState.layoutInfo.visibleItemsInfo
 
-            // Select the last content item whose top edge has reached the sticky header bottom.
-            // This switches the tab exactly when the next card's top touches the header.
+            // Find the last content card whose top edge has reached the sticky header bottom.
+            // Overview (tab 0) is selected when no content card has crossed that threshold yet.
             val activeItem = visibleItems
-                .filter { it.index >= 3 && it.index < 3 + tabs.size }
+                .filter { it.index >= CONTENT_START_INDEX && it.index < CONTENT_START_INDEX + tabs.size - CONTENT_TAB_OFFSET }
                 .lastOrNull { it.offset <= tabRowHeightPx }
-                ?: visibleItems.firstOrNull { it.index >= 3 && it.index < 3 + tabs.size }
+                ?: return@derivedStateOf OVERVIEW_TAB_INDEX
 
-            ((activeItem?.index ?: 3) - 3).coerceIn(0, tabs.lastIndex)
+            (activeItem.index - CONTENT_START_INDEX + CONTENT_TAB_OFFSET).coerceIn(
+                OVERVIEW_TAB_INDEX,
+                tabs.lastIndex
+            )
         }
     }
 
@@ -247,10 +250,14 @@ private fun CompactView(
                             selected = selectedTabIndex == index,
                             onClick = {
                                 coroutineScope.launch {
-                                    listState.animateScrollToItem(
-                                        index = index + 3,
-                                        scrollOffset = tabRowHeightPx * -1
-                                    )
+                                    if (index == OVERVIEW_TAB_INDEX) {
+                                        listState.animateScrollToItem(index = 0)
+                                    } else {
+                                        listState.animateScrollToItem(
+                                            index = index - CONTENT_TAB_OFFSET + CONTENT_START_INDEX,
+                                            scrollOffset = tabRowHeightPx * -1
+                                        )
+                                    }
                                 }
                             },
                             text = { Text(title) }
@@ -683,6 +690,18 @@ private fun SettingsView(settings: Settings, modifier: Modifier = Modifier) {
 
 val EXPANDED_CARD_PADDING = 16.dp
 val SETTINGS_OPTION_SPACING = 16.dp
+
+// Lazy list layout: image(0), meta(1), stickyHeader(2), content sections start at 3
+private const val CONTENT_START_INDEX = 3
+
+// Number of tabs before the first content tab (just Overview)
+private const val CONTENT_TAB_OFFSET = 1
+
+// Index of the Overview tab
+private const val OVERVIEW_TAB_INDEX = 0
+
+// Approximate height of the sticky tab row — used to trigger tab switches and align scroll targets
+private val TAB_ROW_HEIGHT = 48.dp
 
 
 @Preview

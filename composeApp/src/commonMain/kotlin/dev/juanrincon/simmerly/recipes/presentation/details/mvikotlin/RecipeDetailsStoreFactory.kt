@@ -124,6 +124,7 @@ class RecipeDetailsStoreFactory(
                     loading = false,
                     recipe = msg.recipe,
                     tabs = buildList {
+                        add("Overview")
                         add("Ingredients")
                         add("Instructions")
                         if (msg.recipe.notes.isNotEmpty()) add("Notes")
