@@ -46,6 +46,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -173,11 +174,25 @@ private fun CompactView(
 
     val listState = rememberLazyListState()
     val coroutineScope = rememberCoroutineScope()
+    val density = LocalDensity.current
+    val tabRowHeightPx = remember(density) { with(density) { 48.dp.roundToPx() } }
 
     // Content sections start at index 3 (image=0, meta=1, stickyHeader=2, sections=3+)
-    val selectedTabIndex by remember {
+    val selectedTabIndex by remember(tabs) {
         derivedStateOf {
-            (listState.firstVisibleItemIndex - 3).coerceIn(0, tabs.lastIndex)
+            // At the very bottom of the list, always select the last tab
+            if (!listState.canScrollForward) return@derivedStateOf tabs.lastIndex
+
+            val visibleItems = listState.layoutInfo.visibleItemsInfo
+
+            // Select the last content item whose top edge has reached the sticky header bottom.
+            // This switches the tab exactly when the next card's top touches the header.
+            val activeItem = visibleItems
+                .filter { it.index >= 3 && it.index < 3 + tabs.size }
+                .lastOrNull { it.offset <= tabRowHeightPx }
+                ?: visibleItems.firstOrNull { it.index >= 3 && it.index < 3 + tabs.size }
+
+            ((activeItem?.index ?: 3) - 3).coerceIn(0, tabs.lastIndex)
         }
     }
 
@@ -221,6 +236,7 @@ private fun CompactView(
         // Sticky tab row
         stickyHeader {
             PrimaryScrollableTabRow(
+                containerColor = MaterialTheme.colorScheme.background,
                 selectedTabIndex = selectedTabIndex,
                 modifier = Modifier.fillMaxWidth()
             ) {
@@ -320,10 +336,6 @@ private fun CompactView(
                         .padding(top = 32.dp, bottom = 16.dp, start = 16.dp, end = 16.dp)
                 )
             }
-        }
-
-        item {
-            Spacer(modifier = Modifier.height(16.dp))
         }
     }
 }
