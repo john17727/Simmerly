@@ -245,7 +245,10 @@ private fun CompactView(
                         selected = selectedTabIndex == index,
                         onClick = {
                             coroutineScope.launch {
-                                listState.animateScrollToItem(index + 3)
+                                listState.animateScrollToItem(
+                                    index = index + 3,
+                                    scrollOffset = tabRowHeightPx * -1
+                                )
                             }
                         },
                         text = { Text(title) }
