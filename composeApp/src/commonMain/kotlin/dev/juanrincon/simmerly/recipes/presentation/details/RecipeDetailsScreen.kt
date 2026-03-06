@@ -42,8 +42,10 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -172,9 +174,17 @@ private fun CompactView(
     val density = LocalDensity.current
     val tabRowHeightPx = remember(density) { with(density) { TAB_ROW_HEIGHT.roundToPx() } }
 
+    // When the user taps a tab we lock the indicator to that index for the
+    // duration of the programmatic animated scroll, preventing intermediate
+    // positions from momentarily lighting up the wrong tab.
+    var programmaticScrollTargetIndex by remember { mutableStateOf<Int?>(null) }
+
     // List layout: image(0), meta(1), stickyHeader(2), content sections(3+), trailing Spacer
     val selectedTabIndex by remember(tabs) {
         derivedStateOf {
+            // While we are animating to a tab, keep the indicator pinned there.
+            programmaticScrollTargetIndex?.let { return@derivedStateOf it }
+
             // At the very bottom of the list, always select the last tab
             if (!listState.canScrollForward) return@derivedStateOf tabs.lastIndex
 
@@ -257,13 +267,18 @@ private fun CompactView(
                             selected = selectedTabIndex == index,
                             onClick = {
                                 coroutineScope.launch {
-                                    if (index == OVERVIEW_TAB_INDEX) {
-                                        listState.animateScrollToItem(index = 0)
-                                    } else {
-                                        listState.animateScrollToItem(
-                                            index = index - CONTENT_TAB_OFFSET + CONTENT_START_INDEX,
-                                            scrollOffset = tabRowHeightPx * -1
-                                        )
+                                    programmaticScrollTargetIndex = index
+                                    try {
+                                        if (index == OVERVIEW_TAB_INDEX) {
+                                            listState.animateScrollToItem(index = 0)
+                                        } else {
+                                            listState.animateScrollToItem(
+                                                index = index - CONTENT_TAB_OFFSET + CONTENT_START_INDEX,
+                                                scrollOffset = tabRowHeightPx * -1
+                                            )
+                                        }
+                                    } finally {
+                                        programmaticScrollTargetIndex = null
                                     }
                                 }
                             },
