@@ -28,7 +28,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.PrimaryScrollableTabRow
+import androidx.compose.material3.SecondaryScrollableTabRow
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
@@ -163,15 +163,7 @@ private fun CompactView(
     modifier: Modifier = Modifier
 ) {
     val recipe = state.recipe
-    val tabs = remember(recipe.notes.isNotEmpty(), recipe.settings.showNutrition) {
-        buildList {
-            add("Ingredients")
-            add("Instructions")
-            if (recipe.notes.isNotEmpty()) add("Notes")
-            if (recipe.settings.showNutrition) add("Nutrition")
-        }
-    }
-
+    val tabs = state.tabs
     val listState = rememberLazyListState()
     val coroutineScope = rememberCoroutineScope()
     val density = LocalDensity.current
@@ -207,7 +199,16 @@ private fun CompactView(
                 modifier = Modifier
                     .fillMaxWidth()
                     .fillParentMaxHeight(0.33f)
-                    .clip(MaterialTheme.shapes.medium)
+                    .ifTrue(state.loading) {
+                        height(100.dp).shimmer(
+                            colors = listOf(
+                                MaterialTheme.colorScheme.surfaceContainer,
+                                MaterialTheme.colorScheme.surfaceContainerHighest,
+                                MaterialTheme.colorScheme.surfaceContainer,
+                            ),
+                            shape = MaterialTheme.shapes.medium
+                        )
+                    }.clip(MaterialTheme.shapes.medium)
             )
         }
 
@@ -234,25 +235,27 @@ private fun CompactView(
         }
 
         // Sticky tab row
-        stickyHeader {
-            PrimaryScrollableTabRow(
-                containerColor = MaterialTheme.colorScheme.background,
-                selectedTabIndex = selectedTabIndex,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                tabs.forEachIndexed { index, title ->
-                    Tab(
-                        selected = selectedTabIndex == index,
-                        onClick = {
-                            coroutineScope.launch {
-                                listState.animateScrollToItem(
-                                    index = index + 3,
-                                    scrollOffset = tabRowHeightPx * -1
-                                )
-                            }
-                        },
-                        text = { Text(title) }
-                    )
+        if (tabs.isNotEmpty()) {
+            stickyHeader {
+                SecondaryScrollableTabRow(
+                    containerColor = MaterialTheme.colorScheme.background,
+                    selectedTabIndex = selectedTabIndex,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    tabs.forEachIndexed { index, title ->
+                        Tab(
+                            selected = selectedTabIndex == index,
+                            onClick = {
+                                coroutineScope.launch {
+                                    listState.animateScrollToItem(
+                                        index = index + 3,
+                                        scrollOffset = tabRowHeightPx * -1
+                                    )
+                                }
+                            },
+                            text = { Text(title) }
+                        )
+                    }
                 }
             }
         }

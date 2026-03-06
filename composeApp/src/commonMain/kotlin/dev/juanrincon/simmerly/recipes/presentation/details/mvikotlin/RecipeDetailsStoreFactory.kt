@@ -120,7 +120,16 @@ class RecipeDetailsStoreFactory(
     private object ReducerImpl : Reducer<State, Msg> {
         override fun State.reduce(msg: Msg): State =
             when (msg) {
-                is RecipeUpdated -> copy(loading = false, recipe = msg.recipe)
+                is RecipeUpdated -> copy(
+                    loading = false,
+                    recipe = msg.recipe,
+                    tabs = buildList {
+                        add("Ingredients")
+                        add("Instructions")
+                        if (msg.recipe.notes.isNotEmpty()) add("Notes")
+                        if (msg.recipe.settings.showNutrition) add("Nutrition")
+                    }
+                )
                 is Msg.Loading -> copy(loading = true)
                 Msg.ShowSettings -> copy(showSettings = true)
                 Msg.DismissSettings -> copy(showSettings = false)
