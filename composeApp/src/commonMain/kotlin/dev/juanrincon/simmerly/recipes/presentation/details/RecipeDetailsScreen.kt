@@ -3,7 +3,6 @@ package dev.juanrincon.simmerly.recipes.presentation.details
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -64,6 +63,7 @@ import dev.juanrincon.simmerly.core.presentation.ifTrue
 import dev.juanrincon.simmerly.core.presentation.shimmer
 import dev.juanrincon.simmerly.recipes.domain.model.Note
 import dev.juanrincon.simmerly.recipes.domain.model.Settings
+import dev.juanrincon.simmerly.recipes.presentation.comments.RecipeCommentsScreen
 import dev.juanrincon.simmerly.recipes.presentation.details.models.IngredientUi
 import dev.juanrincon.simmerly.recipes.presentation.details.models.InstructionUi
 import dev.juanrincon.simmerly.recipes.presentation.details.models.NutritionUi
@@ -400,16 +400,18 @@ private fun ExpandedView(
             .fillMaxSize()
             .padding(top = 16.dp, bottom = 16.dp, end = 16.dp)
     ) {
-        SecondaryTabRow(
-            selectedTabIndex = selectedExpandedTabIndex,
-            containerColor = MaterialTheme.colorScheme.background
-        ) {
-            expandedTabs.forEachIndexed { index, title ->
-                Tab(
-                    selected = selectedExpandedTabIndex == index,
-                    onClick = { selectedExpandedTabIndex = index },
-                    text = { Text(title) }
-                )
+        if (expandedTabs.count() != 1) {
+            SecondaryTabRow(
+                selectedTabIndex = selectedExpandedTabIndex,
+                containerColor = MaterialTheme.colorScheme.background
+            ) {
+                expandedTabs.forEachIndexed { index, title ->
+                    Tab(
+                        selected = selectedExpandedTabIndex == index,
+                        onClick = { selectedExpandedTabIndex = index },
+                        text = { Text(title) }
+                    )
+                }
             }
         }
 
@@ -521,16 +523,10 @@ private fun ExpandedView(
                 }
 
                 EXPANDED_TAB_COMMENTS -> {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = "No comments yet",
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
+                    RecipeCommentsScreen(
+                        recipeId = recipe.id,
+                        modifier = Modifier.fillMaxSize()
+                    )
                 }
 
                 else -> Unit

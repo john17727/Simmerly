@@ -34,10 +34,12 @@ import dev.juanrincon.simmerly.recipes.presentation.comments.models.CommentUi
 import dev.juanrincon.simmerly.recipes.presentation.comments.mvikotlin.RecipeCommentsStore
 import dev.juanrincon.simmerly.theme.SimmerlyTheme
 import org.koin.compose.viewmodel.koinViewModel
+import org.koin.core.parameter.parametersOf
 
 @Composable
 fun RecipeCommentsScreen(
-    viewModel: RecipeCommentsViewModel = koinViewModel(),
+    recipeId: String,
+    viewModel: RecipeCommentsViewModel = koinViewModel { parametersOf(recipeId) },
     modifier: Modifier = Modifier
 ) {
     val state by viewModel.state.collectAsState()
