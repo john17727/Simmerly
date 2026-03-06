@@ -410,7 +410,7 @@ private fun ExpandedView(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .padding(top = 16.dp, bottom = 16.dp, end = 16.dp)
+            .padding(top = 16.dp, end = 16.dp)
     ) {
         if (expandedTabs.count() != 1) {
             SecondaryTabRow(
