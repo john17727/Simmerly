@@ -18,7 +18,8 @@ interface RecipeDetailsStore : Store<Intent, State, Label> {
     data class State(
         val loading: Boolean = false,
         val recipe: RecipeDetailUi = RecipeDetailUi.emptyRecipe,
-        val tabs: List<String> = listOf(),
+        val mobileTabs: List<String> = listOf(),
+        val desktopTabs: List<String> = listOf(),
         val mode: RecipeMode = RecipeMode.READ_ONLY,
         val showSettings: Boolean = false,
     )

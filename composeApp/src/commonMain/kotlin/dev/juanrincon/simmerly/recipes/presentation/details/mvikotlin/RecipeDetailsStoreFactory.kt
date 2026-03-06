@@ -123,12 +123,17 @@ class RecipeDetailsStoreFactory(
                 is RecipeUpdated -> copy(
                     loading = false,
                     recipe = msg.recipe,
-                    tabs = buildList {
+                    mobileTabs = buildList {
                         add("Overview")
                         add("Ingredients")
                         add("Instructions")
                         if (msg.recipe.notes.isNotEmpty()) add("Notes")
                         if (msg.recipe.settings.showNutrition) add("Nutrition")
+                    },
+                    desktopTabs = buildList {
+                        add("Recipe")
+                        if (msg.recipe.notes.isNotEmpty()) add("Notes")
+                        if (!msg.recipe.settings.disableComments) add("Comments")
                     }
                 )
                 is Msg.Loading -> copy(loading = true)

@@ -1,9 +1,9 @@
 package dev.juanrincon.simmerly.recipes.presentation.details
 
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -31,6 +31,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SecondaryScrollableTabRow
+import androidx.compose.material3.SecondaryTabRow
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
@@ -42,6 +43,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -168,7 +170,7 @@ private fun CompactView(
     modifier: Modifier = Modifier
 ) {
     val recipe = state.recipe
-    val tabs = state.tabs
+    val tabs = state.mobileTabs
     val listState = rememberLazyListState()
     val coroutineScope = rememberCoroutineScope()
     val density = LocalDensity.current
@@ -381,83 +383,158 @@ private fun ExpandedView(
     onEvent: (RecipeDetailsStore.Intent) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Row(
-        modifier = modifier.fillMaxSize().padding(top = 16.dp, bottom = 16.dp, end = 16.dp),
-        horizontalArrangement = Arrangement.spacedBy(EXPANDED_CARD_PADDING)
-    ) {
-        Column(
-            modifier = Modifier
-                .widthIn(200.dp, 300.dp)
-                .fillMaxHeight()
-                .verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            IngredientAndToolView(
-                recipe = state.recipe,
-                onRemoveServingButtonClick = { onEvent(RecipeDetailsStore.Intent.RemoveServing) },
-                onAddServingButtonClick = { onEvent(RecipeDetailsStore.Intent.AddServing) },
-                modifier = Modifier.background(
-                    color = MaterialTheme.colorScheme.surface,
-                    shape = MaterialTheme.shapes.medium
-                )
-                    .ifTrue(state.loading) {
-                        height(600.dp).shimmer(
-                            colors = listOf(
-                                MaterialTheme.colorScheme.surfaceContainer,
-                                MaterialTheme.colorScheme.surfaceContainerHighest,
-                                MaterialTheme.colorScheme.surfaceContainer,
-                            ),
-                            shape = MaterialTheme.shapes.medium
-                        )
-                    }
-            )
-            AnimatedVisibility(state.recipe.settings.showNutrition) {
-                NutritionView(
-                    state.recipe.nutrition, modifier = Modifier.background(
-                        color = MaterialTheme.colorScheme.surface,
-                        shape = MaterialTheme.shapes.medium
-                    ).wrapContentHeight(unbounded = true) // allow shrinking to content height
-                        .padding(top = 32.dp, bottom = 16.dp, start = 16.dp, end = 16.dp)
-                )
-            }
-            Spacer(modifier = Modifier.height(16.dp))
+    val recipe = state.recipe
+    val expandedTabs = state.desktopTabs
+
+    var selectedExpandedTabIndex by remember { mutableIntStateOf(0) }
+
+    // Reset to first tab if the currently selected tab disappears (e.g., nutrition disabled)
+    LaunchedEffect(expandedTabs) {
+        if (selectedExpandedTabIndex >= expandedTabs.size) {
+            selectedExpandedTabIndex = 0
         }
-        Column(
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxHeight()
-                .verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+    }
+
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .padding(top = 16.dp, bottom = 16.dp, end = 16.dp)
+    ) {
+        SecondaryTabRow(
+            selectedTabIndex = selectedExpandedTabIndex,
+            containerColor = MaterialTheme.colorScheme.background
         ) {
-            InstructionView(
-                instructions = state.recipe.instructions,
-                modifier = Modifier.background(
-                    color = MaterialTheme.colorScheme.surface,
-                    shape = MaterialTheme.shapes.medium
-                )
-                    .ifTrue(state.loading) {
-                        height(800.dp).shimmer(
-                            colors = listOf(
-                                MaterialTheme.colorScheme.surfaceContainer,
-                                MaterialTheme.colorScheme.surfaceContainerHighest,
-                                MaterialTheme.colorScheme.surfaceContainer,
-                            ),
-                            shape = MaterialTheme.shapes.medium
-                        )
-                    }
-            )
-            if (state.recipe.notes.isNotEmpty()) {
-                NotesView(
-                    state.recipe.notes,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(
-                            color = MaterialTheme.colorScheme.surface,
-                            shape = MaterialTheme.shapes.medium
-                        )
+            expandedTabs.forEachIndexed { index, title ->
+                Tab(
+                    selected = selectedExpandedTabIndex == index,
+                    onClick = { selectedExpandedTabIndex = index },
+                    text = { Text(title) }
                 )
             }
-            Spacer(modifier = Modifier.height(16.dp))
+        }
+
+        AnimatedContent(
+            targetState = selectedExpandedTabIndex,
+            modifier = Modifier.weight(1f)
+        ) { tabIndex ->
+            when (expandedTabs.getOrNull(tabIndex)) {
+                EXPANDED_TAB_RECIPE -> {
+                    // Two-column layout: ingredients (left) + instructions (right)
+                    Row(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(top = 16.dp),
+                        horizontalArrangement = Arrangement.spacedBy(EXPANDED_CARD_PADDING)
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .widthIn(200.dp, 300.dp)
+                                .fillMaxHeight()
+                                .verticalScroll(rememberScrollState()),
+                            verticalArrangement = Arrangement.spacedBy(16.dp)
+                        ) {
+                            IngredientAndToolView(
+                                recipe = recipe,
+                                onRemoveServingButtonClick = { onEvent(RecipeDetailsStore.Intent.RemoveServing) },
+                                onAddServingButtonClick = { onEvent(RecipeDetailsStore.Intent.AddServing) },
+                                modifier = Modifier.background(
+                                    color = MaterialTheme.colorScheme.surface,
+                                    shape = MaterialTheme.shapes.medium
+                                ).ifTrue(state.loading) {
+                                    height(600.dp).shimmer(
+                                        colors = listOf(
+                                            MaterialTheme.colorScheme.surfaceContainer,
+                                            MaterialTheme.colorScheme.surfaceContainerHighest,
+                                            MaterialTheme.colorScheme.surfaceContainer,
+                                        ),
+                                        shape = MaterialTheme.shapes.medium
+                                    )
+                                }
+                            )
+                            if (recipe.settings.showNutrition) {
+                                NutritionView(
+                                    recipe.nutrition,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .background(
+                                            color = MaterialTheme.colorScheme.surface,
+                                            shape = MaterialTheme.shapes.medium
+                                        )
+                                        .wrapContentHeight(unbounded = true)
+                                        .padding(
+                                            top = 32.dp,
+                                            bottom = 16.dp,
+                                            start = 16.dp,
+                                            end = 16.dp
+                                        )
+                                )
+                            }
+                            Spacer(modifier = Modifier.height(16.dp))
+                        }
+                        Column(
+                            modifier = Modifier
+                                .weight(1f)
+                                .fillMaxHeight()
+                                .verticalScroll(rememberScrollState()),
+                            verticalArrangement = Arrangement.spacedBy(16.dp)
+                        ) {
+                            InstructionView(
+                                instructions = recipe.instructions,
+                                modifier = Modifier.background(
+                                    color = MaterialTheme.colorScheme.surface,
+                                    shape = MaterialTheme.shapes.medium
+                                ).ifTrue(state.loading) {
+                                    height(800.dp).shimmer(
+                                        colors = listOf(
+                                            MaterialTheme.colorScheme.surfaceContainer,
+                                            MaterialTheme.colorScheme.surfaceContainerHighest,
+                                            MaterialTheme.colorScheme.surfaceContainer,
+                                        ),
+                                        shape = MaterialTheme.shapes.medium
+                                    )
+                                }
+                            )
+                            Spacer(modifier = Modifier.height(16.dp))
+                        }
+                    }
+                }
+
+                EXPANDED_TAB_NOTES -> {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(top = 16.dp)
+                            .verticalScroll(rememberScrollState()),
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        NotesView(
+                            recipe.notes,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .background(
+                                    color = MaterialTheme.colorScheme.surface,
+                                    shape = MaterialTheme.shapes.medium
+                                )
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                    }
+                }
+
+                EXPANDED_TAB_COMMENTS -> {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "No comments yet",
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+
+                else -> Unit
+            }
         }
     }
 }
@@ -712,6 +789,10 @@ private fun SettingsView(settings: Settings, modifier: Modifier = Modifier) {
 
 val EXPANDED_CARD_PADDING = 16.dp
 val SETTINGS_OPTION_SPACING = 16.dp
+
+private const val EXPANDED_TAB_RECIPE = "Recipe"
+private const val EXPANDED_TAB_NOTES = "Notes"
+private const val EXPANDED_TAB_COMMENTS = "Comments"
 
 // Lazy list layout: image(0), meta(1), stickyHeader(2), content sections start at 3
 private const val CONTENT_START_INDEX = 3
