@@ -193,7 +193,9 @@ fun RecipeCard(
                     .bringIntoViewRequester(bringIntoViewRequester),
             ) {
                 AsyncImage(
-                    model = recipe.image,
+                    model = ImageRequest.Builder(LocalPlatformContext.current)
+                        .data(recipe.image)
+                        .build(),
                     contentDescription = null,
                     contentScale = ContentScale.Crop,
                     modifier = Modifier
