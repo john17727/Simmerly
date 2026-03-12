@@ -1,6 +1,7 @@
 package dev.juanrincon.simmerly.recipes.presentation.details
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -28,6 +29,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MediumTopAppBar
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SecondaryScrollableTabRow
@@ -35,7 +37,7 @@ import androidx.compose.material3.SecondaryTabRow
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.runtime.Composable
@@ -51,9 +53,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.window.core.layout.WindowSizeClass
@@ -129,10 +133,20 @@ private fun Content(
                             modifier = modifier
                         )
                     } else {
+                        val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
                         Scaffold(
+                            modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
                             topBar = {
-                                TopAppBar(
-                                    title = { Text(state.recipe.title) },
+                                MediumTopAppBar(
+                                    title = {
+                                        val isCollapsed =
+                                            scrollBehavior.state.collapsedFraction > 0.5f
+                                        Text(
+                                            text = state.recipe.title,
+                                            maxLines = if (isCollapsed) 1 else Int.MAX_VALUE,
+                                            overflow = TextOverflow.Ellipsis
+                                        )
+                                    },
                                     navigationIcon = {
                                         IconButton(onClick = onNavigateBack) {
                                             Icon(
@@ -158,7 +172,8 @@ private fun Content(
                                         }
                                     },
                                     colors = TopAppBarDefaults.topAppBarColors()
-                                        .copy(containerColor = MaterialTheme.colorScheme.background)
+                                        .copy(containerColor = MaterialTheme.colorScheme.background),
+                                    scrollBehavior = scrollBehavior
                                 )
                             },
                         ) { paddingValues ->
@@ -223,7 +238,7 @@ private fun CompactView(
     LazyColumn(
         state = listState,
         modifier = modifier,
-        contentPadding = PaddingValues(horizontal = 16.dp)
+        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
     ) {
 
         // Hero image
@@ -259,12 +274,32 @@ private fun CompactView(
                     recipe.performTime
                 )
                 Spacer(modifier = Modifier.height(16.dp))
+                // State declared outside the `if` to satisfy Compose's rules-of-hooks
+                var descriptionExpanded by remember { mutableStateOf(false) }
+                var descriptionOverflowing by remember { mutableStateOf(false) }
                 if (recipe.description.isNotBlank()) {
-                    Text(
-                        recipe.description,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSecondaryContainer
-                    )
+                    Column(modifier = Modifier.animateContentSize()) {
+                        Text(
+                            recipe.description,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSecondaryContainer,
+                            maxLines = if (descriptionExpanded) Int.MAX_VALUE else DESCRIPTION_MAX_LINES,
+                            overflow = TextOverflow.Ellipsis,
+                            onTextLayout = { layoutResult ->
+                                if (!descriptionExpanded) {
+                                    descriptionOverflowing = layoutResult.hasVisualOverflow
+                                }
+                            }
+                        )
+                        if (descriptionOverflowing || descriptionExpanded) {
+                            TextButton(
+                                onClick = { descriptionExpanded = !descriptionExpanded },
+                                modifier = Modifier.align(Alignment.End)
+                            ) {
+                                Text(if (descriptionExpanded) "Show less" else "Read more")
+                            }
+                        }
+                    }
                     Spacer(modifier = Modifier.height(16.dp))
                 }
             }
@@ -814,6 +849,9 @@ private const val OVERVIEW_TAB_INDEX = 0
 
 // Approximate height of the sticky tab row — used to trigger tab switches and align scroll targets
 private val TAB_ROW_HEIGHT = 48.dp
+
+// Max collapsed lines for the recipe description before a "Read more" button appears
+private const val DESCRIPTION_MAX_LINES = 4
 
 
 @Preview

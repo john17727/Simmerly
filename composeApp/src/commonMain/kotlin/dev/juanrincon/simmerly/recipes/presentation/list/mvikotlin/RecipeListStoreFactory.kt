@@ -69,7 +69,7 @@ class RecipeListStoreFactory(
         }
 
         override fun executeAction(action: Action) = when (action) {
-            Action.LoadRecipes -> fetchAndObserve(1)
+            Action.LoadRecipes -> fetchAndObserve(1, refresh = true)
         }
 
         private fun fetchAndObserve(page: Int, refresh: Boolean = false) {
