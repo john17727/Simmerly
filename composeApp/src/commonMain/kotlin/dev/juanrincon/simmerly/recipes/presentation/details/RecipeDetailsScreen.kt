@@ -2,7 +2,6 @@ package dev.juanrincon.simmerly.recipes.presentation.details
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.animateContentSize
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -25,15 +24,16 @@ import androidx.compose.material.icons.automirrored.filled.Comment
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MediumTopAppBar
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.PrimaryScrollableTabRow
+import androidx.compose.material3.PrimaryTabRow
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SecondaryScrollableTabRow
-import androidx.compose.material3.SecondaryTabRow
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
@@ -110,11 +110,12 @@ private fun Content(
 ) {
     if (state.showSettings) {
         ModalBottomSheet(
+            dragHandle = null,
             onDismissRequest = {
                 onEvent(RecipeDetailsStore.Intent.DismissSettings)
             },
         ) {
-            SettingsView(state.recipe.settings)
+            SettingsView(state.recipe.settings, modifier = Modifier.padding(vertical = 16.dp))
         }
     }
 
@@ -238,7 +239,7 @@ private fun CompactView(
     LazyColumn(
         state = listState,
         modifier = modifier,
-        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
+        contentPadding = PaddingValues(vertical = 8.dp)
     ) {
 
         // Hero image
@@ -249,7 +250,7 @@ private fun CompactView(
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .fillParentMaxHeight(0.33f)
+                    .fillParentMaxHeight(0.33f).padding(horizontal = 16.dp)
                     .ifTrue(state.loading) {
                         height(100.dp).shimmer(
                             colors = listOf(
@@ -265,7 +266,7 @@ private fun CompactView(
 
         // Description + meta
         item {
-            Column(modifier = Modifier.padding(horizontal = 8.dp)) {
+            Column(modifier = Modifier.padding(horizontal = 24.dp)) {
                 Spacer(modifier = Modifier.height(16.dp))
                 RecipeMetaRow(
                     recipe.rating,
@@ -308,8 +309,7 @@ private fun CompactView(
         // Sticky tab row
         if (tabs.isNotEmpty()) {
             stickyHeader {
-                SecondaryScrollableTabRow(
-                    containerColor = MaterialTheme.colorScheme.background,
+                PrimaryScrollableTabRow(
                     selectedTabIndex = selectedTabIndex,
                     modifier = Modifier.fillMaxWidth()
                 ) {
@@ -342,17 +342,11 @@ private fun CompactView(
 
         // Ingredients & Tools (always shown, index 3)
         item {
-            IngredientAndToolView(
-                recipe = recipe,
-                onRemoveServingButtonClick = { onEvent(RecipeDetailsStore.Intent.RemoveServing) },
-                onAddServingButtonClick = { onEvent(RecipeDetailsStore.Intent.AddServing) },
+            Card(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(vertical = 8.dp)
-                    .background(
-                        color = MaterialTheme.colorScheme.surface,
-                        shape = MaterialTheme.shapes.medium
-                    )
+                    .padding(horizontal = 16.dp)
                     .ifTrue(state.loading) {
                         height(400.dp).shimmer(
                             colors = listOf(
@@ -363,20 +357,23 @@ private fun CompactView(
                             shape = MaterialTheme.shapes.medium
                         )
                     }
-            )
+            ) {
+                IngredientAndToolView(
+                    recipe = recipe,
+                    onRemoveServingButtonClick = { onEvent(RecipeDetailsStore.Intent.RemoveServing) },
+                    onAddServingButtonClick = { onEvent(RecipeDetailsStore.Intent.AddServing) },
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
         }
 
         // Instructions (always shown, index 4)
         item {
-            InstructionView(
-                instructions = recipe.instructions,
+            Card(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(vertical = 8.dp)
-                    .background(
-                        color = MaterialTheme.colorScheme.surface,
-                        shape = MaterialTheme.shapes.medium
-                    )
+                    .padding(horizontal = 16.dp)
                     .ifTrue(state.loading) {
                         height(600.dp).shimmer(
                             colors = listOf(
@@ -387,40 +384,48 @@ private fun CompactView(
                             shape = MaterialTheme.shapes.medium
                         )
                     }
-            )
+            ) {
+                InstructionView(
+                    instructions = recipe.instructions,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
         }
 
         // Notes (conditional)
         if (recipe.notes.isNotEmpty()) {
             item {
-                NotesView(
-                    recipe.notes,
+                Card(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(vertical = 8.dp)
-                        .background(
-                            color = MaterialTheme.colorScheme.surface,
-                            shape = MaterialTheme.shapes.medium
-                        )
-                )
+                        .padding(horizontal = 16.dp)
+                ) {
+                    NotesView(
+                        recipe.notes,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
             }
         }
 
         // Nutrition (conditional)
         if (recipe.settings.showNutrition) {
             item {
-                NutritionView(
-                    recipe.nutrition,
+                Card(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(vertical = 8.dp)
-                        .background(
-                            color = MaterialTheme.colorScheme.surface,
-                            shape = MaterialTheme.shapes.medium
-                        )
-                        .wrapContentHeight(unbounded = true)
-                        .padding(top = 32.dp, bottom = 16.dp, start = 16.dp, end = 16.dp)
-                )
+                        .padding(horizontal = 16.dp)
+                ) {
+                    NutritionView(
+                        recipe.nutrition,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .wrapContentHeight(unbounded = true)
+                            .padding(top = 32.dp, bottom = 16.dp, start = 16.dp, end = 16.dp)
+                    )
+                }
             }
         }
     }
@@ -450,9 +455,8 @@ private fun ExpandedView(
             .padding(top = 16.dp, end = 16.dp)
     ) {
         if (expandedTabs.count() != 1) {
-            SecondaryTabRow(
+            PrimaryTabRow(
                 selectedTabIndex = selectedExpandedTabIndex,
-                containerColor = MaterialTheme.colorScheme.background
             ) {
                 expandedTabs.forEachIndexed { index, title ->
                     Tab(
@@ -484,41 +488,42 @@ private fun ExpandedView(
                                 .verticalScroll(rememberScrollState()),
                             verticalArrangement = Arrangement.spacedBy(16.dp)
                         ) {
-                            IngredientAndToolView(
-                                recipe = recipe,
-                                onRemoveServingButtonClick = { onEvent(RecipeDetailsStore.Intent.RemoveServing) },
-                                onAddServingButtonClick = { onEvent(RecipeDetailsStore.Intent.AddServing) },
-                                modifier = Modifier.background(
-                                    color = MaterialTheme.colorScheme.surface,
-                                    shape = MaterialTheme.shapes.medium
-                                ).ifTrue(state.loading) {
-                                    height(600.dp).shimmer(
-                                        colors = listOf(
-                                            MaterialTheme.colorScheme.surfaceContainer,
-                                            MaterialTheme.colorScheme.surfaceContainerHighest,
-                                            MaterialTheme.colorScheme.surfaceContainer,
-                                        ),
-                                        shape = MaterialTheme.shapes.medium
-                                    )
-                                }
-                            )
-                            if (recipe.settings.showNutrition) {
-                                NutritionView(
-                                    recipe.nutrition,
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .background(
-                                            color = MaterialTheme.colorScheme.surface,
+                            Card(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .ifTrue(state.loading) {
+                                        height(600.dp).shimmer(
+                                            colors = listOf(
+                                                MaterialTheme.colorScheme.surfaceContainer,
+                                                MaterialTheme.colorScheme.surfaceContainerHighest,
+                                                MaterialTheme.colorScheme.surfaceContainer,
+                                            ),
                                             shape = MaterialTheme.shapes.medium
                                         )
-                                        .wrapContentHeight(unbounded = true)
-                                        .padding(
-                                            top = 32.dp,
-                                            bottom = 16.dp,
-                                            start = 16.dp,
-                                            end = 16.dp
-                                        )
+                                    }
+                            ) {
+                                IngredientAndToolView(
+                                    recipe = recipe,
+                                    onRemoveServingButtonClick = { onEvent(RecipeDetailsStore.Intent.RemoveServing) },
+                                    onAddServingButtonClick = { onEvent(RecipeDetailsStore.Intent.AddServing) },
+                                    modifier = Modifier.fillMaxWidth()
                                 )
+                            }
+                            if (recipe.settings.showNutrition) {
+                                Card(modifier = Modifier.fillMaxWidth()) {
+                                    NutritionView(
+                                        recipe.nutrition,
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .wrapContentHeight(unbounded = true)
+                                            .padding(
+                                                top = 32.dp,
+                                                bottom = 16.dp,
+                                                start = 16.dp,
+                                                end = 16.dp
+                                            )
+                                    )
+                                }
                             }
                             Spacer(modifier = Modifier.height(16.dp))
                         }
@@ -529,22 +534,25 @@ private fun ExpandedView(
                                 .verticalScroll(rememberScrollState()),
                             verticalArrangement = Arrangement.spacedBy(16.dp)
                         ) {
-                            InstructionView(
-                                instructions = recipe.instructions,
-                                modifier = Modifier.background(
-                                    color = MaterialTheme.colorScheme.surface,
-                                    shape = MaterialTheme.shapes.medium
-                                ).ifTrue(state.loading) {
-                                    height(800.dp).shimmer(
-                                        colors = listOf(
-                                            MaterialTheme.colorScheme.surfaceContainer,
-                                            MaterialTheme.colorScheme.surfaceContainerHighest,
-                                            MaterialTheme.colorScheme.surfaceContainer,
-                                        ),
-                                        shape = MaterialTheme.shapes.medium
-                                    )
-                                }
-                            )
+                            Card(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .ifTrue(state.loading) {
+                                        height(800.dp).shimmer(
+                                            colors = listOf(
+                                                MaterialTheme.colorScheme.surfaceContainer,
+                                                MaterialTheme.colorScheme.surfaceContainerHighest,
+                                                MaterialTheme.colorScheme.surfaceContainer,
+                                            ),
+                                            shape = MaterialTheme.shapes.medium
+                                        )
+                                    }
+                            ) {
+                                InstructionView(
+                                    instructions = recipe.instructions,
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                            }
                             Spacer(modifier = Modifier.height(16.dp))
                         }
                     }
@@ -560,12 +568,7 @@ private fun ExpandedView(
                     ) {
                         NotesView(
                             recipe.notes,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .background(
-                                    color = MaterialTheme.colorScheme.surface,
-                                    shape = MaterialTheme.shapes.medium
-                                )
+                            modifier = Modifier.fillMaxWidth()
                         )
                         Spacer(modifier = Modifier.height(16.dp))
                     }
