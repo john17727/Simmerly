@@ -6,13 +6,16 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
@@ -52,6 +55,7 @@ import coil3.compose.AsyncImage
 import coil3.compose.LocalPlatformContext
 import coil3.request.ImageRequest
 import dev.juanrincon.simmerly.core.presentation.ifTrue
+import dev.juanrincon.simmerly.core.presentation.shimmer
 import dev.juanrincon.simmerly.recipes.domain.model.RecipeSummary
 import dev.juanrincon.simmerly.recipes.presentation.list.mvikotlin.RecipeListStore
 import dev.juanrincon.simmerly.recipes.presentation.shared.RecipeMetaRow
@@ -99,6 +103,7 @@ private fun Content(
     if (windowSizeClass.isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_EXPANDED_LOWER_BOUND)) {
         SelectableList(
             state.recipes,
+            isLoading = state.isLoading,
             selected = state.selectedRecipeId,
             onRecipeSelected = onRecipeSelected,
             onSelected = { onEvent(RecipeListStore.Intent.OnRecipeSelected(it)) },
@@ -120,8 +125,9 @@ private fun Content(
         ) { paddingValues ->
             List(
                 state.recipes,
-                onRecipeSelected,
-                lazyListState,
+                isLoading = state.isLoading,
+                onRecipeSelected = onRecipeSelected,
+                lazyListState = lazyListState,
                 modifier = modifier.padding(paddingValues)
             )
         }
@@ -131,6 +137,7 @@ private fun Content(
 @Composable
 fun SelectableList(
     recipes: List<RecipeSummary>,
+    isLoading: Boolean,
     selected: String,
     onRecipeSelected: (String) -> Unit,
     onSelected: (String) -> Unit,
@@ -143,21 +150,32 @@ fun SelectableList(
         verticalArrangement = Arrangement.spacedBy(8.dp),
         modifier = modifier.clip(shape = MaterialTheme.shapes.medium)
     ) {
-        items(recipes, key = { it.id }) { item ->
-            val isSelected = item.id == selected
-            RecipeCard(
-                item,
-                selected = isSelected,
-                onClick = {
-                    onRecipeSelected(item.id)
-                    onSelected(item.id)
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .animateItem().ifTrue(isSelected) {
-                        padding(vertical = 32.dp)
-                    }
-            )
+        if (isLoading && recipes.isEmpty()) {
+            items(6) {
+                RecipeCardSkeleton(modifier = Modifier.fillMaxWidth())
+            }
+        } else {
+            items(recipes, key = { it.id }) { item ->
+                val isSelected = item.id == selected
+                RecipeCard(
+                    item,
+                    selected = isSelected,
+                    onClick = {
+                        onRecipeSelected(item.id)
+                        onSelected(item.id)
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .animateItem().ifTrue(isSelected) {
+                            padding(vertical = 32.dp)
+                        }
+                )
+            }
+            if (isLoading) {
+                item {
+                    RecipeCardSkeleton(modifier = Modifier.fillMaxWidth())
+                }
+            }
         }
     }
 }
@@ -165,6 +183,7 @@ fun SelectableList(
 @Composable
 fun List(
     recipes: List<RecipeSummary>,
+    isLoading: Boolean,
     onRecipeSelected: (String) -> Unit,
     lazyListState: LazyListState,
     modifier: Modifier = Modifier
@@ -175,12 +194,23 @@ fun List(
         verticalArrangement = Arrangement.spacedBy(8.dp),
         modifier = modifier.clip(shape = MaterialTheme.shapes.medium)
     ) {
-        items(recipes, key = { it.id }) { item ->
-            RecipeCard(
-                item,
-                onClick = { onRecipeSelected(item.id) },
-                modifier = Modifier.fillMaxWidth().animateItem()
-            )
+        if (isLoading && recipes.isEmpty()) {
+            items(6) {
+                RecipeCardSkeleton(modifier = Modifier.fillMaxWidth())
+            }
+        } else {
+            items(recipes, key = { it.id }) { item ->
+                RecipeCard(
+                    item,
+                    onClick = { onRecipeSelected(item.id) },
+                    modifier = Modifier.fillMaxWidth().animateItem()
+                )
+            }
+            if (isLoading) {
+                item {
+                    RecipeCardSkeleton(modifier = Modifier.fillMaxWidth())
+                }
+            }
         }
     }
 }
@@ -278,6 +308,48 @@ fun RecipeCard(
                         )
                     }
                 }
+            }
+        }
+    }
+}
+
+@Composable
+private fun RecipeCardSkeleton(modifier: Modifier = Modifier) {
+    val shimmerColors = listOf(
+        MaterialTheme.colorScheme.surfaceContainer,
+        MaterialTheme.colorScheme.surfaceContainerHighest,
+        MaterialTheme.colorScheme.surfaceContainer,
+    )
+    Card(modifier = modifier) {
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.padding(8.dp)
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(100.dp)
+                    .clip(MaterialTheme.shapes.medium)
+                    .shimmer(shimmerColors, shape = MaterialTheme.shapes.medium)
+            )
+            Column(
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+                modifier = Modifier.weight(1f)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(18.dp)
+                        .clip(MaterialTheme.shapes.small)
+                        .shimmer(shimmerColors, shape = MaterialTheme.shapes.small)
+                )
+                Box(
+                    modifier = Modifier
+                        .width(80.dp)
+                        .height(14.dp)
+                        .clip(MaterialTheme.shapes.small)
+                        .shimmer(shimmerColors, shape = MaterialTheme.shapes.small)
+                )
             }
         }
     }

@@ -3,6 +3,7 @@ package dev.juanrincon.simmerly.recipes.presentation.details
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -12,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
@@ -140,13 +142,31 @@ private fun Content(
                             topBar = {
                                 MediumTopAppBar(
                                     title = {
-                                        val isCollapsed =
-                                            scrollBehavior.state.collapsedFraction > 0.5f
-                                        Text(
-                                            text = state.recipe.title,
-                                            maxLines = if (isCollapsed) 1 else Int.MAX_VALUE,
-                                            overflow = TextOverflow.Ellipsis
-                                        )
+                                        if (state.loading) {
+                                            val shimmerColors = listOf(
+                                                MaterialTheme.colorScheme.surfaceContainer,
+                                                MaterialTheme.colorScheme.surfaceContainerHighest,
+                                                MaterialTheme.colorScheme.surfaceContainer,
+                                            )
+                                            Box(
+                                                modifier = Modifier
+                                                    .width(160.dp)
+                                                    .height(20.dp)
+                                                    .clip(MaterialTheme.shapes.small)
+                                                    .shimmer(
+                                                        shimmerColors,
+                                                        MaterialTheme.shapes.small
+                                                    )
+                                            )
+                                        } else {
+                                            val isCollapsed =
+                                                scrollBehavior.state.collapsedFraction > 0.5f
+                                            Text(
+                                                text = state.recipe.title,
+                                                maxLines = if (isCollapsed) 1 else Int.MAX_VALUE,
+                                                overflow = TextOverflow.Ellipsis
+                                            )
+                                        }
                                     },
                                     navigationIcon = {
                                         IconButton(onClick = onNavigateBack) {
@@ -266,42 +286,93 @@ private fun CompactView(
 
         // Description + meta
         item {
+            val shimmerColors = listOf(
+                MaterialTheme.colorScheme.surfaceContainer,
+                MaterialTheme.colorScheme.surfaceContainerHighest,
+                MaterialTheme.colorScheme.surfaceContainer,
+            )
+            // State declared outside any conditional to satisfy Compose's rules-of-hooks
+            var descriptionExpanded by remember { mutableStateOf(false) }
+            var descriptionOverflowing by remember { mutableStateOf(false) }
             Column(modifier = Modifier.padding(horizontal = 24.dp)) {
                 Spacer(modifier = Modifier.height(16.dp))
-                RecipeMetaRow(
-                    recipe.rating,
-                    recipe.totalTime,
-                    recipe.prepTime,
-                    recipe.performTime
-                )
-                Spacer(modifier = Modifier.height(16.dp))
-                // State declared outside the `if` to satisfy Compose's rules-of-hooks
-                var descriptionExpanded by remember { mutableStateOf(false) }
-                var descriptionOverflowing by remember { mutableStateOf(false) }
-                if (recipe.description.isNotBlank()) {
-                    Column(modifier = Modifier.animateContentSize()) {
-                        Text(
-                            recipe.description,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSecondaryContainer,
-                            maxLines = if (descriptionExpanded) Int.MAX_VALUE else DESCRIPTION_MAX_LINES,
-                            overflow = TextOverflow.Ellipsis,
-                            onTextLayout = { layoutResult ->
-                                if (!descriptionExpanded) {
-                                    descriptionOverflowing = layoutResult.hasVisualOverflow
-                                }
-                            }
+                if (state.loading) {
+                    // Meta row skeleton — three shimmer pills mimicking icon+text chips
+                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        Box(
+                            modifier = Modifier.width(64.dp).height(16.dp)
+                                .clip(MaterialTheme.shapes.small)
+                                .shimmer(shimmerColors, MaterialTheme.shapes.small)
                         )
-                        if (descriptionOverflowing || descriptionExpanded) {
-                            TextButton(
-                                onClick = { descriptionExpanded = !descriptionExpanded },
-                                modifier = Modifier.align(Alignment.End)
-                            ) {
-                                Text(if (descriptionExpanded) "Show less" else "Read more")
-                            }
-                        }
+                        Box(
+                            modifier = Modifier.width(80.dp).height(16.dp)
+                                .clip(MaterialTheme.shapes.small)
+                                .shimmer(shimmerColors, MaterialTheme.shapes.small)
+                        )
+                        Box(
+                            modifier = Modifier.width(72.dp).height(16.dp)
+                                .clip(MaterialTheme.shapes.small)
+                                .shimmer(shimmerColors, MaterialTheme.shapes.small)
+                        )
                     }
                     Spacer(modifier = Modifier.height(16.dp))
+                    // Description skeleton — four lines at decreasing widths
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Box(
+                            modifier = Modifier.fillMaxWidth().height(14.dp)
+                                .clip(MaterialTheme.shapes.small)
+                                .shimmer(shimmerColors, MaterialTheme.shapes.small)
+                        )
+                        Box(
+                            modifier = Modifier.fillMaxWidth().height(14.dp)
+                                .clip(MaterialTheme.shapes.small)
+                                .shimmer(shimmerColors, MaterialTheme.shapes.small)
+                        )
+                        Box(
+                            modifier = Modifier.fillMaxWidth(0.9f).height(14.dp)
+                                .clip(MaterialTheme.shapes.small)
+                                .shimmer(shimmerColors, MaterialTheme.shapes.small)
+                        )
+                        Box(
+                            modifier = Modifier.fillMaxWidth(0.55f).height(14.dp)
+                                .clip(MaterialTheme.shapes.small)
+                                .shimmer(shimmerColors, MaterialTheme.shapes.small)
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(16.dp))
+                } else {
+                    RecipeMetaRow(
+                        recipe.rating,
+                        recipe.totalTime,
+                        recipe.prepTime,
+                        recipe.performTime
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    if (recipe.description.isNotBlank()) {
+                        Column(modifier = Modifier.animateContentSize()) {
+                            Text(
+                                recipe.description,
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSecondaryContainer,
+                                maxLines = if (descriptionExpanded) Int.MAX_VALUE else DESCRIPTION_MAX_LINES,
+                                overflow = TextOverflow.Ellipsis,
+                                onTextLayout = { layoutResult ->
+                                    if (!descriptionExpanded) {
+                                        descriptionOverflowing = layoutResult.hasVisualOverflow
+                                    }
+                                }
+                            )
+                            if (descriptionOverflowing || descriptionExpanded) {
+                                TextButton(
+                                    onClick = { descriptionExpanded = !descriptionExpanded },
+                                    modifier = Modifier.align(Alignment.End)
+                                ) {
+                                    Text(if (descriptionExpanded) "Show less" else "Read more")
+                                }
+                            }
+                        }
+                        Spacer(modifier = Modifier.height(16.dp))
+                    }
                 }
             }
         }
