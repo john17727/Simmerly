@@ -8,12 +8,14 @@ import androidx.compose.runtime.Composable
 @Composable
 fun SimmerlyTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
+    dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
-    val colorScheme = if (darkTheme) {
-        SimmerlyDarkColorScheme
+    val colorScheme = if (dynamicColor) {
+        rememberDynamicColorScheme(darkTheme)
+            ?: if (darkTheme) SimmerlyDarkColorScheme else SimmerlyLightColorScheme
     } else {
-        SimmerlyLightColorScheme
+        if (darkTheme) SimmerlyDarkColorScheme else SimmerlyLightColorScheme
     }
 
     MaterialTheme(

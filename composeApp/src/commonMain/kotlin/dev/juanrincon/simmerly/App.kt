@@ -23,7 +23,7 @@ import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
 fun App() {
-    SimmerlyTheme {
+    SimmerlyTheme(dynamicColor = true) {
         SimmerlyApp(modifier = Modifier.fillMaxSize())
     }
 }
