@@ -57,7 +57,7 @@ fun RecipesContent(modifier: Modifier = Modifier) {
 
     NavDisplay(
         backStack = backStack,
-        sceneStrategy = rememberListDetailSceneStrategy(),
+        sceneStrategies = listOf(rememberListDetailSceneStrategy()),
         modifier = modifier.fillMaxSize(),
         entryDecorators = listOf(
             rememberSaveableStateHolderNavEntryDecorator(),

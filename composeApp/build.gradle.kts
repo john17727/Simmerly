@@ -9,11 +9,11 @@ plugins {
     alias(libs.plugins.kotlinSerialization)
     alias(libs.plugins.room)
     alias(libs.plugins.ksp)
-    alias(libs.plugins.stability.analyzer)
+//    alias(libs.plugins.stability.analyzer)
 }
 
 kotlin {
-    androidLibrary {
+    android {
         namespace = "dev.juanrincon.simmerly.composeApp"
         compileSdk = libs.versions.android.compileSdk.get().toInt()
         experimentalProperties["android.experimental.kmp.enableAndroidResources"] = true // Needed for android resource, check later if still needed.

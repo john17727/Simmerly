@@ -3,7 +3,7 @@ plugins {
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
     alias(libs.plugins.ksp)
-    alias(libs.plugins.stability.analyzer)
+//    alias(libs.plugins.stability.analyzer)
 }
 
 android {
