@@ -17,6 +17,7 @@ import dev.juanrincon.simmerly.recipes.data.local.recipe.model.CommentWithRelati
 import dev.juanrincon.simmerly.recipes.data.local.recipe.model.IngredientWithRelations
 import dev.juanrincon.simmerly.recipes.data.local.recipe.model.InstructionWithRelations
 import dev.juanrincon.simmerly.recipes.data.local.recipe.model.RecipeDetailWithRelations
+import dev.juanrincon.simmerly.recipes.data.remote.dto.SettingsDto
 import dev.juanrincon.simmerly.recipes.domain.model.Category
 import dev.juanrincon.simmerly.recipes.domain.model.Comment
 import dev.juanrincon.simmerly.recipes.domain.model.Food
@@ -347,6 +348,16 @@ fun User.toEntity(): UserEntity = UserEntity(
     admin = admin,
     fullName = fullName
 )
+
+fun Settings.toDto(): SettingsDto = SettingsDto(
+    public = public,
+    showNutrition = showNutrition,
+    showAssets = showAssets,
+    landscapeView = landscapeView,
+    disableComments = disableComments,
+    locked = locked
+)
+
 
 private fun createRecipeImageUrl(host: String?, id: String): String {
     if (host == null) return ""

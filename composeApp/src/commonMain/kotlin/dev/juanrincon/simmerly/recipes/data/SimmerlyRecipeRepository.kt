@@ -9,10 +9,12 @@ import dev.juanrincon.simmerly.auth.domain.SessionDataStore
 import dev.juanrincon.simmerly.core.data.local.SimmerlyDatabase
 import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.junction.RecipeToolCrossRef
 import dev.juanrincon.simmerly.recipes.data.mappers.toDomain
+import dev.juanrincon.simmerly.recipes.data.mappers.toDto
 import dev.juanrincon.simmerly.recipes.data.mappers.toEntity
 import dev.juanrincon.simmerly.recipes.data.mappers.toEntityWithRelations
 import dev.juanrincon.simmerly.recipes.data.mappers.toPaginationData
 import dev.juanrincon.simmerly.recipes.data.remote.RecipeNetworkClient
+import dev.juanrincon.simmerly.recipes.data.remote.dto.outgoing.RecipePatchDto
 import dev.juanrincon.simmerly.recipes.domain.LoadingResult
 import dev.juanrincon.simmerly.recipes.domain.RecipeListResult
 import dev.juanrincon.simmerly.recipes.domain.RecipeRepository
@@ -20,6 +22,7 @@ import dev.juanrincon.simmerly.recipes.domain.RecipesError
 import dev.juanrincon.simmerly.recipes.domain.model.Comment
 import dev.juanrincon.simmerly.recipes.domain.model.PaginationData
 import dev.juanrincon.simmerly.recipes.domain.model.RecipeDetail
+import dev.juanrincon.simmerly.recipes.domain.model.Settings
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -156,5 +159,13 @@ class SimmerlyRecipeRepository(
     ): Result<Unit, RecipesError> =
         networkClient.addComment(recipeId, text).onSuccess { comment ->
             commentDao.upsert(comment.toEntity())
+        }.mapError { RecipesError.UpdateError }.asEmptyDataResult()
+
+    override suspend fun updateSettings(
+        recipeId: String,
+        settings: Settings
+    ): Result<Unit, RecipesError> =
+        networkClient.patchRecipe(recipeId, RecipePatchDto(settings = settings.toDto())).onSuccess {
+            recipeDao.upsert(it.toEntity())
         }.mapError { RecipesError.UpdateError }.asEmptyDataResult()
 }

@@ -8,9 +8,11 @@ import dev.juanrincon.simmerly.recipes.data.remote.dto.CommentDto
 import dev.juanrincon.simmerly.recipes.data.remote.dto.RecipeDetailDto
 import dev.juanrincon.simmerly.recipes.data.remote.dto.RecipeSummaryDto
 import dev.juanrincon.simmerly.recipes.data.remote.dto.outgoing.NewCommentDto
+import dev.juanrincon.simmerly.recipes.data.remote.dto.outgoing.RecipePatchDto
 import io.ktor.client.HttpClient
 import io.ktor.client.request.get
 import io.ktor.client.request.parameter
+import io.ktor.client.request.patch
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 
@@ -31,7 +33,14 @@ class RecipeNetworkClient(private val client: HttpClient) {
         client.get("/api/recipes/$slug")
     }
 
-//    suspend fun updateRecipe()
+    suspend fun patchRecipe(
+        slug: String,
+        recipe: RecipePatchDto
+    ): Result<RecipeDetailDto, DataError.NetworkError<Unit>> = networkHandler {
+        client.patch("/api/recipes/$slug") {
+            setBody(recipe)
+        }
+    }
 
     suspend fun addComment(recipeId: String, comment: String): Result<CommentDto, DataError.NetworkError<Unit>> = networkHandler {
        client.post("/api/comments") {
