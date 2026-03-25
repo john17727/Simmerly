@@ -1,6 +1,6 @@
 package dev.juanrincon.simmerly.core.data.local
 
-import androidx.room.TypeConverter
+import androidx.room3.TypeConverter
 import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
 

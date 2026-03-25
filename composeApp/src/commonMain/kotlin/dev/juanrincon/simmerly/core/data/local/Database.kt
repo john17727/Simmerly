@@ -1,10 +1,10 @@
 package dev.juanrincon.simmerly.core.data.local
 
-import androidx.room.ConstructedBy
-import androidx.room.Database
-import androidx.room.RoomDatabase
-import androidx.room.RoomDatabaseConstructor
-import androidx.room.TypeConverters
+import androidx.room3.ConstructedBy
+import androidx.room3.Database
+import androidx.room3.RoomDatabase
+import androidx.room3.RoomDatabaseConstructor
+import androidx.room3.TypeConverters
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import dev.juanrincon.simmerly.recipes.data.local.metadata.RecipeRemoteKey
 import dev.juanrincon.simmerly.recipes.data.local.metadata.RecipeRemoteKeyDao

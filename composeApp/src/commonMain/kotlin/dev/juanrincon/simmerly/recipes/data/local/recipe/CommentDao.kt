@@ -1,9 +1,9 @@
 package dev.juanrincon.simmerly.recipes.data.local.recipe
 
-import androidx.room.Dao
-import androidx.room.Query
-import androidx.room.Transaction
-import androidx.room.Upsert
+import androidx.room3.Dao
+import androidx.room3.Query
+import androidx.room3.Transaction
+import androidx.room3.Upsert
 import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.CommentEntity
 import dev.juanrincon.simmerly.recipes.data.local.recipe.model.CommentWithRelations
 import kotlinx.coroutines.flow.Flow

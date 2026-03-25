@@ -1,7 +1,7 @@
 package dev.juanrincon.simmerly.core.local
 
-import androidx.room.Room
-import androidx.room.RoomDatabase
+import androidx.room3.Room
+import androidx.room3.RoomDatabase
 import dev.juanrincon.simmerly.core.data.local.SimmerlyDatabase
 import java.io.File
 

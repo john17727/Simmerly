@@ -1,7 +1,7 @@
 package dev.juanrincon.simmerly.recipes.data.local.recipe.model
 
-import androidx.room.Embedded
-import androidx.room.Relation
+import androidx.room3.Embedded
+import androidx.room3.Relation
 import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.CommentEntity
 import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.UserEntity
 

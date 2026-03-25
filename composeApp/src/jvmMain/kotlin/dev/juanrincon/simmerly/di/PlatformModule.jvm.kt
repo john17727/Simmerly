@@ -2,7 +2,7 @@ package dev.juanrincon.simmerly.di
 
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
-import androidx.room.RoomDatabase
+import androidx.room3.RoomDatabase
 import dev.juanrincon.simmerly.core.data.local.SimmerlyDatabase
 import dev.juanrincon.simmerly.core.datastore.createDesktopDataStore
 import dev.juanrincon.simmerly.core.local.getDatabaseBuilder

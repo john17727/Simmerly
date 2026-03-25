@@ -1,8 +1,8 @@
 package dev.juanrincon.simmerly.recipes.data.local.metadata
 
-import androidx.room.Entity
-import androidx.room.ForeignKey
-import androidx.room.PrimaryKey
+import androidx.room3.Entity
+import androidx.room3.ForeignKey
+import androidx.room3.PrimaryKey
 import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.RecipeEntity
 import kotlin.time.Instant
 

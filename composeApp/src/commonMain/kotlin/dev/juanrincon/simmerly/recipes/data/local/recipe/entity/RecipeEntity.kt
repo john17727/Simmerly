@@ -1,9 +1,9 @@
 package dev.juanrincon.simmerly.recipes.data.local.recipe.entity
 
-import androidx.room.ColumnInfo
-import androidx.room.Embedded
-import androidx.room.Entity
-import androidx.room.PrimaryKey
+import androidx.room3.ColumnInfo
+import androidx.room3.Embedded
+import androidx.room3.Entity
+import androidx.room3.PrimaryKey
 import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
 

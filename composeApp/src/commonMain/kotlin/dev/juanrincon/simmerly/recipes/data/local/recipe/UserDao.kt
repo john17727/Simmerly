@@ -1,7 +1,7 @@
 package dev.juanrincon.simmerly.recipes.data.local.recipe
 
-import androidx.room.Dao
-import androidx.room.Upsert
+import androidx.room3.Dao
+import androidx.room3.Upsert
 import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.UserEntity
 
 @Dao

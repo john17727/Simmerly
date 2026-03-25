@@ -1,6 +1,6 @@
 package dev.juanrincon.simmerly.recipes.data.local.recipe.entity
 
-import androidx.room.ColumnInfo
+import androidx.room3.ColumnInfo
 
 data class NutritionEntity(
     val calories: String?,
