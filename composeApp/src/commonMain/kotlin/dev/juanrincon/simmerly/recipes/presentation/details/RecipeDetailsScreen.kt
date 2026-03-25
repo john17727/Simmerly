@@ -66,6 +66,7 @@ import androidx.window.core.layout.WindowSizeClass
 import coil3.compose.AsyncImage
 import com.mohamedrejeb.richeditor.model.rememberRichTextState
 import com.mohamedrejeb.richeditor.ui.material3.RichText
+import com.skydoves.compose.stability.runtime.TraceRecomposition
 //import com.skydoves.compose.stability.runtime.TraceRecomposition
 import dev.juanrincon.simmerly.core.presentation.ifTrue
 import dev.juanrincon.simmerly.core.presentation.shimmer
@@ -100,7 +101,7 @@ fun RecipeDetailsScreen(
     )
 }
 
-//@TraceRecomposition
+@TraceRecomposition
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun Content(
