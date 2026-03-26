@@ -1,6 +1,7 @@
 package dev.juanrincon.simmerly.recipes.presentation.details.mvikotlin
 
 import com.arkivanov.mvikotlin.core.store.Store
+import dev.juanrincon.simmerly.recipes.domain.model.Settings
 import dev.juanrincon.simmerly.recipes.presentation.details.models.RecipeDetailUi
 import dev.juanrincon.simmerly.recipes.presentation.details.mvikotlin.RecipeDetailsStore.Intent
 import dev.juanrincon.simmerly.recipes.presentation.details.mvikotlin.RecipeDetailsStore.Label
@@ -11,8 +12,9 @@ interface RecipeDetailsStore : Store<Intent, State, Label> {
     sealed interface Intent {
         data object AddServing : Intent
         data object RemoveServing : Intent
-        data object ShowSettings: Intent
-        data object DismissSettings: Intent
+        data object ShowSettings : Intent
+        data object DismissSettings : Intent
+        data class UpdateSettings(val settings: Settings) : Intent
     }
 
     data class State(

@@ -10,6 +10,7 @@ import dev.juanrincon.simmerly.recipes.domain.LoadingResult
 import dev.juanrincon.simmerly.recipes.domain.RecipeRepository
 import dev.juanrincon.simmerly.recipes.domain.RecipesError
 import dev.juanrincon.simmerly.recipes.domain.model.RecipeDetail
+import dev.juanrincon.simmerly.recipes.domain.model.Settings
 import dev.juanrincon.simmerly.recipes.presentation.details.mappers.toRecipeDetailUi
 import dev.juanrincon.simmerly.recipes.presentation.details.models.RecipeDetailUi
 import dev.juanrincon.simmerly.recipes.presentation.details.mvikotlin.RecipeDetailsStore.Intent
@@ -19,6 +20,7 @@ import dev.juanrincon.simmerly.recipes.presentation.details.mvikotlin.RecipeDeta
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.launch
 import kotlin.math.round
 
 class RecipeDetailsStoreFactory(
@@ -43,6 +45,7 @@ class RecipeDetailsStoreFactory(
     private sealed interface Msg {
         data object Loading : Msg
         data class RecipeUpdated(val recipe: RecipeDetailUi) : Msg
+        data class SettingsUpdated(val settings: Settings) : Msg
         data object ShowSettings : Msg
         data object DismissSettings : Msg
     }
@@ -61,6 +64,7 @@ class RecipeDetailsStoreFactory(
             Intent.RemoveServing -> updateServing(state().recipe.servings - 1)
             Intent.ShowSettings -> dispatch(Msg.ShowSettings)
             Intent.DismissSettings -> dispatch(Msg.DismissSettings)
+            is Intent.UpdateSettings -> updateSettings(intent.settings)
         }
 
         override fun executeAction(action: Action) {
@@ -89,6 +93,17 @@ class RecipeDetailsStoreFactory(
                     }
                 }.launchIn(scope)
         }
+        private fun updateSettings(settings: Settings) {
+            val recipeId = state().recipe.id
+            // Optimistic update — reflect the toggle immediately in the UI
+            dispatch(Msg.SettingsUpdated(settings))
+            scope.launch {
+                repository.updateSettings(recipeId, settings)
+                // On error you could revert by dispatching the old settings;
+                // for now we let the next recipeDetails emission reconcile the state.
+            }
+        }
+
         private fun updateServing(newServings: Double) {
             val current = state().recipe
             if (current == RecipeDetailUi.emptyRecipe) return
@@ -136,6 +151,7 @@ class RecipeDetailsStoreFactory(
                         if (!msg.recipe.settings.disableComments) add("Comments")
                     }
                 )
+                is Msg.SettingsUpdated -> copy(recipe = recipe.copy(settings = msg.settings))
                 is Msg.Loading -> copy(loading = true)
                 Msg.ShowSettings -> copy(showSettings = true)
                 Msg.DismissSettings -> copy(showSettings = false)

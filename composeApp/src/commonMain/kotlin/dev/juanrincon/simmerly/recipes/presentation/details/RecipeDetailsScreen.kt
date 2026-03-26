@@ -118,7 +118,11 @@ private fun Content(
                 onEvent(RecipeDetailsStore.Intent.DismissSettings)
             },
         ) {
-            SettingsView(state.recipe.settings, modifier = Modifier.padding(vertical = 16.dp))
+            SettingsView(
+                settings = state.recipe.settings,
+                onSettingChanged = { onEvent(RecipeDetailsStore.Intent.UpdateSettings(it)) },
+                modifier = Modifier.padding(vertical = 16.dp)
+            )
         }
     }
 
@@ -871,7 +875,11 @@ private fun InstructionEntry(instruction: InstructionUi, modifier: Modifier = Mo
 }
 
 @Composable
-private fun SettingsView(settings: Settings, modifier: Modifier = Modifier) {
+private fun SettingsView(
+    settings: Settings,
+    onSettingChanged: (Settings) -> Unit,
+    modifier: Modifier = Modifier
+) {
     Column(modifier = modifier.padding(16.dp)) {
         Text("Recipe Settings", style = MaterialTheme.typography.headlineSmall)
         Spacer(modifier = Modifier.height(16.dp))
@@ -879,28 +887,40 @@ private fun SettingsView(settings: Settings, modifier: Modifier = Modifier) {
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(SETTINGS_OPTION_SPACING)
         ) {
-            Switch(checked = settings.public, onCheckedChange = {})
+            Switch(
+                checked = settings.public,
+                onCheckedChange = { onSettingChanged(settings.copy(public = it)) }
+            )
             Text("Public Recipe")
         }
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(SETTINGS_OPTION_SPACING)
         ) {
-            Switch(checked = settings.showNutrition, onCheckedChange = {})
+            Switch(
+                checked = settings.showNutrition,
+                onCheckedChange = { onSettingChanged(settings.copy(showNutrition = it)) }
+            )
             Text("Show Nutrition Values")
         }
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(SETTINGS_OPTION_SPACING)
         ) {
-            Switch(checked = settings.disableComments, onCheckedChange = {})
+            Switch(
+                checked = settings.disableComments,
+                onCheckedChange = { onSettingChanged(settings.copy(disableComments = it)) }
+            )
             Text("Disable Comments")
         }
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(SETTINGS_OPTION_SPACING)
         ) {
-            Switch(checked = settings.locked, onCheckedChange = {})
+            Switch(
+                checked = settings.locked,
+                onCheckedChange = { onSettingChanged(settings.copy(locked = it)) }
+            )
             Text("Locked")
         }
     }
