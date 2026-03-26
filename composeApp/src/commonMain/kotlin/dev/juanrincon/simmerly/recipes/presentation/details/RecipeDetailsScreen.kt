@@ -24,10 +24,14 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Comment
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.HorizontalFloatingToolbar
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -102,7 +106,7 @@ fun RecipeDetailsScreen(
 }
 
 @TraceRecomposition
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun Content(
     state: RecipeDetailsStore.State,
@@ -190,12 +194,6 @@ private fun Content(
                                                 )
                                             }
                                         }
-                                        IconButton(onClick = { onEvent(RecipeDetailsStore.Intent.ShowSettings) }) {
-                                            Icon(
-                                                Icons.Default.Settings,
-                                                contentDescription = "Settings"
-                                            )
-                                        }
                                     },
                                     colors = TopAppBarDefaults.topAppBarColors()
                                         .copy(containerColor = MaterialTheme.colorScheme.background),
@@ -203,11 +201,38 @@ private fun Content(
                                 )
                             },
                         ) { paddingValues ->
-                            CompactView(
-                                state = state,
-                                onEvent = onEvent,
-                                modifier = modifier.padding(paddingValues)
-                            )
+                            Box(modifier = modifier.fillMaxSize().padding(paddingValues)) {
+                                CompactView(
+                                    state = state,
+                                    onEvent = onEvent,
+                                    modifier = Modifier.fillMaxSize()
+                                )
+                                HorizontalFloatingToolbar(
+                                    expanded = true,
+                                    modifier = Modifier
+                                        .align(Alignment.BottomCenter)
+                                        .padding(bottom = 24.dp)
+                                ) {
+                                    IconButton(onClick = { /* TODO: favourite action */ }) {
+                                        Icon(
+                                            Icons.Default.Favorite,
+                                            contentDescription = "Favourite"
+                                        )
+                                    }
+                                    IconButton(onClick = { onEvent(RecipeDetailsStore.Intent.ShowSettings) }) {
+                                        Icon(
+                                            Icons.Default.Settings,
+                                            contentDescription = "Settings"
+                                        )
+                                    }
+                                    IconButton(onClick = { /* TODO: edit action */ }) {
+                                        Icon(
+                                            Icons.Default.Edit,
+                                            contentDescription = "Edit"
+                                        )
+                                    }
+                                }
+                            }
                         }
                     }
                 }
@@ -264,7 +289,7 @@ private fun CompactView(
     LazyColumn(
         state = listState,
         modifier = modifier,
-        contentPadding = PaddingValues(vertical = 8.dp)
+        contentPadding = PaddingValues(top = 8.dp, bottom = 96.dp)
     ) {
 
         // Hero image
