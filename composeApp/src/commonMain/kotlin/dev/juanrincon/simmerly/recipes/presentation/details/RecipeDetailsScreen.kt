@@ -1,6 +1,7 @@
 package dev.juanrincon.simmerly.recipes.presentation.details
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -26,11 +27,15 @@ import androidx.compose.material.icons.automirrored.filled.Comment
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.ViewTimeline
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.FloatingToolbarDefaults
 import androidx.compose.material3.HorizontalFloatingToolbar
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -207,29 +212,54 @@ private fun Content(
                                     onEvent = onEvent,
                                     modifier = Modifier.fillMaxSize()
                                 )
-                                HorizontalFloatingToolbar(
-                                    expanded = true,
-                                    modifier = Modifier
-                                        .align(Alignment.BottomCenter)
+                                AnimatedVisibility(
+                                    !state.loading,
+                                    modifier = Modifier.align(Alignment.BottomCenter)
                                         .padding(bottom = 24.dp)
                                 ) {
-                                    IconButton(onClick = { /* TODO: favourite action */ }) {
-                                        Icon(
-                                            Icons.Default.Favorite,
-                                            contentDescription = "Favourite"
-                                        )
-                                    }
-                                    IconButton(onClick = { onEvent(RecipeDetailsStore.Intent.ShowSettings) }) {
-                                        Icon(
-                                            Icons.Default.Settings,
-                                            contentDescription = "Settings"
-                                        )
-                                    }
-                                    IconButton(onClick = { /* TODO: edit action */ }) {
-                                        Icon(
-                                            Icons.Default.Edit,
-                                            contentDescription = "Edit"
-                                        )
+                                    HorizontalFloatingToolbar(
+                                        expanded = true,
+                                        floatingActionButton = {
+                                            FloatingToolbarDefaults.StandardFloatingActionButton(
+                                                onClick = { /* TODO: play action */ }
+                                            ) {
+                                                Icon(
+                                                    Icons.Default.PlayArrow,
+                                                    contentDescription = "Play"
+                                                )
+                                            }
+                                        }
+                                    ) {
+                                        IconButton(onClick = { /* TODO: favourite action */ }) {
+                                            Icon(
+                                                Icons.Default.Favorite,
+                                                contentDescription = "Favourite"
+                                            )
+                                        }
+                                        IconButton(onClick = { /* TODO: timeline action */ }) {
+                                            Icon(
+                                                Icons.Default.ViewTimeline,
+                                                contentDescription = "Timeline"
+                                            )
+                                        }
+                                        IconButton(onClick = { /* TODO: edit action */ }) {
+                                            Icon(
+                                                Icons.Default.Edit,
+                                                contentDescription = "Edit"
+                                            )
+                                        }
+                                        IconButton(onClick = { onEvent(RecipeDetailsStore.Intent.ShowSettings) }) {
+                                            Icon(
+                                                Icons.Default.Settings,
+                                                contentDescription = "Settings"
+                                            )
+                                        }
+                                        IconButton(onClick = { /* TODO: more action */ }) {
+                                            Icon(
+                                                Icons.Default.MoreVert,
+                                                contentDescription = "More"
+                                            )
+                                        }
                                     }
                                 }
                             }
