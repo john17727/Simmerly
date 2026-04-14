@@ -1,5 +1,9 @@
 package dev.juanrincon.simmerly.recipes.presentation.details.models
 
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Favorite
+import dev.juanrincon.simmerly.core.presentation.UiIcon
+import dev.juanrincon.simmerly.core.presentation.UiText
 import dev.juanrincon.simmerly.core.utils.format
 import dev.juanrincon.simmerly.recipes.domain.model.Note
 import dev.juanrincon.simmerly.recipes.domain.model.Settings
@@ -7,14 +11,15 @@ import dev.juanrincon.simmerly.recipes.domain.model.Tool
 
 data class RecipeDetailUi(
     val id: String,
-    val title: String,
+    val title: UiText,
     val image: String,
-    val description: String = "",
+    val description: UiText?,
     val rating: Double?,
     val totalTime: String?,
     val prepTime: String?,
     val performTime: String?,
     val servings: Double,
+    val favoriteIcon: UiIcon = UiIcon.Vector(Icons.Outlined.Favorite),
     val ingredients: List<IngredientUi>,
     val instructions: List<InstructionUi>,
     val tools: List<Tool>,
@@ -34,8 +39,9 @@ data class RecipeDetailUi(
     companion object {
         val emptyRecipe = RecipeDetailUi(
             id = "",
-            title = "",
+            title = UiText.DynamicText(""),
             image = "",
+            description = UiText.DynamicText(""),
             rating = null,
             totalTime = null,
             prepTime = null,

@@ -1,5 +1,6 @@
 package dev.juanrincon.simmerly.recipes.presentation.details
 
+//import com.skydoves.compose.stability.runtime.TraceRecomposition
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
@@ -26,7 +27,6 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Comment
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Remove
@@ -76,7 +76,6 @@ import coil3.compose.AsyncImage
 import com.mohamedrejeb.richeditor.model.rememberRichTextState
 import com.mohamedrejeb.richeditor.ui.material3.RichText
 import com.skydoves.compose.stability.runtime.TraceRecomposition
-//import com.skydoves.compose.stability.runtime.TraceRecomposition
 import dev.juanrincon.simmerly.core.presentation.ifTrue
 import dev.juanrincon.simmerly.core.presentation.shimmer
 import dev.juanrincon.simmerly.recipes.domain.model.Note
@@ -176,7 +175,7 @@ private fun Content(
                                             val isCollapsed =
                                                 scrollBehavior.state.collapsedFraction > 0.5f
                                             Text(
-                                                text = state.recipe.title,
+                                                text = state.recipe.title.asString(),
                                                 maxLines = if (isCollapsed) 1 else Int.MAX_VALUE,
                                                 overflow = TextOverflow.Ellipsis
                                             )
@@ -215,7 +214,6 @@ private fun Content(
                                 AnimatedVisibility(
                                     !state.loading,
                                     modifier = Modifier.align(Alignment.BottomCenter)
-                                        .padding(bottom = 24.dp)
                                 ) {
                                     HorizontalFloatingToolbar(
                                         expanded = true,
@@ -232,8 +230,9 @@ private fun Content(
                                     ) {
                                         IconButton(onClick = { /* TODO: favourite action */ }) {
                                             Icon(
-                                                Icons.Default.Favorite,
-                                                contentDescription = "Favourite"
+                                                state.recipe.favoriteIcon.painter(),
+                                                contentDescription = "Favorite",
+                                                tint = MaterialTheme.colorScheme.primary
                                             )
                                         }
                                         IconButton(onClick = { /* TODO: timeline action */ }) {
@@ -408,10 +407,10 @@ private fun CompactView(
                         recipe.performTime
                     )
                     Spacer(modifier = Modifier.height(16.dp))
-                    if (recipe.description.isNotBlank()) {
+                    recipe.description?.let {
                         Column(modifier = Modifier.animateContentSize()) {
                             Text(
-                                recipe.description,
+                                it.asString(),
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSecondaryContainer,
                                 maxLines = if (descriptionExpanded) Int.MAX_VALUE else DESCRIPTION_MAX_LINES,

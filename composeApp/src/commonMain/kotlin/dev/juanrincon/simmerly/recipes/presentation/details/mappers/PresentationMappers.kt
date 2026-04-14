@@ -1,5 +1,6 @@
 package dev.juanrincon.simmerly.recipes.presentation.details.mappers
 
+import dev.juanrincon.simmerly.core.presentation.UiText
 import dev.juanrincon.simmerly.core.utils.capitalizeWords
 import dev.juanrincon.simmerly.core.utils.nullIfEmpty
 import dev.juanrincon.simmerly.recipes.domain.model.Comment
@@ -23,9 +24,9 @@ import kotlin.time.Instant
 
 fun RecipeDetail.toRecipeDetailUi(): RecipeDetailUi = RecipeDetailUi(
     id = id,
-    title = name,
+    title = UiText.DynamicText(name),
     image = image,
-    description = description,
+    description = UiText.DynamicText(description),
     rating = rating,
     totalTime = totalTime,
     prepTime = prepTime,
