@@ -31,6 +31,7 @@ import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LargeFlexibleTopAppBar
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
@@ -116,9 +117,7 @@ private fun Content(
             topBar = {
                 LargeFlexibleTopAppBar(
                     title = { Text("Recipes") },
-                    scrollBehavior = scrollBehavior,
-                    colors = TopAppBarDefaults.topAppBarColors()
-                        .copy(containerColor = MaterialTheme.colorScheme.background)
+                    scrollBehavior = scrollBehavior
                 )
             },
             modifier = modifier.nestedScroll(scrollBehavior.nestedScrollConnection)
@@ -278,7 +277,7 @@ fun RecipeCard(
                 }
             }
         } else {
-            Card(
+            OutlinedCard(
                 modifier = modifier,
                 onClick = onClick,
             ) {

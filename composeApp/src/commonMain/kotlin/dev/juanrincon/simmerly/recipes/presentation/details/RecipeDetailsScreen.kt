@@ -39,9 +39,10 @@ import androidx.compose.material3.FloatingToolbarDefaults
 import androidx.compose.material3.HorizontalFloatingToolbar
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.MediumTopAppBar
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.PrimaryScrollableTabRow
 import androidx.compose.material3.PrimaryTabRow
 import androidx.compose.material3.Scaffold
@@ -153,7 +154,7 @@ private fun Content(
                         Scaffold(
                             modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
                             topBar = {
-                                MediumTopAppBar(
+                                LargeTopAppBar(
                                     title = {
                                         if (state.loading) {
                                             val shimmerColors = listOf(
@@ -199,8 +200,6 @@ private fun Content(
                                             }
                                         }
                                     },
-                                    colors = TopAppBarDefaults.topAppBarColors()
-                                        .copy(containerColor = MaterialTheme.colorScheme.background),
                                     scrollBehavior = scrollBehavior
                                 )
                             },
@@ -472,7 +471,7 @@ private fun CompactView(
 
         // Ingredients & Tools (always shown, index 3)
         item {
-            Card(
+            OutlinedCard(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(vertical = 8.dp)
@@ -499,7 +498,7 @@ private fun CompactView(
 
         // Instructions (always shown, index 4)
         item {
-            Card(
+            OutlinedCard(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(vertical = 8.dp)
@@ -525,7 +524,7 @@ private fun CompactView(
         // Notes (conditional)
         if (recipe.notes.isNotEmpty()) {
             item {
-                Card(
+                OutlinedCard(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(vertical = 8.dp)
@@ -542,7 +541,7 @@ private fun CompactView(
         // Nutrition (conditional)
         if (recipe.settings.showNutrition) {
             item {
-                Card(
+                OutlinedCard(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(vertical = 8.dp)
