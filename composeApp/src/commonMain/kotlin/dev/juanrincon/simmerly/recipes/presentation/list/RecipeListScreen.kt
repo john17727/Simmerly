@@ -8,7 +8,6 @@ import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -16,9 +15,6 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyListState
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.relocation.BringIntoViewRequester
 import androidx.compose.foundation.relocation.bringIntoViewRequester
@@ -27,16 +23,11 @@ import androidx.compose.material.icons.rounded.Star
 import androidx.compose.material.icons.rounded.Timer
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
-import androidx.compose.material3.LargeFlexibleTopAppBar
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedCard
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
-import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -47,7 +38,6 @@ import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -55,7 +45,6 @@ import androidx.window.core.layout.WindowSizeClass
 import coil3.compose.AsyncImage
 import coil3.compose.LocalPlatformContext
 import coil3.request.ImageRequest
-import dev.juanrincon.simmerly.core.presentation.ifTrue
 import dev.juanrincon.simmerly.core.presentation.shimmer
 import dev.juanrincon.simmerly.recipes.domain.model.RecipeSummary
 import dev.juanrincon.simmerly.recipes.presentation.list.mvikotlin.RecipeListStore
@@ -77,7 +66,7 @@ fun RecipeListScreen(
     )
 }
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun Content(
     state: RecipeListStore.State,
@@ -101,6 +90,7 @@ private fun Content(
     LaunchedEffect(shouldLoadMore) {
         if (shouldLoadMore) onEvent(RecipeListStore.Intent.OnLoadMore)
     }
+
     if (windowSizeClass.isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_EXPANDED_LOWER_BOUND)) {
         SelectableList(
             state.recipes,
@@ -112,105 +102,13 @@ private fun Content(
             modifier = modifier
         )
     } else {
-        val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
-        Scaffold(
-            topBar = {
-                LargeFlexibleTopAppBar(
-                    title = { Text("Recipes") },
-                    scrollBehavior = scrollBehavior
-                )
-            },
-            modifier = modifier.nestedScroll(scrollBehavior.nestedScrollConnection)
-        ) { paddingValues ->
-            List(
-                state.recipes,
-                isLoading = state.isLoading,
-                onRecipeSelected = onRecipeSelected,
-                lazyListState = lazyListState,
-                modifier = modifier.padding(paddingValues)
-            )
-        }
-    }
-}
-
-@Composable
-fun SelectableList(
-    recipes: List<RecipeSummary>,
-    isLoading: Boolean,
-    selected: String,
-    onRecipeSelected: (String) -> Unit,
-    onSelected: (String) -> Unit,
-    state: LazyListState,
-    modifier: Modifier = Modifier
-) {
-    LazyColumn(
-        state = state,
-        contentPadding = PaddingValues(start = 16.dp, top = 16.dp, bottom = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
-        modifier = modifier.clip(shape = MaterialTheme.shapes.medium)
-    ) {
-        if (isLoading && recipes.isEmpty()) {
-            items(6) {
-                RecipeCardSkeleton(modifier = Modifier.fillMaxWidth())
-            }
-        } else {
-            items(recipes, key = { it.id }) { item ->
-                val isSelected = item.id == selected
-                RecipeCard(
-                    item,
-                    selected = isSelected,
-                    onClick = {
-                        onRecipeSelected(item.id)
-                        onSelected(item.id)
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .animateItem().ifTrue(isSelected) {
-                            padding(vertical = 32.dp)
-                        }
-                )
-            }
-            if (isLoading) {
-                item {
-                    RecipeCardSkeleton(modifier = Modifier.fillMaxWidth())
-                }
-            }
-        }
-    }
-}
-
-@Composable
-fun List(
-    recipes: List<RecipeSummary>,
-    isLoading: Boolean,
-    onRecipeSelected: (String) -> Unit,
-    lazyListState: LazyListState,
-    modifier: Modifier = Modifier
-) {
-    LazyColumn(
-        state = lazyListState,
-        contentPadding = PaddingValues(16.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
-        modifier = modifier.clip(shape = MaterialTheme.shapes.medium)
-    ) {
-        if (isLoading && recipes.isEmpty()) {
-            items(6) {
-                RecipeCardSkeleton(modifier = Modifier.fillMaxWidth())
-            }
-        } else {
-            items(recipes, key = { it.id }) { item ->
-                RecipeCard(
-                    item,
-                    onClick = { onRecipeSelected(item.id) },
-                    modifier = Modifier.fillMaxWidth().animateItem()
-                )
-            }
-            if (isLoading) {
-                item {
-                    RecipeCardSkeleton(modifier = Modifier.fillMaxWidth())
-                }
-            }
-        }
+        CompactRecipeList(
+            recipes = state.recipes,
+            isLoading = state.isLoading,
+            onRecipeSelected = onRecipeSelected,
+            lazyListState = lazyListState,
+            modifier = modifier
+        )
     }
 }
 
@@ -224,7 +122,6 @@ fun RecipeCard(
     val bringIntoViewRequester = remember { BringIntoViewRequester() }
     LaunchedEffect(selected) {
         if (selected) {
-            // Wait one frame so the expanded content is composed and measured
             withFrameNanos { }
             bringIntoViewRequester.bringIntoView()
         }
@@ -310,7 +207,7 @@ fun RecipeCard(
 }
 
 @Composable
-private fun RecipeCardSkeleton(modifier: Modifier = Modifier) {
+fun RecipeCardSkeleton(modifier: Modifier = Modifier) {
     val shimmerColors = listOf(
         MaterialTheme.colorScheme.surfaceContainer,
         MaterialTheme.colorScheme.surfaceContainerHighest,
