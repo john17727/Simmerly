@@ -39,8 +39,8 @@ import androidx.compose.material3.FloatingToolbarDefaults
 import androidx.compose.material3.HorizontalFloatingToolbar
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MediumFlexibleTopAppBar
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.PrimaryScrollableTabRow
@@ -154,7 +154,7 @@ private fun Content(
                         Scaffold(
                             modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
                             topBar = {
-                                LargeTopAppBar(
+                                MediumFlexibleTopAppBar(
                                     title = {
                                         if (state.loading) {
                                             val shimmerColors = listOf(

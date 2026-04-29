@@ -283,8 +283,7 @@ fun RecipeCard(
             ) {
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(16.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.padding(8.dp)
+                    modifier = Modifier.padding(10.dp)
                 ) {
                     AsyncImage(
                         model = ImageRequest.Builder(LocalPlatformContext.current)
@@ -292,14 +291,12 @@ fun RecipeCard(
                             .build(),
                         contentDescription = null,
                         contentScale = ContentScale.Crop,
-                        modifier = Modifier.size(100.dp).clip(MaterialTheme.shapes.medium)
+                        modifier = Modifier.size(100.dp).clip(MaterialTheme.shapes.small)
                     )
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Text(
                             recipe.name,
                             style = MaterialTheme.typography.titleMedium,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
                         )
                         RecipeLimitedMetaRow(
                             recipe.rating,
