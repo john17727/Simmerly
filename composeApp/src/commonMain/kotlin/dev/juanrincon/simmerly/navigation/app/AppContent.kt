@@ -3,10 +3,11 @@ package dev.juanrincon.simmerly.navigation.app
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
-import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
+import androidx.compose.material3.adaptive.currentWindowAdaptiveInfoV2
 import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteItem
 import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteScaffold
 import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteScaffoldDefaults
+import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteType
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -19,12 +20,19 @@ import dev.juanrincon.simmerly.recipes.presentation.RecipesContent
 @Composable
 fun AppContent(modifier: Modifier = Modifier) {
     var currentDestination by rememberSaveable { mutableStateOf(AppDestinations.RECIPES) }
-    val navSuiteType =
-        NavigationSuiteScaffoldDefaults.navigationSuiteType(currentWindowAdaptiveInfo())
+    var isAtRecipesRoot by rememberSaveable { mutableStateOf(true) }
+    val baseNavSuiteType =
+        NavigationSuiteScaffoldDefaults.navigationSuiteType(currentWindowAdaptiveInfoV2())
+    val effectiveNavSuiteType =
+        if (!isAtRecipesRoot && (baseNavSuiteType != NavigationSuiteType.NavigationRail || baseNavSuiteType != NavigationSuiteType.WideNavigationRailExpanded)) {
+            NavigationSuiteType.None
+        } else {
+            baseNavSuiteType
+        }
     val saveableStateHolder = rememberSaveableStateHolder()
     NavigationSuiteScaffold(
         modifier = modifier,
-        navigationSuiteType = navSuiteType,
+        navigationSuiteType = effectiveNavSuiteType,
         navigationItems = {
             AppDestinations.entries.forEach {
                 NavigationSuiteItem(
@@ -48,7 +56,10 @@ fun AppContent(modifier: Modifier = Modifier) {
         // per destination, so each tab picks up exactly where it left off.
         saveableStateHolder.SaveableStateProvider(currentDestination) {
             when (val destination = currentDestination) {
-                AppDestinations.RECIPES -> RecipesContent(modifier = Modifier.fillMaxSize())
+                AppDestinations.RECIPES -> RecipesContent(
+                    onAtRootChanged = { isAtRecipesRoot = it },
+                    modifier = Modifier.fillMaxSize()
+                )
 
                 AppDestinations.MEAL_PLAN -> {
                     Text(destination.label.asString())

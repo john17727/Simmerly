@@ -17,6 +17,10 @@ import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
 import androidx.compose.material3.adaptive.navigation3.ListDetailSceneStrategy
 import androidx.compose.material3.adaptive.navigation3.rememberListDetailSceneStrategy
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
@@ -35,7 +39,10 @@ import kotlinx.serialization.modules.polymorphic
 
 @OptIn(ExperimentalMaterial3AdaptiveApi::class, ExperimentalMaterial3Api::class)
 @Composable
-fun RecipesContent(modifier: Modifier = Modifier) {
+fun RecipesContent(
+    onAtRootChanged: (Boolean) -> Unit = {},
+    modifier: Modifier = Modifier
+) {
     val backStack = rememberNavBackStack(
         configuration = SavedStateConfiguration {
             serializersModule = SerializersModule {
@@ -54,6 +61,9 @@ fun RecipesContent(modifier: Modifier = Modifier) {
         },
         RecipeDestinations.List
     )
+
+    val isAtRoot by remember { derivedStateOf { backStack.size <= 1 } }
+    LaunchedEffect(isAtRoot) { onAtRootChanged(isAtRoot) }
 
     NavDisplay(
         backStack = backStack,
