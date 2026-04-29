@@ -91,10 +91,10 @@ fun simmerlyTypography(
             lineHeight = 32.sp,
             letterSpacing = 0.sp
         ),
-            // --- Title — DM Sans ---
+            // --- Title — DM Serif Display (Large), DM Sans (Medium/Small) ---
         titleLarge = TextStyle(
-            fontFamily = bodyFontFamily,
-            fontWeight = FontWeight.Bold,
+            fontFamily = displayFontFamily,
+            fontWeight = FontWeight.Normal,
             fontSize = 22.sp,
             lineHeight = 28.sp,
             letterSpacing = 0.sp
