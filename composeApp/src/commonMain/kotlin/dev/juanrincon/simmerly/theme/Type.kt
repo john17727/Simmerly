@@ -2,64 +2,51 @@ package dev.juanrincon.simmerly.theme
 
 import androidx.compose.material3.Typography
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import org.jetbrains.compose.resources.Font
-import simmerly.composeapp.generated.resources.DMSerifDisplay_Italic
-import simmerly.composeapp.generated.resources.DMSerifDisplay_Regular
 import simmerly.composeapp.generated.resources.Res
-import simmerly.composeapp.generated.resources.nunito_italic_variablefont_wght
-import simmerly.composeapp.generated.resources.nunito_variablefont_wght
+import simmerly.composeapp.generated.resources.dm_sans_italic_variablefont
+import simmerly.composeapp.generated.resources.dm_sans_variablefont
+import simmerly.composeapp.generated.resources.dm_serif_display_italic
+import simmerly.composeapp.generated.resources.dm_serif_display_regular
 
 @Composable
 fun dmSerifDisplayFontFamily(): FontFamily {
-    val dmSerifDisplayRegular = Font(Res.font.DMSerifDisplay_Regular, weight = FontWeight.Normal)
-    val dmSerifDisplayItalic =
-        Font(Res.font.DMSerifDisplay_Italic, weight = FontWeight.Normal, style = FontStyle.Italic)
-
-    return FontFamily(
-        dmSerifDisplayRegular,
-        dmSerifDisplayItalic
-    )
+    val regular = Font(Res.font.dm_serif_display_regular, weight = FontWeight.Normal)
+    val italic =
+        Font(Res.font.dm_serif_display_italic, weight = FontWeight.Normal, style = FontStyle.Italic)
+    return remember(regular, italic) { FontFamily(regular, italic) }
 }
 
 @Composable
-fun nunitoVariableFontFamily(): FontFamily {
-    val nunitoVariableLight = Font(Res.font.nunito_variablefont_wght, weight = FontWeight.Light)
-    val nunitoVariable = Font(Res.font.nunito_variablefont_wght, weight = FontWeight.Normal)
-    val nunitoVariableItalic = Font(
-        Res.font.nunito_italic_variablefont_wght,
+fun dmSansVariableFontFamily(): FontFamily {
+    val light = Font(Res.font.dm_sans_variablefont, weight = FontWeight.Light)
+    val regular = Font(Res.font.dm_sans_variablefont, weight = FontWeight.Normal)
+    val italic = Font(
+        Res.font.dm_sans_italic_variablefont,
         weight = FontWeight.Normal,
         style = FontStyle.Italic
     )
-    val nunitoVariableMedium = Font(Res.font.nunito_variablefont_wght, weight = FontWeight.Medium)
-    val nunitoVariableSemiBold =
-        Font(Res.font.nunito_variablefont_wght, weight = FontWeight.SemiBold)
-    val nunitoVariableBold = Font(Res.font.nunito_variablefont_wght, weight = FontWeight.Bold)
-    val nunitoVariableExtraBold = Font(Res.font.nunito_variablefont_wght, weight = FontWeight.ExtraBold)
-    val nunitoVariableBlack = Font(Res.font.nunito_variablefont_wght, weight = FontWeight.Black)
-
-    return FontFamily(
-        nunitoVariableLight,
-        nunitoVariable,
-        nunitoVariableItalic,
-        nunitoVariableMedium,
-        nunitoVariableSemiBold,
-        nunitoVariableBold,
-        nunitoVariableExtraBold,
-        nunitoVariableBlack
-    )
+    val medium = Font(Res.font.dm_sans_variablefont, weight = FontWeight.Medium)
+    val semiBold = Font(Res.font.dm_sans_variablefont, weight = FontWeight.SemiBold)
+    val bold = Font(Res.font.dm_sans_variablefont, weight = FontWeight.Bold)
+    return remember(light, regular, italic, medium, semiBold, bold) {
+        FontFamily(light, regular, italic, medium, semiBold, bold)
+    }
 }
 
 @Composable
 fun simmerlyTypography(
     displayFontFamily: FontFamily = dmSerifDisplayFontFamily(),
-    bodyFontFamily: FontFamily = nunitoVariableFontFamily()
+    bodyFontFamily: FontFamily = dmSansVariableFontFamily()
 ): Typography {
-    return Typography(
+    return remember(displayFontFamily, bodyFontFamily) {
+        Typography(
         // --- Display — DM Serif Display ---
         displayLarge = TextStyle(
             fontFamily = displayFontFamily,
@@ -104,7 +91,7 @@ fun simmerlyTypography(
             lineHeight = 32.sp,
             letterSpacing = 0.sp
         ),
-        // --- Title — Nunito ---
+            // --- Title — DM Sans ---
         titleLarge = TextStyle(
             fontFamily = bodyFontFamily,
             fontWeight = FontWeight.Bold,
@@ -126,7 +113,7 @@ fun simmerlyTypography(
             lineHeight = 20.sp,
             letterSpacing = 0.1.sp
         ),
-        // --- Body — Nunito ---
+            // --- Body — DM Sans ---
         bodyLarge = TextStyle(
             fontFamily = bodyFontFamily,
             fontWeight = FontWeight.Normal,
@@ -148,7 +135,7 @@ fun simmerlyTypography(
             lineHeight = 16.sp,
             letterSpacing = 0.4.sp
         ),
-        // --- Label — Nunito ---
+            // --- Label — DM Sans ---
         labelLarge = TextStyle(
             fontFamily = bodyFontFamily,
             fontWeight = FontWeight.Medium,
@@ -170,6 +157,6 @@ fun simmerlyTypography(
             lineHeight = 16.sp,
             letterSpacing = 0.5.sp
         )
-    )
+        )
+    }
 }
-
