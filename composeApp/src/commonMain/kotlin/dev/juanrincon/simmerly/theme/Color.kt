@@ -31,13 +31,6 @@ object Simmerly {
     val Neutral900 = Color(0xFF17191C)  // --color-neutral-900 (--fg-primary)
     val Black = Color(0xFF000000)
 
-    // ── Secondary — Dusty Rose ────────────────────────────────────────────────
-    val DustyRoseSubtle = Color(0xFFF9EEEC)  // --color-secondary-50
-    val DustyRoseLight = Color(0xFFE8C4BE)  // --color-secondary-200
-    val DustyRose = Color(0xFFC2857A)  // --color-secondary-400
-    val DustyRoseDark = Color(0xFF8F4F46)  // --color-secondary-600
-    val DustyRoseDeep = Color(0xFF5A2A24)  // --color-secondary-800
-
     // ── Tertiary — Herb Sage ──────────────────────────────────────────────────
     val HerbSageSubtle = Color(0xFFEDF3EF)  // --color-tertiary-50
     val HerbSageLight = Color(0xFFAECDB7)  // --color-tertiary-200
@@ -61,10 +54,10 @@ val SimmerlyLightColorScheme = lightColorScheme(
     primaryContainer = Simmerly.Coral100,
     onPrimaryContainer = Simmerly.Coral900,
 
-    secondary = Simmerly.DustyRose,
+    secondary = Simmerly.Coral600,
     onSecondary = Simmerly.Neutral0,
-    secondaryContainer = Simmerly.DustyRoseSubtle,
-    onSecondaryContainer = Simmerly.DustyRoseDeep,
+    secondaryContainer = Simmerly.Coral100,
+    onSecondaryContainer = Simmerly.Coral600,
 
     tertiary = Simmerly.HerbSage,
     onTertiary = Simmerly.Neutral0,
@@ -104,13 +97,13 @@ val SimmerlyLightColorScheme = lightColorScheme(
 val SimmerlyDarkColorScheme = darkColorScheme(
     primary = Simmerly.Coral200,
     onPrimary = Simmerly.Coral900,
-    primaryContainer = Simmerly.Coral800,
+    primaryContainer = Simmerly.Coral600,
     onPrimaryContainer = Simmerly.Coral100,
 
-    secondary = Simmerly.DustyRoseLight,
-    onSecondary = Simmerly.DustyRoseDeep,
-    secondaryContainer = Simmerly.DustyRoseDark,
-    onSecondaryContainer = Simmerly.DustyRoseSubtle,
+    secondary = Simmerly.Coral100,
+    onSecondary = Simmerly.Coral900,
+    secondaryContainer = Simmerly.Coral700,
+    onSecondaryContainer = Simmerly.Coral200,
 
     tertiary = Simmerly.HerbSageLight,
     onTertiary = Simmerly.HerbSageDeep,
