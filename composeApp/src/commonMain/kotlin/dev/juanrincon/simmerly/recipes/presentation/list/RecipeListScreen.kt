@@ -27,7 +27,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Text
-import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
+import androidx.compose.material3.adaptive.currentWindowAdaptiveInfoV2
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -74,7 +74,7 @@ private fun Content(
     onRecipeSelected: (recipeId: String) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val windowSizeClass = currentWindowAdaptiveInfo().windowSizeClass
+    val windowSizeClass = currentWindowAdaptiveInfoV2().windowSizeClass
     val lazyListState = rememberLazyListState()
 
     val shouldLoadMore by remember(lazyListState, state.recipes.size, state.isLoading) {

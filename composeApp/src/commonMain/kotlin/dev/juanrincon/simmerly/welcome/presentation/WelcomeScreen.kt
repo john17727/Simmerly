@@ -28,7 +28,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
+import androidx.compose.material3.adaptive.currentWindowAdaptiveInfoV2
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -63,7 +63,7 @@ fun WelcomeScreen(
     onEvent: (WelcomeStore.Intent) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val windowSizeClass = currentWindowAdaptiveInfo().windowSizeClass
+    val windowSizeClass = currentWindowAdaptiveInfoV2().windowSizeClass
     val keyboardController = LocalSoftwareKeyboardController.current
     LaunchedEffect(state.isLoading) {
         if (state.isLoading) {
