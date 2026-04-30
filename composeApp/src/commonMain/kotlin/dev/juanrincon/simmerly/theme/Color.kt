@@ -5,123 +5,143 @@ import androidx.compose.material3.lightColorScheme
 import androidx.compose.ui.graphics.Color
 
 object Simmerly {
-    // Primary — coral salmon (#FF7C6A seed)
-    val Coral = Color(0xFFFF7C6A)          // --color-primary-400
-    val CoralPressed = Color(0xFFF5624E)   // --color-primary-500
-    val CoralSubtle = Color(0xFFFFF0EE)    // --color-primary-50
-    val CoralMuted = Color(0xFFFFD8D3)     // --color-primary-100
+    // ── Coral — coral salmon ────────────────────────────────────────────────
+    val Coral50 = Color(0xFFFFF0EE)  // --color-primary-50
+    val Coral100 = Color(0xFFFFD8D3)  // --color-primary-100
+    val Coral200 = Color(0xFFFFB3A7)  // --color-primary-200
+    val Coral300 = Color(0xFFFF9587)  // --color-primary-300
+    val Coral400 = Color(0xFFFF7C6A)  // --color-primary-400 (seed)
+    val Coral500 = Color(0xFFF5624E)  // --color-primary-500
+    val Coral600 = Color(0xFFE04437)  // --color-primary-600
+    val Coral700 = Color(0xFFC42E22)  // --color-primary-700
+    val Coral800 = Color(0xFF9E1E14)  // --color-primary-800
+    val Coral900 = Color(0xFF75130D)  // --color-primary-900
 
-    // Foreground
-    val TextPrimary = Color(0xFF17191C)    // --fg-primary / --color-neutral-900
-    val TextSecondary = Color(0xFF5F6269)  // --fg-secondary / --color-neutral-600
-    val TextMuted = Color(0xFF828590)      // --fg-muted / --color-neutral-500
-    val TextDisabled = Color(0xFFC8C9CE)   // --fg-disabled / --color-neutral-300
+    // ── Neutral — steel cool ──────────────────────────────────────────────────
+    val Neutral0 = Color(0xFFFFFFFF)  // --color-neutral-0   (--surface-1 / --bg-base)
+    val Neutral50 = Color(0xFFF9F9FA)  // --color-neutral-50  (--surface-2 / --bg-subtle)
+    val Neutral100 = Color(0xFFF2F2F4)  // --color-neutral-100 (--surface-3 / --bg-muted)
+    val Neutral200 = Color(0xFFE2E3E6)  // --color-neutral-200 (--border-default)
+    val Neutral300 = Color(0xFFC8C9CE)  // --color-neutral-300 (--fg-disabled)
+    val Neutral400 = Color(0xFFA8AAB0)  // --color-neutral-400 (--border-strong)
+    val Neutral500 = Color(0xFF828590)  // --color-neutral-500 (--fg-muted)
+    val Neutral600 = Color(0xFF5F6269)  // --color-neutral-600 (--fg-secondary)
+    val Neutral700 = Color(0xFF404347)  // --color-neutral-700
+    val Neutral800 = Color(0xFF282A2E)  // --color-neutral-800 (--bg-emphasis)
+    val Neutral900 = Color(0xFF17191C)  // --color-neutral-900 (--fg-primary)
+    val Black = Color(0xFF000000)
 
-    // Secondary — Dusty Rose
-    val DustyRose = Color(0xFFC2857A)      // --color-secondary-400
+    // ── Secondary — Dusty Rose ────────────────────────────────────────────────
+    val DustyRoseSubtle = Color(0xFFF9EEEC)  // --color-secondary-50
+    val DustyRoseLight = Color(0xFFE8C4BE)  // --color-secondary-200
+    val DustyRose = Color(0xFFC2857A)  // --color-secondary-400
+    val DustyRoseDark = Color(0xFF8F4F46)  // --color-secondary-600
+    val DustyRoseDeep = Color(0xFF5A2A24)  // --color-secondary-800
 
-    // Tertiary — Herb Sage
-    val HerbSage = Color(0xFF5E9E74)       // --color-tertiary-400
+    // ── Tertiary — Herb Sage ──────────────────────────────────────────────────
+    val HerbSageSubtle = Color(0xFFEDF3EF)  // --color-tertiary-50
+    val HerbSageLight = Color(0xFFAECDB7)  // --color-tertiary-200
+    val HerbSage = Color(0xFF5E9E74)  // --color-tertiary-400
+    val HerbSageDark = Color(0xFF366B4A)  // --color-tertiary-600
+    val HerbSageDeep = Color(0xFF1C3D2A)  // --color-tertiary-800
 
-    // Surfaces
-    val Surface1 = Color(0xFFFFFFFF)       // --surface-1 / --color-neutral-0
-    val Surface2 = Color(0xFFF9F9FA)       // --surface-2 / --color-neutral-50
-    val Surface3 = Color(0xFFF2F2F4)       // --surface-3 / --color-neutral-100
-    val Background = Color(0xFFF9F9FA)     // --bg-subtle / --color-neutral-50
-
-    // Borders
-    val BorderDefault = Color(0xFFE2E3E6)  // --border-default / --color-neutral-200
-    val BorderStrong = Color(0xFFA8AAB0)   // --border-strong / --color-neutral-400
+    // ── Error ─────────────────────────────────────────────────────────────────
+    val ErrorSubtle = Color(0xFFFDECEA)  // --color-error-100
+    val ErrorRed = Color(0xFFD93025)  // --color-error-500
+    val ErrorDark = Color(0xFF9B1C14)  // --color-error-700
+    val ErrorDarkPrimary = Color(0xFFFFB4AB)  // M3 dark-theme error
+    val ErrorDarkOn = Color(0xFF690005)  // M3 dark-theme on-error
+    val ErrorDarkContainer = Color(0xFF93000A)  // M3 dark-theme error-container
 }
 
 // LIGHT THEME
 val SimmerlyLightColorScheme = lightColorScheme(
-    primary = Simmerly.Coral,                       // --color-primary-400
-    onPrimary = Color(0xFFFFFFFF),                  // --color-neutral-0
-    primaryContainer = Simmerly.CoralMuted,         // --color-primary-100
-    onPrimaryContainer = Color(0xFF75130D),         // --color-primary-900
+    primary = Simmerly.Coral400,
+    onPrimary = Simmerly.Neutral0,
+    primaryContainer = Simmerly.Coral100,
+    onPrimaryContainer = Simmerly.Coral900,
 
-    secondary = Simmerly.DustyRose,                 // --color-secondary-400
-    onSecondary = Color(0xFFFFFFFF),                // --color-neutral-0
-    secondaryContainer = Color(0xFFF9EEEC),         // --color-secondary-50
-    onSecondaryContainer = Color(0xFF5A2A24),       // --color-secondary-800
+    secondary = Simmerly.DustyRose,
+    onSecondary = Simmerly.Neutral0,
+    secondaryContainer = Simmerly.DustyRoseSubtle,
+    onSecondaryContainer = Simmerly.DustyRoseDeep,
 
-    tertiary = Simmerly.HerbSage,                   // --color-tertiary-400
-    onTertiary = Color(0xFFFFFFFF),                 // --color-neutral-0
-    tertiaryContainer = Color(0xFFEDF3EF),          // --color-tertiary-50
-    onTertiaryContainer = Color(0xFF1C3D2A),        // --color-tertiary-800
+    tertiary = Simmerly.HerbSage,
+    onTertiary = Simmerly.Neutral0,
+    tertiaryContainer = Simmerly.HerbSageSubtle,
+    onTertiaryContainer = Simmerly.HerbSageDeep,
 
-    error = Color(0xFFD93025),                      // --color-error-500
-    onError = Color(0xFFFFFFFF),                    // --color-neutral-0
-    errorContainer = Color(0xFFFDECEA),             // --color-error-100
-    onErrorContainer = Color(0xFF9B1C14),           // --color-error-700
+    error = Simmerly.ErrorRed,
+    onError = Simmerly.Neutral0,
+    errorContainer = Simmerly.ErrorSubtle,
+    onErrorContainer = Simmerly.ErrorDark,
 
-    background = Simmerly.Background,               // --bg-subtle / --color-neutral-50
-    onBackground = Simmerly.TextPrimary,            // --fg-primary / --color-neutral-900
+    background = Simmerly.Neutral0,
+    onBackground = Simmerly.Neutral900,
 
-    surface = Simmerly.Surface1,                    // --bg-base / --color-neutral-0
-    onSurface = Simmerly.TextPrimary,               // --fg-primary / --color-neutral-900
-    surfaceVariant = Simmerly.Surface3,             // --bg-muted / --color-neutral-100
-    onSurfaceVariant = Simmerly.TextSecondary,      // --fg-secondary / --color-neutral-600
-    surfaceContainerLowest = Simmerly.Surface1,     // --color-neutral-0
-    surfaceContainerLow = Simmerly.Surface2,        // --color-neutral-50
-    surfaceContainer = Simmerly.Surface3,           // --color-neutral-100
-    surfaceContainerHigh = Simmerly.BorderDefault,  // --color-neutral-200
-    surfaceContainerHighest = Simmerly.TextDisabled,// --color-neutral-300
+    surface = Simmerly.Neutral0,
+    onSurface = Simmerly.Neutral900,
+    surfaceVariant = Simmerly.Neutral100,
+    onSurfaceVariant = Simmerly.Neutral600,
+    surfaceContainerLowest = Simmerly.Neutral0,
+    surfaceContainerLow = Simmerly.Neutral50,
+    surfaceContainer = Simmerly.Neutral100,
+    surfaceContainerHigh = Simmerly.Neutral200,
+    surfaceContainerHighest = Simmerly.Neutral300,
 
-    outline = Simmerly.BorderStrong,                // --border-strong / --color-neutral-400
-    outlineVariant = Simmerly.BorderDefault,        // --border-default / --color-neutral-200
+    outline = Simmerly.Neutral400,
+    outlineVariant = Simmerly.Neutral200,
 
-    inverseSurface = Color(0xFF282A2E),             // --bg-emphasis / --color-neutral-800
-    inverseOnSurface = Simmerly.Surface2,           // --color-neutral-50
-    inversePrimary = Color(0xFFFFB3A7),             // --color-primary-200
+    inverseSurface = Simmerly.Neutral800,
+    inverseOnSurface = Simmerly.Neutral50,
+    inversePrimary = Simmerly.Coral200,
 
-    scrim = Color(0xFF000000),
-    surfaceTint = Simmerly.Coral                    // --brand / --color-primary-400
+    scrim = Simmerly.Black,
+    surfaceTint = Simmerly.Coral400
 )
 
 // DARK THEME
 val SimmerlyDarkColorScheme = darkColorScheme(
-    primary = Color(0xFFFFB3A7),                    // --color-primary-200
-    onPrimary = Color(0xFF75130D),                  // --color-primary-900
-    primaryContainer = Color(0xFF9E1E14),           // --color-primary-800
-    onPrimaryContainer = Simmerly.CoralMuted,       // --color-primary-100
+    primary = Simmerly.Coral200,
+    onPrimary = Simmerly.Coral900,
+    primaryContainer = Simmerly.Coral800,
+    onPrimaryContainer = Simmerly.Coral100,
 
-    secondary = Color(0xFFE8C4BE),                  // --color-secondary-200
-    onSecondary = Color(0xFF5A2A24),                // --color-secondary-800
-    secondaryContainer = Color(0xFF8F4F46),         // --color-secondary-600
-    onSecondaryContainer = Color(0xFFF9EEEC),       // --color-secondary-50
+    secondary = Simmerly.DustyRoseLight,
+    onSecondary = Simmerly.DustyRoseDeep,
+    secondaryContainer = Simmerly.DustyRoseDark,
+    onSecondaryContainer = Simmerly.DustyRoseSubtle,
 
-    tertiary = Color(0xFFAECDB7),                   // --color-tertiary-200
-    onTertiary = Color(0xFF1C3D2A),                 // --color-tertiary-800
-    tertiaryContainer = Color(0xFF366B4A),          // --color-tertiary-600
-    onTertiaryContainer = Color(0xFFEDF3EF),        // --color-tertiary-50
+    tertiary = Simmerly.HerbSageLight,
+    onTertiary = Simmerly.HerbSageDeep,
+    tertiaryContainer = Simmerly.HerbSageDark,
+    onTertiaryContainer = Simmerly.HerbSageSubtle,
 
-    error = Color(0xFFFFB4AB),
-    onError = Color(0xFF690005),
-    errorContainer = Color(0xFF93000A),
-    onErrorContainer = Color(0xFFFDECEA),           // --color-error-100
+    error = Simmerly.ErrorDarkPrimary,
+    onError = Simmerly.ErrorDarkOn,
+    errorContainer = Simmerly.ErrorDarkContainer,
+    onErrorContainer = Simmerly.ErrorSubtle,
 
-    background = Color(0xFF17191C),                 // --color-neutral-900
-    onBackground = Color(0xFFF2F2F4),               // --color-neutral-100
+    background = Simmerly.Neutral900,
+    onBackground = Simmerly.Neutral100,
 
-    surface = Color(0xFF17191C),                    // --color-neutral-900
-    onSurface = Color(0xFFF2F2F4),                  // --color-neutral-100
-    surfaceVariant = Color(0xFF404347),             // --color-neutral-700
-    onSurfaceVariant = Simmerly.TextDisabled,       // --color-neutral-300
-    surfaceContainerLowest = Color(0xFF17191C),     // --color-neutral-900
-    surfaceContainerLow = Color(0xFF282A2E),        // --color-neutral-800
-    surfaceContainer = Color(0xFF404347),           // --color-neutral-700
-    surfaceContainerHigh = Color(0xFF5F6269),       // --color-neutral-600
-    surfaceContainerHighest = Simmerly.TextMuted,   // --color-neutral-500
+    surface = Simmerly.Neutral900,
+    onSurface = Simmerly.Neutral100,
+    surfaceVariant = Simmerly.Neutral700,
+    onSurfaceVariant = Simmerly.Neutral300,
+    surfaceContainerLowest = Simmerly.Neutral900,
+    surfaceContainerLow = Simmerly.Neutral800,
+    surfaceContainer = Simmerly.Neutral700,
+    surfaceContainerHigh = Simmerly.Neutral600,
+    surfaceContainerHighest = Simmerly.Neutral500,
 
-    outline = Simmerly.TextMuted,                   // --color-neutral-500
-    outlineVariant = Color(0xFF404347),             // --color-neutral-700
+    outline = Simmerly.Neutral500,
+    outlineVariant = Simmerly.Neutral700,
 
-    inverseSurface = Color(0xFFF2F2F4),             // --color-neutral-100
-    inverseOnSurface = Color(0xFF17191C),           // --color-neutral-900
-    inversePrimary = Simmerly.Coral,                // --color-primary-400 (seed)
+    inverseSurface = Simmerly.Neutral100,
+    inverseOnSurface = Simmerly.Neutral900,
+    inversePrimary = Simmerly.Coral400,
 
-    scrim = Color(0xFF000000),
-    surfaceTint = Color(0xFFFFB3A7)                 // --color-primary-200
+    scrim = Simmerly.Black,
+    surfaceTint = Simmerly.Coral200
 )
