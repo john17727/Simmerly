@@ -55,12 +55,21 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Devices
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
+import dev.juanrincon.simmerly.core.presentation.UiText
 import dev.juanrincon.simmerly.core.presentation.ifTrue
 import dev.juanrincon.simmerly.core.presentation.shimmer
+import dev.juanrincon.simmerly.recipes.domain.model.Settings
+import dev.juanrincon.simmerly.recipes.presentation.details.models.IngredientUi
+import dev.juanrincon.simmerly.recipes.presentation.details.models.InstructionUi
+import dev.juanrincon.simmerly.recipes.presentation.details.models.NutritionUi
+import dev.juanrincon.simmerly.recipes.presentation.details.models.RecipeDetailUi
 import dev.juanrincon.simmerly.recipes.presentation.details.mvikotlin.RecipeDetailsStore
 import dev.juanrincon.simmerly.recipes.presentation.shared.RecipeMetaRow
+import dev.juanrincon.simmerly.theme.SimmerlyTheme
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
@@ -469,3 +478,171 @@ private val TAB_ROW_HEIGHT = 48.dp
 
 // Max collapsed lines for the recipe description before a "Read more" button appears
 private const val DESCRIPTION_MAX_LINES = 4
+
+private val previewRecipe = RecipeDetailUi(
+    id = "1",
+    title = UiText.DynamicText("Spaghetti Carbonara"),
+    image = "",
+    description = UiText.DynamicText(
+        "A classic Roman pasta dish made with eggs, Pecorino Romano, guanciale, and black pepper. " +
+                "Rich, creamy, and deeply satisfying without a drop of cream."
+    ),
+    rating = 4.8,
+    totalTime = "30 min",
+    prepTime = "10 min",
+    performTime = "20 min",
+    servings = 2.0,
+    favorite = false,
+    ingredients = listOf(
+        IngredientUi(
+            quantity = null,
+            display = "200g spaghetti",
+            food = null,
+            unit = null,
+            note = null
+        ),
+        IngredientUi(
+            quantity = null,
+            display = "100g guanciale",
+            food = null,
+            unit = null,
+            note = null
+        ),
+        IngredientUi(
+            quantity = null,
+            display = "2 large eggs",
+            food = null,
+            unit = null,
+            note = null
+        ),
+        IngredientUi(
+            quantity = null,
+            display = "50g Pecorino Romano",
+            food = null,
+            unit = null,
+            note = null
+        ),
+    ),
+    instructions = listOf(
+        InstructionUi(
+            id = "1",
+            title = "Cook the pasta",
+            summary = "Boil spaghetti in salted water until al dente.",
+            text = "Bring a large pot of salted water to a boil. Cook spaghetti according to package instructions until al dente. Reserve 1 cup of pasta water before draining.",
+            associatedIngredients = emptyList()
+        ),
+        InstructionUi(
+            id = "2",
+            title = "Prepare the sauce",
+            summary = "Whisk eggs and cheese, then combine with pasta.",
+            text = "Whisk together eggs and Pecorino Romano in a bowl. Remove pasta from heat, add guanciale, then stir in egg mixture, adding pasta water gradually to achieve a creamy consistency.",
+            associatedIngredients = emptyList()
+        ),
+    ),
+    tools = emptyList(),
+    nutrition = NutritionUi(
+        calories = "620 kcal",
+        carbohydrateContent = "72g",
+        cholesterolContent = "210mg",
+        fatContent = "24g",
+        fiberContent = "3g",
+        proteinContent = "28g",
+        saturatedFatContent = "9g",
+        sodiumContent = "580mg",
+        sugarContent = "2g",
+        transFatContent = "0g",
+        unsaturatedFatContent = "13g"
+    ),
+    notes = emptyList(),
+    settings = Settings(
+        public = true,
+        showNutrition = false,
+        showAssets = false,
+        landscapeView = false,
+        disableComments = false,
+        locked = false
+    )
+)
+
+private val previewTabs = listOf("Overview", "Ingredients", "Instructions")
+
+@Preview(apiLevel = 36, showSystemUi = true, device = Devices.PIXEL_9_PRO, wallpaper = 1)
+@Composable
+private fun DynamicPreview() {
+    SimmerlyTheme(dynamicColor = true) {
+        CompactRecipeDetails(
+            state = RecipeDetailsStore.State(
+                loading = false,
+                recipe = previewRecipe,
+                mobileTabs = previewTabs
+            ),
+            onEvent = {},
+            onNavigateBack = {},
+            onNavigateToComments = {}
+        )
+    }
+}
+
+@Preview(apiLevel = 36, showSystemUi = true, device = Devices.PIXEL_9_PRO)
+@Composable
+private fun LightPreview() {
+    SimmerlyTheme {
+        CompactRecipeDetails(
+            state = RecipeDetailsStore.State(
+                loading = false,
+                recipe = previewRecipe,
+                mobileTabs = previewTabs
+            ),
+            onEvent = {},
+            onNavigateBack = {},
+            onNavigateToComments = {}
+        )
+    }
+}
+
+@Preview(apiLevel = 36, showSystemUi = true, device = Devices.PIXEL_9_PRO, wallpaper = 1)
+@Composable
+private fun DynamicDarkPreview() {
+    SimmerlyTheme(darkTheme = true, dynamicColor = true) {
+        CompactRecipeDetails(
+            state = RecipeDetailsStore.State(
+                loading = false,
+                recipe = previewRecipe,
+                mobileTabs = previewTabs
+            ),
+            onEvent = {},
+            onNavigateBack = {},
+            onNavigateToComments = {}
+        )
+    }
+}
+
+@Preview(apiLevel = 36, showSystemUi = true, device = Devices.PIXEL_9_PRO)
+@Composable
+private fun DarkPreview() {
+    SimmerlyTheme(darkTheme = true) {
+        CompactRecipeDetails(
+            state = RecipeDetailsStore.State(
+                loading = false,
+                recipe = previewRecipe,
+                mobileTabs = previewTabs
+            ),
+            onEvent = {},
+            onNavigateBack = {},
+            onNavigateToComments = {}
+        )
+    }
+}
+
+@Preview(apiLevel = 36, showSystemUi = true, device = Devices.PIXEL_9_PRO)
+@Composable
+private fun LoadingPreview() {
+    SimmerlyTheme {
+        CompactRecipeDetails(
+            state = RecipeDetailsStore.State(loading = true),
+            onEvent = {},
+            onNavigateBack = {},
+            onNavigateToComments = {}
+        )
+    }
+}
