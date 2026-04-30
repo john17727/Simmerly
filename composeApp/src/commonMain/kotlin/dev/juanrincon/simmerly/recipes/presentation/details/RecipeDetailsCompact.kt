@@ -20,16 +20,18 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Comment
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.ViewTimeline
+import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.FloatingToolbarDefaults
-import androidx.compose.material3.HorizontalFloatingToolbar
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconToggleButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MediumFlexibleTopAppBar
 import androidx.compose.material3.OutlinedCard
@@ -106,62 +108,68 @@ internal fun CompactRecipeDetails(
                         )
                     }
                 },
-                actions = {
-                    if (!state.recipe.settings.disableComments) {
-                        IconButton(onClick = { onNavigateToComments(state.recipe.id) }) {
-                            Icon(
-                                Icons.AutoMirrored.Default.Comment,
-                                contentDescription = "Comment"
-                            )
-                        }
-                    }
-                },
                 scrollBehavior = scrollBehavior
             )
         },
-    ) { paddingValues ->
-        Box(modifier = modifier.fillMaxSize().padding(paddingValues)) {
-            CompactContent(
-                state = state,
-                onEvent = onEvent,
-                modifier = Modifier.fillMaxSize()
-            )
-            AnimatedVisibility(
-                !state.loading,
-                modifier = Modifier.align(Alignment.BottomCenter)
-            ) {
-                HorizontalFloatingToolbar(
-                    expanded = true,
-                    floatingActionButton = {
-                        FloatingToolbarDefaults.StandardFloatingActionButton(
-                            onClick = { /* TODO: play action */ }
+        bottomBar = {
+            BottomAppBar(
+                actions = {
+                    IconToggleButton(
+                        checked = state.recipe.favorite,
+                        onCheckedChange = {},
+                        enabled = !state.loading
+                    ) {
+                        Icon(
+                            Icons.Default.Favorite,
+                            contentDescription = "Favorite",
+                        )
+                    }
+                    IconButton(
+                        onClick = { /* TODO: timeline action */ },
+                        enabled = !state.loading
+                    ) {
+                        Icon(Icons.Default.ViewTimeline, contentDescription = "Timeline")
+                    }
+                    IconButton(onClick = { /* TODO: edit action */ }, enabled = !state.loading) {
+                        Icon(Icons.Default.Edit, contentDescription = "Edit")
+                    }
+                    IconButton(
+                        onClick = { onEvent(RecipeDetailsStore.Intent.ShowSettings) },
+                        enabled = !state.loading
+                    ) {
+                        Icon(Icons.Default.Settings, contentDescription = "Settings")
+                    }
+                    IconButton(
+                        onClick = { onNavigateToComments(state.recipe.id) },
+                        enabled = !state.loading && !state.recipe.settings.disableComments
+                    ) {
+                        Icon(
+                            Icons.AutoMirrored.Default.Comment,
+                            contentDescription = "Comment"
+                        )
+                    }
+                    IconButton(onClick = { /* TODO: more action */ }, enabled = !state.loading) {
+                        Icon(Icons.Default.MoreVert, contentDescription = "More")
+                    }
+                },
+                floatingActionButton = {
+                    AnimatedVisibility(visible = !state.loading) {
+                        FloatingActionButton(
+                            onClick = { /* TODO: play action */ },
                         ) {
                             Icon(Icons.Default.PlayArrow, contentDescription = "Play")
                         }
                     }
-                ) {
-                    IconButton(onClick = { /* TODO: favourite action */ }) {
-                        Icon(
-                            state.recipe.favoriteIcon.painter(),
-                            contentDescription = "Favorite",
-                            tint = MaterialTheme.colorScheme.primary
-                        )
-                    }
-                    IconButton(onClick = { /* TODO: timeline action */ }) {
-                        Icon(Icons.Default.ViewTimeline, contentDescription = "Timeline")
-                    }
-                    IconButton(onClick = { /* TODO: edit action */ }) {
-                        Icon(Icons.Default.Edit, contentDescription = "Edit")
-                    }
-                    IconButton(onClick = { onEvent(RecipeDetailsStore.Intent.ShowSettings) }) {
-                        Icon(Icons.Default.Settings, contentDescription = "Settings")
-                    }
-                    IconButton(onClick = { /* TODO: more action */ }) {
-                        Icon(Icons.Default.MoreVert, contentDescription = "More")
-                    }
                 }
-            }
+            )
         }
+    ) { paddingValues ->
+        CompactContent(
+            state = state,
+            onEvent = onEvent,
+            paddingValues = paddingValues,
+            modifier = modifier.fillMaxSize()
+        )
     }
 }
 
@@ -169,6 +177,7 @@ internal fun CompactRecipeDetails(
 private fun CompactContent(
     state: RecipeDetailsStore.State,
     onEvent: (RecipeDetailsStore.Intent) -> Unit,
+    paddingValues: PaddingValues,
     modifier: Modifier = Modifier
 ) {
     val recipe = state.recipe
@@ -202,8 +211,11 @@ private fun CompactContent(
 
     LazyColumn(
         state = listState,
-        modifier = modifier,
-        contentPadding = PaddingValues(top = 8.dp, bottom = 96.dp)
+        modifier = modifier.padding(paddingValues),
+        contentPadding = PaddingValues(
+            top = 8.dp,
+            bottom = 8.dp
+        )
     ) {
 
         // Hero image
