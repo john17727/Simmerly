@@ -3,6 +3,7 @@ package dev.juanrincon.simmerly.recipes.presentation.details.models
 import dev.juanrincon.simmerly.core.utils.capitalizeWords
 import dev.juanrincon.simmerly.core.utils.format
 import dev.juanrincon.simmerly.core.utils.nullIfEmpty
+import dev.juanrincon.simmerly.core.utils.toFractionString
 
 data class IngredientUi(
     val quantity: Double?,
@@ -33,7 +34,8 @@ data class IngredientUi(
             } else {
                 unit.pluralName ?: unit.name
             }
-            val formattedQuantity = quantity?.format(2)
+            val formattedQuantity =
+                if (unit.fraction) quantity?.toFractionString() else quantity?.format(2)
             val formattedUnit = if ((quantity ?: 0.0) > 1.0) {
                 (pluralName ?: name).nullIfEmpty()
             } else {
