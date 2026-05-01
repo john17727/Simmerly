@@ -138,7 +138,10 @@ internal fun Login(
             label = { Text("Server Address") },
             leadingIcon = { Icon(Icons.Default.Dns, contentDescription = null) },
             enabled = !state.isLoading,
-            keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Next),
+            keyboardOptions = KeyboardOptions.Default.copy(
+                imeAction = ImeAction.Next,
+                keyboardType = KeyboardType.Text
+            ),
             keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) })
         )
         Spacer(modifier = Modifier.height(32.dp))
