@@ -1,8 +1,6 @@
 package dev.juanrincon.simmerly.welcome.presentation
 
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -35,16 +33,10 @@ fun WelcomeContent(
             }
         }
     }
-
-    Scaffold(
-        modifier = modifier,
-        snackbarHost = { SnackbarHost(snackbarHostState) }
-    ) { innerPadding ->
-        WelcomeScreen(
-            state = state,
-            onEvent = viewModel::onEvent,
-            // Pass innerPadding if WelcomeScreen is the direct child of Scaffold
-            modifier = Modifier.fillMaxSize()
-        )
-    }
+    WelcomeScreen(
+        state = state,
+        onEvent = viewModel::onEvent,
+        // Pass innerPadding if WelcomeScreen is the direct child of Scaffold
+        modifier = Modifier.fillMaxSize()
+    )
 }

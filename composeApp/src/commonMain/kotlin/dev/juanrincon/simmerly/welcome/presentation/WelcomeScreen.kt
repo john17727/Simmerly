@@ -2,14 +2,16 @@ package dev.juanrincon.simmerly.welcome.presentation
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Dns
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Button
@@ -30,10 +32,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusDirection
-import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ColorFilter
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.input.ImeAction
@@ -46,7 +45,6 @@ import dev.juanrincon.simmerly.welcome.presentation.mvikotlin.WelcomeStore
 import org.jetbrains.compose.resources.painterResource
 import simmerly.composeapp.generated.resources.Res
 import simmerly.composeapp.generated.resources.simmerly_logo
-import simmerly.composeapp.generated.resources.welcome_background
 
 @Composable
 fun WelcomeScreen(
@@ -61,23 +59,11 @@ fun WelcomeScreen(
             keyboardController?.hide()
         }
     }
-    Box(modifier = modifier) {
-        Image(
-            painter = painterResource(Res.drawable.welcome_background),
-            contentDescription = "Welcome background",
-            modifier = Modifier.fillMaxSize(),
-            contentScale = ContentScale.Crop,
-            colorFilter = ColorFilter.tint(
-                Color.Black.copy(alpha = 0.5f), // Example: 30% opaque black tint
-                blendMode = BlendMode.Multiply
-            )
-        )
-        AnimatedContent(windowSizeClass.isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_EXPANDED_LOWER_BOUND)) { isExpanded ->
-            if (isExpanded) {
-                ExpandedWelcome(state, onEvent)
-            } else {
-                CompactWelcome(state, onEvent)
-            }
+    AnimatedContent(windowSizeClass.isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_EXPANDED_LOWER_BOUND)) { isExpanded ->
+        if (isExpanded) {
+            ExpandedWelcome(state, onEvent, modifier = modifier)
+        } else {
+            CompactWelcome(state, onEvent, modifier = modifier)
         }
     }
 }
@@ -108,6 +94,26 @@ fun Logo(modifier: Modifier = Modifier) {
     }
 }
 
+@Composable
+fun Header(modifier: Modifier = Modifier) {
+    Column(
+        modifier = modifier,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            text = "Welcome to Simmerly",
+            style = MaterialTheme.typography.headlineLarge,
+            modifier = Modifier.padding(16.dp)
+        )
+        Text(
+            text = "Your self‑hosted recipe nook.",
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.tertiary,
+            modifier = Modifier.padding(horizontal = 16.dp)
+        )
+    }
+}
+
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
 internal fun Login(
@@ -116,63 +122,71 @@ internal fun Login(
     modifier: Modifier = Modifier
 ) {
     val focusManager = LocalFocusManager.current
-    OutlinedTextField(
-        value = state.serverAddress,
-        onValueChange = { onEvent(WelcomeStore.Intent.OnServerAddressChanged(it)) },
-        modifier = modifier.padding(16.dp),
-        label = { Text("Server Address") },
-        enabled = !state.isLoading,
-        keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Next),
-        keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) })
-    )
-    OutlinedTextField(
-        value = state.username,
-        onValueChange = { onEvent(WelcomeStore.Intent.OnUsernameChanged(it)) },
-        modifier.padding(horizontal = 16.dp),
-        label = { Text("Username/Email") },
-        enabled = !state.isLoading,
-        keyboardOptions = KeyboardOptions.Default.copy(
-            imeAction = ImeAction.Next,
-            keyboardType = KeyboardType.Email
-        ),
-        keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) })
-    )
-    var passwordVisible by remember { mutableStateOf(false) }
-    OutlinedTextField(
-        value = state.password,
-        onValueChange = { onEvent(WelcomeStore.Intent.OnPasswordChanged(it)) },
-        modifier.padding(horizontal = 16.dp),
-        label = { Text("Password") },
-        visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-        keyboardOptions = KeyboardOptions.Default.copy(
-            imeAction = ImeAction.Done,
-            keyboardType = KeyboardType.Password
-        ),
-        keyboardActions = KeyboardActions(onDone = { onEvent(WelcomeStore.Intent.OnLoginClicked) }),
-        enabled = !state.isLoading,
-        trailingIcon = {
-            val image = if (passwordVisible)
-                Icons.Filled.Visibility
-            else Icons.Filled.VisibilityOff
-            val description = if (passwordVisible) "Hide password" else "Show password"
-            IconButton(onClick = { passwordVisible = !passwordVisible }) {
-                Icon(imageVector = image, description)
+    Column(modifier = modifier) {
+        OutlinedTextField(
+            value = state.serverAddress,
+            onValueChange = { onEvent(WelcomeStore.Intent.OnServerAddressChanged(it)) },
+            modifier = Modifier.fillMaxWidth(),
+            label = { Text("Server Address") },
+            leadingIcon = { Icon(Icons.Default.Dns, contentDescription = null) },
+            enabled = !state.isLoading,
+            keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Next),
+            keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) })
+        )
+        OutlinedTextField(
+            value = state.username,
+            onValueChange = { onEvent(WelcomeStore.Intent.OnUsernameChanged(it)) },
+            label = { Text("Username/Email") },
+            modifier = Modifier.fillMaxWidth(),
+            leadingIcon = { Icon(Icons.Default.Person, contentDescription = null) },
+            enabled = !state.isLoading,
+            keyboardOptions = KeyboardOptions.Default.copy(
+                imeAction = ImeAction.Next,
+                keyboardType = KeyboardType.Email
+            ),
+            keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) })
+        )
+        var passwordVisible by remember { mutableStateOf(false) }
+        OutlinedTextField(
+            value = state.password,
+            onValueChange = { onEvent(WelcomeStore.Intent.OnPasswordChanged(it)) },
+            modifier = Modifier.fillMaxWidth(),
+            label = { Text("Password") },
+            leadingIcon = { Icon(Icons.Default.Lock, contentDescription = null) },
+            visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+            keyboardOptions = KeyboardOptions.Default.copy(
+                imeAction = ImeAction.Done,
+                keyboardType = KeyboardType.Password
+            ),
+            keyboardActions = KeyboardActions(onDone = { onEvent(WelcomeStore.Intent.OnLoginClicked) }),
+            enabled = !state.isLoading,
+            trailingIcon = {
+                val image = if (passwordVisible)
+                    Icons.Filled.Visibility
+                else Icons.Filled.VisibilityOff
+                val description = if (passwordVisible) "Hide password" else "Show password"
+                IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                    Icon(imageVector = image, description)
+                }
             }
-        }
-    )
-    Button(
-        onClick = { onEvent(WelcomeStore.Intent.OnLoginClicked) },
-        enabled = state.isLoginButtonEnabled,
-        modifier = modifier.padding(16.dp)
-    ) {
-        AnimatedContent(targetState = state.isLoading, label = "LoginButtonContent") { isLoading ->
-            if (isLoading) {
-                CircularProgressIndicator(
-                    color = MaterialTheme.colorScheme.onPrimary,
-                    modifier = Modifier.sizeIn(maxHeight = 24.dp, maxWidth = 24.dp)
-                )
-            } else {
-                Text("Login")
+        )
+        Button(
+            onClick = { onEvent(WelcomeStore.Intent.OnLoginClicked) },
+            enabled = state.isLoginButtonEnabled,
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            AnimatedContent(
+                targetState = state.isLoading,
+                label = "LoginButtonContent"
+            ) { isLoading ->
+                if (isLoading) {
+                    CircularProgressIndicator(
+                        color = MaterialTheme.colorScheme.onPrimary,
+                        modifier = Modifier.sizeIn(maxHeight = 24.dp, maxWidth = 24.dp)
+                    )
+                } else {
+                    Text("Login")
+                }
             }
         }
     }
