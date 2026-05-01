@@ -5,11 +5,14 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -21,15 +24,16 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonGroupDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.SegmentedButton
-import androidx.compose.material3.SegmentedButtonDefaults
-import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
+import androidx.compose.material3.ToggleButton
+import androidx.compose.material3.ToggleButtonDefaults
 import androidx.compose.material3.adaptive.currentWindowAdaptiveInfoV2
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -44,6 +48,9 @@ import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -121,7 +128,7 @@ fun Header(modifier: Modifier = Modifier) {
     }
 }
 
-@OptIn(ExperimentalComposeUiApi::class)
+@OptIn(ExperimentalComposeUiApi::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 internal fun Login(
     state: WelcomeStore.State,
@@ -145,21 +152,32 @@ internal fun Login(
             keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) })
         )
         Spacer(modifier = Modifier.height(32.dp))
-        SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
-            SegmentedButton(
-                shape = SegmentedButtonDefaults.itemShape(0, 2),
-                onClick = { onEvent(WelcomeStore.Intent.OnCredentialTypeChanged(WelcomeStore.CredentialType.CREDENTIALS)) },
-                selected = state.credentialType == WelcomeStore.CredentialType.CREDENTIALS,
-                icon = { Icon(Icons.Default.Person, contentDescription = null) },
-                label = { Text("Credentials") },
-            )
-            SegmentedButton(
-                shape = SegmentedButtonDefaults.itemShape(1, 2),
-                onClick = { onEvent(WelcomeStore.Intent.OnCredentialTypeChanged(WelcomeStore.CredentialType.API_TOKEN)) },
-                selected = state.credentialType == WelcomeStore.CredentialType.API_TOKEN,
-                icon = { Icon(Icons.Default.Key, contentDescription = null) },
-                label = { Text("API Token") },
-            )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween)
+        ) {
+            ToggleButton(
+                checked = state.credentialType == WelcomeStore.CredentialType.CREDENTIALS,
+                onCheckedChange = { onEvent(WelcomeStore.Intent.OnCredentialTypeChanged(WelcomeStore.CredentialType.CREDENTIALS)) },
+                modifier = Modifier.weight(1f).semantics { role = Role.RadioButton },
+                enabled = !state.isLoading,
+                shapes = ButtonGroupDefaults.connectedLeadingButtonShapes(),
+            ) {
+                Icon(Icons.Default.Person, contentDescription = null)
+                Spacer(Modifier.size(ToggleButtonDefaults.IconSpacing))
+                Text("Credentials")
+            }
+            ToggleButton(
+                checked = state.credentialType == WelcomeStore.CredentialType.API_TOKEN,
+                onCheckedChange = { onEvent(WelcomeStore.Intent.OnCredentialTypeChanged(WelcomeStore.CredentialType.API_TOKEN)) },
+                modifier = Modifier.weight(1f).semantics { role = Role.RadioButton },
+                enabled = !state.isLoading,
+                shapes = ButtonGroupDefaults.connectedTrailingButtonShapes(),
+            ) {
+                Icon(Icons.Default.Key, contentDescription = null)
+                Spacer(Modifier.size(ToggleButtonDefaults.IconSpacing))
+                Text("API Token")
+            }
         }
         Spacer(modifier = Modifier.height(8.dp))
         AnimatedContent(
