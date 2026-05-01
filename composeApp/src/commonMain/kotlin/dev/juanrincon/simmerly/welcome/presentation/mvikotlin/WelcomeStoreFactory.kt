@@ -8,7 +8,6 @@ import com.arkivanov.mvikotlin.extensions.coroutines.CoroutineExecutor
 import dev.juanrincon.simmerly.auth.domain.AuthRepository
 import dev.juanrincon.simmerly.auth.domain.LoginError
 import dev.juanrincon.simmerly.welcome.presentation.mvikotlin.WelcomeStoreFactory.Message.LoadingStateChanged
-import dev.juanrincon.simmerly.welcome.presentation.mvikotlin.WelcomeStoreFactory.Message.LoginButtonStateChanged
 import dev.juanrincon.simmerly.welcome.presentation.mvikotlin.WelcomeStoreFactory.Message.PasswordChanged
 import dev.juanrincon.simmerly.welcome.presentation.mvikotlin.WelcomeStoreFactory.Message.ServerAddressChanged
 import dev.juanrincon.simmerly.welcome.presentation.mvikotlin.WelcomeStoreFactory.Message.UsernameChanged
@@ -40,8 +39,6 @@ class WelcomeStoreFactory(
 
         data class PasswordChanged(val password: String) : Message
 
-        data class LoginButtonStateChanged(val isEnabled: Boolean) : Message
-
         data class LoadingStateChanged(val isLoading: Boolean) : Message
     }
 
@@ -51,7 +48,6 @@ class WelcomeStoreFactory(
         override fun executeIntent(intent: WelcomeStore.Intent) = when (intent) {
             is WelcomeStore.Intent.OnServerAddressChanged -> {
                 dispatch(ServerAddressChanged(intent.serverAddress))
-                updateLoginButtonState()
             }
 
             WelcomeStore.Intent.OnLoginClicked -> logInUser(
@@ -62,12 +58,10 @@ class WelcomeStoreFactory(
 
             is WelcomeStore.Intent.OnPasswordChanged -> {
                 dispatch(PasswordChanged(intent.password))
-                updateLoginButtonState()
             }
 
             is WelcomeStore.Intent.OnUsernameChanged -> {
                 dispatch(UsernameChanged(intent.username))
-                updateLoginButtonState()
             }
 
             is WelcomeStore.Intent.OnCredentialTypeChanged -> {
@@ -88,7 +82,18 @@ class WelcomeStoreFactory(
                 ) {
                     formattedServerAddress = "https://$formattedServerAddress"
                 }
-                authRepository.login(formattedServerAddress, username, password).onError { error ->
+                when (state().credentialType) {
+                    WelcomeStore.CredentialType.CREDENTIALS -> authRepository.login(
+                        formattedServerAddress,
+                        username,
+                        password
+                    )
+
+                    WelcomeStore.CredentialType.API_TOKEN -> authRepository.login(
+                        formattedServerAddress,
+                        password
+                    )
+                }.onError { error ->
                     val message = when (error) {
                         LoginError.InvalidCredentials -> Res.string.login_failed
                         LoginError.UnresolvedAddress,
@@ -97,16 +102,9 @@ class WelcomeStoreFactory(
                         LoginError.UnknownError -> Res.string.something_went_wrong
                     }
                     publish(WelcomeStore.Label.LoginFailed(message))
-                    dispatch(LoadingStateChanged(false))
                 }
+                dispatch(LoadingStateChanged(false))
             }
-        }
-
-        private fun updateLoginButtonState() {
-            val isEnabled = state().serverAddress.isNotBlank() &&
-                    state().username.isNotBlank() &&
-                    state().password.isNotBlank()
-            dispatch(LoginButtonStateChanged(isEnabled))
         }
     }
 
@@ -117,28 +115,54 @@ class WelcomeStoreFactory(
         ): WelcomeStore.State = when (msg) {
             is ServerAddressChanged -> copy(
                 serverAddress = msg.serverAddress,
-                isLoginButtonEnabled = isLoginButtonEnabled(msg.serverAddress, username, password)
+                isLoginButtonEnabled = isLoginButtonEnabled(
+                    credentialType,
+                    msg.serverAddress,
+                    username,
+                    password
+                )
             )
 
             is PasswordChanged -> copy(
                 password = msg.password,
-                isLoginButtonEnabled = isLoginButtonEnabled(serverAddress, username, msg.password)
+                isLoginButtonEnabled = isLoginButtonEnabled(
+                    credentialType,
+                    serverAddress,
+                    username,
+                    msg.password
+                )
             )
 
             is UsernameChanged -> copy(
                 username = msg.username,
-                isLoginButtonEnabled = isLoginButtonEnabled(serverAddress, msg.username, password)
+                isLoginButtonEnabled = isLoginButtonEnabled(
+                    credentialType,
+                    serverAddress,
+                    msg.username,
+                    password
+                )
             )
 
-            is LoginButtonStateChanged -> copy(isLoginButtonEnabled = msg.isEnabled)
             is LoadingStateChanged -> copy(isLoading = msg.isLoading)
-            is Message.CredentialTypeChanged -> copy(credentialType = msg.credentialType)
+            is Message.CredentialTypeChanged -> copy(
+                credentialType = msg.credentialType,
+                isLoginButtonEnabled = isLoginButtonEnabled(
+                    msg.credentialType,
+                    serverAddress,
+                    username,
+                    password
+                )
+            )
         }
 
         private fun isLoginButtonEnabled(
+            credentialType: WelcomeStore.CredentialType,
             serverAddress: String,
             username: String,
             password: String
-        ) = serverAddress.isNotBlank() && username.isNotBlank() && password.isNotBlank()
+        ) = when (credentialType) {
+            WelcomeStore.CredentialType.CREDENTIALS -> serverAddress.isNotBlank() && username.isNotBlank() && password.isNotBlank()
+            WelcomeStore.CredentialType.API_TOKEN -> serverAddress.isNotBlank() && password.isNotBlank()
+        }
     }
 }

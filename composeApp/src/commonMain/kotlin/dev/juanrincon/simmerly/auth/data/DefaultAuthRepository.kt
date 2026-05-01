@@ -24,6 +24,7 @@ class DefaultAuthRepository(
         password: String
     ): EmptyResult<LoginError> =
         networkClient.logIn(serverAddress, username, password).onSuccess {
+            // TODO: Validate token by getting user data, potentially get auxiliary data from the server
             sessionDatastore.setServerAddress(serverAddress)
             sessionDatastore.setToken(it)
         }.mapError { error ->
@@ -41,8 +42,11 @@ class DefaultAuthRepository(
             }
         }.asEmptyDataResult()
 
-    override suspend fun login(apiKey: String) {
-        TODO("Not yet implemented")
+    override suspend fun login(serverAddress: String, apiKey: String): EmptyResult<LoginError> {
+        // TODO: Validate API key by getting user data, potentially get auxiliary data from the server
+        sessionDatastore.setServerAddress(serverAddress)
+        sessionDatastore.setToken(apiKey)
+        return EmptyResult.success(Unit)
     }
 
     override suspend fun logout() {
