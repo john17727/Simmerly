@@ -34,6 +34,8 @@ class WelcomeStoreFactory(
     private sealed interface Message {
         data class ServerAddressChanged(val serverAddress: String) : Message
 
+        data class CredentialTypeChanged(val credentialType: WelcomeStore.CredentialType) : Message
+
         data class UsernameChanged(val username: String) : Message
 
         data class PasswordChanged(val password: String) : Message
@@ -66,6 +68,10 @@ class WelcomeStoreFactory(
             is WelcomeStore.Intent.OnUsernameChanged -> {
                 dispatch(UsernameChanged(intent.username))
                 updateLoginButtonState()
+            }
+
+            is WelcomeStore.Intent.OnCredentialTypeChanged -> {
+                dispatch(Message.CredentialTypeChanged(intent.credentialType))
             }
         }
 
@@ -126,6 +132,7 @@ class WelcomeStoreFactory(
 
             is LoginButtonStateChanged -> copy(isLoginButtonEnabled = msg.isEnabled)
             is LoadingStateChanged -> copy(isLoading = msg.isLoading)
+            is Message.CredentialTypeChanged -> copy(credentialType = msg.credentialType)
         }
 
         private fun isLoginButtonEnabled(

@@ -26,10 +26,6 @@ import org.jetbrains.compose.resources.painterResource
 import simmerly.composeapp.generated.resources.Res
 import simmerly.composeapp.generated.resources.recipe_1
 import simmerly.composeapp.generated.resources.recipe_10
-import simmerly.composeapp.generated.resources.recipe_11
-import simmerly.composeapp.generated.resources.recipe_12
-import simmerly.composeapp.generated.resources.recipe_13
-import simmerly.composeapp.generated.resources.recipe_14
 import simmerly.composeapp.generated.resources.recipe_2
 import simmerly.composeapp.generated.resources.recipe_3
 import simmerly.composeapp.generated.resources.recipe_4
@@ -69,30 +65,25 @@ internal fun WelcomeCollage(modifier: Modifier = Modifier) {
                 ColorBlock(MaterialTheme.colorScheme.tertiary, cellSize)
                 RecipeSquareImage(Res.drawable.recipe_1, cellSize)
                 RecipeSquareImage(Res.drawable.recipe_2, cellSize)
-                ColorBlock(MaterialTheme.colorScheme.secondary, cellSize)
             }
             Column(verticalArrangement = Arrangement.spacedBy(GAP)) {
                 RecipeSquareImage(Res.drawable.recipe_3, cellSize)
                 LogoCell(cellSize)
-                RecipeSquareImage(Res.drawable.recipe_4, cellSize)
-                RecipeCircleImage(Res.drawable.recipe_5, cellSize)
+                RecipeCircleImage(Res.drawable.recipe_4, cellSize)
             }
             Column(verticalArrangement = Arrangement.spacedBy(GAP)) {
-                RecipeCircleImage(Res.drawable.recipe_6, cellSize)
-                RecipeSquareImage(Res.drawable.recipe_7, cellSize)
+                RecipeCircleImage(Res.drawable.recipe_5, cellSize)
                 ColorBlock(MaterialTheme.colorScheme.primary, cellSize)
-                RecipeSquareImage(Res.drawable.recipe_8, cellSize)
+                RecipeSquareImage(Res.drawable.recipe_6, cellSize)
             }
             Column(verticalArrangement = Arrangement.spacedBy(GAP)) {
                 ColorBlock(MaterialTheme.colorScheme.secondaryContainer, cellSize)
-                RecipeSquareImage(Res.drawable.recipe_9, cellSize)
-                RecipeCircleImage(Res.drawable.recipe_10, cellSize)
-                RecipeSquareImage(Res.drawable.recipe_11, cellSize)
+                RecipeSquareImage(Res.drawable.recipe_7, cellSize)
+                RecipeCircleImage(Res.drawable.recipe_8, cellSize)
             }
             Column(verticalArrangement = Arrangement.spacedBy(GAP)) {
-                RecipeSquareImage(Res.drawable.recipe_12, cellSize)
-                RecipeSquareImage(Res.drawable.recipe_13, cellSize)
-                RecipeSquareImage(Res.drawable.recipe_14, cellSize)
+                RecipeSquareImage(Res.drawable.recipe_9, cellSize)
+                RecipeSquareImage(Res.drawable.recipe_10, cellSize)
                 ColorBlock(MaterialTheme.colorScheme.tertiaryContainer, cellSize)
             }
         }

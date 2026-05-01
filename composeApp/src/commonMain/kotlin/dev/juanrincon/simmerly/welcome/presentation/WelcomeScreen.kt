@@ -1,15 +1,21 @@
 package dev.juanrincon.simmerly.welcome.presentation
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Dns
+import androidx.compose.material.icons.filled.Key
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Visibility
@@ -20,6 +26,9 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.adaptive.currentWindowAdaptiveInfoV2
 import androidx.compose.runtime.Composable
@@ -59,12 +68,10 @@ fun WelcomeScreen(
             keyboardController?.hide()
         }
     }
-    AnimatedContent(windowSizeClass.isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_EXPANDED_LOWER_BOUND)) { isExpanded ->
-        if (isExpanded) {
-            ExpandedWelcome(state, onEvent, modifier = modifier)
-        } else {
-            CompactWelcome(state, onEvent, modifier = modifier)
-        }
+    if (windowSizeClass.isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_EXPANDED_LOWER_BOUND)) {
+        ExpandedWelcome(state, onEvent, modifier = modifier)
+    } else {
+        CompactWelcome(state, onEvent, modifier = modifier)
     }
 }
 
@@ -103,7 +110,7 @@ fun Header(modifier: Modifier = Modifier) {
         Text(
             text = "Welcome to Simmerly",
             style = MaterialTheme.typography.headlineLarge,
-            modifier = Modifier.padding(16.dp)
+            modifier = Modifier.padding(horizontal = 16.dp)
         )
         Text(
             text = "Your self‑hosted recipe nook.",
@@ -122,6 +129,7 @@ internal fun Login(
     modifier: Modifier = Modifier
 ) {
     val focusManager = LocalFocusManager.current
+    var passwordVisible by remember { mutableStateOf(false) }
     Column(modifier = modifier) {
         OutlinedTextField(
             value = state.serverAddress,
@@ -133,43 +141,85 @@ internal fun Login(
             keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Next),
             keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) })
         )
-        OutlinedTextField(
-            value = state.username,
-            onValueChange = { onEvent(WelcomeStore.Intent.OnUsernameChanged(it)) },
-            label = { Text("Username/Email") },
-            modifier = Modifier.fillMaxWidth(),
-            leadingIcon = { Icon(Icons.Default.Person, contentDescription = null) },
-            enabled = !state.isLoading,
-            keyboardOptions = KeyboardOptions.Default.copy(
-                imeAction = ImeAction.Next,
-                keyboardType = KeyboardType.Email
-            ),
-            keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) })
-        )
-        var passwordVisible by remember { mutableStateOf(false) }
-        OutlinedTextField(
-            value = state.password,
-            onValueChange = { onEvent(WelcomeStore.Intent.OnPasswordChanged(it)) },
-            modifier = Modifier.fillMaxWidth(),
-            label = { Text("Password") },
-            leadingIcon = { Icon(Icons.Default.Lock, contentDescription = null) },
-            visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-            keyboardOptions = KeyboardOptions.Default.copy(
-                imeAction = ImeAction.Done,
-                keyboardType = KeyboardType.Password
-            ),
-            keyboardActions = KeyboardActions(onDone = { onEvent(WelcomeStore.Intent.OnLoginClicked) }),
-            enabled = !state.isLoading,
-            trailingIcon = {
-                val image = if (passwordVisible)
-                    Icons.Filled.Visibility
-                else Icons.Filled.VisibilityOff
-                val description = if (passwordVisible) "Hide password" else "Show password"
-                IconButton(onClick = { passwordVisible = !passwordVisible }) {
-                    Icon(imageVector = image, description)
+        Spacer(modifier = Modifier.height(32.dp))
+        SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
+            SegmentedButton(
+                shape = SegmentedButtonDefaults.itemShape(0, 2),
+                onClick = { onEvent(WelcomeStore.Intent.OnCredentialTypeChanged(WelcomeStore.CredentialType.CREDENTIALS)) },
+                selected = state.credentialType == WelcomeStore.CredentialType.CREDENTIALS,
+                icon = { Icon(Icons.Default.Person, contentDescription = null) },
+                label = { Text("Credentials") },
+            )
+            SegmentedButton(
+                shape = SegmentedButtonDefaults.itemShape(1, 2),
+                onClick = { onEvent(WelcomeStore.Intent.OnCredentialTypeChanged(WelcomeStore.CredentialType.API_TOKEN)) },
+                selected = state.credentialType == WelcomeStore.CredentialType.API_TOKEN,
+                icon = { Icon(Icons.Default.Key, contentDescription = null) },
+                label = { Text("API Token") },
+            )
+        }
+        Spacer(modifier = Modifier.height(8.dp))
+        AnimatedContent(
+            targetState = state.credentialType,
+            label = "CredentialFields",
+            transitionSpec = { fadeIn() togetherWith fadeOut() }
+        ) { credType ->
+            Column {
+                if (credType == WelcomeStore.CredentialType.CREDENTIALS) {
+                    OutlinedTextField(
+                        value = state.username,
+                        onValueChange = { onEvent(WelcomeStore.Intent.OnUsernameChanged(it)) },
+                        label = { Text("Username/Email") },
+                        modifier = Modifier.fillMaxWidth(),
+                        leadingIcon = { Icon(Icons.Default.Person, contentDescription = null) },
+                        enabled = !state.isLoading,
+                        keyboardOptions = KeyboardOptions.Default.copy(
+                            imeAction = ImeAction.Next,
+                            keyboardType = KeyboardType.Email
+                        ),
+                        keyboardActions = KeyboardActions(onNext = {
+                            focusManager.moveFocus(
+                                FocusDirection.Down
+                            )
+                        })
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
                 }
+                OutlinedTextField(
+                    value = state.password,
+                    onValueChange = { onEvent(WelcomeStore.Intent.OnPasswordChanged(it)) },
+                    modifier = Modifier.fillMaxWidth(),
+                    label = {
+                        if (credType == WelcomeStore.CredentialType.CREDENTIALS) Text("Password") else Text(
+                            "Token"
+                        )
+                    },
+                    leadingIcon = {
+                        if (credType == WelcomeStore.CredentialType.CREDENTIALS) {
+                            Icon(Icons.Default.Lock, contentDescription = null)
+                        } else {
+                            Icon(Icons.Default.Key, contentDescription = null)
+                        }
+                    },
+                    visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                    keyboardOptions = KeyboardOptions.Default.copy(
+                        imeAction = ImeAction.Done,
+                        keyboardType = KeyboardType.Password
+                    ),
+                    keyboardActions = KeyboardActions(onDone = { onEvent(WelcomeStore.Intent.OnLoginClicked) }),
+                    enabled = !state.isLoading,
+                    trailingIcon = {
+                        val image =
+                            if (passwordVisible) Icons.Filled.Visibility else Icons.Filled.VisibilityOff
+                        val description = if (passwordVisible) "Hide password" else "Show password"
+                        IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                            Icon(imageVector = image, description)
+                        }
+                    }
+                )
             }
-        )
+        }
+        Spacer(modifier = Modifier.height(16.dp))
         Button(
             onClick = { onEvent(WelcomeStore.Intent.OnLoginClicked) },
             enabled = state.isLoginButtonEnabled,

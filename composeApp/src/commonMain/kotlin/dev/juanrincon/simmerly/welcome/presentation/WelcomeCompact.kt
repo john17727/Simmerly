@@ -11,6 +11,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import dev.juanrincon.simmerly.theme.SimmerlyTheme
 import dev.juanrincon.simmerly.welcome.presentation.mvikotlin.WelcomeStore
 
@@ -22,14 +23,16 @@ internal fun CompactWelcome(
 ) {
     Scaffold { innerPadding ->
         Column(
-            modifier = modifier.fillMaxSize().padding(innerPadding.calculateBottomPadding()),
+            modifier = modifier.fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             WelcomeCollage(modifier = Modifier.fillMaxWidth())
+            Spacer(modifier = Modifier.weight(1f))
             Header(modifier = Modifier.fillMaxWidth())
             Spacer(modifier = Modifier.weight(1f))
-            Login(state, onEvent, modifier = Modifier.fillMaxWidth())
+            Login(state, onEvent, modifier = Modifier.fillMaxWidth().padding(16.dp))
             Spacer(modifier = Modifier.weight(1f))
+            Spacer(modifier = Modifier.padding(innerPadding.calculateBottomPadding()))
         }
     }
 }
