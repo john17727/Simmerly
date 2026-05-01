@@ -2,26 +2,17 @@ package dev.juanrincon.simmerly.welcome.presentation
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.sizeIn
-import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -83,44 +74,9 @@ fun WelcomeScreen(
         )
         AnimatedContent(windowSizeClass.isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_EXPANDED_LOWER_BOUND)) { isExpanded ->
             if (isExpanded) {
-                Row(modifier = Modifier.fillMaxSize().systemBarsPadding()) {
-                    Column(
-                        modifier = Modifier.fillMaxHeight().weight(2f),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Spacer(modifier = Modifier.weight(1f))
-                        Logo(modifier = Modifier.weight(3f))
-                    }
-                    Column(
-                        modifier = Modifier.padding(16.dp).background(
-                            color = MaterialTheme.colorScheme.surface,
-                            shape = MaterialTheme.shapes.medium
-                        )
-                            .fillMaxHeight().weight(3f),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center
-                    ) {
-                        Login(
-                            state,
-                            onEvent,
-                            modifier = Modifier.fillMaxWidth(DESKTOP_ELEMENTS_MAX_WIDTH_FRACTION)
-                        )
-                    }
-                }
+                ExpandedWelcome(state, onEvent)
             } else {
-                Column(
-                    modifier = Modifier.fillMaxSize().systemBarsPadding(),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.SpaceEvenly
-                ) {
-                    Logo(modifier = Modifier.fillMaxWidth())
-                    Card(
-                        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
-                    ) {
-                        Login(state, onEvent, modifier = Modifier.fillMaxWidth())
-                    }
-                }
+                CompactWelcome(state, onEvent)
             }
         }
     }
@@ -154,7 +110,7 @@ fun Logo(modifier: Modifier = Modifier) {
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
-private fun Login(
+internal fun Login(
     state: WelcomeStore.State,
     onEvent: (WelcomeStore.Intent) -> Unit,
     modifier: Modifier = Modifier
