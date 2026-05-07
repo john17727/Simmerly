@@ -9,13 +9,16 @@ interface RecipeSearchStore :
     sealed interface Intent {
         data class OnQueryChanged(val query: String) : Intent
         data class OnQuerySubmitted(val query: String) : Intent
+        data class OnRecipeViewed(val recipeId: String) : Intent
     }
 
     data class State(
         val isLoading: Boolean = false,
         val searchQuery: String = "",
         val submittedQuery: String = "",
-        val recipes: List<RecipeSummary> = emptyList()
+        val recipes: List<RecipeSummary> = emptyList(),
+        val recentRecipes: List<RecipeSummary> = emptyList(),
+        val recentQueries: List<String> = emptyList()
     )
 
     sealed interface Label

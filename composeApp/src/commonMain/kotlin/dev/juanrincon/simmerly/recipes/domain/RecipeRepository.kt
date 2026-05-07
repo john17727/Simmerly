@@ -3,6 +3,7 @@ package dev.juanrincon.simmerly.recipes.domain
 import app.tracktion.core.domain.util.Result
 import dev.juanrincon.simmerly.recipes.domain.model.Comment
 import dev.juanrincon.simmerly.recipes.domain.model.RecipeDetail
+import dev.juanrincon.simmerly.recipes.domain.model.RecipeSummary
 import dev.juanrincon.simmerly.recipes.domain.model.Settings
 import kotlinx.coroutines.flow.Flow
 
@@ -25,4 +26,12 @@ interface RecipeRepository {
     suspend fun addComment(recipeId: String, text: String): Result<Unit, RecipesError>
 
     suspend fun updateSettings(recipeId: String, settings: Settings): Result<Unit, RecipesError>
+
+    fun observeRecentlyViewed(): Flow<List<RecipeSummary>>
+
+    suspend fun recordRecipeView(recipeId: String)
+
+    fun observeRecentSearchQueries(): Flow<List<String>>
+
+    suspend fun recordSearchQuery(query: String)
 }

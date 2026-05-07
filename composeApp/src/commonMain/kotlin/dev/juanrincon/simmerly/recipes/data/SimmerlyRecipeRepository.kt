@@ -7,6 +7,8 @@ import app.tracktion.core.domain.util.mapError
 import app.tracktion.core.domain.util.onSuccess
 import dev.juanrincon.simmerly.auth.domain.SessionDataStore
 import dev.juanrincon.simmerly.core.data.local.SimmerlyDatabase
+import dev.juanrincon.simmerly.recipes.data.local.recent.RecentSearchQueryEntity
+import dev.juanrincon.simmerly.recipes.data.local.recent.RecentlyViewedEntity
 import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.junction.RecipeTagCrossRef
 import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.junction.RecipeToolCrossRef
 import dev.juanrincon.simmerly.recipes.data.mappers.toDomain
@@ -23,6 +25,7 @@ import dev.juanrincon.simmerly.recipes.domain.RecipesError
 import dev.juanrincon.simmerly.recipes.domain.model.Comment
 import dev.juanrincon.simmerly.recipes.domain.model.PaginationData
 import dev.juanrincon.simmerly.recipes.domain.model.RecipeDetail
+import dev.juanrincon.simmerly.recipes.domain.model.RecipeSummary
 import dev.juanrincon.simmerly.recipes.domain.model.Settings
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
@@ -46,6 +49,8 @@ class SimmerlyRecipeRepository(
     private val noteDao = database.noteDao()
     private val commentDao = database.commentDao()
     private val userDao = database.userDao()
+    private val recentlyViewedDao = database.recentlyViewedDao()
+    private val recentSearchQueryDao = database.recentSearchQueryDao()
 
 
     override fun recipeList(
@@ -181,4 +186,21 @@ class SimmerlyRecipeRepository(
         networkClient.patchRecipe(recipeId, RecipePatchDto(settings = settings.toDto())).onSuccess {
             recipeDao.upsert(it.toEntity())
         }.mapError { RecipesError.UpdateError }.asEmptyDataResult()
+
+    override fun observeRecentlyViewed(): Flow<List<RecipeSummary>> =
+        sessionDataStore.observeServerAddress()
+            .combine(recentlyViewedDao.observeWithRecipes()) { address, recipes ->
+                recipes.map { it.toDomain(address) }
+            }
+
+    override suspend fun recordRecipeView(recipeId: String) {
+        recentlyViewedDao.upsert(RecentlyViewedEntity(recipeId, System.currentTimeMillis()))
+    }
+
+    override fun observeRecentSearchQueries(): Flow<List<String>> =
+        recentSearchQueryDao.observe().map { list -> list.map { it.query } }
+
+    override suspend fun recordSearchQuery(query: String) {
+        recentSearchQueryDao.upsert(RecentSearchQueryEntity(query, System.currentTimeMillis()))
+    }
 }

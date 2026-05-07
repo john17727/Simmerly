@@ -11,6 +11,10 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
+import androidx.compose.material.icons.automirrored.rounded.ArrowBackIos
+import androidx.compose.material.icons.rounded.Close
+import androidx.compose.material.icons.rounded.History
+import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material3.AppBarWithSearch
 import androidx.compose.material3.ExpandedFullScreenContainedSearchBar
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -18,6 +22,7 @@ import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.material3.SearchBarValue
@@ -48,7 +53,7 @@ fun RecipeSearchScreen(
 ) {
     val state by viewModel.state.collectAsState()
     val textFieldState = rememberTextFieldState()
-    val searchBarState = rememberContainedSearchBarState(initialValue = SearchBarValue.Expanded)
+    val searchBarState = rememberContainedSearchBarState()
     val scope = rememberCoroutineScope()
     val appBarWithSearchColors =
         SearchBarDefaults.appBarWithSearchColors(
@@ -67,10 +72,27 @@ fun RecipeSearchScreen(
             },
             placeholder = { Text("Search recipes…") },
             leadingIcon = {
-                IconButton(onClick = onNavigateBack) {
-                    Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Back")
+                if (searchBarState.currentValue == SearchBarValue.Expanded) {
+                    IconButton(onClick = { scope.launch { searchBarState.animateToCollapsed() } }) {
+                        Icon(
+                            Icons.AutoMirrored.Rounded.ArrowBackIos,
+                            contentDescription = "Dismiss search"
+                        )
+                    }
+                } else {
+                    Icon(Icons.Rounded.Search, contentDescription = null)
                 }
-            }
+            },
+            trailingIcon = if (textFieldState.text.isNotEmpty()) {
+                {
+                    IconButton(onClick = {
+                        textFieldState.edit { replace(0, length, "") }
+                        viewModel.onEvent(RecipeSearchStore.Intent.OnQuerySubmitted(""))
+                    }) {
+                        Icon(Icons.Rounded.Close, contentDescription = "Clear")
+                    }
+                }
+            } else null
         )
     }
 
@@ -95,6 +117,11 @@ fun RecipeSearchScreen(
                 state = searchBarState,
                 inputField = inputField,
                 colors = appBarWithSearchColors,
+                navigationIcon = {
+                    IconButton(onClick = onNavigateBack) {
+                        Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Back")
+                    }
+                }
             )
             ExpandedFullScreenContainedSearchBar(
                 state = searchBarState,
@@ -102,15 +129,31 @@ fun RecipeSearchScreen(
                 inputField = inputField,
             ) {
                 LazyColumn(modifier = Modifier.fillMaxSize()) {
-                    items(suggestions, key = { it.id }) { recipe ->
-                        ListItem(
-                            headlineContent = { Text(recipe.name) },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable {
-                                    textFieldState.edit { replace(0, length, recipe.name) }
-                                }
-                        )
+                    if (state.searchQuery.isEmpty()) {
+                        items(state.recentQueries, key = { it }) { query ->
+                            ListItem(
+                                headlineContent = { Text(query) },
+                                leadingContent = {
+                                    Icon(Icons.Rounded.History, contentDescription = null)
+                                },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable {
+                                        textFieldState.edit { replace(0, length, query) }
+                                    }
+                            )
+                        }
+                    } else {
+                        items(suggestions, key = { it.id }) { recipe ->
+                            ListItem(
+                                headlineContent = { Text(recipe.name) },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable {
+                                        textFieldState.edit { replace(0, length, recipe.name) }
+                                    }
+                            )
+                        }
                     }
                 }
             }
@@ -122,7 +165,27 @@ fun RecipeSearchScreen(
             verticalArrangement = Arrangement.spacedBy(8.dp),
             modifier = Modifier.padding(paddingValues).fillMaxSize()
         ) {
-            if (state.isLoading && results.isEmpty() && state.submittedQuery.isNotEmpty()) {
+            if (state.submittedQuery.isEmpty()) {
+                if (state.recentRecipes.isNotEmpty()) {
+                    item {
+                        Text(
+                            text = "Recently Viewed",
+                            style = MaterialTheme.typography.titleMedium,
+                            modifier = Modifier.padding(bottom = 8.dp)
+                        )
+                    }
+                }
+                items(state.recentRecipes, key = { it.id }) { recipe ->
+                    RecipeCard(
+                        recipe = recipe,
+                        onClick = {
+                            viewModel.onEvent(RecipeSearchStore.Intent.OnRecipeViewed(recipe.id))
+                            onRecipeSelected(recipe.id)
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            } else if (state.isLoading && results.isEmpty()) {
                 items(6) {
                     RecipeCardSkeleton(modifier = Modifier.fillMaxWidth())
                 }
@@ -130,7 +193,10 @@ fun RecipeSearchScreen(
                 items(results, key = { it.id }) { recipe ->
                     RecipeCard(
                         recipe = recipe,
-                        onClick = { onRecipeSelected(recipe.id) },
+                        onClick = {
+                            viewModel.onEvent(RecipeSearchStore.Intent.OnRecipeViewed(recipe.id))
+                            onRecipeSelected(recipe.id)
+                        },
                         modifier = Modifier.fillMaxWidth().animateItem()
                     )
                 }

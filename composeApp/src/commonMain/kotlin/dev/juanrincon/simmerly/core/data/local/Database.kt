@@ -8,6 +8,10 @@ import androidx.room3.TypeConverters
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import dev.juanrincon.simmerly.recipes.data.local.metadata.RecipeRemoteKey
 import dev.juanrincon.simmerly.recipes.data.local.metadata.RecipeRemoteKeyDao
+import dev.juanrincon.simmerly.recipes.data.local.recent.RecentSearchQueryDao
+import dev.juanrincon.simmerly.recipes.data.local.recent.RecentSearchQueryEntity
+import dev.juanrincon.simmerly.recipes.data.local.recent.RecentlyViewedDao
+import dev.juanrincon.simmerly.recipes.data.local.recent.RecentlyViewedEntity
 import dev.juanrincon.simmerly.recipes.data.local.recipe.CommentDao
 import dev.juanrincon.simmerly.recipes.data.local.recipe.FoodDao
 import dev.juanrincon.simmerly.recipes.data.local.recipe.IngredientDao
@@ -56,9 +60,11 @@ import kotlin.time.ExperimentalTime
         RecipeTagCrossRef::class,
         RecipeToolCrossRef::class,
         InstructionIngredientCrossRef::class,
-        RecipeRemoteKey::class
+        RecipeRemoteKey::class,
+        RecentlyViewedEntity::class,
+        RecentSearchQueryEntity::class,
     ],
-    version = 1
+    version = 2
 )
 @TypeConverters(Converters::class)
 @OptIn(ExperimentalTime::class)
@@ -89,6 +95,10 @@ abstract class SimmerlyDatabase : RoomDatabase() {
     abstract fun commentDao(): CommentDao
 
     abstract fun userDao(): UserDao
+
+    abstract fun recentlyViewedDao(): RecentlyViewedDao
+
+    abstract fun recentSearchQueryDao(): RecentSearchQueryDao
 }
 
 @Suppress("KotlinNoActualForExpect")
@@ -100,6 +110,7 @@ fun getRoomDatabase(
     builder: RoomDatabase.Builder<SimmerlyDatabase>
 ): SimmerlyDatabase {
     return builder
+        .fallbackToDestructiveMigration(true)
         .setDriver(BundledSQLiteDriver())
         .setQueryCoroutineContext(Dispatchers.IO)
         .build()
