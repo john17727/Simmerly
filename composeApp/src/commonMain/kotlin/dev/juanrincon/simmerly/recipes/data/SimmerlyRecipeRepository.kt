@@ -7,6 +7,7 @@ import app.tracktion.core.domain.util.mapError
 import app.tracktion.core.domain.util.onSuccess
 import dev.juanrincon.simmerly.auth.domain.SessionDataStore
 import dev.juanrincon.simmerly.core.data.local.SimmerlyDatabase
+import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.junction.RecipeTagCrossRef
 import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.junction.RecipeToolCrossRef
 import dev.juanrincon.simmerly.recipes.data.mappers.toDomain
 import dev.juanrincon.simmerly.recipes.data.mappers.toDto
@@ -39,7 +40,9 @@ class SimmerlyRecipeRepository(
     private val ingredientDao = database.ingredientDao()
     private val instructionsDao = database.instructionDao()
     private val toolsDao = database.toolDao()
+    private val tagsDao = database.tagDao()
     private val recipeToolDao = database.recipeToolDao()
+    private val recipeTagDao = database.recipeTagDao()
     private val noteDao = database.noteDao()
     private val commentDao = database.commentDao()
     private val userDao = database.userDao()
@@ -61,10 +64,20 @@ class SimmerlyRecipeRepository(
         var pagination: PaginationData? = null
 
         // Fetch from network and persist
-        val networkResult = networkClient.getRecipes(page, perPage)
+        val networkResult = networkClient.getRecipes(page, perPage, true)
         networkResult.fold(
             onSuccess = { response ->
                 recipeDao.upsertAll(response.items.map { it.toEntity() })
+                tagsDao.upsertAll(response.items.flatMap { it.tags.map { tag -> tag.toEntity() } })
+                val tagRefs = response.items.flatMap { recipe ->
+                    recipe.tags.map { tag ->
+                        RecipeTagCrossRef(
+                            recipeId = recipe.id,
+                            tagId = tag.id
+                        )
+                    }
+                }
+                recipeTagDao.insertAll(tagRefs)
                 pagination = response.toPaginationData()
             },
             onFailure = {

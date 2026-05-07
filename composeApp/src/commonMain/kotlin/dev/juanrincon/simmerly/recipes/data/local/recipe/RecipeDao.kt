@@ -6,6 +6,7 @@ import androidx.room3.Query
 import androidx.room3.Transaction
 import androidx.room3.Upsert
 import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.RecipeEntity
+import dev.juanrincon.simmerly.recipes.data.local.recipe.model.ListRecipeWithTags
 import dev.juanrincon.simmerly.recipes.data.local.recipe.model.RecipeDetailWithRelations
 import kotlinx.coroutines.flow.Flow
 import kotlin.time.ExperimentalTime
@@ -19,7 +20,7 @@ interface RecipeDao {
      * The list is ordered by creation date to ensure a consistent UI.
      */
     @Query("SELECT * FROM recipes ORDER BY created_at DESC")
-    fun observeRecipeList(): Flow<List<RecipeEntity>>
+    fun observeRecipeList(): Flow<List<ListRecipeWithTags>>
 
     /**
      * Observes a single recipe with all its relations (tags, ingredients, etc.).

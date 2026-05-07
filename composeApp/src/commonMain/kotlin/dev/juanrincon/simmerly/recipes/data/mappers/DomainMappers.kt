@@ -16,6 +16,7 @@ import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.UserEntity
 import dev.juanrincon.simmerly.recipes.data.local.recipe.model.CommentWithRelations
 import dev.juanrincon.simmerly.recipes.data.local.recipe.model.IngredientWithRelations
 import dev.juanrincon.simmerly.recipes.data.local.recipe.model.InstructionWithRelations
+import dev.juanrincon.simmerly.recipes.data.local.recipe.model.ListRecipeWithTags
 import dev.juanrincon.simmerly.recipes.data.local.recipe.model.RecipeDetailWithRelations
 import dev.juanrincon.simmerly.recipes.data.remote.dto.SettingsDto
 import dev.juanrincon.simmerly.recipes.domain.model.Category
@@ -43,6 +44,18 @@ fun RecipeEntity.toDomain(host: String?): RecipeSummary = RecipeSummary(
     prepTime = abbreviateNullableTime(prepTime),
     performTime = abbreviateNullableTime(performTime),
     description = description
+)
+
+fun ListRecipeWithTags.toDomain(host: String?): RecipeSummary = RecipeSummary(
+    id = recipe.id,
+    name = recipe.name,
+    image = createRecipeImageUrl(host, recipe.id),
+    tags = tags.map { it.toDomain() },
+    rating = recipe.rating,
+    totalTime = abbreviateTime(recipe.totalTime),
+    prepTime = abbreviateNullableTime(recipe.prepTime),
+    performTime = abbreviateNullableTime(recipe.performTime),
+    description = recipe.description
 )
 
 fun RecipeDetailWithRelations.toDomain(host: String?): RecipeDetail = RecipeDetail(

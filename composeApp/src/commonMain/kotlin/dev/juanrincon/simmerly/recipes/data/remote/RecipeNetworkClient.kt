@@ -19,11 +19,13 @@ import io.ktor.client.request.setBody
 class RecipeNetworkClient(private val client: HttpClient) {
     suspend fun getRecipes(
         page: Int = 1,
-        perPage: Int = 50
+        perPage: Int = 50,
+        requireTags: Boolean = false
     ): Result<ItemListDto<RecipeSummaryDto>, DataError.NetworkError<Unit>> = networkHandler {
         client.get("/api/recipes") {
             parameter("page", page)
             parameter("perPage", perPage)
+            parameter("requireAllTags", requireTags)
         }
     }
 
