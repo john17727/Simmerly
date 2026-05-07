@@ -106,6 +106,8 @@ private fun Content(
         CompactRecipeList(
             recipes = state.recipes,
             isLoading = state.isLoading,
+            searchQuery = state.searchQuery,
+            onSearchQueryChanged = { onEvent(RecipeListStore.Intent.OnSearchQueryChanged(it)) },
             onRecipeSelected = onRecipeSelected,
             lazyListState = lazyListState,
             modifier = modifier

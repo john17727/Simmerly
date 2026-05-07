@@ -2,20 +2,33 @@ package dev.juanrincon.simmerly.recipes.presentation.list
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.text.input.rememberTextFieldState
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.ArrowBack
+import androidx.compose.material.icons.rounded.Search
+import androidx.compose.material3.AppBarWithSearch
+import androidx.compose.material3.ExpandedFullScreenContainedSearchBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.LargeFlexibleTopAppBar
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SearchBarDefaults
+import androidx.compose.material3.SearchBarValue
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.rememberTopAppBarState
+import androidx.compose.material3.rememberSearchBarState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -25,23 +38,87 @@ import androidx.compose.ui.unit.dp
 import dev.juanrincon.simmerly.recipes.domain.model.RecipeSummary
 import dev.juanrincon.simmerly.recipes.domain.model.Tag
 import dev.juanrincon.simmerly.theme.SimmerlyTheme
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 internal fun CompactRecipeList(
     recipes: List<RecipeSummary>,
     isLoading: Boolean,
+    searchQuery: String,
+    onSearchQueryChanged: (String) -> Unit,
     onRecipeSelected: (String) -> Unit,
     lazyListState: LazyListState,
     modifier: Modifier = Modifier
 ) {
-    val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
+    val scrollBehavior = SearchBarDefaults.enterAlwaysSearchBarScrollBehavior()
+    val textFieldState = rememberTextFieldState()
+    val searchBarState = rememberSearchBarState()
+    val scope = rememberCoroutineScope()
+
+    // Sync text field changes to the store
+    LaunchedEffect(textFieldState) {
+        snapshotFlow { textFieldState.text.toString() }
+            .collect { query -> onSearchQueryChanged(query) }
+    }
+
+    val filteredRecipes = remember(recipes, searchQuery) {
+        if (searchQuery.isEmpty()) recipes
+        else recipes.filter { it.name.contains(searchQuery, ignoreCase = true) }
+    }
+
+    val inputField = @Composable {
+        SearchBarDefaults.InputField(
+            textFieldState = textFieldState,
+            searchBarState = searchBarState,
+            onSearch = { scope.launch { searchBarState.animateToCollapsed() } },
+            placeholder = { Text("Search recipes…") },
+            leadingIcon = {
+                if (searchBarState.currentValue == SearchBarValue.Expanded) {
+                    IconButton(onClick = {
+                        textFieldState.edit { replace(0, length, "") }
+                        scope.launch { searchBarState.animateToCollapsed() }
+                    }) {
+                        Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Back")
+                    }
+                } else {
+                    Icon(Icons.Rounded.Search, contentDescription = null)
+                }
+            }
+        )
+    }
+
     Scaffold(
         topBar = {
-            LargeFlexibleTopAppBar(
-                title = { Text("Recipes") },
-                scrollBehavior = scrollBehavior
+            AppBarWithSearch(
+                state = searchBarState,
+                inputField = inputField,
+                scrollBehavior = scrollBehavior,
             )
+            ExpandedFullScreenContainedSearchBar(
+                state = searchBarState,
+                inputField = inputField,
+            ) {
+                LazyColumn(
+                    contentPadding = PaddingValues(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    if (isLoading && filteredRecipes.isEmpty()) {
+                        items(6) {
+                            RecipeCardSkeleton(modifier = Modifier.fillMaxWidth())
+                        }
+                    } else {
+                        items(filteredRecipes, key = { it.id }) { recipe ->
+                            RecipeCard(
+                                recipe = recipe,
+                                onClick = { onRecipeSelected(recipe.id) },
+                                modifier = Modifier.fillMaxWidth().animateItem()
+                            )
+                        }
+                    }
+                }
+            }
         },
         modifier = modifier.nestedScroll(scrollBehavior.nestedScrollConnection)
     ) { paddingValues ->
@@ -144,6 +221,8 @@ private fun DynamicPreview() {
         CompactRecipeList(
             recipes = previewRecipes,
             isLoading = false,
+            searchQuery = "",
+            onSearchQueryChanged = {},
             onRecipeSelected = {},
             lazyListState = LazyListState()
         )
@@ -157,6 +236,8 @@ private fun LightPreview() {
         CompactRecipeList(
             recipes = previewRecipes,
             isLoading = false,
+            searchQuery = "",
+            onSearchQueryChanged = {},
             onRecipeSelected = {},
             lazyListState = LazyListState()
         )
@@ -170,6 +251,8 @@ private fun DynamicDarkPreview() {
         CompactRecipeList(
             recipes = previewRecipes,
             isLoading = false,
+            searchQuery = "",
+            onSearchQueryChanged = {},
             onRecipeSelected = {},
             lazyListState = LazyListState()
         )
@@ -183,6 +266,8 @@ private fun DarkPreview() {
         CompactRecipeList(
             recipes = previewRecipes,
             isLoading = false,
+            searchQuery = "",
+            onSearchQueryChanged = {},
             onRecipeSelected = {},
             lazyListState = LazyListState()
         )
@@ -196,6 +281,8 @@ private fun LoadingPreview() {
         CompactRecipeList(
             recipes = emptyList(),
             isLoading = true,
+            searchQuery = "",
+            onSearchQueryChanged = {},
             onRecipeSelected = {},
             lazyListState = LazyListState()
         )

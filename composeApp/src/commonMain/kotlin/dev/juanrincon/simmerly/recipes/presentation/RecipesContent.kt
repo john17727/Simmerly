@@ -83,10 +83,13 @@ fun RecipesContent(
                     }
                 )
             ) {
-                RecipeListScreen(modifier = Modifier.fillMaxSize(), onRecipeSelected = { recipeId ->
-                    backStack.removeAll { it is RecipeDestinations.Detail }
-                    backStack.add(RecipeDestinations.Detail(recipeId))
-                })
+                RecipeListScreen(
+                    modifier = Modifier.fillMaxSize(),
+                    onRecipeSelected = { recipeId ->
+                        backStack.removeAll { it is RecipeDestinations.Detail }
+                        backStack.add(RecipeDestinations.Detail(recipeId))
+                    }
+                )
             }
             entry<RecipeDestinations.Detail>(
                 metadata = ListDetailSceneStrategy.detailPane()
