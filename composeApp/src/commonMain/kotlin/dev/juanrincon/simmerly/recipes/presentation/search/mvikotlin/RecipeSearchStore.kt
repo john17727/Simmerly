@@ -8,11 +8,13 @@ interface RecipeSearchStore :
 
     sealed interface Intent {
         data class OnQueryChanged(val query: String) : Intent
+        data class OnQuerySubmitted(val query: String) : Intent
     }
 
     data class State(
         val isLoading: Boolean = false,
         val searchQuery: String = "",
+        val submittedQuery: String = "",
         val recipes: List<RecipeSummary> = emptyList()
     )
 

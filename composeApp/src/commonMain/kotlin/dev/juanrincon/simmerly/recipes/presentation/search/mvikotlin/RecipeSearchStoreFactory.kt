@@ -14,6 +14,7 @@ import dev.juanrincon.simmerly.recipes.presentation.search.mvikotlin.RecipeSearc
 import dev.juanrincon.simmerly.recipes.presentation.search.mvikotlin.RecipeSearchStore.State
 import dev.juanrincon.simmerly.recipes.presentation.search.mvikotlin.RecipeSearchStoreFactory.Msg.Loading
 import dev.juanrincon.simmerly.recipes.presentation.search.mvikotlin.RecipeSearchStoreFactory.Msg.QueryChanged
+import dev.juanrincon.simmerly.recipes.presentation.search.mvikotlin.RecipeSearchStoreFactory.Msg.QuerySubmitted
 import dev.juanrincon.simmerly.recipes.presentation.search.mvikotlin.RecipeSearchStoreFactory.Msg.RecipesLoaded
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -40,6 +41,7 @@ class RecipeSearchStoreFactory(
         data class Loading(val isLoading: Boolean) : Msg
         data class RecipesLoaded(val recipes: List<RecipeSummary>) : Msg
         data class QueryChanged(val query: String) : Msg
+        data class QuerySubmitted(val query: String) : Msg
     }
 
     private class BootstrapperImpl : CoroutineBootstrapper<Action>() {
@@ -54,6 +56,7 @@ class RecipeSearchStoreFactory(
         override fun executeIntent(intent: Intent) {
             when (intent) {
                 is Intent.OnQueryChanged -> dispatch(QueryChanged(intent.query))
+                is Intent.OnQuerySubmitted -> dispatch(QuerySubmitted(intent.query))
             }
         }
 
@@ -83,6 +86,7 @@ class RecipeSearchStoreFactory(
                 is Loading -> copy(isLoading = msg.isLoading)
                 is RecipesLoaded -> copy(recipes = msg.recipes, isLoading = false)
                 is QueryChanged -> copy(searchQuery = msg.query)
+                is QuerySubmitted -> copy(submittedQuery = msg.query)
             }
     }
 }
