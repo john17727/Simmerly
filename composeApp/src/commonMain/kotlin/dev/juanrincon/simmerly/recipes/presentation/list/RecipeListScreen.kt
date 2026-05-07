@@ -55,6 +55,7 @@ import org.koin.compose.viewmodel.koinViewModel
 @Composable
 fun RecipeListScreen(
     onRecipeSelected: (recipeId: String) -> Unit,
+    onSearchClicked: () -> Unit,
     viewModel: RecipeListViewModel = koinViewModel(),
     modifier: Modifier = Modifier
 ) {
@@ -63,6 +64,7 @@ fun RecipeListScreen(
         state = state,
         onEvent = viewModel::onEvent,
         onRecipeSelected = onRecipeSelected,
+        onSearchClicked = onSearchClicked,
         modifier = modifier
     )
 }
@@ -73,6 +75,7 @@ private fun Content(
     state: RecipeListStore.State,
     onEvent: (RecipeListStore.Intent) -> Unit,
     onRecipeSelected: (recipeId: String) -> Unit,
+    onSearchClicked: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val windowSizeClass = currentWindowAdaptiveInfoV2().windowSizeClass
@@ -106,8 +109,7 @@ private fun Content(
         CompactRecipeList(
             recipes = state.recipes,
             isLoading = state.isLoading,
-            searchQuery = state.searchQuery,
-            onSearchQueryChanged = { onEvent(RecipeListStore.Intent.OnSearchQueryChanged(it)) },
+            onSearchClicked = onSearchClicked,
             onRecipeSelected = onRecipeSelected,
             lazyListState = lazyListState,
             modifier = modifier

@@ -34,6 +34,7 @@ import dev.juanrincon.simmerly.recipes.presentation.comments.RecipeCommentsScree
 import dev.juanrincon.simmerly.recipes.presentation.details.RecipeDetailsScreen
 import dev.juanrincon.simmerly.recipes.presentation.list.RecipeListScreen
 import dev.juanrincon.simmerly.recipes.presentation.navigation.RecipeDestinations
+import dev.juanrincon.simmerly.recipes.presentation.search.RecipeSearchScreen
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
 
@@ -55,6 +56,10 @@ fun RecipesContent(
                     subclass(
                         RecipeDestinations.Comments::class,
                         RecipeDestinations.Comments.serializer()
+                    )
+                    subclass(
+                        RecipeDestinations.Search::class,
+                        RecipeDestinations.Search.serializer()
                     )
                 }
             }
@@ -85,10 +90,21 @@ fun RecipesContent(
             ) {
                 RecipeListScreen(
                     modifier = Modifier.fillMaxSize(),
+                    onSearchClicked = { backStack.add(RecipeDestinations.Search) },
                     onRecipeSelected = { recipeId ->
                         backStack.removeAll { it is RecipeDestinations.Detail }
                         backStack.add(RecipeDestinations.Detail(recipeId))
                     }
+                )
+            }
+            entry<RecipeDestinations.Search> {
+                RecipeSearchScreen(
+                    onRecipeSelected = { recipeId ->
+                        backStack.removeAll { it is RecipeDestinations.Detail }
+                        backStack.add(RecipeDestinations.Detail(recipeId))
+                    },
+                    onNavigateBack = { backStack.removeLastOrNull() },
+                    modifier = Modifier.fillMaxSize()
                 )
             }
             entry<RecipeDestinations.Detail>(
