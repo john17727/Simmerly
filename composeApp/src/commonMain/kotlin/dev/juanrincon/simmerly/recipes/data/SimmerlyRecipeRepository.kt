@@ -33,6 +33,7 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
+import kotlin.time.Clock
 
 class SimmerlyRecipeRepository(
     private val networkClient: RecipeNetworkClient,
@@ -194,13 +195,23 @@ class SimmerlyRecipeRepository(
             }
 
     override suspend fun recordRecipeView(recipeId: String) {
-        recentlyViewedDao.upsert(RecentlyViewedEntity(recipeId, System.currentTimeMillis()))
+        recentlyViewedDao.upsert(
+            RecentlyViewedEntity(
+                recipeId,
+                Clock.System.now().toEpochMilliseconds()
+            )
+        )
     }
 
     override fun observeRecentSearchQueries(): Flow<List<String>> =
         recentSearchQueryDao.observe().map { list -> list.map { it.query } }
 
     override suspend fun recordSearchQuery(query: String) {
-        recentSearchQueryDao.upsert(RecentSearchQueryEntity(query, System.currentTimeMillis()))
+        recentSearchQueryDao.upsert(
+            RecentSearchQueryEntity(
+                query,
+                Clock.System.now().toEpochMilliseconds()
+            )
+        )
     }
 }

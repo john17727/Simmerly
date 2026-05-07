@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
@@ -19,6 +20,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Comment
+import androidx.compose.material.icons.automirrored.filled.OpenInNew
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.MoreVert
@@ -28,9 +30,11 @@ import androidx.compose.material.icons.filled.ViewTimeline
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.IconToggleButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MediumFlexibleTopAppBar
@@ -54,6 +58,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
@@ -230,6 +235,7 @@ private fun CompactContent(
 
         // Hero image
         item {
+            val uriHandler = LocalUriHandler.current
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -260,6 +266,21 @@ private fun CompactContent(
                             .align(Alignment.BottomStart)
                             .padding(12.dp)
                     )
+                }
+                if (!state.loading && recipe.link != null) {
+                    FilledIconButton(
+                        onClick = { uriHandler.openUri(recipe.link) },
+                        shape = IconButtonDefaults.extraSmallSquareShape,
+                        modifier = Modifier.padding(12.dp)
+                            .size(IconButtonDefaults.extraSmallContainerSize())
+                            .align(Alignment.BottomEnd),
+                    ) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Default.OpenInNew,
+                            contentDescription = "Open original recipe",
+                            modifier = Modifier.size(IconButtonDefaults.extraSmallIconSize)
+                        )
+                    }
                 }
             }
         }
@@ -569,6 +590,7 @@ private val previewRecipe = RecipeDetailUi(
     ),
     notes = emptyList(),
     tags = emptyList(),
+    link = null,
     settings = Settings(
         public = true,
         showNutrition = false,
