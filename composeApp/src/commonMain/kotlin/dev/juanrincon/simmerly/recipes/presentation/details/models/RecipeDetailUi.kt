@@ -4,6 +4,7 @@ import dev.juanrincon.simmerly.core.presentation.UiText
 import dev.juanrincon.simmerly.core.utils.format
 import dev.juanrincon.simmerly.recipes.domain.model.Note
 import dev.juanrincon.simmerly.recipes.domain.model.Settings
+import dev.juanrincon.simmerly.recipes.domain.model.Tag
 import dev.juanrincon.simmerly.recipes.domain.model.Tool
 
 data class RecipeDetailUi(
@@ -17,6 +18,7 @@ data class RecipeDetailUi(
     val performTime: String?,
     val servings: Double,
     val favorite: Boolean,
+    val tags: List<Tag>,
     val ingredients: List<IngredientUi>,
     val instructions: List<InstructionUi>,
     val tools: List<Tool>,
@@ -45,6 +47,7 @@ data class RecipeDetailUi(
             performTime = null,
             servings = 0.0,
             favorite = false,
+            tags = emptyList(),
             ingredients = emptyList(),
             instructions = emptyList(),
             nutrition = NutritionUi(

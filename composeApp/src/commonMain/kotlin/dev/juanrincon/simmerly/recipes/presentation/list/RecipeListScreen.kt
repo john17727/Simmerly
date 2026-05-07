@@ -5,8 +5,6 @@ import androidx.compose.animation.SizeTransform
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -51,6 +49,7 @@ import dev.juanrincon.simmerly.core.presentation.shimmer
 import dev.juanrincon.simmerly.recipes.domain.model.RecipeSummary
 import dev.juanrincon.simmerly.recipes.presentation.list.mvikotlin.RecipeListStore
 import dev.juanrincon.simmerly.recipes.presentation.shared.RecipeMetaRow
+import dev.juanrincon.simmerly.recipes.presentation.shared.TagRow
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
@@ -205,30 +204,7 @@ fun RecipeCard(
                             recipe.rating,
                             recipe.totalTime
                         )
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            recipe.tags.forEach {
-                                Box(
-                                    contentAlignment = Alignment.Center,
-                                    modifier = Modifier.background(
-                                        MaterialTheme.colorScheme.tertiaryContainer,
-                                        shape = MaterialTheme.shapes.small
-                                    ).border(
-                                        1.dp,
-                                        MaterialTheme.colorScheme.tertiary,
-                                        MaterialTheme.shapes.small
-                                    ).padding(vertical = 4.dp, horizontal = 8.dp)
-                                ) {
-                                    Text(
-                                        it.name,
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onTertiaryContainer
-                                    )
-                                }
-                            }
-                        }
+                        TagRow(recipe.tags)
                     }
                 }
             }

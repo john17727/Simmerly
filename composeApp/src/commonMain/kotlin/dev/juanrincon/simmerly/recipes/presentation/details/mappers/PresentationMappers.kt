@@ -33,6 +33,7 @@ fun RecipeDetail.toRecipeDetailUi(): RecipeDetailUi = RecipeDetailUi(
     performTime = performTime,
     servings = servings,
     favorite = false, // TODO: Implement favorites, consider loading all necessary data up front.
+    tags = tags,
     ingredients = ingredients.map { it.toIngredientUi() },
     instructions = instructions.mapIndexed { index, instruction -> instruction.toInstructionUi(index + 1) },
     nutrition = nutrition.toNutritionUi(),

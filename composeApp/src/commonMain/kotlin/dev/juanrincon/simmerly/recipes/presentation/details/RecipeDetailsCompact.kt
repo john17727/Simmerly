@@ -69,6 +69,7 @@ import dev.juanrincon.simmerly.recipes.presentation.details.models.NutritionUi
 import dev.juanrincon.simmerly.recipes.presentation.details.models.RecipeDetailUi
 import dev.juanrincon.simmerly.recipes.presentation.details.mvikotlin.RecipeDetailsStore
 import dev.juanrincon.simmerly.recipes.presentation.shared.RecipeMetaRow
+import dev.juanrincon.simmerly.recipes.presentation.shared.TagRow
 import dev.juanrincon.simmerly.theme.SimmerlyTheme
 import kotlinx.coroutines.launch
 
@@ -229,24 +230,38 @@ private fun CompactContent(
 
         // Hero image
         item {
-            AsyncImage(
-                model = recipe.image,
-                contentDescription = null,
-                contentScale = ContentScale.Crop,
+            Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .fillParentMaxHeight(0.33f).padding(horizontal = 16.dp)
-                    .ifTrue(state.loading) {
-                        height(100.dp).shimmer(
-                            colors = listOf(
-                                MaterialTheme.colorScheme.surfaceContainer,
-                                MaterialTheme.colorScheme.surfaceContainerHighest,
-                                MaterialTheme.colorScheme.surfaceContainer,
-                            ),
-                            shape = MaterialTheme.shapes.medium
-                        )
-                    }.clip(MaterialTheme.shapes.medium)
-            )
+                    .fillParentMaxHeight(0.33f)
+                    .padding(horizontal = 16.dp)
+            ) {
+                AsyncImage(
+                    model = recipe.image,
+                    contentDescription = null,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                        .matchParentSize()
+                        .ifTrue(state.loading) {
+                            shimmer(
+                                colors = listOf(
+                                    MaterialTheme.colorScheme.surfaceContainer,
+                                    MaterialTheme.colorScheme.surfaceContainerHighest,
+                                    MaterialTheme.colorScheme.surfaceContainer,
+                                ),
+                                shape = MaterialTheme.shapes.medium
+                            )
+                        }.clip(MaterialTheme.shapes.medium)
+                )
+                if (!state.loading && recipe.tags.isNotEmpty()) {
+                    TagRow(
+                        tags = recipe.tags,
+                        modifier = Modifier
+                            .align(Alignment.BottomStart)
+                            .padding(12.dp)
+                    )
+                }
+            }
         }
 
         // Description + meta
@@ -315,7 +330,6 @@ private fun CompactContent(
                             Text(
                                 it.asString(),
                                 style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSecondaryContainer,
                                 maxLines = if (descriptionExpanded) Int.MAX_VALUE else DESCRIPTION_MAX_LINES,
                                 overflow = TextOverflow.Ellipsis,
                                 onTextLayout = { layoutResult ->
@@ -554,6 +568,7 @@ private val previewRecipe = RecipeDetailUi(
         unsaturatedFatContent = "13g"
     ),
     notes = emptyList(),
+    tags = emptyList(),
     settings = Settings(
         public = true,
         showNutrition = false,
