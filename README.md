@@ -65,6 +65,8 @@ desktop platforms — all from a single Kotlin codebase.
 ### Async
 
 - [Coroutines](https://github.com/Kotlin/kotlinx.coroutines) — asynchronous operations
+- [Arrow](https://arrow-kt.io/) — functional error handling (`Either`, `raise`) and concurrent
+  operations (`parZip`)
 
 ### Other
 
