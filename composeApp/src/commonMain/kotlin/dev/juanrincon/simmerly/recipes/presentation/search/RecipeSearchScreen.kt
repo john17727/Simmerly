@@ -1,5 +1,6 @@
 package dev.juanrincon.simmerly.recipes.presentation.search
 
+import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
@@ -48,6 +49,7 @@ import org.koin.compose.viewmodel.koinViewModel
 fun RecipeSearchScreen(
     onRecipeSelected: (String) -> Unit,
     onNavigateBack: () -> Unit,
+    sharedTransitionScope: SharedTransitionScope? = null,
     viewModel: RecipeSearchViewModel = koinViewModel(),
     modifier: Modifier = Modifier
 ) {
@@ -182,6 +184,7 @@ fun RecipeSearchScreen(
                             viewModel.onEvent(RecipeSearchStore.Intent.OnRecipeViewed(recipe.id))
                             onRecipeSelected(recipe.id)
                         },
+                        sharedTransitionScope = sharedTransitionScope,
                         modifier = Modifier.fillMaxWidth()
                     )
                 }
@@ -197,6 +200,7 @@ fun RecipeSearchScreen(
                             viewModel.onEvent(RecipeSearchStore.Intent.OnRecipeViewed(recipe.id))
                             onRecipeSelected(recipe.id)
                         },
+                        sharedTransitionScope = sharedTransitionScope,
                         modifier = Modifier.fillMaxWidth().animateItem()
                     )
                 }

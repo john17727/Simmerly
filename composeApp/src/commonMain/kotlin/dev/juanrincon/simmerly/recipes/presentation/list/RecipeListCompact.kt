@@ -1,5 +1,6 @@
 package dev.juanrincon.simmerly.recipes.presentation.list
 
+import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -38,7 +39,8 @@ internal fun CompactRecipeList(
     onSearchClicked: () -> Unit,
     onRecipeSelected: (String) -> Unit,
     lazyListState: LazyListState,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    sharedTransitionScope: SharedTransitionScope? = null,
 ) {
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
 
@@ -60,6 +62,7 @@ internal fun CompactRecipeList(
             recipes = recipes,
             isLoading = isLoading,
             onRecipeSelected = onRecipeSelected,
+            sharedTransitionScope = sharedTransitionScope,
             lazyListState = lazyListState,
             modifier = modifier.padding(paddingValues)
         )
@@ -72,7 +75,8 @@ private fun RecipeList(
     isLoading: Boolean,
     onRecipeSelected: (String) -> Unit,
     lazyListState: LazyListState,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    sharedTransitionScope: SharedTransitionScope? = null,
 ) {
     LazyColumn(
         state = lazyListState,
@@ -89,6 +93,7 @@ private fun RecipeList(
                 RecipeCard(
                     item,
                     onClick = { onRecipeSelected(item.id) },
+                    sharedTransitionScope = sharedTransitionScope,
                     modifier = Modifier.fillMaxWidth().animateItem()
                 )
             }

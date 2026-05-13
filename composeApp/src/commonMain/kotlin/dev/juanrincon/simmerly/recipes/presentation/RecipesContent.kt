@@ -1,5 +1,7 @@
 package dev.juanrincon.simmerly.recipes.presentation
 
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -38,7 +40,11 @@ import dev.juanrincon.simmerly.recipes.presentation.search.RecipeSearchScreen
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
 
-@OptIn(ExperimentalMaterial3AdaptiveApi::class, ExperimentalMaterial3Api::class)
+@OptIn(
+    ExperimentalMaterial3AdaptiveApi::class,
+    ExperimentalMaterial3Api::class,
+    ExperimentalSharedTransitionApi::class
+)
 @Composable
 fun RecipesContent(
     onAtRootChanged: (Boolean) -> Unit = {},
@@ -70,6 +76,7 @@ fun RecipesContent(
     val isAtRoot by remember { derivedStateOf { backStack.size <= 1 } }
     LaunchedEffect(isAtRoot) { onAtRootChanged(isAtRoot) }
 
+    SharedTransitionLayout {
     NavDisplay(
         backStack = backStack,
         sceneStrategies = listOf(rememberListDetailSceneStrategy()),
@@ -90,6 +97,7 @@ fun RecipesContent(
             ) {
                 RecipeListScreen(
                     modifier = Modifier.fillMaxSize(),
+                    sharedTransitionScope = this@SharedTransitionLayout,
                     onSearchClicked = { backStack.add(RecipeDestinations.Search) },
                     onRecipeSelected = { recipeId ->
                         backStack.removeAll { it is RecipeDestinations.Detail }
@@ -104,6 +112,7 @@ fun RecipesContent(
                         backStack.add(RecipeDestinations.Detail(recipeId))
                     },
                     onNavigateBack = { backStack.removeLastOrNull() },
+                    sharedTransitionScope = this@SharedTransitionLayout,
                     modifier = Modifier.fillMaxSize()
                 )
             }
@@ -112,6 +121,7 @@ fun RecipesContent(
             ) { key ->
                 RecipeDetailsScreen(
                     recipeId = key.recipeId,
+                    sharedTransitionScope = this@SharedTransitionLayout,
                     onNavigateBack = { backStack.removeLastOrNull() },
                     onNavigateToComments = { backStack.add(RecipeDestinations.Comments(it)) },
                     modifier = Modifier.fillMaxSize()
@@ -145,6 +155,7 @@ fun RecipesContent(
             }
         }
     )
+    } // SharedTransitionLayout
 
 }
 

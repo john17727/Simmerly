@@ -1,6 +1,8 @@
 package dev.juanrincon.simmerly.recipes.presentation.details
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -63,6 +65,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.navigation3.ui.LocalNavAnimatedContentScope
 import coil3.compose.AsyncImage
 import dev.juanrincon.simmerly.core.presentation.UiText
 import dev.juanrincon.simmerly.core.presentation.ifTrue
@@ -85,6 +88,7 @@ internal fun CompactRecipeDetails(
     onEvent: (RecipeDetailsStore.Intent) -> Unit,
     onNavigateBack: () -> Unit,
     onNavigateToComments: (recipeId: String) -> Unit,
+    sharedTransitionScope: SharedTransitionScope? = null,
     modifier: Modifier = Modifier
 ) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
@@ -183,16 +187,19 @@ internal fun CompactRecipeDetails(
             state = state,
             onEvent = onEvent,
             paddingValues = paddingValues,
+            sharedTransitionScope = sharedTransitionScope,
             modifier = modifier.fillMaxSize()
         )
     }
 }
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 private fun CompactContent(
     state: RecipeDetailsStore.State,
     onEvent: (RecipeDetailsStore.Intent) -> Unit,
     paddingValues: PaddingValues,
+    sharedTransitionScope: SharedTransitionScope? = null,
     modifier: Modifier = Modifier
 ) {
     val recipe = state.recipe
@@ -236,6 +243,15 @@ private fun CompactContent(
         // Hero image
         item {
             val uriHandler = LocalUriHandler.current
+            val animatedScope = LocalNavAnimatedContentScope.current
+            val sharedModifier = if (sharedTransitionScope != null) {
+                with(sharedTransitionScope) {
+                    Modifier.sharedElement(
+                        sharedContentState = rememberSharedContentState(key = "recipe-image-${recipe.id}"),
+                        animatedVisibilityScope = animatedScope,
+                    )
+                }
+            } else Modifier
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -248,6 +264,7 @@ private fun CompactContent(
                     contentScale = ContentScale.Crop,
                     modifier = Modifier
                         .matchParentSize()
+                        .then(sharedModifier)
                         .ifTrue(state.loading) {
                             shimmer(
                                 colors = listOf(

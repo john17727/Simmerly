@@ -1,6 +1,8 @@
 package dev.juanrincon.simmerly.recipes.presentation.list
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.animation.SizeTransform
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -41,6 +43,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.navigation3.ui.LocalNavAnimatedContentScope
 import androidx.window.core.layout.WindowSizeClass
 import coil3.compose.AsyncImage
 import coil3.compose.LocalPlatformContext
@@ -56,6 +59,7 @@ import org.koin.compose.viewmodel.koinViewModel
 fun RecipeListScreen(
     onRecipeSelected: (recipeId: String) -> Unit,
     onSearchClicked: () -> Unit,
+    sharedTransitionScope: SharedTransitionScope? = null,
     viewModel: RecipeListViewModel = koinViewModel(),
     modifier: Modifier = Modifier
 ) {
@@ -65,6 +69,7 @@ fun RecipeListScreen(
         onEvent = viewModel::onEvent,
         onRecipeSelected = onRecipeSelected,
         onSearchClicked = onSearchClicked,
+        sharedTransitionScope = sharedTransitionScope,
         modifier = modifier
     )
 }
@@ -76,6 +81,7 @@ private fun Content(
     onEvent: (RecipeListStore.Intent) -> Unit,
     onRecipeSelected: (recipeId: String) -> Unit,
     onSearchClicked: () -> Unit,
+    sharedTransitionScope: SharedTransitionScope? = null,
     modifier: Modifier = Modifier
 ) {
     val windowSizeClass = currentWindowAdaptiveInfoV2().windowSizeClass
@@ -111,18 +117,21 @@ private fun Content(
             isLoading = state.isLoading,
             onSearchClicked = onSearchClicked,
             onRecipeSelected = onRecipeSelected,
+            sharedTransitionScope = sharedTransitionScope,
             lazyListState = lazyListState,
             modifier = modifier
         )
     }
 }
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun RecipeCard(
     recipe: RecipeSummary,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     selected: Boolean = false,
+    sharedTransitionScope: SharedTransitionScope? = null,
 ) {
     val bringIntoViewRequester = remember { BringIntoViewRequester() }
     LaunchedEffect(selected) {
@@ -188,13 +197,23 @@ fun RecipeCard(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.fillMaxWidth().padding(10.dp)
                 ) {
+                    val animatedScope = LocalNavAnimatedContentScope.current
+                    val sharedModifier = if (sharedTransitionScope != null) {
+                        with(sharedTransitionScope) {
+                            Modifier.sharedElement(
+                                sharedContentState = rememberSharedContentState(key = "recipe-image-${recipe.id}"),
+                                animatedVisibilityScope = animatedScope,
+                            )
+                        }
+                    } else Modifier
                     AsyncImage(
                         model = ImageRequest.Builder(LocalPlatformContext.current)
                             .data(recipe.image)
                             .build(),
                         contentDescription = null,
                         contentScale = ContentScale.Crop,
-                        modifier = Modifier.size(100.dp).clip(MaterialTheme.shapes.small)
+                        modifier = Modifier.size(100.dp).then(sharedModifier)
+                            .clip(MaterialTheme.shapes.small)
                     )
                     Column(
                         verticalArrangement = Arrangement.spacedBy(8.dp),

@@ -1,6 +1,7 @@
 package dev.juanrincon.simmerly.recipes.presentation.details
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -31,6 +32,7 @@ fun RecipeDetailsScreen(
     recipeId: String,
     onNavigateBack: () -> Unit = {},
     onNavigateToComments: (recipeId: String) -> Unit,
+    sharedTransitionScope: SharedTransitionScope? = null,
     viewModel: RecipeDetailsViewModel = koinViewModel { parametersOf(recipeId) },
     modifier: Modifier = Modifier
 ) {
@@ -40,6 +42,7 @@ fun RecipeDetailsScreen(
         onEvent = viewModel::onEvent,
         onNavigateBack = onNavigateBack,
         onNavigateToComments = onNavigateToComments,
+        sharedTransitionScope = sharedTransitionScope,
         modifier = modifier
     )
 }
@@ -52,6 +55,7 @@ private fun Content(
     onEvent: (RecipeDetailsStore.Intent) -> Unit,
     onNavigateBack: () -> Unit,
     onNavigateToComments: (recipeId: String) -> Unit,
+    sharedTransitionScope: SharedTransitionScope? = null,
     modifier: Modifier = Modifier
 ) {
     if (state.showSettings) {
@@ -86,6 +90,7 @@ private fun Content(
                             onEvent = onEvent,
                             onNavigateBack = onNavigateBack,
                             onNavigateToComments = onNavigateToComments,
+                            sharedTransitionScope = sharedTransitionScope,
                             modifier = modifier
                         )
                     }
