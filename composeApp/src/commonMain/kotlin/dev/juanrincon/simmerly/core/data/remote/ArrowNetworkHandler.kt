@@ -10,6 +10,8 @@ import io.ktor.client.statement.HttpResponse
 import io.ktor.util.network.UnresolvedAddressException
 import kotlinx.serialization.SerializationException
 
+expect fun <E> mapPlatformException(e: Exception): DataError.NetworkError<E>
+
 suspend inline fun <reified E, reified D> arrowNetworkHandler(call: () -> HttpResponse): Either<DataError.NetworkError<E>, D> =
     either {
         val response = try {

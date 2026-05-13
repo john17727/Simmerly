@@ -1,6 +1,5 @@
 package dev.juanrincon.simmerly.welcome.presentation.mvikotlin
 
-import app.tracktion.core.domain.util.onError
 import com.arkivanov.mvikotlin.core.store.Reducer
 import com.arkivanov.mvikotlin.core.store.Store
 import com.arkivanov.mvikotlin.core.store.StoreFactory
@@ -93,7 +92,7 @@ class WelcomeStoreFactory(
                         formattedServerAddress,
                         password
                     )
-                }.onError { error ->
+                }.onLeft { error ->
                     val message = when (error) {
                         LoginError.InvalidCredentials -> Res.string.login_failed
                         LoginError.UnresolvedAddress,

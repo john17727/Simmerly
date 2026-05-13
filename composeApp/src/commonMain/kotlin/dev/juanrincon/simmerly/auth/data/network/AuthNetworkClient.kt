@@ -1,11 +1,10 @@
 package dev.juanrincon.simmerly.auth.data.network
 
 import app.tracktion.core.domain.util.DataError
-import app.tracktion.core.domain.util.Result
-import app.tracktion.core.domain.util.mapData
+import arrow.core.Either
 import dev.juanrincon.simmerly.auth.data.network.dto.AuthTokenResponse
+import dev.juanrincon.simmerly.core.data.remote.arrowNetworkHandler
 import dev.juanrincon.simmerly.core.data.remote.utils.dynamic_base_url_ktor_plugin.BaseUrlOverride
-import dev.juanrincon.simmerly.core.data.remote.networkHandler
 import io.ktor.client.HttpClient
 import io.ktor.client.request.forms.submitForm
 import io.ktor.http.Parameters
@@ -15,8 +14,8 @@ class AuthNetworkClient(private val httpClient: HttpClient) {
         baseUrl: String,
         username: String,
         password: String
-    ): Result<String, DataError.NetworkError<Unit>> =
-        networkHandler<AuthTokenResponse, Unit> {
+    ): Either<DataError.NetworkError<Unit>, String> =
+        arrowNetworkHandler<Unit, AuthTokenResponse> {
             httpClient.submitForm(
                 url = "/api/auth/token",
                 formParameters = Parameters.build {
@@ -26,5 +25,5 @@ class AuthNetworkClient(private val httpClient: HttpClient) {
             ) {
                 attributes.put(BaseUrlOverride, baseUrl)
             }
-        }.mapData { it.token }
+        }.map { it.token }
 }
