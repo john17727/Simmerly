@@ -1,10 +1,7 @@
 package dev.juanrincon.simmerly.recipes.data
 
-import app.tracktion.core.domain.util.Result
-import app.tracktion.core.domain.util.asEmptyDataResult
-import app.tracktion.core.domain.util.fold
-import app.tracktion.core.domain.util.mapError
-import app.tracktion.core.domain.util.onSuccess
+import arrow.core.Either
+import arrow.core.raise.either
 import dev.juanrincon.simmerly.auth.domain.SessionDataStore
 import dev.juanrincon.simmerly.core.data.local.SimmerlyDatabase
 import dev.juanrincon.simmerly.recipes.data.local.recent.RecentSearchQueryEntity
@@ -23,7 +20,6 @@ import dev.juanrincon.simmerly.recipes.domain.RecipeListResult
 import dev.juanrincon.simmerly.recipes.domain.RecipeRepository
 import dev.juanrincon.simmerly.recipes.domain.RecipesError
 import dev.juanrincon.simmerly.recipes.domain.model.Comment
-import dev.juanrincon.simmerly.recipes.domain.model.PaginationData
 import dev.juanrincon.simmerly.recipes.domain.model.RecipeDetail
 import dev.juanrincon.simmerly.recipes.domain.model.RecipeSummary
 import dev.juanrincon.simmerly.recipes.domain.model.Settings
@@ -58,38 +54,37 @@ class SimmerlyRecipeRepository(
         page: Int,
         perPage: Int,
         refresh: Boolean
-    ): Flow<Result<LoadingResult<RecipeListResult>, RecipesError>> = flow {
+    ): Flow<Either<RecipesError, LoadingResult<RecipeListResult>>> = flow {
         // Start with loading
-        emit(Result.Success(LoadingResult.Loading))
+        emit(Either.Right(LoadingResult.Loading))
 
         // Optionally clear for a hard refresh
         if (refresh) {
             recipeDao.clearAll()
         }
 
-        var pagination: PaginationData? = null
-
         // Fetch from network and persist
-        val networkResult = networkClient.getRecipes(page, perPage, true)
-        networkResult.fold(
-            onSuccess = { response ->
-                recipeDao.upsertAll(response.items.map { it.toEntity() })
-                tagsDao.upsertAll(response.items.flatMap { it.tags.map { tag -> tag.toEntity() } })
-                val tagRefs = response.items.flatMap { recipe ->
-                    recipe.tags.map { tag ->
-                        RecipeTagCrossRef(
-                            recipeId = recipe.id,
-                            tagId = tag.id
-                        )
-                    }
-                }
-                recipeTagDao.insertAll(tagRefs)
-                pagination = response.toPaginationData()
-            },
-            onFailure = {
+        val pagination = either {
+            val response = networkClient.getRecipes(page, perPage, true).mapLeft {
                 // Surface fetch error but continue to emit cached/updated DB data
-                emit(Result.Error(RecipesError.FetchError))
+                RecipesError.FetchError
+            }.bind()
+
+            recipeDao.upsertAll(response.items.map { it.toEntity() })
+            tagsDao.upsertAll(response.items.flatMap { it.tags.map { tag -> tag.toEntity() } })
+            val tagRefs = response.items.flatMap { recipe ->
+                recipe.tags.map { tag ->
+                    RecipeTagCrossRef(
+                        recipeId = recipe.id,
+                        tagId = tag.id
+                    )
+                }
             }
+            recipeTagDao.insertAll(tagRefs)
+            response.toPaginationData()
+        }.fold(
+            ifLeft = { emit(Either.Left(it)); null },   // surface error, keep going
+            ifRight = { it }
         )
 
         // Now emit the DB-backed list
@@ -98,7 +93,7 @@ class SimmerlyRecipeRepository(
                 recipes.map { it.toDomain(address) }
             }
             .map { list ->
-                Result.Success(LoadingResult.Loaded(RecipeListResult(list, pagination)))
+                Either.Right(LoadingResult.Loaded(RecipeListResult(list, pagination)))
             }
             .distinctUntilChanged()
 
@@ -113,52 +108,54 @@ class SimmerlyRecipeRepository(
 
     // removed: loadRecipes(page, perPage, refresh) in favor of unified recipeList()
 
-    override fun recipeDetails(id: String): Flow<Result<LoadingResult<RecipeDetail>, RecipesError>> =
+    override fun recipeDetails(id: String): Flow<Either<RecipesError, LoadingResult<RecipeDetail>>> =
         flow {
             // Notify observers we're loading fresh data
-            emit(Result.Success(LoadingResult.Loading))
+            emit(Either.Right(LoadingResult.Loading))
 
             // Try to refresh from network and persist to local DB first
-            val networkResult = networkClient.getRecipe(id)
-            networkResult.fold(
-                onSuccess = { dto ->
-                    val data = dto.toEntityWithRelations()
-                    val recipeId = data.recipe.id
-
-                    // Persist the latest details
-                    recipeDao.upsert(data.recipe)
-
-                    val units = data.ingredients.mapNotNull { it.unit }
-                    if (units.isNotEmpty()) database.unitDao().upsertAll(units)
-
-                    val foods = data.ingredients.mapNotNull { it.food }
-                    if (foods.isNotEmpty()) database.foodDao().upsertAll(foods)
-
-                    ingredientDao.deleteByRecipeId(recipeId)
-                    instructionsDao.deleteByRecipeId(recipeId)
-                    ingredientDao.upsertAll(data.ingredients.map { it.ingredient })
-                    instructionsDao.upsertAll(data.instructions.map { it.instruction })
-
-                    noteDao.deleteByRecipeId(recipeId)
-                    noteDao.upsertAll(data.notes)
-
-                    toolsDao.upsertAll(data.tools)
-
-                    userDao.upsertAll(data.comments.map { it.user })
-                    commentDao.deleteByRecipeId(recipeId)
-                    commentDao.upsertAll(data.comments.map { it.comment })
-
-                    // Refresh cross refs for tools
-                    val refs = data.tools.map { tool ->
-                        RecipeToolCrossRef(recipeId = recipeId, toolId = tool.id)
-                    }
-                    recipeToolDao.clearForRecipe(recipeId)
-                    recipeToolDao.insertAll(refs)
-                },
-                onFailure = {
+            either {
+                val dto = networkClient.getRecipe(id).mapLeft {
                     // Surface fetch error but still proceed to emit cached DB flow next
-                    emit(Result.Error(RecipesError.FetchError))
+                    RecipesError.FetchError
+                }.bind()
+                val data = dto.toEntityWithRelations()
+                val recipeId = data.recipe.id
+
+                // Persist the latest details
+                recipeDao.upsert(data.recipe)
+
+                val units = data.ingredients.mapNotNull { it.unit }
+                if (units.isNotEmpty()) database.unitDao().upsertAll(units)
+
+                val foods = data.ingredients.mapNotNull { it.food }
+                if (foods.isNotEmpty()) database.foodDao().upsertAll(foods)
+
+                ingredientDao.deleteByRecipeId(recipeId)
+                instructionsDao.deleteByRecipeId(recipeId)
+                ingredientDao.upsertAll(data.ingredients.map { it.ingredient })
+                instructionsDao.upsertAll(data.instructions.map { it.instruction })
+
+                noteDao.deleteByRecipeId(recipeId)
+                noteDao.upsertAll(data.notes)
+
+                toolsDao.upsertAll(data.tools)
+
+                userDao.upsertAll(data.comments.map { it.user })
+                commentDao.deleteByRecipeId(recipeId)
+                commentDao.upsertAll(data.comments.map { it.comment })
+
+                // Refresh cross refs for tools
+                val refs = data.tools.map { tool ->
+                    RecipeToolCrossRef(recipeId = recipeId, toolId = tool.id)
                 }
+                recipeToolDao.clearForRecipe(recipeId)
+                recipeToolDao.insertAll(refs)
+            }.fold(
+                ifLeft = {
+                    emit(Either.Left(it))
+                },
+                ifRight = {}
             )
 
             // Now emit the database-backed flow (latest if refresh succeeded)
@@ -166,7 +163,7 @@ class SimmerlyRecipeRepository(
                 .combine(recipeDao.observeRecipeDetail(id)) { address, entity ->
                     entity.toDomain(address)
                 }
-                .map { Result.Success(LoadingResult.Loaded(it)) }
+                .map { Either.Right(LoadingResult.Loaded(it)) }
                 .distinctUntilChanged()
 
             emitAll(dbFlow)
@@ -175,18 +172,21 @@ class SimmerlyRecipeRepository(
     override suspend fun addComment(
         recipeId: String,
         text: String
-    ): Result<Unit, RecipesError> =
-        networkClient.addComment(recipeId, text).onSuccess { comment ->
-            commentDao.upsert(comment.toEntity())
-        }.mapError { RecipesError.UpdateError }.asEmptyDataResult()
+    ): Either<RecipesError, Unit> = either {
+        val comment =
+            networkClient.addComment(recipeId, text).mapLeft { RecipesError.UpdateError }.bind()
+        commentDao.upsert(comment.toEntity())
+    }
 
     override suspend fun updateSettings(
         recipeId: String,
         settings: Settings
-    ): Result<Unit, RecipesError> =
-        networkClient.patchRecipe(recipeId, RecipePatchDto(settings = settings.toDto())).onSuccess {
-            recipeDao.upsert(it.toEntity())
-        }.mapError { RecipesError.UpdateError }.asEmptyDataResult()
+    ): Either<RecipesError, Unit> = either {
+        val updatedSettings =
+            networkClient.patchRecipe(recipeId, RecipePatchDto(settings = settings.toDto()))
+                .mapLeft { RecipesError.UpdateError }.bind()
+        recipeDao.upsert(updatedSettings.toEntity())
+    }
 
     override fun observeRecentlyViewed(): Flow<List<RecipeSummary>> =
         sessionDataStore.observeServerAddress()

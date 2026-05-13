@@ -1,6 +1,6 @@
 package dev.juanrincon.simmerly.recipes.domain
 
-import app.tracktion.core.domain.util.Result
+import arrow.core.Either
 import dev.juanrincon.simmerly.recipes.domain.model.Comment
 import dev.juanrincon.simmerly.recipes.domain.model.RecipeDetail
 import dev.juanrincon.simmerly.recipes.domain.model.RecipeSummary
@@ -17,15 +17,15 @@ interface RecipeRepository {
         page: Int,
         perPage: Int = 50,
         refresh: Boolean = false
-    ): Flow<Result<LoadingResult<RecipeListResult>, RecipesError>>
+    ): Flow<Either<RecipesError, LoadingResult<RecipeListResult>>>
 
     fun comments(recipeId: String): Flow<List<Comment>>
 
-    fun recipeDetails(id: String): Flow<Result<LoadingResult<RecipeDetail>, RecipesError>>
+    fun recipeDetails(id: String): Flow<Either<RecipesError, LoadingResult<RecipeDetail>>>
 
-    suspend fun addComment(recipeId: String, text: String): Result<Unit, RecipesError>
+    suspend fun addComment(recipeId: String, text: String): Either<RecipesError, Unit>
 
-    suspend fun updateSettings(recipeId: String, settings: Settings): Result<Unit, RecipesError>
+    suspend fun updateSettings(recipeId: String, settings: Settings): Either<RecipesError, Unit>
 
     fun observeRecentlyViewed(): Flow<List<RecipeSummary>>
 

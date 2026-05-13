@@ -1,9 +1,9 @@
 package dev.juanrincon.simmerly.recipes.data.remote
 
 import app.tracktion.core.domain.util.DataError
-import app.tracktion.core.domain.util.Result
+import arrow.core.Either
+import dev.juanrincon.simmerly.core.data.remote.arrowNetworkHandler
 import dev.juanrincon.simmerly.core.data.remote.dto.ItemListDto
-import dev.juanrincon.simmerly.core.data.remote.networkHandler
 import dev.juanrincon.simmerly.recipes.data.remote.dto.CommentDto
 import dev.juanrincon.simmerly.recipes.data.remote.dto.RecipeDetailDto
 import dev.juanrincon.simmerly.recipes.data.remote.dto.RecipeSummaryDto
@@ -21,7 +21,7 @@ class RecipeNetworkClient(private val client: HttpClient) {
         page: Int = 1,
         perPage: Int = 50,
         requireTags: Boolean = false
-    ): Result<ItemListDto<RecipeSummaryDto>, DataError.NetworkError<Unit>> = networkHandler {
+    ): Either<DataError.NetworkError<Unit>, ItemListDto<RecipeSummaryDto>> = arrowNetworkHandler {
         client.get("/api/recipes") {
             parameter("page", page)
             parameter("perPage", perPage)
@@ -31,22 +31,25 @@ class RecipeNetworkClient(private val client: HttpClient) {
 
     suspend fun getRecipe(
         slug: String
-    ): Result<RecipeDetailDto, DataError.NetworkError<Unit>> = networkHandler {
+    ): Either<DataError.NetworkError<Unit>, RecipeDetailDto> = arrowNetworkHandler {
         client.get("/api/recipes/$slug")
     }
 
     suspend fun patchRecipe(
         slug: String,
         recipe: RecipePatchDto
-    ): Result<RecipeDetailDto, DataError.NetworkError<Unit>> = networkHandler {
+    ): Either<DataError.NetworkError<Unit>, RecipeDetailDto> = arrowNetworkHandler {
         client.patch("/api/recipes/$slug") {
             setBody(recipe)
         }
     }
 
-    suspend fun addComment(recipeId: String, comment: String): Result<CommentDto, DataError.NetworkError<Unit>> = networkHandler {
-       client.post("/api/comments") {
-           setBody(NewCommentDto(recipeId, comment))
-       }
+    suspend fun addComment(
+        recipeId: String,
+        comment: String
+    ): Either<DataError.NetworkError<Unit>, CommentDto> = arrowNetworkHandler {
+        client.post("/api/comments") {
+            setBody(NewCommentDto(recipeId, comment))
+        }
     }
 }
