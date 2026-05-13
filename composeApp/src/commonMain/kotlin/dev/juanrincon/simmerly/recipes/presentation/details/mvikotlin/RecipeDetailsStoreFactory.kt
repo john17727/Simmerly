@@ -1,6 +1,6 @@
 package dev.juanrincon.simmerly.recipes.presentation.details.mvikotlin
 
-import app.tracktion.core.domain.util.Result
+import arrow.core.Either
 import com.arkivanov.mvikotlin.core.store.Reducer
 import com.arkivanov.mvikotlin.core.store.Store
 import com.arkivanov.mvikotlin.core.store.StoreFactory
@@ -43,7 +43,7 @@ class RecipeDetailsStoreFactory(
     }
 
     private sealed interface Msg {
-        data object Loading : Msg
+        data class Loading(val isLoading: Boolean) : Msg
         data class RecipeUpdated(val recipe: RecipeDetailUi) : Msg
         data class SettingsUpdated(val settings: Settings) : Msg
         data object ShowSettings : Msg
@@ -76,23 +76,9 @@ class RecipeDetailsStoreFactory(
         private fun observeRecipe(recipeId: String) {
             repository.recipeDetails(recipeId)
                 .distinctUntilChanged()
-                .onEach { result ->
-                    when (result) {
-                        is Result.Error<RecipesError> -> TODO()
-                        is Result.Success<LoadingResult<RecipeDetail>> -> {
-                            when (result.data) {
-                                is LoadingResult.Loaded<RecipeDetail> -> dispatch(
-                                    RecipeUpdated(
-                                        result.data.data.toRecipeDetailUi()
-                                    )
-                                )
-
-                                LoadingResult.Loading -> dispatch(Msg.Loading)
-                            }
-                        }
-                    }
-                }.launchIn(scope)
+                .onEach(::handleRecipeUpdates).launchIn(scope)
         }
+
         private fun updateSettings(settings: Settings) {
             val recipeId = state().recipe.id
             // Optimistic update — reflect the toggle immediately in the UI
@@ -130,6 +116,22 @@ class RecipeDetailsStoreFactory(
 
             dispatch(RecipeUpdated(updatedRecipe))
         }
+
+        private suspend fun handleRecipeUpdates(response: Either<RecipesError, LoadingResult<RecipeDetail>>) =
+            response.fold(
+                ifLeft = { dispatch(Msg.Loading(false)) },
+                ifRight = { result ->
+                    when (result) {
+                        is LoadingResult.Loaded<RecipeDetail> -> dispatch(
+                            RecipeUpdated(
+                                result.data.toRecipeDetailUi()
+                            )
+                        )
+
+                        LoadingResult.Loading -> dispatch(Msg.Loading(true))
+                    }
+                }
+            )
     }
 
     private object ReducerImpl : Reducer<State, Msg> {
@@ -152,7 +154,7 @@ class RecipeDetailsStoreFactory(
                     }
                 )
                 is Msg.SettingsUpdated -> copy(recipe = recipe.copy(settings = msg.settings))
-                is Msg.Loading -> copy(loading = true)
+                is Msg.Loading -> copy(loading = msg.isLoading)
                 Msg.ShowSettings -> copy(showSettings = true)
                 Msg.DismissSettings -> copy(showSettings = false)
             }

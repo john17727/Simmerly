@@ -1,13 +1,15 @@
 package dev.juanrincon.simmerly.recipes.presentation.search.mvikotlin
 
-import app.tracktion.core.domain.util.Result
+import arrow.core.Either
 import com.arkivanov.mvikotlin.core.store.Reducer
 import com.arkivanov.mvikotlin.core.store.Store
 import com.arkivanov.mvikotlin.core.store.StoreFactory
 import com.arkivanov.mvikotlin.extensions.coroutines.CoroutineBootstrapper
 import com.arkivanov.mvikotlin.extensions.coroutines.CoroutineExecutor
 import dev.juanrincon.simmerly.recipes.domain.LoadingResult
+import dev.juanrincon.simmerly.recipes.domain.RecipeListResult
 import dev.juanrincon.simmerly.recipes.domain.RecipeRepository
+import dev.juanrincon.simmerly.recipes.domain.RecipesError
 import dev.juanrincon.simmerly.recipes.domain.model.RecipeSummary
 import dev.juanrincon.simmerly.recipes.presentation.search.mvikotlin.RecipeSearchStore.Intent
 import dev.juanrincon.simmerly.recipes.presentation.search.mvikotlin.RecipeSearchStore.Label
@@ -81,15 +83,7 @@ class RecipeSearchStoreFactory(
 
         private fun fetchRecipes() {
             repository.recipeList(page = 1, refresh = false)
-                .onEach { result ->
-                    when (result) {
-                        is Result.Success -> when (val lr = result.data) {
-                            is LoadingResult.Loading -> dispatch(Loading(true))
-                            is LoadingResult.Loaded -> dispatch(RecipesLoaded(lr.data.items))
-                        }
-                        is Result.Error -> dispatch(Loading(false))
-                    }
-                }
+                .onEach(::handleRecipeListResponse)
                 .launchIn(scope)
         }
 
@@ -102,6 +96,19 @@ class RecipeSearchStoreFactory(
                 .onEach { dispatch(RecentQueriesLoaded(it)) }
                 .launchIn(scope)
         }
+
+        private suspend fun handleRecipeListResponse(response: Either<RecipesError, LoadingResult<RecipeListResult>>) =
+            response.fold(
+                ifLeft = {
+                    dispatch(Loading(false))
+                },
+                ifRight = { result ->
+                    when (result) {
+                        is LoadingResult.Loading -> dispatch(Loading(true))
+                        is LoadingResult.Loaded -> dispatch(RecipesLoaded(result.data.items))
+                    }
+                }
+            )
     }
 
     private object ReducerImpl : Reducer<State, Msg> {

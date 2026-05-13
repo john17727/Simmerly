@@ -1,13 +1,15 @@
 package dev.juanrincon.simmerly.recipes.presentation.list.mvikotlin
 
-import app.tracktion.core.domain.util.Result
+import arrow.core.Either
 import com.arkivanov.mvikotlin.core.store.Reducer
 import com.arkivanov.mvikotlin.core.store.Store
 import com.arkivanov.mvikotlin.core.store.StoreFactory
 import com.arkivanov.mvikotlin.extensions.coroutines.CoroutineBootstrapper
 import com.arkivanov.mvikotlin.extensions.coroutines.CoroutineExecutor
 import dev.juanrincon.simmerly.recipes.domain.LoadingResult
+import dev.juanrincon.simmerly.recipes.domain.RecipeListResult
 import dev.juanrincon.simmerly.recipes.domain.RecipeRepository
+import dev.juanrincon.simmerly.recipes.domain.RecipesError
 import dev.juanrincon.simmerly.recipes.domain.model.RecipeSummary
 import dev.juanrincon.simmerly.recipes.presentation.list.mvikotlin.RecipeListStore.Intent
 import dev.juanrincon.simmerly.recipes.presentation.list.mvikotlin.RecipeListStore.Label
@@ -74,20 +76,25 @@ class RecipeListStoreFactory(
 
         private fun fetchAndObserve(page: Int, refresh: Boolean = false) {
             repository.recipeList(page = page, refresh = refresh)
-                .onEach { result ->
-                    when (result) {
-                        is Result.Success -> when (val lr = result.data) {
-                            is LoadingResult.Loading -> dispatch(Loading(true))
-                            is LoadingResult.Loaded -> {
-                                dispatch(RecipesUpdated(lr.data.items))
-                                dispatch(PageData(nextPage = lr.data.pagination?.next))
-                            }
-                        }
-                        is Result.Error -> dispatch(Loading(false))
-                    }
-                }
+                .onEach(::handleRecipeListResponse)
                 .launchIn(scope)
         }
+
+        private suspend fun handleRecipeListResponse(response: Either<RecipesError, LoadingResult<RecipeListResult>>) =
+            response.fold(
+                ifLeft = {
+                    dispatch(Loading(false))
+                },
+                ifRight = { result ->
+                    when (result) {
+                        is LoadingResult.Loading -> dispatch(Loading(true))
+                        is LoadingResult.Loaded -> {
+                            dispatch(RecipesUpdated(result.data.items))
+                            dispatch(PageData(nextPage = result.data.pagination?.next))
+                        }
+                    }
+                }
+            )
     }
 
     private object ReducerImpl : Reducer<State, Msg> {

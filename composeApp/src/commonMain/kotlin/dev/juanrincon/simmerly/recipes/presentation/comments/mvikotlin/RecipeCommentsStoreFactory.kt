@@ -1,6 +1,5 @@
 package dev.juanrincon.simmerly.recipes.presentation.comments.mvikotlin
 
-import app.tracktion.core.domain.util.fold
 import com.arkivanov.mvikotlin.core.store.Reducer
 import com.arkivanov.mvikotlin.core.store.Store
 import com.arkivanov.mvikotlin.core.store.StoreFactory
@@ -77,10 +76,10 @@ class RecipeCommentsStoreFactory(
         private fun addComment(recipeId: String, text: String) {
             scope.launch {
                 repository.addComment(recipeId, text).fold(
-                    onSuccess = {
+                    ifRight = {
                         dispatch(Msg.CommentTextChange(""))
                     },
-                    onFailure = {
+                    ifLeft = {
                        // TODO: Handle error
                     }
                 )
