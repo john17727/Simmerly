@@ -102,6 +102,10 @@ kotlin {
             implementation(libs.androidx.navigation3.ui)
             implementation(libs.androidx.navigation3.material3.adaptive)
             implementation(libs.androidx.lifecycle.viewmodel.navigation3)
+
+            // Arrow
+            implementation(libs.arrow.core)
+            implementation(libs.arrow.fx.coroutines)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
