@@ -243,8 +243,8 @@ private fun CompactContent(
         // Hero image
         item {
             val uriHandler = LocalUriHandler.current
-            val animatedScope = LocalNavAnimatedContentScope.current
             val sharedModifier = if (sharedTransitionScope != null) {
+                val animatedScope = LocalNavAnimatedContentScope.current
                 with(sharedTransitionScope) {
                     Modifier.sharedElement(
                         sharedContentState = rememberSharedContentState(key = "recipe-image-${recipe.id}"),
@@ -276,21 +276,25 @@ private fun CompactContent(
                             )
                         }.clip(MaterialTheme.shapes.medium)
                 )
-                if (!state.loading && recipe.tags.isNotEmpty()) {
+                AnimatedVisibility(
+                    !state.loading && recipe.tags.isNotEmpty(),
+                    modifier = Modifier.align(Alignment.BottomStart)
+                ) {
                     TagRow(
                         tags = recipe.tags,
                         modifier = Modifier
-                            .align(Alignment.BottomStart)
                             .padding(12.dp)
                     )
                 }
-                if (!state.loading && recipe.link != null) {
+                AnimatedVisibility(
+                    !state.loading && recipe.link != null,
+                    modifier = Modifier.align(Alignment.BottomEnd)
+                ) {
                     FilledIconButton(
-                        onClick = { uriHandler.openUri(recipe.link) },
+                        onClick = { uriHandler.openUri(recipe.link!!) },
                         shape = IconButtonDefaults.extraSmallSquareShape,
                         modifier = Modifier.padding(12.dp)
                             .size(IconButtonDefaults.extraSmallContainerSize())
-                            .align(Alignment.BottomEnd),
                     ) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Default.OpenInNew,
