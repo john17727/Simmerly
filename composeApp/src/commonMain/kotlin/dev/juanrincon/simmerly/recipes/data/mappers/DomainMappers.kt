@@ -58,7 +58,8 @@ fun ListRecipeWithTags.toDomain(host: String?): RecipeSummary = RecipeSummary(
     description = recipe.description
 )
 
-fun RecipeDetailWithRelations.toDomain(host: String?): RecipeDetail = RecipeDetail(
+fun RecipeDetailWithRelations.toDomain(host: String?, isFavorite: Boolean = false): RecipeDetail =
+    RecipeDetail(
     id = recipe.id,
     userId = recipe.userId,
     householdId = recipe.householdId,
@@ -89,7 +90,8 @@ fun RecipeDetailWithRelations.toDomain(host: String?): RecipeDetail = RecipeDeta
     settings = recipe.settings.toDomain(),
     assets = listOf(),
     notes = notes.map { it.toDomain() },
-    comments = comments.map { it.toDomain(host) }
+        comments = comments.map { it.toDomain(host) },
+        isFavorite = isFavorite,
 )
 
 fun CategoryEntity.toDomain(): Category = Category(

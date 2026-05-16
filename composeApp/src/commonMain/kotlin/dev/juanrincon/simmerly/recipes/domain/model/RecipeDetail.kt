@@ -35,5 +35,6 @@ data class RecipeDetail (
     val settings: Settings,
     val assets: List<String>,
     val notes: List<Note>,
-    val comments: List<Comment>
+    val comments: List<Comment>,
+    val isFavorite: Boolean = false,
 )

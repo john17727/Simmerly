@@ -159,10 +159,14 @@ class SimmerlyRecipeRepository(
             )
 
             // Now emit the database-backed flow (latest if refresh succeeded)
-            val dbFlow = sessionDataStore.observeServerAddress()
-                .combine(recipeDao.observeRecipeDetail(id)) { address, entity ->
-                    entity.toDomain(address)
-                }
+            val preferenceDao = database.userRecipePreferenceDao()
+            val dbFlow = combine(
+                sessionDataStore.observeServerAddress(),
+                recipeDao.observeRecipeDetail(id),
+                preferenceDao.observe(id),
+            ) { address, entity, preference ->
+                entity.toDomain(address, isFavorite = preference?.isFavorite ?: false)
+            }
                 .map { Either.Right(LoadingResult.Loaded(it)) }
                 .distinctUntilChanged()
 
