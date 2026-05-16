@@ -46,7 +46,8 @@ fun RecipeEntity.toDomain(host: String?): RecipeSummary = RecipeSummary(
     description = description
 )
 
-fun ListRecipeWithTags.toDomain(host: String?): RecipeSummary = RecipeSummary(
+fun ListRecipeWithTags.toDomain(host: String?, isFavorite: Boolean = false): RecipeSummary =
+    RecipeSummary(
     id = recipe.id,
     name = recipe.name,
     image = createRecipeImageUrl(host, recipe.id),
@@ -55,7 +56,8 @@ fun ListRecipeWithTags.toDomain(host: String?): RecipeSummary = RecipeSummary(
     totalTime = abbreviateTime(recipe.totalTime),
     prepTime = abbreviateNullableTime(recipe.prepTime),
     performTime = abbreviateNullableTime(recipe.performTime),
-    description = recipe.description
+        description = recipe.description,
+        isFavorite = isFavorite,
 )
 
 fun RecipeDetailWithRelations.toDomain(host: String?, isFavorite: Boolean = false): RecipeDetail =

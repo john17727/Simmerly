@@ -21,6 +21,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.relocation.BringIntoViewRequester
 import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.rounded.Star
 import androidx.compose.material.icons.rounded.Timer
 import androidx.compose.material3.Card
@@ -225,7 +226,8 @@ fun RecipeCard(
                         )
                         RecipeLimitedMetaRow(
                             recipe.rating,
-                            recipe.totalTime
+                            recipe.totalTime,
+                            recipe.isFavorite,
                         )
                         TagRow(recipe.tags)
                     }
@@ -281,6 +283,7 @@ fun RecipeCardSkeleton(modifier: Modifier = Modifier) {
 private fun RecipeLimitedMetaRow(
     rating: Double?,
     totalTime: String?,
+    isFavorite: Boolean = false,
     modifier: Modifier = Modifier
 ) {
     Row(
@@ -288,6 +291,14 @@ private fun RecipeLimitedMetaRow(
         verticalAlignment = Alignment.CenterVertically,
         modifier = modifier
     ) {
+        if (isFavorite) {
+            Icon(
+                Icons.Default.Favorite,
+                contentDescription = "Favorite",
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(16.dp)
+            )
+        }
         rating?.let {
             Row(
                 verticalAlignment = Alignment.CenterVertically,

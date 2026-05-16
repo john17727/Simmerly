@@ -13,4 +13,7 @@ interface UserRecipePreferenceDao {
 
     @Query("SELECT * FROM user_recipe_preferences WHERE recipeId = :recipeId")
     fun observe(recipeId: String): Flow<UserRecipePreferenceEntity?>
+
+    @Query("SELECT * FROM user_recipe_preferences")
+    fun observeAll(): Flow<List<UserRecipePreferenceEntity>>
 }

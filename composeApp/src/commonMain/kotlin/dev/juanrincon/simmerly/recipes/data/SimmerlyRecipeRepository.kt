@@ -88,10 +88,20 @@ class SimmerlyRecipeRepository(
         )
 
         // Now emit the DB-backed list
-        val dbFlow = sessionDataStore.observeServerAddress()
-            .combine(recipeDao.observeRecipeList()) { address, recipes ->
-                recipes.map { it.toDomain(address) }
+        val preferenceDao = database.userRecipePreferenceDao()
+        val dbFlow = combine(
+            sessionDataStore.observeServerAddress(),
+            recipeDao.observeRecipeList(),
+            preferenceDao.observeAll(),
+        ) { address, recipes, preferences ->
+            val preferenceMap = preferences.associateBy { it.recipeId }
+            recipes.map {
+                it.toDomain(
+                    address,
+                    isFavorite = preferenceMap[it.recipe.id]?.isFavorite ?: false
+                )
             }
+        }
             .map { list ->
                 Either.Right(LoadingResult.Loaded(RecipeListResult(list, pagination)))
             }

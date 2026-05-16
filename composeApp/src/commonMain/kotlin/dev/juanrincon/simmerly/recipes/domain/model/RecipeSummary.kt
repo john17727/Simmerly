@@ -9,5 +9,6 @@ data class RecipeSummary(
     val totalTime: String?,
     val prepTime: String?,
     val performTime: String?,
-    val description: String
+    val description: String,
+    val isFavorite: Boolean = false,
 )
