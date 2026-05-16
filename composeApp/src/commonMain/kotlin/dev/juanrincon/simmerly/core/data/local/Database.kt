@@ -12,6 +12,7 @@ import dev.juanrincon.simmerly.recipes.data.local.recent.RecentSearchQueryDao
 import dev.juanrincon.simmerly.recipes.data.local.recent.RecentSearchQueryEntity
 import dev.juanrincon.simmerly.recipes.data.local.recent.RecentlyViewedDao
 import dev.juanrincon.simmerly.recipes.data.local.recent.RecentlyViewedEntity
+import dev.juanrincon.simmerly.recipes.data.local.recipe.CategoryDao
 import dev.juanrincon.simmerly.recipes.data.local.recipe.CommentDao
 import dev.juanrincon.simmerly.recipes.data.local.recipe.FoodDao
 import dev.juanrincon.simmerly.recipes.data.local.recipe.IngredientDao
@@ -24,6 +25,7 @@ import dev.juanrincon.simmerly.recipes.data.local.recipe.TagDao
 import dev.juanrincon.simmerly.recipes.data.local.recipe.ToolDao
 import dev.juanrincon.simmerly.recipes.data.local.recipe.UnitDao
 import dev.juanrincon.simmerly.recipes.data.local.recipe.UserDao
+import dev.juanrincon.simmerly.recipes.data.local.recipe.UserRecipePreferenceDao
 import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.CategoryEntity
 import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.CommentEntity
 import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.FoodEntity
@@ -35,6 +37,7 @@ import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.TagEntity
 import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.ToolEntity
 import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.UnitEntity
 import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.UserEntity
+import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.UserRecipePreferenceEntity
 import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.junction.InstructionIngredientCrossRef
 import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.junction.RecipeCategoryCrossRef
 import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.junction.RecipeTagCrossRef
@@ -63,8 +66,9 @@ import kotlin.time.ExperimentalTime
         RecipeRemoteKey::class,
         RecentlyViewedEntity::class,
         RecentSearchQueryEntity::class,
+        UserRecipePreferenceEntity::class,
     ],
-    version = 2
+    version = 3
 )
 @TypeConverters(Converters::class)
 @OptIn(ExperimentalTime::class)
@@ -95,6 +99,10 @@ abstract class SimmerlyDatabase : RoomDatabase() {
     abstract fun commentDao(): CommentDao
 
     abstract fun userDao(): UserDao
+
+    abstract fun categoryDao(): CategoryDao
+
+    abstract fun userRecipePreferenceDao(): UserRecipePreferenceDao
 
     abstract fun recentlyViewedDao(): RecentlyViewedDao
 

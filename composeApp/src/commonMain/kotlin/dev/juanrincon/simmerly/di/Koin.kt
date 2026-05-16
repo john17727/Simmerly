@@ -3,6 +3,8 @@ package dev.juanrincon.simmerly.di
 import dev.juanrincon.simmerly.auth.di.authModule
 import dev.juanrincon.simmerly.core.di.localModule
 import dev.juanrincon.simmerly.core.di.remoteModule
+import dev.juanrincon.simmerly.initialload.data.di.initialLoadDataModule
+import dev.juanrincon.simmerly.initialload.presentation.di.initialLoadPresentationModule
 import dev.juanrincon.simmerly.recipes.data.di.recipeDataModule
 import dev.juanrincon.simmerly.recipes.presentation.di.recipePresentationModule
 import dev.juanrincon.simmerly.welcome.di.welcomeModule
@@ -23,7 +25,9 @@ fun initKoin(appDeclaration: KoinAppDeclaration = {}) {
             authModule,
             welcomeModule,
             recipeDataModule,
-            recipePresentationModule
+            recipePresentationModule,
+            initialLoadDataModule,
+            initialLoadPresentationModule
         )
     }
 }

@@ -16,7 +16,7 @@ class AuthNavigationViewModel(
     val isAuthenticated: StateFlow<AuthDestinations> =
         repository.observeAuthState().map { authState ->
         when (authState) {
-            is AuthState.Authenticated -> AuthDestinations.App
+            is AuthState.Authenticated -> AuthDestinations.InitialLoad
             AuthState.Loading -> AuthDestinations.Splash
             AuthState.Unauthenticated -> AuthDestinations.Login
         }

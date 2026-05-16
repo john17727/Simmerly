@@ -14,4 +14,7 @@ sealed interface AuthDestinations: NavKey {
 
     @Serializable
     data object Splash : AuthDestinations
+
+    @Serializable
+    data object InitialLoad : AuthDestinations
 }

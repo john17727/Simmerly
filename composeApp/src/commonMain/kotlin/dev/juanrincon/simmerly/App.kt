@@ -11,6 +11,7 @@ import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.ui.NavDisplay
 import androidx.savedstate.serialization.SavedStateConfiguration
+import dev.juanrincon.simmerly.initialload.presentation.InitialLoadScreen
 import dev.juanrincon.simmerly.navigation.app.AppContent
 import dev.juanrincon.simmerly.navigation.auth.AuthDestinations
 import dev.juanrincon.simmerly.navigation.auth.AuthNavigationViewModel
@@ -40,6 +41,10 @@ fun SimmerlyApp(
                     subclass(AuthDestinations.Login::class, AuthDestinations.Login.serializer())
                     subclass(AuthDestinations.Splash::class, AuthDestinations.Splash.serializer())
                     subclass(AuthDestinations.App::class, AuthDestinations.App.serializer())
+                    subclass(
+                        AuthDestinations.InitialLoad::class,
+                        AuthDestinations.InitialLoad.serializer()
+                    )
                 }
             }
         },
@@ -64,6 +69,16 @@ fun SimmerlyApp(
                is AuthDestinations.Splash -> {
                    NavEntry(key) {
                        SplashScreen()
+                   }
+               }
+               is AuthDestinations.InitialLoad -> {
+                   NavEntry(key) {
+                       InitialLoadScreen(
+                           onLoadComplete = {
+                               backStack.clear()
+                               backStack.add(AuthDestinations.App)
+                           }
+                       )
                    }
                }
                is AuthDestinations.App -> {
