@@ -4,6 +4,8 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -243,15 +245,18 @@ private fun CompactContent(
         // Hero image
         item {
             val uriHandler = LocalUriHandler.current
-            val sharedModifier = if (sharedTransitionScope != null) {
+            val (sharedModifier, isNavTransitionRunning) = if (sharedTransitionScope != null) {
                 val animatedScope = LocalNavAnimatedContentScope.current
-                with(sharedTransitionScope) {
+                val modifier = with(sharedTransitionScope) {
                     Modifier.sharedElement(
                         sharedContentState = rememberSharedContentState(key = "recipe-image-${recipe.id}"),
                         animatedVisibilityScope = animatedScope,
                     )
                 }
-            } else Modifier
+                modifier to animatedScope.transition.isRunning
+            } else {
+                Modifier to false
+            }
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -277,8 +282,10 @@ private fun CompactContent(
                         }.clip(MaterialTheme.shapes.medium)
                 )
                 AnimatedVisibility(
-                    !state.loading && recipe.tags.isNotEmpty(),
-                    modifier = Modifier.align(Alignment.BottomStart)
+                    !state.loading && recipe.tags.isNotEmpty() && !isNavTransitionRunning,
+                    modifier = Modifier.align(Alignment.BottomStart),
+                    enter = fadeIn(),
+                    exit = fadeOut(),
                 ) {
                     TagRow(
                         tags = recipe.tags,
@@ -287,8 +294,10 @@ private fun CompactContent(
                     )
                 }
                 AnimatedVisibility(
-                    !state.loading && recipe.link != null,
-                    modifier = Modifier.align(Alignment.BottomEnd)
+                    !state.loading && recipe.link != null && !isNavTransitionRunning,
+                    modifier = Modifier.align(Alignment.BottomEnd),
+                    enter = fadeIn(),
+                    exit = fadeOut(),
                 ) {
                     FilledIconButton(
                         onClick = { uriHandler.openUri(recipe.link!!) },
