@@ -48,6 +48,7 @@ import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
@@ -253,7 +254,9 @@ internal fun Login(
                 if (isLoading) {
                     CircularProgressIndicator(
                         color = MaterialTheme.colorScheme.onPrimary,
-                        modifier = Modifier.sizeIn(maxHeight = 24.dp, maxWidth = 24.dp)
+                        modifier = Modifier
+                            .sizeIn(maxHeight = 24.dp, maxWidth = 24.dp)
+                            .testTag("login_loading_indicator")
                     )
                 } else {
                     Text("Login")
