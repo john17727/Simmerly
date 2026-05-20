@@ -11,14 +11,14 @@ data class IngredientWithRelations(
     val ingredient: IngredientEntity,
 
     @Relation(
-        parentColumn = "unit_id",
-        entityColumn = "id",
+        parentColumns = ["unit_id"],
+        entityColumns = ["id"],
     )
     val unit: UnitEntity?,
 
     @Relation(
-        parentColumn = "food_id",
-        entityColumn = "id",
+        parentColumns = ["food_id"],
+        entityColumns = ["id"],
     )
     val food: FoodEntity?
 )

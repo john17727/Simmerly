@@ -9,8 +9,8 @@ data class CommentWithRelations(
     @Embedded
     val comment: CommentEntity,
     @Relation(
-        parentColumn = "user_id",
-        entityColumn = "id"
+        parentColumns = ["user_id"],
+        entityColumns = ["id"]
     )
     val user: UserEntity
 )

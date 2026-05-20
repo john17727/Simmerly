@@ -20,62 +20,62 @@ data class RecipeDetailWithRelations(
     val recipe: RecipeEntity,
 
     @Relation(
-        parentColumn = "id",
-        entityColumn = "id",
+        parentColumns = ["id"],
+        entityColumns = ["id"],
         associateBy = Junction(
             RecipeCategoryCrossRef::class,
-            parentColumn = "recipe_id",
-            entityColumn = "category_id"
+            parentColumns = ["recipe_id"],
+            entityColumns = ["category_id"]
         )
     )
     val categories: List<CategoryEntity>,
 
     @Relation(
-        parentColumn = "id",
-        entityColumn = "id",
+        parentColumns = ["id"],
+        entityColumns = ["id"],
         associateBy = Junction(
             RecipeTagCrossRef::class,
-            parentColumn = "recipe_id",
-            entityColumn = "tag_id"
+            parentColumns = ["recipe_id"],
+            entityColumns = ["tag_id"]
         )
     )
     val tags: List<TagEntity>,
 
     @Relation(
-        parentColumn = "id",
-        entityColumn = "id",
+        parentColumns = ["id"],
+        entityColumns = ["id"],
         associateBy = Junction(
             RecipeToolCrossRef::class,
-            parentColumn = "recipe_id",
-            entityColumn = "tool_id"
+            parentColumns = ["recipe_id"],
+            entityColumns = ["tool_id"]
         )
     )
     val tools: List<ToolEntity>,
 
     @Relation(
         entity = IngredientEntity::class,
-        parentColumn = "id",
-        entityColumn = "recipe_id",
+        parentColumns = ["id"],
+        entityColumns = ["recipe_id"],
     )
     val ingredients: List<IngredientWithRelations>,
 
     @Relation(
         entity = InstructionEntity::class,
-        parentColumn = "id",
-        entityColumn = "recipe_id",
+        parentColumns = ["id"],
+        entityColumns = ["recipe_id"],
     )
     val instructions: List<InstructionWithRelations>,
 
     @Relation(
-        parentColumn = "id",
-        entityColumn = "recipe_id",
+        parentColumns = ["id"],
+        entityColumns = ["recipe_id"],
     )
     val notes: List<NoteEntity>,
 
     @Relation(
         entity = CommentEntity::class,
-        parentColumn = "id",
-        entityColumn = "recipe_id",
+        parentColumns = ["id"],
+        entityColumns = ["recipe_id"],
     )
     val comments: List<CommentWithRelations>,
 )

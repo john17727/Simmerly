@@ -13,12 +13,12 @@ data class InstructionWithRelations(
 
     @Relation(
         entity = IngredientEntity::class,
-        parentColumn = "id",
-        entityColumn = "id",
+        parentColumns = ["id"],
+        entityColumns = ["id"],
         associateBy = Junction(
             InstructionIngredientCrossRef::class,
-            parentColumn = "instruction_id",
-            entityColumn = "ingredient_id"
+            parentColumns = ["instruction_id"],
+            entityColumns = ["ingredient_id"]
         )
     )
     val ingredients: List<IngredientWithRelations>

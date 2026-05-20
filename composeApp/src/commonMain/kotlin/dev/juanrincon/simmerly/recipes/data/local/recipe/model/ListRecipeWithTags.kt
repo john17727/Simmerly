@@ -12,12 +12,12 @@ data class ListRecipeWithTags(
     val recipe: RecipeEntity,
 
     @Relation(
-        parentColumn = "id",
-        entityColumn = "id",
+        parentColumns = ["id"],
+        entityColumns = ["id"],
         associateBy = Junction(
             RecipeTagCrossRef::class,
-            parentColumn = "recipe_id",
-            entityColumn = "tag_id"
+            parentColumns = ["recipe_id"],
+            entityColumns = ["tag_id"]
         )
     )
     val tags: List<TagEntity>,
