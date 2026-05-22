@@ -14,22 +14,15 @@ expect fun <E> mapPlatformException(e: Exception): DataError.NetworkError<E>
 
 suspend inline fun <reified E, reified D> arrowNetworkHandler(call: () -> HttpResponse): Either<DataError.NetworkError<E>, D> =
     either {
-        val response = try {
-            call()
-        } catch (e: UnresolvedAddressException) {
-            raise(DataError.NetworkError.NoInternet)
-        } catch (e: SerializationException) {
-            raise(DataError.NetworkError.Serialization)
-        } catch (e: SocketTimeoutException) {
-            raise(DataError.NetworkError.UnresolvedAddress)
-        } catch (e: HttpRequestTimeoutException) {
-            raise(DataError.NetworkError.RequestTimeout)
-        } catch (e: Exception) {
-            // Check for the Java-specific exception by its fully qualified name
-            // This relies on the class being available at runtime on the platform
-            raise(mapPlatformException(e))
-        }
-
+        val response = Either.catch { call() }.mapLeft { e ->
+            when (e) {
+                is UnresolvedAddressException -> raise(DataError.NetworkError.NoInternet)
+                is SerializationException -> raise(DataError.NetworkError.Serialization)
+                is SocketTimeoutException -> raise(DataError.NetworkError.UnresolvedAddress)
+                is HttpRequestTimeoutException -> raise(DataError.NetworkError.RequestTimeout)
+                else -> raise(mapPlatformException(e as Exception))
+            }
+        }.bind()
 
         when (response.status.value) {
             in 200..299 -> response.body<D>()
