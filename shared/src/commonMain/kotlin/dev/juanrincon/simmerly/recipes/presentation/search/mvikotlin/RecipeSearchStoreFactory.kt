@@ -106,6 +106,7 @@ class RecipeSearchStoreFactory(
                     when (result) {
                         is LoadingResult.Loading -> dispatch(Loading(true))
                         is LoadingResult.Loaded -> dispatch(RecipesLoaded(result.data.items))
+                        else -> {}
                     }
                 }
             )

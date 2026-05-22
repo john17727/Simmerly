@@ -92,6 +92,7 @@ class RecipeListStoreFactory(
                             dispatch(RecipesUpdated(result.data.items))
                             dispatch(PageData(nextPage = result.data.pagination?.next))
                         }
+                        else -> {}
                     }
                 }
             )

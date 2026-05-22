@@ -32,6 +32,7 @@ import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.ViewTimeline
 import androidx.compose.material3.BottomAppBar
+import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FilledIconButton
@@ -40,6 +41,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.IconToggleButton
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MediumFlexibleTopAppBar
 import androidx.compose.material3.OutlinedCard
@@ -97,40 +99,53 @@ internal fun CompactRecipeDetails(
     Scaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
-            MediumFlexibleTopAppBar(
-                title = {
-                    if (state.loading) {
-                        val shimmerColors = listOf(
-                            MaterialTheme.colorScheme.surfaceContainer,
-                            MaterialTheme.colorScheme.surfaceContainerHighest,
-                            MaterialTheme.colorScheme.surfaceContainer,
-                        )
-                        Box(
-                            modifier = Modifier
-                                .width(160.dp)
-                                .height(20.dp)
-                                .clip(MaterialTheme.shapes.small)
-                                .shimmer(shimmerColors, MaterialTheme.shapes.small)
-                        )
-                    } else {
-                        val isCollapsed = scrollBehavior.state.collapsedFraction > 0.5f
-                        Text(
-                            text = state.recipe.title.asString(),
-                            maxLines = if (isCollapsed) 1 else Int.MAX_VALUE,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                    }
-                },
-                navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(
-                            Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back"
-                        )
-                    }
-                },
-                scrollBehavior = scrollBehavior
-            )
+            Column {
+                MediumFlexibleTopAppBar(
+                    title = {
+                        if (state.loading) {
+                            val shimmerColors = listOf(
+                                MaterialTheme.colorScheme.surfaceContainer,
+                                MaterialTheme.colorScheme.surfaceContainerHighest,
+                                MaterialTheme.colorScheme.surfaceContainer,
+                            )
+                            Box(
+                                modifier = Modifier
+                                    .width(160.dp)
+                                    .height(20.dp)
+                                    .clip(MaterialTheme.shapes.small)
+                                    .shimmer(shimmerColors, MaterialTheme.shapes.small)
+                            )
+                        } else {
+                            val isCollapsed = scrollBehavior.state.collapsedFraction > 0.5f
+                            Text(
+                                text = state.recipe.title.asString(),
+                                maxLines = if (isCollapsed) 1 else Int.MAX_VALUE,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
+                    },
+                    navigationIcon = {
+                        IconButton(onClick = onNavigateBack) {
+                            Icon(
+                                Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = "Back"
+                            )
+                        }
+                    },
+                    scrollBehavior = scrollBehavior
+                )
+                AnimatedVisibility(
+                    visible = state.isRefreshing,
+                    enter = fadeIn(),
+                    exit = fadeOut()
+                ) {
+                    LinearProgressIndicator(
+                        modifier = Modifier.fillMaxWidth(),
+                        color = MaterialTheme.colorScheme.primary,
+                        trackColor = MaterialTheme.colorScheme.surfaceContainer,
+                    )
+                }
+            }
         },
         bottomBar = {
             BottomAppBar(
@@ -185,13 +200,30 @@ internal fun CompactRecipeDetails(
             )
         }
     ) { paddingValues ->
-        CompactContent(
-            state = state,
-            onEvent = onEvent,
-            paddingValues = paddingValues,
-            sharedTransitionScope = sharedTransitionScope,
-            modifier = modifier.fillMaxSize()
-        )
+        if (state.error != null) {
+            Box(
+                modifier = modifier.fillMaxSize().padding(paddingValues),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    Text("Couldn't load recipe. Check your connection and try again.")
+                    Button(onClick = onNavigateBack) {
+                        Text("Go back")
+                    }
+                }
+            }
+        } else {
+            CompactContent(
+                state = state,
+                onEvent = onEvent,
+                paddingValues = paddingValues,
+                sharedTransitionScope = sharedTransitionScope,
+                modifier = modifier.fillMaxSize()
+            )
+        }
     }
 }
 

@@ -44,7 +44,9 @@ class RecipeDetailsStoreFactory(
 
     private sealed interface Msg {
         data class Loading(val isLoading: Boolean) : Msg
+        data class Refreshing(val isRefreshing: Boolean) : Msg
         data class RecipeUpdated(val recipe: RecipeDetailUi) : Msg
+        data class Error(val error: RecipesError) : Msg
         data class SettingsUpdated(val settings: Settings) : Msg
         data object ShowSettings : Msg
         data object DismissSettings : Msg
@@ -119,16 +121,19 @@ class RecipeDetailsStoreFactory(
 
         private suspend fun handleRecipeUpdates(response: Either<RecipesError, LoadingResult<RecipeDetail>>) =
             response.fold(
-                ifLeft = { dispatch(Msg.Loading(false)) },
+                ifLeft = { error ->
+                    if (state().recipe == RecipeDetailUi.emptyRecipe) {
+                        dispatch(Msg.Error(error))
+                    } else {
+                        dispatch(Msg.Refreshing(false))
+                    }
+                },
                 ifRight = { result ->
                     when (result) {
-                        is LoadingResult.Loaded<RecipeDetail> -> dispatch(
-                            RecipeUpdated(
-                                result.data.toRecipeDetailUi()
-                            )
-                        )
-
                         LoadingResult.Loading -> dispatch(Msg.Loading(true))
+                        LoadingResult.Refreshing -> dispatch(Msg.Refreshing(true))
+                        LoadingResult.RefreshComplete -> dispatch(Msg.Refreshing(false))
+                        is LoadingResult.Loaded -> dispatch(RecipeUpdated(result.data.toRecipeDetailUi()))
                     }
                 }
             )
@@ -139,6 +144,8 @@ class RecipeDetailsStoreFactory(
             when (msg) {
                 is RecipeUpdated -> copy(
                     loading = false,
+                    isRefreshing = false,
+                    error = null,
                     recipe = msg.recipe,
                     mobileTabs = buildList {
                         add("Overview")
@@ -154,6 +161,8 @@ class RecipeDetailsStoreFactory(
                     }
                 )
 
+                is Msg.Refreshing -> copy(isRefreshing = msg.isRefreshing)
+                is Msg.Error -> copy(loading = false, isRefreshing = false, error = msg.error)
                 is Msg.SettingsUpdated -> copy(recipe = recipe.copy(settings = msg.settings))
                 is Msg.Loading -> copy(loading = msg.isLoading)
                 Msg.ShowSettings -> copy(showSettings = true)

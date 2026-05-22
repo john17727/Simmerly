@@ -35,6 +35,9 @@ interface RecipeDao {
     @Query("SELECT * FROM recipes WHERE id = :id")
     suspend fun getRecipeDetail(id: String): RecipeDetailWithRelations
 
+    @Query("SELECT COUNT(*) FROM recipes WHERE id = :id")
+    suspend fun existsById(id: String): Int
+
     @Upsert
     suspend fun upsert(recipe: RecipeEntity)
 

@@ -1,6 +1,7 @@
 package dev.juanrincon.simmerly.recipes.presentation.details.mvikotlin
 
 import com.arkivanov.mvikotlin.core.store.Store
+import dev.juanrincon.simmerly.recipes.domain.RecipesError
 import dev.juanrincon.simmerly.recipes.domain.model.Settings
 import dev.juanrincon.simmerly.recipes.presentation.details.models.RecipeDetailUi
 import dev.juanrincon.simmerly.recipes.presentation.details.mvikotlin.RecipeDetailsStore.Intent
@@ -19,7 +20,9 @@ interface RecipeDetailsStore : Store<Intent, State, Label> {
 
     data class State(
         val loading: Boolean = true,
+        val isRefreshing: Boolean = false,
         val recipe: RecipeDetailUi = RecipeDetailUi.emptyRecipe,
+        val error: RecipesError? = null,
         val mobileTabs: List<String> = listOf(),
         val desktopTabs: List<String> = listOf(),
         val mode: RecipeMode = RecipeMode.READ_ONLY,
