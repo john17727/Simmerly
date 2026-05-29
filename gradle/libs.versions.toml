@@ -26,7 +26,6 @@ adaptive = "1.2.0"
 compose-rich-text = "1.0.0-rc14"
 androidxNavigation3UI = "1.1.1"
 androidxNavigation3Material = "1.3.0-beta01"
-stability-analyzer = "0.8.0"
 arrow = "2.2.2.1"
 assertk = "0.28.1"
 turbine = "1.2.1"
@@ -105,7 +104,6 @@ kotlinJvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 kotlinSerialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 room = { id = "androidx.room3", version.ref = "room" }
-stability-analyzer = { id = "com.github.skydoves.compose.stability.analyzer", version.ref = "stability-analyzer" }
 
 [bundles]
 ktor = [

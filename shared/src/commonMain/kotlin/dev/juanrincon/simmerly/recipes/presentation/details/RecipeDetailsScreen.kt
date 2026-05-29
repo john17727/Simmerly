@@ -21,7 +21,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.window.core.layout.WindowSizeClass
-import com.skydoves.compose.stability.runtime.TraceRecomposition
 import dev.juanrincon.simmerly.recipes.domain.model.Settings
 import dev.juanrincon.simmerly.recipes.presentation.details.mvikotlin.RecipeDetailsStore
 import org.koin.compose.viewmodel.koinViewModel
@@ -47,7 +46,6 @@ fun RecipeDetailsScreen(
     )
 }
 
-@TraceRecomposition
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun Content(
