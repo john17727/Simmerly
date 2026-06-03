@@ -11,12 +11,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.dp
-import dev.juanrincon.simmerly.welcome.presentation.mvikotlin.WelcomeStore
+import dev.juanrincon.simmerly.welcome.presentation.orbit.WelcomeIntent
+import dev.juanrincon.simmerly.welcome.presentation.orbit.WelcomeState
 
 @Composable
 internal fun CompactWelcome(
-    state: WelcomeStore.State,
-    onEvent: (WelcomeStore.Intent) -> Unit,
+    state: WelcomeState,
+    onEvent: (WelcomeIntent) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Scaffold { innerPadding ->

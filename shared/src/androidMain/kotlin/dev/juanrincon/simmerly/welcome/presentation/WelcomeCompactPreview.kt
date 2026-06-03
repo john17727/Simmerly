@@ -6,7 +6,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import dev.juanrincon.simmerly.theme.SimmerlyTheme
-import dev.juanrincon.simmerly.welcome.presentation.mvikotlin.WelcomeStore
+import dev.juanrincon.simmerly.welcome.presentation.orbit.WelcomeState
 import org.jetbrains.compose.resources.PreviewContextConfigurationEffect
 
 @Preview(apiLevel = 36, showSystemUi = true, device = Devices.PIXEL_9_PRO, wallpaper = 1)
@@ -15,7 +15,7 @@ private fun DynamicPreview() {
     PreviewContextConfigurationEffect()
     SimmerlyTheme(dynamicColor = true) {
         CompactWelcome(
-            state = WelcomeStore.State(),
+            state = WelcomeState(),
             onEvent = {},
             modifier = Modifier.fillMaxSize()
         )
@@ -27,7 +27,7 @@ private fun DynamicPreview() {
 private fun LightPreview() {
     PreviewContextConfigurationEffect()
     SimmerlyTheme {
-        CompactWelcome(state = WelcomeStore.State(), onEvent = {})
+        CompactWelcome(state = WelcomeState(), onEvent = {})
     }
 }
 
@@ -36,7 +36,7 @@ private fun LightPreview() {
 private fun DynamicDarkPreview() {
     PreviewContextConfigurationEffect()
     SimmerlyTheme(dynamicColor = true, darkTheme = true) {
-        CompactWelcome(state = WelcomeStore.State(), onEvent = {})
+        CompactWelcome(state = WelcomeState(), onEvent = {})
     }
 }
 
@@ -45,7 +45,7 @@ private fun DynamicDarkPreview() {
 private fun DarkPreview() {
     PreviewContextConfigurationEffect()
     SimmerlyTheme(darkTheme = true) {
-        CompactWelcome(state = WelcomeStore.State(), onEvent = {})
+        CompactWelcome(state = WelcomeState(), onEvent = {})
     }
 }
 
@@ -54,6 +54,6 @@ private fun DarkPreview() {
 private fun LoadingPreview() {
     PreviewContextConfigurationEffect()
     SimmerlyTheme {
-        CompactWelcome(state = WelcomeStore.State(isLoading = true), onEvent = {})
+        CompactWelcome(state = WelcomeState(isLoading = true), onEvent = {})
     }
 }

@@ -14,8 +14,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.sizeIn
-import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.text.input.OutputTransformation
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Dns
 import androidx.compose.material.icons.filled.Key
@@ -44,9 +44,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
@@ -54,19 +52,19 @@ import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.window.core.layout.WindowSizeClass
-import dev.juanrincon.simmerly.welcome.presentation.mvikotlin.WelcomeStore
+import dev.juanrincon.simmerly.welcome.presentation.model.CredentialType
+import dev.juanrincon.simmerly.welcome.presentation.orbit.WelcomeIntent
+import dev.juanrincon.simmerly.welcome.presentation.orbit.WelcomeState
 import org.jetbrains.compose.resources.painterResource
 import simmerly.shared.generated.resources.Res
 import simmerly.shared.generated.resources.simmerly_logo
 
 @Composable
 fun WelcomeScreen(
-    state: WelcomeStore.State,
-    onEvent: (WelcomeStore.Intent) -> Unit,
+    state: WelcomeState,
+    onEvent: (WelcomeIntent) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val windowSizeClass = currentWindowAdaptiveInfoV2().windowSizeClass
@@ -129,19 +127,17 @@ fun Header(modifier: Modifier = Modifier) {
     }
 }
 
-@OptIn(ExperimentalComposeUiApi::class, ExperimentalMaterial3ExpressiveApi::class)
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 internal fun Login(
-    state: WelcomeStore.State,
-    onEvent: (WelcomeStore.Intent) -> Unit,
+    state: WelcomeState,
+    onEvent: (WelcomeIntent) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val focusManager = LocalFocusManager.current
     var passwordVisible by remember { mutableStateOf(false) }
     Column(modifier = modifier) {
         OutlinedTextField(
-            value = state.serverAddress,
-            onValueChange = { onEvent(WelcomeStore.Intent.OnServerAddressChanged(it)) },
+            state = state.serverAddress,
             modifier = Modifier.fillMaxWidth(),
             label = { Text("Server Address") },
             leadingIcon = { Icon(Icons.Default.Dns, contentDescription = null) },
@@ -150,7 +146,6 @@ internal fun Login(
                 imeAction = ImeAction.Next,
                 keyboardType = KeyboardType.Text
             ),
-            keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) })
         )
         Spacer(modifier = Modifier.height(32.dp))
         Row(
@@ -158,8 +153,8 @@ internal fun Login(
             horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween)
         ) {
             ToggleButton(
-                checked = state.credentialType == WelcomeStore.CredentialType.CREDENTIALS,
-                onCheckedChange = { onEvent(WelcomeStore.Intent.OnCredentialTypeChanged(WelcomeStore.CredentialType.CREDENTIALS)) },
+                checked = state.credentialType == CredentialType.CREDENTIALS,
+                onCheckedChange = { onEvent(WelcomeIntent.OnCredentialTypeChanged(CredentialType.CREDENTIALS)) },
                 modifier = Modifier.weight(1f).semantics { role = Role.RadioButton },
                 enabled = !state.isLoading,
                 shapes = ButtonGroupDefaults.connectedLeadingButtonShapes(),
@@ -169,8 +164,8 @@ internal fun Login(
                 Text("Credentials")
             }
             ToggleButton(
-                checked = state.credentialType == WelcomeStore.CredentialType.API_TOKEN,
-                onCheckedChange = { onEvent(WelcomeStore.Intent.OnCredentialTypeChanged(WelcomeStore.CredentialType.API_TOKEN)) },
+                checked = state.credentialType == CredentialType.API_TOKEN,
+                onCheckedChange = { onEvent(WelcomeIntent.OnCredentialTypeChanged(CredentialType.API_TOKEN)) },
                 modifier = Modifier.weight(1f).semantics { role = Role.RadioButton },
                 enabled = !state.isLoading,
                 shapes = ButtonGroupDefaults.connectedTrailingButtonShapes(),
@@ -187,10 +182,9 @@ internal fun Login(
             transitionSpec = { fadeIn() togetherWith fadeOut() }
         ) { credType ->
             Column {
-                if (credType == WelcomeStore.CredentialType.CREDENTIALS) {
+                if (credType == CredentialType.CREDENTIALS) {
                     OutlinedTextField(
-                        value = state.username,
-                        onValueChange = { onEvent(WelcomeStore.Intent.OnUsernameChanged(it)) },
+                        state = state.username,
                         label = { Text("Username/Email") },
                         modifier = Modifier.fillMaxWidth(),
                         leadingIcon = { Icon(Icons.Default.Person, contentDescription = null) },
@@ -199,36 +193,30 @@ internal fun Login(
                             imeAction = ImeAction.Next,
                             keyboardType = KeyboardType.Email
                         ),
-                        keyboardActions = KeyboardActions(onNext = {
-                            focusManager.moveFocus(
-                                FocusDirection.Down
-                            )
-                        })
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                 }
                 OutlinedTextField(
-                    value = state.password,
-                    onValueChange = { onEvent(WelcomeStore.Intent.OnPasswordChanged(it)) },
+                    state = state.password,
                     modifier = Modifier.fillMaxWidth(),
                     label = {
-                        if (credType == WelcomeStore.CredentialType.CREDENTIALS) Text("Password") else Text(
-                            "Token"
-                        )
+                        if (credType == CredentialType.CREDENTIALS) Text("Password") else Text("Token")
                     },
                     leadingIcon = {
-                        if (credType == WelcomeStore.CredentialType.CREDENTIALS) {
+                        if (credType == CredentialType.CREDENTIALS) {
                             Icon(Icons.Default.Lock, contentDescription = null)
                         } else {
                             Icon(Icons.Default.Key, contentDescription = null)
                         }
                     },
-                    visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                    outputTransformation = if (!passwordVisible) OutputTransformation {
+                        replace(0, length, "•".repeat(length))
+                    } else null,
                     keyboardOptions = KeyboardOptions.Default.copy(
                         imeAction = ImeAction.Done,
                         keyboardType = KeyboardType.Password
                     ),
-                    keyboardActions = KeyboardActions(onDone = { onEvent(WelcomeStore.Intent.OnLoginClicked) }),
+                    onKeyboardAction = { onEvent(WelcomeIntent.OnLoginClicked) },
                     enabled = !state.isLoading,
                     trailingIcon = {
                         val image =
@@ -243,7 +231,7 @@ internal fun Login(
         }
         Spacer(modifier = Modifier.height(16.dp))
         Button(
-            onClick = { onEvent(WelcomeStore.Intent.OnLoginClicked) },
+            onClick = { onEvent(WelcomeIntent.OnLoginClicked) },
             enabled = state.isLoginButtonEnabled,
             modifier = Modifier.fillMaxWidth(),
         ) {
