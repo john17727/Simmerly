@@ -126,6 +126,7 @@ kotlin {
             implementation(libs.assertk)
             implementation(libs.turbine)
             implementation(libs.kotlinx.coroutines.test)
+            implementation(libs.orbit.test)
         }
         jvmMain.dependencies {
             // Ktor
