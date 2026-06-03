@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.input.OutputTransformation
+import androidx.compose.foundation.text.input.TextObfuscationMode
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Dns
 import androidx.compose.material.icons.filled.Key
@@ -30,7 +31,9 @@ import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedSecureTextField
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.SecureTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.ToggleButton
 import androidx.compose.material3.ToggleButtonDefaults
@@ -196,7 +199,7 @@ internal fun Login(
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                 }
-                OutlinedTextField(
+                OutlinedSecureTextField(
                     state = state.password,
                     modifier = Modifier.fillMaxWidth(),
                     label = {
@@ -209,15 +212,9 @@ internal fun Login(
                             Icon(Icons.Default.Key, contentDescription = null)
                         }
                     },
-                    outputTransformation = if (!passwordVisible) OutputTransformation {
-                        replace(0, length, "•".repeat(length))
-                    } else null,
-                    keyboardOptions = KeyboardOptions.Default.copy(
-                        imeAction = ImeAction.Done,
-                        keyboardType = KeyboardType.Password
-                    ),
                     onKeyboardAction = { onEvent(WelcomeIntent.OnLoginClicked) },
                     enabled = !state.isLoading,
+                    textObfuscationMode = if (passwordVisible) TextObfuscationMode.Visible else TextObfuscationMode.RevealLastTyped,
                     trailingIcon = {
                         val image =
                             if (passwordVisible) Icons.Filled.Visibility else Icons.Filled.VisibilityOff
