@@ -33,7 +33,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.adaptive.currentWindowAdaptiveInfoV2
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -51,10 +50,12 @@ import coil3.compose.LocalPlatformContext
 import coil3.request.ImageRequest
 import dev.juanrincon.simmerly.core.presentation.shimmer
 import dev.juanrincon.simmerly.recipes.domain.model.RecipeSummary
-import dev.juanrincon.simmerly.recipes.presentation.list.mvikotlin.RecipeListStore
+import dev.juanrincon.simmerly.recipes.presentation.list.orbit.RecipeListIntent
+import dev.juanrincon.simmerly.recipes.presentation.list.orbit.RecipeListState
 import dev.juanrincon.simmerly.recipes.presentation.shared.RecipeMetaRow
 import dev.juanrincon.simmerly.recipes.presentation.shared.TagRow
 import org.koin.compose.viewmodel.koinViewModel
+import org.orbitmvi.orbit.compose.collectAsState
 
 @Composable
 fun RecipeListScreen(
@@ -64,7 +65,7 @@ fun RecipeListScreen(
     viewModel: RecipeListViewModel = koinViewModel(),
     modifier: Modifier = Modifier
 ) {
-    val state by viewModel.state.collectAsState()
+    val state by viewModel.collectAsState()
     Content(
         state = state,
         onEvent = viewModel::onEvent,
@@ -78,8 +79,8 @@ fun RecipeListScreen(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun Content(
-    state: RecipeListStore.State,
-    onEvent: (RecipeListStore.Intent) -> Unit,
+    state: RecipeListState,
+    onEvent: (RecipeListIntent) -> Unit,
     onRecipeSelected: (recipeId: String) -> Unit,
     onSearchClicked: () -> Unit,
     sharedTransitionScope: SharedTransitionScope? = null,
@@ -99,7 +100,7 @@ private fun Content(
         }
     }
     LaunchedEffect(shouldLoadMore) {
-        if (shouldLoadMore) onEvent(RecipeListStore.Intent.OnLoadMore)
+        if (shouldLoadMore) onEvent(RecipeListIntent.OnLoadMore)
     }
 
     if (windowSizeClass.isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_EXPANDED_LOWER_BOUND)) {
@@ -108,7 +109,7 @@ private fun Content(
             isLoading = state.isLoading,
             selected = state.selectedRecipeId,
             onRecipeSelected = onRecipeSelected,
-            onSelected = { onEvent(RecipeListStore.Intent.OnRecipeSelected(it)) },
+            onSelected = { onEvent(RecipeListIntent.OnRecipeSelected(it)) },
             state = lazyListState,
             modifier = modifier
         )
