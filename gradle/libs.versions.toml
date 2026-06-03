@@ -29,6 +29,7 @@ androidxNavigation3Material = "1.3.0-beta01"
 arrow = "2.2.2.1"
 assertk = "0.28.1"
 turbine = "1.2.1"
+orbit-mvi = "11.0.0"
 
 [libraries]
 components-resources = { module = "org.jetbrains.compose.components:components-resources", version.ref = "composeMultiplatform" }
@@ -91,6 +92,10 @@ turbine = { module = "app.cash.turbine:turbine", version.ref = "turbine" }
 kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinx-coroutines" }
 compose-ui-test-junit4 = { module = "org.jetbrains.compose.ui:ui-test-junit4", version.ref = "composeMultiplatform" }
 compose-ui-test-manifest = { module = "org.jetbrains.compose.ui:ui-test-manifest", version.ref = "composeMultiplatform" }
+orbit-core = { module = "org.orbit-mvi:orbit-core", version.ref = "orbit-mvi"}
+orbit-viewmodel = { module = "org.orbit-mvi:orbit-viewmodel", version.ref = "orbit-mvi"}
+orbit-compose = { module = "org.orbit-mvi:orbit-compose", version.ref = "orbit-mvi"}
+orbit-test = { module = "org.orbit-mvi:orbit-test", version.ref = "orbit-mvi"}
 
 [plugins]
 androidMultiplatformLibrary = { id = "com.android.kotlin.multiplatform.library", version.ref = "agp" }

@@ -115,6 +115,11 @@ kotlin {
             // Arrow
             implementation(libs.arrow.core)
             implementation(libs.arrow.fx.coroutines)
+
+            // Orbit
+            implementation(libs.orbit.core)
+            implementation(libs.orbit.viewmodel)
+            implementation(libs.orbit.compose)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
