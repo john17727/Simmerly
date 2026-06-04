@@ -90,6 +90,7 @@ orbit-core = { module = "org.orbit-mvi:orbit-core", version.ref = "orbit-mvi"}
 orbit-viewmodel = { module = "org.orbit-mvi:orbit-viewmodel", version.ref = "orbit-mvi"}
 orbit-compose = { module = "org.orbit-mvi:orbit-compose", version.ref = "orbit-mvi"}
 orbit-test = { module = "org.orbit-mvi:orbit-test", version.ref = "orbit-mvi"}
+ktor-client-mock = { module = "io.ktor:ktor-client-mock", version.ref = "ktor" }
 
 [plugins]
 androidMultiplatformLibrary = { id = "com.android.kotlin.multiplatform.library", version.ref = "agp" }
