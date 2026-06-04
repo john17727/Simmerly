@@ -1,6 +1,6 @@
-GET {{baseURL}}/organizers/tags
+GET {{baseUrl}}/organizers/tags
 Authorization: {{token}}
 
 ###
-GET {{baseURL}}/users/self
+GET {{baseUrl}}/users/self
 Authorization: {{token}}

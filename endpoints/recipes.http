@@ -1,2 +1,2 @@
-GET {{baseURL}}/recipes?perPage=3
+GET {{baseUrl}}/recipes
 Authorization: {{token}}
