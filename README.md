@@ -44,9 +44,8 @@ desktop platforms — all from a single Kotlin codebase.
 
 ### Architecture
 
-- MVI pattern with [MVIKotlin](https://github.com/arkivanov/MVIKotlin/)
+- MVI pattern with [Orbit MVI](https://github.com/orbit-mvi/orbit-mvi)
 - [Koin](https://github.com/InsertKoinIO/koin) — dependency injection
-- [Essenty](https://github.com/arkivanov/Essenty) — lifecycle utilities for KMP
 - [AndroidX Lifecycle](https://developer.android.com/jetpack/androidx/releases/lifecycle) —
   ViewModel & lifecycle-aware Compose
 

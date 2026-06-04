@@ -69,14 +69,6 @@ kotlin {
             implementation(libs.coil.network.ktor)
             implementation(libs.coil.svg)
 
-            // Essenty
-            implementation(libs.essenty.lifecycle.coroutines)
-
-            // MVIKotlin
-            implementation(libs.mvikotlin)
-            api(libs.mvikotlin.main)
-            implementation(libs.mvikotlin.extensions.coroutines)
-
             // Ktor and Kotlinx Serialization through Ktor
             implementation(libs.bundles.ktor)
 

@@ -12,10 +12,8 @@ ksp = "2.3.4"
 kotlinx-coroutines = "1.11.0"
 coil = "3.4.0"
 ktor = "3.5.0"
-essenty = "2.5.0"
 material3 = "1.12.0-alpha01"
 materialIconsExtended = "1.7.3"
-mvikotlin = "4.4.0"
 datastore = "1.2.1"
 koin = "4.2.1"
 kotlinx-datetime = "0.8.0"
@@ -53,10 +51,6 @@ ktor-client-java = { module = "io.ktor:ktor-client-java", version.ref = "ktor" }
 material-icons-extended = { module = "org.jetbrains.compose.material:material-icons-extended", version.ref = "materialIconsExtended" }
 material3 = { module = "org.jetbrains.compose.material3:material3", version.ref = "material3" }
 material3-adaptive-navigation-suite = { module = "org.jetbrains.compose.material3:material3-adaptive-navigation-suite", version.ref = "material3" }
-mvikotlin = { module = "com.arkivanov.mvikotlin:mvikotlin", version.ref = "mvikotlin" }
-mvikotlin-main = { module = "com.arkivanov.mvikotlin:mvikotlin-main", version.ref = "mvikotlin" }
-mvikotlin-extensions-coroutines = { module = "com.arkivanov.mvikotlin:mvikotlin-extensions-coroutines", version.ref = "mvikotlin" }
-essenty-lifecycle-coroutines = { module = "com.arkivanov.essenty:lifecycle-coroutines", version.ref = "essenty" }
 androidx-datastore = { module = "androidx.datastore:datastore", version.ref = "datastore" }
 androidx-datastore-preferences = { module = "androidx.datastore:datastore-preferences", version.ref = "datastore" }
 koin-bom = { module = "io.insert-koin:koin-bom", version.ref = "koin" }
