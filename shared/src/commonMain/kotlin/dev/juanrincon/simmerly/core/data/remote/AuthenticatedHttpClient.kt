@@ -52,6 +52,7 @@ fun createAuthenticatedHttpClient(
         bearer {
             loadTokens {
                 val token = sessionDatastore.getToken().orEmpty()
+                    .filter { it.code >= 32 && it.code != 127 }
                 if (token.isBlank()) {
                     null
                 } else {
