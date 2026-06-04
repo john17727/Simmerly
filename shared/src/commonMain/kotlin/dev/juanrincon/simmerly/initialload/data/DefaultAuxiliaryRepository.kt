@@ -35,11 +35,6 @@ class DefaultAuxiliaryRepository(
             toolDao.upsertAll(dto.items.map { it.toEntity() })
         }
 
-    override suspend fun loadFoods(): Either<DataError.NetworkError<Unit>, Unit> =
-        networkClient.getFoods().map { dto ->
-            foodDao.upsertAll(dto.items.map { it.toEntity() })
-        }
-
     override suspend fun loadUnits(): Either<DataError.NetworkError<Unit>, Unit> =
         networkClient.getUnits().map { dto ->
             unitDao.upsertAll(dto.items.map { it.toEntity() })

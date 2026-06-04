@@ -16,18 +16,18 @@ class RecipeListViewModel(
 
     override val container: Container<RecipeListState, RecipeListSideEffect> =
         container(initialState = RecipeListState()) {
-            fetchAndObserve(page = 1, refresh = true)
+            fetchAndObserve(refresh = true)
         }
 
     fun onEvent(event: RecipeListIntent) {
         when (event) {
             RecipeListIntent.OnRefresh -> {
                 if (container.stateFlow.value.isLoading) return
-                fetchAndObserve(page = 1, refresh = true)
+                fetchAndObserve(refresh = true)
             }
             RecipeListIntent.OnLoadMore -> {
                 val nextPage = container.stateFlow.value.nextPage ?: return
-                fetchAndObserve(page = nextPage)
+                fetchAndObserve(next = nextPage)
             }
             is RecipeListIntent.OnRecipeSelected -> intent {
                 reduce { state.copy(selectedRecipeId = event.recipeId) }
@@ -38,8 +38,8 @@ class RecipeListViewModel(
         }
     }
 
-    private fun fetchAndObserve(page: Int, refresh: Boolean = false) = intent {
-        repository.recipeList(page = page, refresh = refresh).collect { response ->
+    private fun fetchAndObserve(next: String? = null, refresh: Boolean = false) = intent {
+        repository.recipeList(next = next, refresh = refresh).collect { response ->
             response.fold(
                 ifLeft = {
                     reduce { state.copy(isLoading = false) }

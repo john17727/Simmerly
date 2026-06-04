@@ -54,8 +54,7 @@ class SimmerlyRecipeRepository(
 
 
     override fun recipeList(
-        page: Int,
-        perPage: Int,
+        next: String?,
         refresh: Boolean
     ): Flow<Either<RecipesError, LoadingResult<RecipeListResult>>> = flow {
         // Start with loading
@@ -68,7 +67,7 @@ class SimmerlyRecipeRepository(
 
         // Fetch from network and persist
         val pagination = either {
-            val response = networkClient.getRecipes(page, perPage, true).mapLeft {
+            val response = networkClient.getRecipes(next, true).mapLeft {
                 // Surface fetch error but continue to emit cached/updated DB data
                 RecipesError.FetchError
             }.bind()

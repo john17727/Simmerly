@@ -14,8 +14,7 @@ interface RecipeRepository {
      * Returns a Flow that starts with Loading, may emit Error on refresh failure, and then Loaded(list + pagination info).
      */
     fun recipeList(
-        page: Int,
-        perPage: Int = 50,
+        next: String? = null,
         refresh: Boolean = false
     ): Flow<Either<RecipesError, LoadingResult<RecipeListResult>>>
 

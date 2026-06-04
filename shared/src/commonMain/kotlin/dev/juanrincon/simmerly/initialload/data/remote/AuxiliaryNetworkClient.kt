@@ -17,35 +17,28 @@ class AuxiliaryNetworkClient(private val client: HttpClient) {
 
     suspend fun getTags(): Either<DataError.NetworkError<Unit>, ItemListDto<TagDto>> =
         arrowNetworkHandler {
-            client.get("/api/groups/tags") {
+            client.get("/api/organizers/tags") {
                 parameter("perPage", 500)
             }
         }
 
     suspend fun getCategories(): Either<DataError.NetworkError<Unit>, ItemListDto<CategoryDto>> =
         arrowNetworkHandler {
-            client.get("/api/groups/categories") {
+            client.get("/api/organizers/categories") {
                 parameter("perPage", 500)
             }
         }
 
     suspend fun getTools(): Either<DataError.NetworkError<Unit>, ItemListDto<ToolDto>> =
         arrowNetworkHandler {
-            client.get("/api/groups/tools") {
-                parameter("perPage", 500)
-            }
-        }
-
-    suspend fun getFoods(): Either<DataError.NetworkError<Unit>, ItemListDto<FoodDto>> =
-        arrowNetworkHandler {
-            client.get("/api/groups/foods") {
+            client.get("/api/organizers/tools") {
                 parameter("perPage", 500)
             }
         }
 
     suspend fun getUnits(): Either<DataError.NetworkError<Unit>, ItemListDto<UnitDto>> =
         arrowNetworkHandler {
-            client.get("/api/groups/units") {
+            client.get("/api/units") {
                 parameter("perPage", 500)
             }
         }

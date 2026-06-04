@@ -82,7 +82,7 @@ class RecipeSearchStoreFactory(
         }
 
         private fun fetchRecipes() {
-            repository.recipeList(page = 1, refresh = false)
+            repository.recipeList(refresh = false)
                 .onEach(::handleRecipeListResponse)
                 .launchIn(scope)
         }

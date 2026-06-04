@@ -27,16 +27,14 @@ class InitialLoadViewModel(
                 { auxiliaryRepository.loadTags() },
                 { auxiliaryRepository.loadCategories() },
                 { auxiliaryRepository.loadTools() },
-                { auxiliaryRepository.loadFoods() },
                 { auxiliaryRepository.loadUnits() },
-            ) { user, ratings, favorites, tags, categories, tools, foods, units ->
+            ) { user, ratings, favorites, tags, categories, tools, units ->
                 user.onLeft { println("InitialLoad: failed to load user — $it") }
                 ratings.onLeft { println("InitialLoad: failed to load ratings — $it") }
                 favorites.onLeft { println("InitialLoad: failed to load favorites — $it") }
                 tags.onLeft { println("InitialLoad: failed to load tags — $it") }
                 categories.onLeft { println("InitialLoad: failed to load categories — $it") }
                 tools.onLeft { println("InitialLoad: failed to load tools — $it") }
-                foods.onLeft { println("InitialLoad: failed to load foods — $it") }
                 units.onLeft { println("InitialLoad: failed to load units — $it") }
             }
             _events.send(Unit)

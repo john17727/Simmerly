@@ -1,0 +1,6 @@
+GET {{baseURL}}/organizers/tags
+Authorization: {{token}}
+
+###
+GET {{baseURL}}/users/self
+Authorization: {{token}}

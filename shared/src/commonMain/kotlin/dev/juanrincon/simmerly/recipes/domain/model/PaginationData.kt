@@ -5,6 +5,6 @@ data class PaginationData(
     val perPage: Int,
     val total: Int,
     val totalPages: Int,
-    val next: Int?,
-    val previous: Int?
+    val next: String?,
+    val previous: String?
 )

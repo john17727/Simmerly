@@ -1,0 +1,2 @@
+GET {{baseURL}}/recipes?perPage=3
+Authorization: {{token}}
