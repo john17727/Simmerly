@@ -19,7 +19,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -31,8 +30,10 @@ import coil3.compose.LocalPlatformContext
 import coil3.compose.SubcomposeAsyncImage
 import coil3.request.ImageRequest
 import dev.juanrincon.simmerly.recipes.presentation.comments.models.CommentUi
-import dev.juanrincon.simmerly.recipes.presentation.comments.mvikotlin.RecipeCommentsStore
+import dev.juanrincon.simmerly.recipes.presentation.comments.orbit.RecipeCommentsIntent
+import dev.juanrincon.simmerly.recipes.presentation.comments.orbit.RecipeCommentsState
 import dev.juanrincon.simmerly.theme.SimmerlyTheme
+import org.orbitmvi.orbit.compose.collectAsState
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
 
@@ -42,7 +43,7 @@ fun RecipeCommentsScreen(
     viewModel: RecipeCommentsViewModel = koinViewModel { parametersOf(recipeId) },
     modifier: Modifier = Modifier
 ) {
-    val state by viewModel.state.collectAsState()
+    val state by viewModel.collectAsState()
     Content(
         state = state,
         onEvent = viewModel::onEvent,
@@ -52,8 +53,8 @@ fun RecipeCommentsScreen(
 
 @Composable
 private fun Content(
-    state: RecipeCommentsStore.State,
-    onEvent: (RecipeCommentsStore.Intent) -> Unit,
+    state: RecipeCommentsState,
+    onEvent: (RecipeCommentsIntent) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(modifier = modifier.padding(16.dp)) {
@@ -69,11 +70,11 @@ private fun Content(
         Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             OutlinedTextField(
                 value = state.commentText,
-                onValueChange = { onEvent(RecipeCommentsStore.Intent.OnCommentTextChanged(it)) },
+                onValueChange = { onEvent(RecipeCommentsIntent.OnCommentTextChanged(it)) },
                 placeholder = { Text(text = "Join the conversation") },
                 modifier = Modifier.weight(1f)
             )
-            IconButton(onClick = { onEvent(RecipeCommentsStore.Intent.OnSendCommentClicked) }) {
+            IconButton(onClick = { onEvent(RecipeCommentsIntent.OnSendCommentClicked) }) {
                 Icon(Icons.AutoMirrored.Default.Send, contentDescription = null)
             }
         }
@@ -127,7 +128,7 @@ private fun Comment(comment: CommentUi, modifier: Modifier = Modifier) {
 fun RecipeCommentsScreenPreview() {
     SimmerlyTheme {
         Content(
-            state = RecipeCommentsStore.State(
+            state = RecipeCommentsState(
                 comments = listOf(
                     CommentUi(
                         id = "1",

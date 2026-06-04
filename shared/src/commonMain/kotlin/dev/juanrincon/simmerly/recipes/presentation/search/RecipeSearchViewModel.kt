@@ -1,28 +1,69 @@
 package dev.juanrincon.simmerly.recipes.presentation.search
 
 import androidx.lifecycle.ViewModel
-import com.arkivanov.mvikotlin.extensions.coroutines.labels
-import com.arkivanov.mvikotlin.extensions.coroutines.stateFlow
-import dev.juanrincon.simmerly.recipes.presentation.search.mvikotlin.RecipeSearchStore
-import dev.juanrincon.simmerly.recipes.presentation.search.mvikotlin.RecipeSearchStoreFactory
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.StateFlow
+import dev.juanrincon.simmerly.recipes.domain.LoadingResult
+import dev.juanrincon.simmerly.recipes.domain.RecipeRepository
+import dev.juanrincon.simmerly.recipes.presentation.search.orbit.RecipeSearchIntent
+import dev.juanrincon.simmerly.recipes.presentation.search.orbit.RecipeSearchSideEffect
+import dev.juanrincon.simmerly.recipes.presentation.search.orbit.RecipeSearchState
+import org.orbitmvi.orbit.Container
+import org.orbitmvi.orbit.ContainerHost
+import org.orbitmvi.orbit.viewmodel.container
 
 class RecipeSearchViewModel(
-    recipeSearchStoreFactory: RecipeSearchStoreFactory
-) : ViewModel() {
+    private val repository: RecipeRepository,
+) : ContainerHost<RecipeSearchState, RecipeSearchSideEffect>, ViewModel() {
 
-    private val store = recipeSearchStoreFactory.create()
+    override val container: Container<RecipeSearchState, RecipeSearchSideEffect> =
+        container(initialState = RecipeSearchState()) {
+            fetchRecipes()
+            loadRecentlyViewed()
+            loadRecentQueries()
+        }
 
-    @OptIn(ExperimentalCoroutinesApi::class)
-    val state: StateFlow<RecipeSearchStore.State> = store.stateFlow
+    fun onEvent(event: RecipeSearchIntent) {
+        when (event) {
+            is RecipeSearchIntent.OnQueryChanged -> intent {
+                reduce { state.copy(searchQuery = event.query) }
+            }
+            is RecipeSearchIntent.OnQuerySubmitted -> intent {
+                reduce { state.copy(submittedQuery = event.query) }
+                if (event.query.isNotBlank()) {
+                    repository.recordSearchQuery(event.query)
+                }
+            }
+            is RecipeSearchIntent.OnRecipeViewed -> intent {
+                repository.recordRecipeView(event.recipeId)
+            }
+        }
+    }
 
-    val labels: Flow<RecipeSearchStore.Label> = store.labels
+    private fun fetchRecipes() = intent {
+        repository.recipeList(refresh = false).collect { response ->
+            response.fold(
+                ifLeft = { reduce { state.copy(isLoading = false) } },
+                ifRight = { result ->
+                    when (result) {
+                        is LoadingResult.Loading -> reduce { state.copy(isLoading = true) }
+                        is LoadingResult.Loaded -> reduce {
+                            state.copy(recipes = result.data.items, isLoading = false)
+                        }
+                        else -> {}
+                    }
+                }
+            )
+        }
+    }
 
-    fun onEvent(intent: RecipeSearchStore.Intent) = store.accept(intent)
+    private fun loadRecentlyViewed() = intent {
+        repository.observeRecentlyViewed().collect { recipes ->
+            reduce { state.copy(recentRecipes = recipes) }
+        }
+    }
 
-    override fun onCleared() {
-        store.dispose()
+    private fun loadRecentQueries() = intent {
+        repository.observeRecentSearchQueries().collect { queries ->
+            reduce { state.copy(recentQueries = queries) }
+        }
     }
 }

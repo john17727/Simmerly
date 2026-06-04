@@ -31,7 +31,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.rememberContainedSearchBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -40,8 +39,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import dev.juanrincon.simmerly.recipes.presentation.list.RecipeCard
 import dev.juanrincon.simmerly.recipes.presentation.list.RecipeCardSkeleton
-import dev.juanrincon.simmerly.recipes.presentation.search.mvikotlin.RecipeSearchStore
+import dev.juanrincon.simmerly.recipes.presentation.search.orbit.RecipeSearchIntent
 import kotlinx.coroutines.launch
+import org.orbitmvi.orbit.compose.collectAsState
 import org.koin.compose.viewmodel.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
@@ -53,7 +53,7 @@ fun RecipeSearchScreen(
     viewModel: RecipeSearchViewModel = koinViewModel(),
     modifier: Modifier = Modifier
 ) {
-    val state by viewModel.state.collectAsState()
+    val state by viewModel.collectAsState()
     val textFieldState = rememberTextFieldState()
     val searchBarState = rememberContainedSearchBarState()
     val scope = rememberCoroutineScope()
@@ -68,7 +68,7 @@ fun RecipeSearchScreen(
             colors = appBarWithSearchColors.searchBarColors.inputFieldColors,
             onSearch = {
                 viewModel.onEvent(
-                    RecipeSearchStore.Intent.OnQuerySubmitted(textFieldState.text.toString())
+                    RecipeSearchIntent.OnQuerySubmitted(textFieldState.text.toString())
                 )
                 scope.launch { searchBarState.animateToCollapsed() }
             },
@@ -89,7 +89,7 @@ fun RecipeSearchScreen(
                 {
                     IconButton(onClick = {
                         textFieldState.edit { replace(0, length, "") }
-                        viewModel.onEvent(RecipeSearchStore.Intent.OnQuerySubmitted(""))
+                        viewModel.onEvent(RecipeSearchIntent.OnQuerySubmitted(""))
                     }) {
                         Icon(Icons.Rounded.Close, contentDescription = "Clear")
                     }
@@ -100,7 +100,7 @@ fun RecipeSearchScreen(
 
     LaunchedEffect(textFieldState) {
         snapshotFlow { textFieldState.text.toString() }
-            .collect { query -> viewModel.onEvent(RecipeSearchStore.Intent.OnQueryChanged(query)) }
+            .collect { query -> viewModel.onEvent(RecipeSearchIntent.OnQueryChanged(query)) }
     }
 
     val suggestions = remember(state.recipes, state.searchQuery) {
@@ -181,7 +181,7 @@ fun RecipeSearchScreen(
                     RecipeCard(
                         recipe = recipe,
                         onClick = {
-                            viewModel.onEvent(RecipeSearchStore.Intent.OnRecipeViewed(recipe.id))
+                            viewModel.onEvent(RecipeSearchIntent.OnRecipeViewed(recipe.id))
                             onRecipeSelected(recipe.id)
                         },
                         sharedTransitionScope = sharedTransitionScope,
@@ -197,7 +197,7 @@ fun RecipeSearchScreen(
                     RecipeCard(
                         recipe = recipe,
                         onClick = {
-                            viewModel.onEvent(RecipeSearchStore.Intent.OnRecipeViewed(recipe.id))
+                            viewModel.onEvent(RecipeSearchIntent.OnRecipeViewed(recipe.id))
                             onRecipeSelected(recipe.id)
                         },
                         sharedTransitionScope = sharedTransitionScope,

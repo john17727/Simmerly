@@ -1,28 +1,49 @@
 package dev.juanrincon.simmerly.recipes.presentation.comments
 
 import androidx.lifecycle.ViewModel
-import com.arkivanov.mvikotlin.core.store.StoreFactory
-import com.arkivanov.mvikotlin.extensions.coroutines.stateFlow
 import dev.juanrincon.simmerly.recipes.domain.RecipeRepository
-import dev.juanrincon.simmerly.recipes.presentation.comments.mvikotlin.RecipeCommentsStore
-import dev.juanrincon.simmerly.recipes.presentation.comments.mvikotlin.RecipeCommentsStoreFactory
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.StateFlow
+import dev.juanrincon.simmerly.recipes.presentation.comments.orbit.RecipeCommentsIntent
+import dev.juanrincon.simmerly.recipes.presentation.comments.orbit.RecipeCommentsSideEffect
+import dev.juanrincon.simmerly.recipes.presentation.comments.orbit.RecipeCommentsState
+import dev.juanrincon.simmerly.recipes.presentation.details.mappers.toCommentUi
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
+import org.orbitmvi.orbit.Container
+import org.orbitmvi.orbit.ContainerHost
+import org.orbitmvi.orbit.viewmodel.container
 
 class RecipeCommentsViewModel(
-    recipeId: String,
-    storeFactory: StoreFactory,
-    repository: RecipeRepository,
-) : ViewModel() {
+    private val recipeId: String,
+    private val repository: RecipeRepository,
+) : ContainerHost<RecipeCommentsState, RecipeCommentsSideEffect>, ViewModel() {
 
-    private val store = RecipeCommentsStoreFactory(recipeId, storeFactory, repository).create()
+    override val container: Container<RecipeCommentsState, RecipeCommentsSideEffect> =
+        container(initialState = RecipeCommentsState()) {
+            observeComments()
+        }
 
-    @OptIn(ExperimentalCoroutinesApi::class)
-    val state: StateFlow<RecipeCommentsStore.State> = store.stateFlow
+    fun onEvent(event: RecipeCommentsIntent) {
+        when (event) {
+            is RecipeCommentsIntent.OnCommentTextChanged -> intent {
+                reduce { state.copy(commentText = event.text) }
+            }
+            RecipeCommentsIntent.OnSendCommentClicked -> sendComment()
+        }
+    }
 
-    fun onEvent(event: RecipeCommentsStore.Intent) = store.accept(event)
+    private fun observeComments() = intent {
+        repository.comments(recipeId)
+            .distinctUntilChanged()
+            .map { comments -> comments.map { it.toCommentUi() } }
+            .collect { comments ->
+                reduce { state.copy(comments = comments) }
+            }
+    }
 
-    override fun onCleared() {
-        store.dispose()
+    private fun sendComment() = intent {
+        repository.addComment(recipeId, state.commentText).fold(
+            ifRight = { reduce { state.copy(commentText = "") } },
+            ifLeft = { /* TODO: handle error */ }
+        )
     }
 }
