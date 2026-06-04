@@ -2,6 +2,7 @@ package dev.juanrincon.simmerly.recipes.data.mappers
 
 import assertk.assertThat
 import assertk.assertions.isEqualTo
+import assertk.assertions.isNull
 import dev.juanrincon.simmerly.recipes.data.remote.dto.CategoryDto
 import dev.juanrincon.simmerly.recipes.data.remote.dto.NutritionDto
 import dev.juanrincon.simmerly.recipes.data.remote.dto.RecipeSummaryDto
