@@ -33,7 +33,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.adaptive.currentWindowAdaptiveInfoV2
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.withFrameNanos
@@ -44,6 +43,8 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.navigation3.ui.LocalNavAnimatedContentScope
+import androidx.paging.compose.LazyPagingItems
+import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.window.core.layout.WindowSizeClass
 import coil3.compose.AsyncImage
 import coil3.compose.LocalPlatformContext
@@ -66,8 +67,10 @@ fun RecipeListScreen(
     modifier: Modifier = Modifier
 ) {
     val state by viewModel.collectAsState()
+    val lazyPagingItems = viewModel.recipes.collectAsLazyPagingItems()
     Content(
         state = state,
+        lazyPagingItems = lazyPagingItems,
         onEvent = viewModel::onEvent,
         onRecipeSelected = onRecipeSelected,
         onSearchClicked = onSearchClicked,
@@ -80,6 +83,7 @@ fun RecipeListScreen(
 @Composable
 private fun Content(
     state: RecipeListState,
+    lazyPagingItems: LazyPagingItems<RecipeSummary>,
     onEvent: (RecipeListIntent) -> Unit,
     onRecipeSelected: (recipeId: String) -> Unit,
     onSearchClicked: () -> Unit,
@@ -89,24 +93,9 @@ private fun Content(
     val windowSizeClass = currentWindowAdaptiveInfoV2().windowSizeClass
     val lazyListState = rememberLazyListState()
 
-    val shouldLoadMore by remember(lazyListState, state.recipes.size, state.isLoading) {
-        derivedStateOf {
-            if (state.isLoading) return@derivedStateOf false
-            val info = lazyListState.layoutInfo
-            val lastVisible =
-                info.visibleItemsInfo.lastOrNull()?.index ?: return@derivedStateOf false
-            val remaining = (state.recipes.size - 1) - lastVisible
-            remaining <= 5 && lazyListState.isScrollInProgress
-        }
-    }
-    LaunchedEffect(shouldLoadMore) {
-        if (shouldLoadMore) onEvent(RecipeListIntent.OnLoadMore)
-    }
-
     if (windowSizeClass.isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_EXPANDED_LOWER_BOUND)) {
         SelectableList(
-            state.recipes,
-            isLoading = state.isLoading,
+            lazyPagingItems = lazyPagingItems,
             selected = state.selectedRecipeId,
             onRecipeSelected = onRecipeSelected,
             onSelected = { onEvent(RecipeListIntent.OnRecipeSelected(it)) },
@@ -115,8 +104,7 @@ private fun Content(
         )
     } else {
         CompactRecipeList(
-            recipes = state.recipes,
-            isLoading = state.isLoading,
+            lazyPagingItems = lazyPagingItems,
             onSearchClicked = onSearchClicked,
             onRecipeSelected = onRecipeSelected,
             sharedTransitionScope = sharedTransitionScope,

@@ -1,9 +1,9 @@
 package dev.juanrincon.simmerly.recipes
 
+import androidx.paging.PagingData
 import arrow.core.Either
 import arrow.core.right
 import dev.juanrincon.simmerly.recipes.domain.LoadingResult
-import dev.juanrincon.simmerly.recipes.domain.RecipeListResult
 import dev.juanrincon.simmerly.recipes.domain.RecipeRepository
 import dev.juanrincon.simmerly.recipes.domain.RecipesError
 import dev.juanrincon.simmerly.recipes.domain.model.Comment
@@ -12,37 +12,21 @@ import dev.juanrincon.simmerly.recipes.domain.model.RecipeSummary
 import dev.juanrincon.simmerly.recipes.domain.model.Settings
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.flowOf
 
 class FakeRecipeRepository : RecipeRepository {
 
     // --- recipeList ---
-    // Pre-created so tests can access recipeListFlowAt(0) before the ViewModel's onCreate intent runs.
-    // replay = 1 ensures emissions before collect() starts are not lost.
-    private val recipeListFlows = mutableListOf(
-        MutableSharedFlow<Either<RecipesError, LoadingResult<RecipeListResult>>>(replay = 1)
-    )
-    var recipeListCallCount = 0
-    var lastRecipeListCall: Pair<String?, Boolean>? = null
+    var recipeListPagingData: PagingData<RecipeSummary> = PagingData.empty()
 
-    override fun recipeList(
-        next: String?,
-        refresh: Boolean
-    ): Flow<Either<RecipesError, LoadingResult<RecipeListResult>>> {
-        val flow = if (recipeListCallCount < recipeListFlows.size) {
-            recipeListFlows[recipeListCallCount]
-        } else {
-            MutableSharedFlow<Either<RecipesError, LoadingResult<RecipeListResult>>>(replay = 1)
-                .also { recipeListFlows.add(it) }
-        }
-        recipeListCallCount++
-        lastRecipeListCall = next to refresh
-        return flow
-    }
+    override fun recipeList(): Flow<PagingData<RecipeSummary>> = flowOf(recipeListPagingData)
 
-    fun recipeListFlowAt(index: Int) = recipeListFlows[index]
+    // --- observeAllRecipes ---
+    val allRecipesFlow = MutableSharedFlow<List<RecipeSummary>>(replay = 1)
+
+    override fun observeAllRecipes(): Flow<List<RecipeSummary>> = allRecipesFlow
 
     // --- recipeDetails ---
-    // Same pre-creation pattern as recipeList.
     private val recipeDetailsFlows = mutableListOf(
         MutableSharedFlow<Either<RecipesError, LoadingResult<RecipeDetail>>>(replay = 1)
     )

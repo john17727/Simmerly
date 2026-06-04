@@ -1,6 +1,5 @@
 package dev.juanrincon.simmerly.recipes.data.mappers
 
-import dev.juanrincon.simmerly.core.data.remote.dto.ItemListDto
 import dev.juanrincon.simmerly.core.domain.dateStringToInstant
 import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.CategoryEntity
 import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.CommentEntity
@@ -33,7 +32,6 @@ import dev.juanrincon.simmerly.recipes.data.remote.dto.TagDto
 import dev.juanrincon.simmerly.recipes.data.remote.dto.ToolDto
 import dev.juanrincon.simmerly.recipes.data.remote.dto.UnitDto
 import dev.juanrincon.simmerly.recipes.data.remote.dto.UserDto
-import dev.juanrincon.simmerly.recipes.domain.model.PaginationData
 import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
 
@@ -63,15 +61,6 @@ fun RecipeSummaryDto.toEntity() = RecipeEntity(
     lastMade = lastMade?.let { Instant.parse(it) },
     nutrition = NutritionEntity.empty(),
     settings = SettingsEntity.empty()
-)
-
-fun ItemListDto<*>.toPaginationData() = PaginationData(
-    page = page,
-    perPage = perPage,
-    total = total,
-    totalPages = totalPages,
-    next = next,
-    previous = previous
 )
 
 fun RecipeDetailDto.toEntityWithRelations(): RecipeDetailWithRelations {

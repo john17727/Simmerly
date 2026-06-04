@@ -15,12 +15,12 @@ import kotlin.time.ExperimentalTime
 @Dao
 interface RecipeDao {
 
-    /**
-     * Provides a PagingSource for the Paging 3 library to read from the database.
-     * The list is ordered by creation date to ensure a consistent UI.
-     */
     @Query("SELECT * FROM recipes ORDER BY created_at DESC")
     fun observeRecipeList(): Flow<List<ListRecipeWithTags>>
+
+    @Transaction
+    @Query("SELECT * FROM recipes ORDER BY created_at DESC LIMIT :limit OFFSET :offset")
+    suspend fun getRecipePage(offset: Int, limit: Int): List<ListRecipeWithTags>
 
     /**
      * Observes a single recipe with all its relations (tags, ingredients, etc.).

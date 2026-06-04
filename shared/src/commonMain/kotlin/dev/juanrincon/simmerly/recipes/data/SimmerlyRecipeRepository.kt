@@ -1,23 +1,24 @@
 package dev.juanrincon.simmerly.recipes.data
 
+import androidx.paging.ExperimentalPagingApi
+import androidx.paging.Pager
+import androidx.paging.PagingConfig
+import androidx.paging.PagingData
 import arrow.core.Either
 import arrow.core.raise.either
 import dev.juanrincon.simmerly.auth.domain.SessionDataStore
 import dev.juanrincon.simmerly.core.data.local.SimmerlyDatabase
 import dev.juanrincon.simmerly.recipes.data.local.recent.RecentSearchQueryEntity
 import dev.juanrincon.simmerly.recipes.data.local.recent.RecentlyViewedEntity
-import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.junction.RecipeTagCrossRef
 import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.junction.RecipeToolCrossRef
 import dev.juanrincon.simmerly.recipes.data.mappers.toDomain
 import dev.juanrincon.simmerly.recipes.data.mappers.toDto
 import dev.juanrincon.simmerly.recipes.data.mappers.toEntity
 import dev.juanrincon.simmerly.recipes.data.mappers.toEntityWithRelations
-import dev.juanrincon.simmerly.recipes.data.mappers.toPaginationData
 import dev.juanrincon.simmerly.recipes.data.remote.RecipeNetworkClient
 import dev.juanrincon.simmerly.recipes.data.remote.dto.RecipeDetailDto
 import dev.juanrincon.simmerly.recipes.data.remote.dto.outgoing.RecipePatchDto
 import dev.juanrincon.simmerly.recipes.domain.LoadingResult
-import dev.juanrincon.simmerly.recipes.domain.RecipeListResult
 import dev.juanrincon.simmerly.recipes.domain.RecipeRepository
 import dev.juanrincon.simmerly.recipes.domain.RecipesError
 import dev.juanrincon.simmerly.recipes.domain.model.Comment
@@ -28,8 +29,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.emitAll
-import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlin.time.Clock
@@ -51,47 +50,30 @@ class SimmerlyRecipeRepository(
     private val userDao = database.userDao()
     private val recentlyViewedDao = database.recentlyViewedDao()
     private val recentSearchQueryDao = database.recentSearchQueryDao()
+    private val remoteKeyDao = database.recipeRemoteKeyDao()
 
-
-    override fun recipeList(
-        next: String?,
-        refresh: Boolean
-    ): Flow<Either<RecipesError, LoadingResult<RecipeListResult>>> = flow {
-        // Start with loading
-        emit(Either.Right(LoadingResult.Loading))
-
-        // Optionally clear for a hard refresh
-        if (refresh) {
-            recipeDao.clearAll()
+    @OptIn(ExperimentalPagingApi::class)
+    override fun recipeList(): Flow<PagingData<RecipeSummary>> = Pager(
+        config = PagingConfig(pageSize = 50, enablePlaceholders = false),
+        remoteMediator = RecipeRemoteMediator(
+            networkClient = networkClient,
+            recipeDao = recipeDao,
+            remoteKeyDao = remoteKeyDao,
+            tagsDao = tagsDao,
+            recipeTagDao = recipeTagDao,
+        ),
+        pagingSourceFactory = {
+            RecipePagingSource(
+                recipeDao = recipeDao,
+                preferenceDao = database.userRecipePreferenceDao(),
+                sessionDataStore = sessionDataStore,
+            )
         }
+    ).flow
 
-        // Fetch from network and persist
-        val pagination = either {
-            val response = networkClient.getRecipes(next, true).mapLeft {
-                // Surface fetch error but continue to emit cached/updated DB data
-                RecipesError.FetchError
-            }.bind()
-
-            recipeDao.upsertAll(response.items.map { it.toEntity() })
-            tagsDao.upsertAll(response.items.flatMap { it.tags.map { tag -> tag.toEntity() } })
-            val tagRefs = response.items.flatMap { recipe ->
-                recipe.tags.map { tag ->
-                    RecipeTagCrossRef(
-                        recipeId = recipe.id,
-                        tagId = tag.id
-                    )
-                }
-            }
-            recipeTagDao.insertAll(tagRefs)
-            response.toPaginationData()
-        }.fold(
-            ifLeft = { emit(Either.Left(it)); null },   // surface error, keep going
-            ifRight = { it }
-        )
-
-        // Now emit the DB-backed list
+    override fun observeAllRecipes(): Flow<List<RecipeSummary>> {
         val preferenceDao = database.userRecipePreferenceDao()
-        val dbFlow = combine(
+        return combine(
             sessionDataStore.observeServerAddress(),
             recipeDao.observeRecipeList(),
             preferenceDao.observeAll(),
@@ -103,13 +85,7 @@ class SimmerlyRecipeRepository(
                     isFavorite = preferenceMap[it.recipe.id]?.isFavorite ?: false
                 )
             }
-        }
-            .map { list ->
-                Either.Right(LoadingResult.Loaded(RecipeListResult(list, pagination)))
-            }
-            .distinctUntilChanged()
-
-        emitAll(dbFlow)
+        }.distinctUntilChanged()
     }
 
     override fun comments(recipeId: String): Flow<List<Comment>> =
@@ -118,14 +94,11 @@ class SimmerlyRecipeRepository(
                 comments.map { it.toDomain(address) }
             }
 
-    // removed: loadRecipes(page, perPage, refresh) in favor of unified recipeList()
-
     override fun recipeDetails(id: String): Flow<Either<RecipesError, LoadingResult<RecipeDetail>>> =
         channelFlow {
             val hasCached = recipeDao.existsById(id) > 0
 
             if (!hasCached) {
-                // Cold start: nothing to show until we fetch from the network.
                 send(Either.Right(LoadingResult.Loading))
                 val fetchResult = either {
                     val dto = networkClient.getRecipe(id).mapLeft { RecipesError.FetchError }.bind()
@@ -136,7 +109,6 @@ class SimmerlyRecipeRepository(
                     return@channelFlow
                 }
             } else {
-                // Cached data exists — kick off a silent background refresh.
                 launch {
                     send(Either.Right(LoadingResult.Refreshing))
                     either {
@@ -150,7 +122,6 @@ class SimmerlyRecipeRepository(
                 }
             }
 
-            // DB-backed flow — only reached once we know a row exists.
             val preferenceDao = database.userRecipePreferenceDao()
             combine(
                 sessionDataStore.observeServerAddress(),

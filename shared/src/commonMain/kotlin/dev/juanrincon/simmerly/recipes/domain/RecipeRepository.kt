@@ -1,5 +1,6 @@
 package dev.juanrincon.simmerly.recipes.domain
 
+import androidx.paging.PagingData
 import arrow.core.Either
 import dev.juanrincon.simmerly.recipes.domain.model.Comment
 import dev.juanrincon.simmerly.recipes.domain.model.RecipeDetail
@@ -9,14 +10,9 @@ import kotlinx.coroutines.flow.Flow
 
 interface RecipeRepository {
 
-    /**
-     * Unified list API: refresh from network (with optional refresh/clear) then emit DB-backed list.
-     * Returns a Flow that starts with Loading, may emit Error on refresh failure, and then Loaded(list + pagination info).
-     */
-    fun recipeList(
-        next: String? = null,
-        refresh: Boolean = false
-    ): Flow<Either<RecipesError, LoadingResult<RecipeListResult>>>
+    fun recipeList(): Flow<PagingData<RecipeSummary>>
+
+    fun observeAllRecipes(): Flow<List<RecipeSummary>>
 
     fun comments(recipeId: String): Flow<List<Comment>>
 

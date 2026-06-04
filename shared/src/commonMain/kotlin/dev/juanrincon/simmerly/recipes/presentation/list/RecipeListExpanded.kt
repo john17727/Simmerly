@@ -6,19 +6,19 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
+import androidx.paging.LoadState
+import androidx.paging.compose.LazyPagingItems
 import dev.juanrincon.simmerly.core.presentation.ifTrue
 import dev.juanrincon.simmerly.recipes.domain.model.RecipeSummary
 
 @Composable
 internal fun SelectableList(
-    recipes: List<RecipeSummary>,
-    isLoading: Boolean,
+    lazyPagingItems: LazyPagingItems<RecipeSummary>,
     selected: String,
     onRecipeSelected: (String) -> Unit,
     onSelected: (String) -> Unit,
@@ -31,12 +31,16 @@ internal fun SelectableList(
         verticalArrangement = Arrangement.spacedBy(8.dp),
         modifier = modifier.clip(shape = MaterialTheme.shapes.medium)
     ) {
-        if (isLoading && recipes.isEmpty()) {
+        if (lazyPagingItems.loadState.refresh is LoadState.Loading) {
             items(6) {
                 RecipeCardSkeleton(modifier = Modifier.fillMaxWidth())
             }
         } else {
-            items(recipes, key = { it.id }) { item ->
+            items(
+                count = lazyPagingItems.itemCount,
+                key = { index -> lazyPagingItems.peek(index)?.id ?: index }
+            ) { index ->
+                val item = lazyPagingItems[index] ?: return@items
                 val isSelected = item.id == selected
                 RecipeCard(
                     item,
@@ -52,7 +56,7 @@ internal fun SelectableList(
                         }
                 )
             }
-            if (isLoading) {
+            if (lazyPagingItems.loadState.append is LoadState.Loading) {
                 item {
                     RecipeCardSkeleton(modifier = Modifier.fillMaxWidth())
                 }

@@ -1,6 +1,5 @@
 package dev.juanrincon.simmerly.recipes.presentation.search
 
-import arrow.core.Either
 import assertk.assertThat
 import assertk.assertions.contains
 import assertk.assertions.hasSize
@@ -9,10 +8,7 @@ import assertk.assertions.isEqualTo
 import assertk.assertions.isFalse
 import assertk.assertions.isTrue
 import dev.juanrincon.simmerly.recipes.FakeRecipeRepository
-import dev.juanrincon.simmerly.recipes.aRecipeListResult
 import dev.juanrincon.simmerly.recipes.aRecipeSummary
-import dev.juanrincon.simmerly.recipes.domain.LoadingResult
-import dev.juanrincon.simmerly.recipes.domain.RecipesError
 import dev.juanrincon.simmerly.recipes.presentation.search.orbit.RecipeSearchIntent
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -65,27 +61,12 @@ class RecipeSearchViewModelTest {
     fun fetchRecipesEmitsLoadingThenRecipesInState() = runTest(testDispatcher) {
         viewModel.test(this) {
             runOnCreate()
-            repo.recipeListFlowAt(0).emit(Either.Right(LoadingResult.Loading))
             assertThat(awaitState().isLoading).isTrue()
 
-            repo.recipeListFlowAt(0)
-                .emit(Either.Right(LoadingResult.Loaded(aRecipeListResult(aRecipeSummary()))))
+            repo.allRecipesFlow.emit(listOf(aRecipeSummary()))
             val state = awaitState()
             assertThat(state.isLoading).isFalse()
             assertThat(state.recipes).hasSize(1)
-            cancelAndIgnoreRemainingItems()
-        }
-    }
-
-    @Test
-    fun fetchRecipesEmitsFetchErrorSetsIsLoadingFalse() = runTest(testDispatcher) {
-        viewModel.test(this) {
-            runOnCreate()
-            repo.recipeListFlowAt(0).emit(Either.Right(LoadingResult.Loading))
-            assertThat(awaitState().isLoading).isTrue()
-
-            repo.recipeListFlowAt(0).emit(Either.Left(RecipesError.FetchError))
-            assertThat(awaitState().isLoading).isFalse()
             cancelAndIgnoreRemainingItems()
         }
     }
@@ -147,7 +128,6 @@ class RecipeSearchViewModelTest {
     fun onQuerySubmittedDoesNotRecordBlankQuery() = runTest(testDispatcher) {
         viewModel.test(this) {
             viewModel.onEvent(RecipeSearchIntent.OnQuerySubmitted(""))
-            // Submitting "" produces no state change (submittedQuery stays ""), so no awaitState()
         }
         assertThat(repo.recordedSearchQueries).isEmpty()
     }

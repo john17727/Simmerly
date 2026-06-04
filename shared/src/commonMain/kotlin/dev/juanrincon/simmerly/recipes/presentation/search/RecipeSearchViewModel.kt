@@ -1,7 +1,6 @@
 package dev.juanrincon.simmerly.recipes.presentation.search
 
 import androidx.lifecycle.ViewModel
-import dev.juanrincon.simmerly.recipes.domain.LoadingResult
 import dev.juanrincon.simmerly.recipes.domain.RecipeRepository
 import dev.juanrincon.simmerly.recipes.presentation.search.orbit.RecipeSearchIntent
 import dev.juanrincon.simmerly.recipes.presentation.search.orbit.RecipeSearchSideEffect
@@ -39,19 +38,9 @@ class RecipeSearchViewModel(
     }
 
     private fun fetchRecipes() = intent {
-        repository.recipeList(refresh = false).collect { response ->
-            response.fold(
-                ifLeft = { reduce { state.copy(isLoading = false) } },
-                ifRight = { result ->
-                    when (result) {
-                        is LoadingResult.Loading -> reduce { state.copy(isLoading = true) }
-                        is LoadingResult.Loaded -> reduce {
-                            state.copy(recipes = result.data.items, isLoading = false)
-                        }
-                        else -> {}
-                    }
-                }
-            )
+        reduce { state.copy(isLoading = true) }
+        repository.observeAllRecipes().collect { recipes ->
+            reduce { state.copy(recipes = recipes, isLoading = false) }
         }
     }
 

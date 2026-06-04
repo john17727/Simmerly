@@ -16,4 +16,7 @@ interface UserRecipePreferenceDao {
 
     @Query("SELECT * FROM user_recipe_preferences")
     fun observeAll(): Flow<List<UserRecipePreferenceEntity>>
+
+    @Query("SELECT * FROM user_recipe_preferences")
+    suspend fun getAll(): List<UserRecipePreferenceEntity>
 }

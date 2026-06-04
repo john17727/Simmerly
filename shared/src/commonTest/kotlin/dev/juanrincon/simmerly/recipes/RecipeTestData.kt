@@ -1,10 +1,8 @@
 package dev.juanrincon.simmerly.recipes
 
 import dev.juanrincon.simmerly.recipes.domain.LoadingResult
-import dev.juanrincon.simmerly.recipes.domain.RecipeListResult
 import dev.juanrincon.simmerly.recipes.domain.model.Comment
 import dev.juanrincon.simmerly.recipes.domain.model.Nutrition
-import dev.juanrincon.simmerly.recipes.domain.model.PaginationData
 import dev.juanrincon.simmerly.recipes.domain.model.RecipeDetail
 import dev.juanrincon.simmerly.recipes.domain.model.RecipeSummary
 import dev.juanrincon.simmerly.recipes.domain.model.Settings
@@ -28,28 +26,6 @@ fun aRecipeSummary(
     performTime = null,
     description = ""
 )
-
-fun aRecipeListResult(
-    vararg recipes: RecipeSummary = arrayOf(aRecipeSummary()),
-    next: String? = null
-) = RecipeListResult(
-    items = recipes.toList(),
-    pagination = next?.let {
-        PaginationData(
-            page = 1,
-            perPage = 50,
-            total = 1,
-            totalPages = 1,
-            next = it,
-            previous = null
-        )
-    }
-)
-
-fun loadedRecipeList(
-    vararg recipes: RecipeSummary = arrayOf(aRecipeSummary()),
-    next: String? = null
-) = LoadingResult.Loaded(aRecipeListResult(*recipes, next = next))
 
 fun aSettings(
     showNutrition: Boolean = false,

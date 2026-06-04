@@ -2,8 +2,6 @@ package dev.juanrincon.simmerly.recipes.data.mappers
 
 import assertk.assertThat
 import assertk.assertions.isEqualTo
-import assertk.assertions.isNull
-import dev.juanrincon.simmerly.core.data.remote.dto.ItemListDto
 import dev.juanrincon.simmerly.recipes.data.remote.dto.CategoryDto
 import dev.juanrincon.simmerly.recipes.data.remote.dto.NutritionDto
 import dev.juanrincon.simmerly.recipes.data.remote.dto.RecipeSummaryDto
@@ -163,45 +161,6 @@ class DataMappersTest {
         assertThat(entity.username).isEqualTo("john")
         assertThat(entity.admin).isEqualTo(true)
         assertThat(entity.fullName).isEqualTo("John Doe")
-    }
-
-    // endregion
-
-    // region ItemListDto.toPaginationData
-
-    @Test
-    fun itemListDtoToPaginationDataMapsAllFields() {
-        val dto = ItemListDto<Unit>(
-            page = 2,
-            perPage = 50,
-            total = 120,
-            totalPages = 3,
-            next = "?page=3",
-            previous = "?page=1",
-            items = emptyList()
-        )
-
-        val pagination = dto.toPaginationData()
-
-        assertThat(pagination.page).isEqualTo(2)
-        assertThat(pagination.perPage).isEqualTo(50)
-        assertThat(pagination.total).isEqualTo(120)
-        assertThat(pagination.totalPages).isEqualTo(3)
-        assertThat(pagination.next).isEqualTo("?page=3")
-        assertThat(pagination.previous).isEqualTo("?page=1")
-    }
-
-    @Test
-    fun itemListDtoToPaginationDataWithNullNextAndPrevious() {
-        val dto = ItemListDto<Unit>(
-            page = 1, perPage = 50, total = 10, totalPages = 1,
-            next = null, previous = null, items = emptyList()
-        )
-
-        val pagination = dto.toPaginationData()
-
-        assertThat(pagination.next).isNull()
-        assertThat(pagination.previous).isNull()
     }
 
     // endregion

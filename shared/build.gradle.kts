@@ -91,6 +91,10 @@ kotlin {
             implementation(libs.androidx.room.runtime)
             implementation(libs.androidx.sqlite.bundled)
 
+            // Paging 3
+            implementation(libs.androidx.paging.common)
+            implementation(libs.androidx.paging.compose)
+
             // Material 3 Adaptive
             implementation(libs.adaptive)
             implementation(libs.adaptive.layout)

@@ -68,7 +68,7 @@ import kotlin.time.ExperimentalTime
         RecentSearchQueryEntity::class,
         UserRecipePreferenceEntity::class,
     ],
-    version = 3
+    version = 4
 )
 @TypeConverters(Converters::class)
 @OptIn(ExperimentalTime::class)
