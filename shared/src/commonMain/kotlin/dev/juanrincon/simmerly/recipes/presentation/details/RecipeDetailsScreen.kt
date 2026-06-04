@@ -15,16 +15,18 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.adaptive.currentWindowAdaptiveInfoV2
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.window.core.layout.WindowSizeClass
 import dev.juanrincon.simmerly.recipes.domain.model.Settings
-import dev.juanrincon.simmerly.recipes.presentation.details.mvikotlin.RecipeDetailsStore
+import dev.juanrincon.simmerly.recipes.presentation.details.orbit.RecipeDetailsIntent
+import dev.juanrincon.simmerly.recipes.presentation.details.orbit.RecipeDetailsState
+import dev.juanrincon.simmerly.recipes.presentation.details.orbit.RecipeMode
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
+import org.orbitmvi.orbit.compose.collectAsState
 
 @Composable
 fun RecipeDetailsScreen(
@@ -35,7 +37,7 @@ fun RecipeDetailsScreen(
     viewModel: RecipeDetailsViewModel = koinViewModel { parametersOf(recipeId) },
     modifier: Modifier = Modifier
 ) {
-    val state by viewModel.state.collectAsState()
+    val state by viewModel.collectAsState()
     Content(
         state = state,
         onEvent = viewModel::onEvent,
@@ -49,8 +51,8 @@ fun RecipeDetailsScreen(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun Content(
-    state: RecipeDetailsStore.State,
-    onEvent: (RecipeDetailsStore.Intent) -> Unit,
+    state: RecipeDetailsState,
+    onEvent: (RecipeDetailsIntent) -> Unit,
     onNavigateBack: () -> Unit,
     onNavigateToComments: (recipeId: String) -> Unit,
     sharedTransitionScope: SharedTransitionScope? = null,
@@ -59,11 +61,11 @@ private fun Content(
     if (state.showSettings) {
         ModalBottomSheet(
             dragHandle = null,
-            onDismissRequest = { onEvent(RecipeDetailsStore.Intent.DismissSettings) },
+            onDismissRequest = { onEvent(RecipeDetailsIntent.DismissSettings) },
         ) {
             SettingsView(
                 settings = state.recipe.settings,
-                onSettingChanged = { onEvent(RecipeDetailsStore.Intent.UpdateSettings(it)) },
+                onSettingChanged = { onEvent(RecipeDetailsIntent.UpdateSettings(it)) },
                 modifier = Modifier.padding(vertical = 16.dp)
             )
         }
@@ -74,7 +76,7 @@ private fun Content(
 
     AnimatedContent(state.mode) { mode ->
         when (mode) {
-            RecipeDetailsStore.RecipeMode.READ_ONLY -> {
+            RecipeMode.READ_ONLY -> {
                 AnimatedContent(isExpanded) { expanded ->
                     if (expanded) {
                         ExpandedView(
@@ -95,7 +97,7 @@ private fun Content(
                 }
             }
 
-            RecipeDetailsStore.RecipeMode.EDIT -> TODO()
+            RecipeMode.EDIT -> TODO()
         }
     }
 }

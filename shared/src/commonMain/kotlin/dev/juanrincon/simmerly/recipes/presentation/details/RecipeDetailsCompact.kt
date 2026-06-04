@@ -79,7 +79,8 @@ import dev.juanrincon.simmerly.recipes.presentation.details.models.IngredientUi
 import dev.juanrincon.simmerly.recipes.presentation.details.models.InstructionUi
 import dev.juanrincon.simmerly.recipes.presentation.details.models.NutritionUi
 import dev.juanrincon.simmerly.recipes.presentation.details.models.RecipeDetailUi
-import dev.juanrincon.simmerly.recipes.presentation.details.mvikotlin.RecipeDetailsStore
+import dev.juanrincon.simmerly.recipes.presentation.details.orbit.RecipeDetailsIntent
+import dev.juanrincon.simmerly.recipes.presentation.details.orbit.RecipeDetailsState
 import dev.juanrincon.simmerly.recipes.presentation.shared.RecipeMetaRow
 import dev.juanrincon.simmerly.recipes.presentation.shared.TagRow
 import dev.juanrincon.simmerly.theme.SimmerlyTheme
@@ -88,8 +89,8 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 internal fun CompactRecipeDetails(
-    state: RecipeDetailsStore.State,
-    onEvent: (RecipeDetailsStore.Intent) -> Unit,
+    state: RecipeDetailsState,
+    onEvent: (RecipeDetailsIntent) -> Unit,
     onNavigateBack: () -> Unit,
     onNavigateToComments: (recipeId: String) -> Unit,
     sharedTransitionScope: SharedTransitionScope? = null,
@@ -170,7 +171,7 @@ internal fun CompactRecipeDetails(
                         Icon(Icons.Default.Edit, contentDescription = "Edit")
                     }
                     IconButton(
-                        onClick = { onEvent(RecipeDetailsStore.Intent.ShowSettings) },
+                        onClick = { onEvent(RecipeDetailsIntent.ShowSettings) },
                         enabled = !state.loading
                     ) {
                         Icon(Icons.Default.Settings, contentDescription = "Settings")
@@ -230,8 +231,8 @@ internal fun CompactRecipeDetails(
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 private fun CompactContent(
-    state: RecipeDetailsStore.State,
-    onEvent: (RecipeDetailsStore.Intent) -> Unit,
+    state: RecipeDetailsState,
+    onEvent: (RecipeDetailsIntent) -> Unit,
     paddingValues: PaddingValues,
     sharedTransitionScope: SharedTransitionScope? = null,
     modifier: Modifier = Modifier
@@ -490,8 +491,8 @@ private fun CompactContent(
             ) {
                 IngredientAndToolView(
                     recipe = recipe,
-                    onRemoveServingButtonClick = { onEvent(RecipeDetailsStore.Intent.RemoveServing) },
-                    onAddServingButtonClick = { onEvent(RecipeDetailsStore.Intent.AddServing) },
+                    onRemoveServingButtonClick = { onEvent(RecipeDetailsIntent.RemoveServing) },
+                    onAddServingButtonClick = { onEvent(RecipeDetailsIntent.AddServing) },
                     modifier = Modifier.fillMaxWidth()
                 )
             }
@@ -670,7 +671,7 @@ private val previewTabs = listOf("Overview", "Ingredients", "Instructions")
 private fun DynamicPreview() {
     SimmerlyTheme(dynamicColor = true) {
         CompactRecipeDetails(
-            state = RecipeDetailsStore.State(
+            state = RecipeDetailsState(
                 loading = false,
                 recipe = previewRecipe,
                 mobileTabs = previewTabs
@@ -687,7 +688,7 @@ private fun DynamicPreview() {
 private fun LightPreview() {
     SimmerlyTheme {
         CompactRecipeDetails(
-            state = RecipeDetailsStore.State(
+            state = RecipeDetailsState(
                 loading = false,
                 recipe = previewRecipe,
                 mobileTabs = previewTabs
@@ -704,7 +705,7 @@ private fun LightPreview() {
 private fun DynamicDarkPreview() {
     SimmerlyTheme(darkTheme = true, dynamicColor = true) {
         CompactRecipeDetails(
-            state = RecipeDetailsStore.State(
+            state = RecipeDetailsState(
                 loading = false,
                 recipe = previewRecipe,
                 mobileTabs = previewTabs
@@ -721,7 +722,7 @@ private fun DynamicDarkPreview() {
 private fun DarkPreview() {
     SimmerlyTheme(darkTheme = true) {
         CompactRecipeDetails(
-            state = RecipeDetailsStore.State(
+            state = RecipeDetailsState(
                 loading = false,
                 recipe = previewRecipe,
                 mobileTabs = previewTabs
@@ -738,7 +739,7 @@ private fun DarkPreview() {
 private fun LoadingPreview() {
     SimmerlyTheme {
         CompactRecipeDetails(
-            state = RecipeDetailsStore.State(loading = true),
+            state = RecipeDetailsState(loading = true),
             onEvent = {},
             onNavigateBack = {},
             onNavigateToComments = {}

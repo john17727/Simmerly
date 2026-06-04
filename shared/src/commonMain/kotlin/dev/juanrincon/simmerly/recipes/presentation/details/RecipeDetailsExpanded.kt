@@ -35,7 +35,8 @@ import androidx.compose.ui.unit.dp
 import dev.juanrincon.simmerly.core.presentation.ifTrue
 import dev.juanrincon.simmerly.core.presentation.shimmer
 import dev.juanrincon.simmerly.recipes.presentation.comments.RecipeCommentsScreen
-import dev.juanrincon.simmerly.recipes.presentation.details.mvikotlin.RecipeDetailsStore
+import dev.juanrincon.simmerly.recipes.presentation.details.orbit.RecipeDetailsIntent
+import dev.juanrincon.simmerly.recipes.presentation.details.orbit.RecipeDetailsState
 
 val EXPANDED_CARD_PADDING = 16.dp
 
@@ -46,8 +47,8 @@ private const val EXPANDED_TAB_COMMENTS = "Comments"
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun ExpandedView(
-    state: RecipeDetailsStore.State,
-    onEvent: (RecipeDetailsStore.Intent) -> Unit,
+    state: RecipeDetailsState,
+    onEvent: (RecipeDetailsIntent) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val recipe = state.recipe
@@ -126,8 +127,8 @@ internal fun ExpandedView(
                             ) {
                                 IngredientAndToolView(
                                     recipe = recipe,
-                                    onRemoveServingButtonClick = { onEvent(RecipeDetailsStore.Intent.RemoveServing) },
-                                    onAddServingButtonClick = { onEvent(RecipeDetailsStore.Intent.AddServing) },
+                                    onRemoveServingButtonClick = { onEvent(RecipeDetailsIntent.RemoveServing) },
+                                    onAddServingButtonClick = { onEvent(RecipeDetailsIntent.AddServing) },
                                     modifier = Modifier.fillMaxWidth()
                                 )
                             }
