@@ -9,6 +9,11 @@ import androidx.compose.ui.window.WindowPlacement
 import androidx.compose.ui.window.application
 import androidx.compose.ui.window.rememberWindowState
 import dev.juanrincon.simmerly.di.initKoin
+import dev.juanrincon.simmerly.splash.presentation.SplashScreen
+import dev.juanrincon.simmerly.theme.SimmerlyTheme
+import io.github.sudarshanmhasrup.splashify.SplashifyApp
+import io.github.sudarshanmhasrup.splashify.ui.config.SplashScreenSize
+import io.github.sudarshanmhasrup.splashify.ui.splashscreen.SimpleSplashScreen
 import java.util.prefs.Preferences
 
 fun main() {
@@ -38,12 +43,24 @@ fun main() {
                 prefs.put("placement", windowState.placement.name)
             }
         }
-        Window(
-            onCloseRequest = ::exitApplication,
-            state = windowState,
-            title = "Simmerly",
+        SplashifyApp(
+            splashScreen = {
+                SimpleSplashScreen(
+                    size = SplashScreenSize(width = 600.dp, height = 380.dp)
+                ) { _ ->
+                    SimmerlyTheme {
+                        SplashScreen()
+                    }
+                }
+            }
         ) {
-            App()
+            Window(
+                onCloseRequest = ::exitApplication,
+                state = windowState,
+                title = "Simmerly",
+            ) {
+                App()
+            }
         }
     }
 }
