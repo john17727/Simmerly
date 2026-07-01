@@ -1,10 +1,10 @@
 package dev.juanrincon.simmerly.core.data.local
 
+import androidx.room3.ColumnTypeConverters
 import androidx.room3.ConstructedBy
 import androidx.room3.Database
 import androidx.room3.RoomDatabase
 import androidx.room3.RoomDatabaseConstructor
-import androidx.room3.TypeConverters
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import dev.juanrincon.simmerly.recipes.data.local.metadata.RecipeRemoteKey
 import dev.juanrincon.simmerly.recipes.data.local.metadata.RecipeRemoteKeyDao
@@ -70,7 +70,7 @@ import kotlin.time.ExperimentalTime
     ],
     version = 4
 )
-@TypeConverters(Converters::class)
+@ColumnTypeConverters(Converters::class)
 @OptIn(ExperimentalTime::class)
 @ConstructedBy(SimmerlyDatabaseConstructor::class)
 abstract class SimmerlyDatabase : RoomDatabase() {
