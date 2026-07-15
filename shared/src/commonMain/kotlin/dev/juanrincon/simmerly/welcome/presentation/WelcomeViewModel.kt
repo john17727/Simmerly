@@ -7,9 +7,9 @@ import dev.juanrincon.simmerly.welcome.presentation.model.CredentialType
 import dev.juanrincon.simmerly.welcome.presentation.orbit.WelcomeIntent
 import dev.juanrincon.simmerly.welcome.presentation.orbit.WelcomeSideEffect
 import dev.juanrincon.simmerly.welcome.presentation.orbit.WelcomeState
-import org.orbitmvi.orbit.Container
-import org.orbitmvi.orbit.ContainerHost
-import org.orbitmvi.orbit.viewmodel.container
+import org.orbitmvi.orbit.OrbitContainer
+import org.orbitmvi.orbit.OrbitContainerHost
+import org.orbitmvi.orbit.viewmodel.orbitContainer
 import simmerly.shared.generated.resources.Res
 import simmerly.shared.generated.resources.login_failed
 import simmerly.shared.generated.resources.something_went_wrong
@@ -17,10 +17,10 @@ import simmerly.shared.generated.resources.unreachable_server_address
 
 class WelcomeViewModel(
     private val authRepository: AuthRepository,
-) : ContainerHost<WelcomeState, WelcomeSideEffect>, ViewModel() {
+) : OrbitContainerHost<WelcomeState, WelcomeState, WelcomeSideEffect>, ViewModel() {
 
-    override val container: Container<WelcomeState, WelcomeSideEffect> =
-        container(initialState = WelcomeState())
+    override val container: OrbitContainer<WelcomeState, WelcomeState, WelcomeSideEffect> =
+        orbitContainer(initialState = WelcomeState())
 
     fun onEvent(event: WelcomeIntent) {
         when (event) {

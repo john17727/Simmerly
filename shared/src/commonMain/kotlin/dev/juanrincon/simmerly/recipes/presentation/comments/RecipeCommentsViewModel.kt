@@ -8,17 +8,18 @@ import dev.juanrincon.simmerly.recipes.presentation.comments.orbit.RecipeComment
 import dev.juanrincon.simmerly.recipes.presentation.details.mappers.toCommentUi
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
-import org.orbitmvi.orbit.Container
-import org.orbitmvi.orbit.ContainerHost
-import org.orbitmvi.orbit.viewmodel.container
+import org.orbitmvi.orbit.OrbitContainer
+import org.orbitmvi.orbit.OrbitContainerHost
+import org.orbitmvi.orbit.viewmodel.orbitContainer
 
 class RecipeCommentsViewModel(
     private val recipeId: String,
     private val repository: RecipeRepository,
-) : ContainerHost<RecipeCommentsState, RecipeCommentsSideEffect>, ViewModel() {
+) : OrbitContainerHost<RecipeCommentsState, RecipeCommentsState, RecipeCommentsSideEffect>,
+    ViewModel() {
 
-    override val container: Container<RecipeCommentsState, RecipeCommentsSideEffect> =
-        container(initialState = RecipeCommentsState()) {
+    override val container: OrbitContainer<RecipeCommentsState, RecipeCommentsState, RecipeCommentsSideEffect> =
+        orbitContainer(initialState = RecipeCommentsState()) {
             observeComments()
         }
 
@@ -27,6 +28,7 @@ class RecipeCommentsViewModel(
             is RecipeCommentsIntent.OnCommentTextChanged -> intent {
                 reduce { state.copy(commentText = event.text) }
             }
+
             RecipeCommentsIntent.OnSendCommentClicked -> sendComment()
         }
     }
@@ -46,4 +48,5 @@ class RecipeCommentsViewModel(
             ifLeft = { /* TODO: handle error */ }
         )
     }
+
 }

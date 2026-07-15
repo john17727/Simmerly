@@ -9,18 +9,19 @@ import dev.juanrincon.simmerly.recipes.presentation.details.orbit.RecipeDetailsI
 import dev.juanrincon.simmerly.recipes.presentation.details.orbit.RecipeDetailsSideEffect
 import dev.juanrincon.simmerly.recipes.presentation.details.orbit.RecipeDetailsState
 import kotlinx.coroutines.flow.distinctUntilChanged
-import org.orbitmvi.orbit.Container
-import org.orbitmvi.orbit.ContainerHost
-import org.orbitmvi.orbit.viewmodel.container
+import org.orbitmvi.orbit.OrbitContainer
+import org.orbitmvi.orbit.OrbitContainerHost
+import org.orbitmvi.orbit.viewmodel.orbitContainer
 import kotlin.math.round
 
 class RecipeDetailsViewModel(
     private val recipeId: String,
     private val repository: RecipeRepository,
-) : ContainerHost<RecipeDetailsState, RecipeDetailsSideEffect>, ViewModel() {
+) : OrbitContainerHost<RecipeDetailsState, RecipeDetailsState, RecipeDetailsSideEffect>,
+    ViewModel() {
 
-    override val container: Container<RecipeDetailsState, RecipeDetailsSideEffect> =
-        container(initialState = RecipeDetailsState()) {
+    override val container: OrbitContainer<RecipeDetailsState, RecipeDetailsState, RecipeDetailsSideEffect> =
+        orbitContainer(initialState = RecipeDetailsState()) {
             observeRecipe()
         }
 

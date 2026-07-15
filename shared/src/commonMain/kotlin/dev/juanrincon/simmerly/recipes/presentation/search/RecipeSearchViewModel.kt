@@ -5,16 +5,16 @@ import dev.juanrincon.simmerly.recipes.domain.RecipeRepository
 import dev.juanrincon.simmerly.recipes.presentation.search.orbit.RecipeSearchIntent
 import dev.juanrincon.simmerly.recipes.presentation.search.orbit.RecipeSearchSideEffect
 import dev.juanrincon.simmerly.recipes.presentation.search.orbit.RecipeSearchState
-import org.orbitmvi.orbit.Container
-import org.orbitmvi.orbit.ContainerHost
-import org.orbitmvi.orbit.viewmodel.container
+import org.orbitmvi.orbit.OrbitContainer
+import org.orbitmvi.orbit.OrbitContainerHost
+import org.orbitmvi.orbit.viewmodel.orbitContainer
 
 class RecipeSearchViewModel(
     private val repository: RecipeRepository,
-) : ContainerHost<RecipeSearchState, RecipeSearchSideEffect>, ViewModel() {
+) : OrbitContainerHost<RecipeSearchState, RecipeSearchState, RecipeSearchSideEffect>, ViewModel() {
 
-    override val container: Container<RecipeSearchState, RecipeSearchSideEffect> =
-        container(initialState = RecipeSearchState()) {
+    override val container: OrbitContainer<RecipeSearchState, RecipeSearchState, RecipeSearchSideEffect> =
+        orbitContainer(initialState = RecipeSearchState()) {
             fetchRecipes()
             loadRecentlyViewed()
             loadRecentQueries()

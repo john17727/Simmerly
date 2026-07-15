@@ -10,16 +10,16 @@ import dev.juanrincon.simmerly.recipes.presentation.list.orbit.RecipeListIntent
 import dev.juanrincon.simmerly.recipes.presentation.list.orbit.RecipeListSideEffect
 import dev.juanrincon.simmerly.recipes.presentation.list.orbit.RecipeListState
 import kotlinx.coroutines.flow.Flow
-import org.orbitmvi.orbit.Container
-import org.orbitmvi.orbit.ContainerHost
-import org.orbitmvi.orbit.viewmodel.container
+import org.orbitmvi.orbit.OrbitContainer
+import org.orbitmvi.orbit.OrbitContainerHost
+import org.orbitmvi.orbit.viewmodel.orbitContainer
 
 class RecipeListViewModel(
     private val repository: RecipeRepository,
-) : ContainerHost<RecipeListState, RecipeListSideEffect>, ViewModel() {
+) : OrbitContainerHost<RecipeListState, RecipeListState, RecipeListSideEffect>, ViewModel() {
 
-    override val container: Container<RecipeListState, RecipeListSideEffect> =
-        container(initialState = RecipeListState())
+    override val container: OrbitContainer<RecipeListState, RecipeListState, RecipeListSideEffect> =
+        orbitContainer(initialState = RecipeListState())
 
     val recipes: Flow<PagingData<RecipeSummary>> = repository.recipeList()
         .cachedIn(viewModelScope)
