@@ -37,13 +37,14 @@ import dev.juanrincon.simmerly.recipes.presentation.details.RecipeDetailsScreen
 import dev.juanrincon.simmerly.recipes.presentation.list.RecipeListScreen
 import dev.juanrincon.simmerly.recipes.presentation.navigation.RecipeDestinations
 import dev.juanrincon.simmerly.recipes.presentation.search.RecipeSearchScreen
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
 
 @OptIn(
     ExperimentalMaterial3AdaptiveApi::class,
     ExperimentalMaterial3Api::class,
-    ExperimentalSharedTransitionApi::class
+    ExperimentalSharedTransitionApi::class, ExperimentalSerializationApi::class
 )
 @Composable
 fun RecipesContent(
@@ -54,19 +55,7 @@ fun RecipesContent(
         configuration = SavedStateConfiguration {
             serializersModule = SerializersModule {
                 polymorphic(NavKey::class) {
-                    subclass(RecipeDestinations.List::class, RecipeDestinations.List.serializer())
-                    subclass(
-                        RecipeDestinations.Detail::class,
-                        RecipeDestinations.Detail.serializer()
-                    )
-                    subclass(
-                        RecipeDestinations.Comments::class,
-                        RecipeDestinations.Comments.serializer()
-                    )
-                    subclass(
-                        RecipeDestinations.Search::class,
-                        RecipeDestinations.Search.serializer()
-                    )
+                    subclassesOfSealed<RecipeDestinations>()
                 }
             }
         },
