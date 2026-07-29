@@ -70,6 +70,7 @@ fun Instruction.toInstructionUi(step: Int): InstructionUi = InstructionUi(
     title = title.nullIfEmpty(),
     summary = formatInstructionStep(summary, step),
     text = text,
+    images = images,
     associatedIngredients = associatedIngredients.map { it.toIngredientUi() }
 )
 

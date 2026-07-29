@@ -1,9 +1,12 @@
 package dev.juanrincon.simmerly.recipes.data.mappers
 
 import assertk.assertThat
+import assertk.assertions.isEmpty
 import assertk.assertions.isEqualTo
 import assertk.assertions.isNull
 import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.CategoryEntity
+import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.CommentEntity
+import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.InstructionEntity
 import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.NutritionEntity
 import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.RecipeEntity
 import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.SettingsEntity
@@ -11,8 +14,8 @@ import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.TagEntity
 import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.ToolEntity
 import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.UserEntity
 import dev.juanrincon.simmerly.recipes.data.local.recipe.model.CommentWithRelations
+import dev.juanrincon.simmerly.recipes.data.local.recipe.model.InstructionWithRelations
 import dev.juanrincon.simmerly.recipes.data.local.recipe.model.ListRecipeWithTags
-import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.CommentEntity
 import kotlin.test.Test
 import kotlin.time.Clock
 import kotlin.time.ExperimentalTime
@@ -265,7 +268,92 @@ class DomainMappersTest {
 
     // endregion
 
+    // region InstructionWithRelations.toDomain
+
+    @Test
+    fun instructionWithRelationsToDomainMapsBasicFields() {
+        val entity = anInstructionWithRelations(text = "Chop the onion.")
+
+        val domain = entity.toDomain(host = "https://myserver.com")
+
+        assertThat(domain.id).isEqualTo("instruction-1")
+        assertThat(domain.summary).isEqualTo("Sautee Onions")
+        assertThat(domain.text).isEqualTo("Chop the onion.")
+        assertThat(domain.images).isEmpty()
+    }
+
+    @Test
+    fun instructionWithRelationsToDomainExtractsImageAndPrefixesHost() {
+        val entity = anInstructionWithRelations(
+            text = "Saute the onion.\n\n<img src=\"/api/media/recipes/recipe-1/assets/meatloaf.jpg\" height=\"100%\" width=\"100%\"/>"
+        )
+
+        val domain = entity.toDomain(host = "https://myserver.com")
+
+        assertThat(domain.text).isEqualTo("Saute the onion.")
+        assertThat(domain.images).isEqualTo(
+            listOf("https://myserver.com/api/media/recipes/recipe-1/assets/meatloaf.jpg")
+        )
+    }
+
+    @Test
+    fun instructionWithRelationsToDomainExtractsMultipleImagesInOrder() {
+        val entity = anInstructionWithRelations(
+            text = "<img src='/assets/first.jpg'>Mix well.<img src=\"/assets/second.jpg\"/>"
+        )
+
+        val domain = entity.toDomain(host = "https://myserver.com/")
+
+        assertThat(domain.text).isEqualTo("Mix well.")
+        assertThat(domain.images).isEqualTo(
+            listOf(
+                "https://myserver.com/assets/first.jpg",
+                "https://myserver.com/assets/second.jpg"
+            )
+        )
+    }
+
+    @Test
+    fun instructionWithRelationsToDomainKeepsAbsoluteImageUrls() {
+        val entity = anInstructionWithRelations(
+            text = "Rest the meat.\n\n<img src=\"https://cdn.example.com/meatloaf.jpg\"/>"
+        )
+
+        val domain = entity.toDomain(host = "https://myserver.com")
+
+        assertThat(domain.images).isEqualTo(listOf("https://cdn.example.com/meatloaf.jpg"))
+    }
+
+    @Test
+    fun instructionWithRelationsToDomainWithNullHostDropsRelativeImages() {
+        val entity = anInstructionWithRelations(
+            text = "Saute the onion.\n\n<img src=\"/api/media/recipes/recipe-1/assets/meatloaf.jpg\"/>"
+        )
+
+        val domain = entity.toDomain(host = null)
+
+        assertThat(domain.text).isEqualTo("Saute the onion.")
+        assertThat(domain.images).isEmpty()
+    }
+
+    // endregion
+
     // region Helpers
+
+    private fun anInstructionWithRelations(
+        text: String,
+        id: String = "instruction-1",
+        summary: String = "Sautee Onions"
+    ) = InstructionWithRelations(
+        instruction = InstructionEntity(
+            id = id,
+            recipeId = "recipe-1",
+            title = "",
+            summary = summary,
+            text = text
+        ),
+        ingredients = emptyList()
+    )
 
     private fun aRecipeEntity(
         id: String = "recipe-1",

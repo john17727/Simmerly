@@ -87,7 +87,7 @@ fun RecipeDetailWithRelations.toDomain(host: String?, isFavorite: Boolean = fals
         updatedAt = recipe.updatedAt,
         lastMade = recipe.lastMade,
         ingredients = ingredients.map { it.toDomain() },
-        instructions = instructions.map { it.toDomain() },
+        instructions = instructions.map { it.toDomain(host) },
         nutrition = recipe.nutrition.toDomain(),
         settings = recipe.settings.toDomain(),
         assets = listOf(),
@@ -148,13 +148,17 @@ fun FoodEntity.toDomain(): Food = Food(
     updatedAt = updatedAt
 )
 
-fun InstructionWithRelations.toDomain(): Instruction = Instruction(
-    id = instruction.id,
-    title = instruction.title,
-    summary = instruction.summary,
-    text = instruction.text,
-    associatedIngredients = ingredients.map { it.toDomain() }
-)
+fun InstructionWithRelations.toDomain(host: String?): Instruction {
+    val (text, images) = extractImages(instruction.text, host)
+    return Instruction(
+        id = instruction.id,
+        title = instruction.title,
+        summary = instruction.summary,
+        text = text,
+        images = images,
+        associatedIngredients = ingredients.map { it.toDomain() }
+    )
+}
 
 fun NutritionEntity.toDomain(): Nutrition = Nutrition(
     calories = calories,
@@ -380,6 +384,39 @@ fun Settings.toDto(): SettingsDto = SettingsDto(
 private fun createRecipeImageUrl(host: String?, id: String): String {
     if (host == null) return ""
     return "$host/api/media/recipes/$id/images/original.webp"
+}
+
+private val imgTagRegex =
+    Regex("""<img\b[^>]*?\bsrc\s*=\s*(["'])(.*?)\1[^>]*>""", RegexOption.IGNORE_CASE)
+
+/**
+ * Splits the markdown [text] of an instruction into the text itself and the images embedded in it
+ * as `<img>` tags, so the images can be rendered by the UI instead of the markdown renderer.
+ *
+ * Image sources are resolved against [host] when relative, since recipe assets are stored on the
+ * server; sources that are already absolute (`http(s)://`, protocol-relative or `data:`) are kept
+ * as they are. Sources that cannot be resolved, such as a relative one without a known host, are
+ * dropped along with their tag.
+ */
+private fun extractImages(text: String, host: String?): Pair<String, List<String>> {
+    if (!text.contains("<img", ignoreCase = true)) return text to emptyList()
+    val images = mutableListOf<String>()
+    val strippedText = imgTagRegex.replace(text) { match ->
+        qualifyImageUrl(match.groupValues[2], host)?.let { images += it }
+        ""
+    }
+    return strippedText.trim() to images
+}
+
+private fun qualifyImageUrl(src: String, host: String?): String? = when {
+    src.isBlank() -> null
+    src.startsWith("http://", ignoreCase = true) -> src
+    src.startsWith("https://", ignoreCase = true) -> src
+    src.startsWith("data:", ignoreCase = true) -> src
+    src.startsWith("//") -> src
+    host.isNullOrBlank() -> null
+    src.startsWith("/") -> "${host.trimEnd('/')}$src"
+    else -> "${host.trimEnd('/')}/$src"
 }
 
 private fun createUserImageUrl(host: String?, id: String): String {

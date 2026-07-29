@@ -16,8 +16,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import coil3.compose.AsyncImage
 import com.mohamedrejeb.richeditor.model.rememberRichTextState
 import com.mohamedrejeb.richeditor.ui.material3.RichText
 import dev.juanrincon.simmerly.recipes.domain.model.Note
@@ -142,11 +145,21 @@ private fun InstructionEntry(instruction: InstructionUi, modifier: Modifier = Mo
                 Text(it.formattedDisplay, style = MaterialTheme.typography.bodySmall)
             }
         }
+
         RichText(
             state = richTextState,
-            imageLoader = Coil3ImageLoader,
             modifier = Modifier.fillMaxWidth()
         )
+        instruction.images.forEach { image ->
+            AsyncImage(
+                model = image,
+                contentDescription = null,
+                contentScale = ContentScale.FillWidth,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(MaterialTheme.shapes.medium)
+            )
+        }
     }
 }
 

@@ -5,5 +5,6 @@ data class InstructionUi(
     val title: String?,
     val summary: String,
     val text: String,
+    val images: List<String> = emptyList(),
     val associatedIngredients: List<IngredientUi>
 )
