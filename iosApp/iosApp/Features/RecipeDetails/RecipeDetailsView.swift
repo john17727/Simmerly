@@ -1,5 +1,5 @@
-import SwiftUI
 import Shared
+import SwiftUI
 
 struct RecipeDetailsView: View {
     let state: RecipeDetailsState
@@ -24,13 +24,20 @@ struct RecipeDetailsView: View {
             }
         }
         .navigationTitle(state.recipe.title.localized)
-        .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Menu {
-                    Button("Recipe Settings", systemImage: "gearshape", action: onShowSettings)
+                    Button(
+                        "Recipe Settings",
+                        systemImage: "gearshape",
+                        action: onShowSettings
+                    )
                     if !state.recipe.settings.disableComments {
-                        Button("Comments", systemImage: "bubble.left.and.bubble.right", action: onNavigateToComments)
+                        Button(
+                            "Comments",
+                            systemImage: "bubble.left.and.bubble.right",
+                            action: onNavigateToComments
+                        )
                     }
                 } label: {
                     Image(systemName: "ellipsis.circle")
@@ -50,8 +57,6 @@ struct RecipeDetailsView: View {
                 heroImage
 
                 VStack(alignment: .leading, spacing: 8) {
-                    Text(state.recipe.title.localized)
-                        .font(SimmerlyFont.headlineMedium)
                     RecipeMetaRow(
                         rating: state.recipe.rating?.doubleValue,
                         totalTime: state.recipe.totalTime,
@@ -59,7 +64,9 @@ struct RecipeDetailsView: View {
                         cookTime: state.recipe.performTime
                     )
                     TagRow(tags: state.recipe.tags)
-                    if let description = state.recipe.description_?.localized, !description.isEmpty {
+                    if let description = state.recipe.description_?.localized,
+                        !description.isEmpty
+                    {
                         Text(description)
                             .font(SimmerlyFont.bodyMedium)
                             .foregroundStyle(SimmerlyColor.onSurfaceVariant)
@@ -111,7 +118,8 @@ private let previewRecipe = RecipeDetailUi(
     title: UiTextDynamic(text: "Spaghetti Carbonara"),
     image: "",
     description: UiTextDynamic(
-        text: "A classic Roman pasta dish made with eggs, Pecorino Romano, guanciale, and black pepper. "
+        text:
+            "A classic Roman pasta dish made with eggs, Pecorino Romano, guanciale, and black pepper. "
             + "Rich, creamy, and deeply satisfying without a drop of cream."
     ),
     rating: KotlinDouble(value: 4.8),
@@ -161,7 +169,8 @@ private let previewRecipe = RecipeDetailUi(
             id: "1",
             title: "Cook the pasta",
             summary: "Boil spaghetti in salted water until al dente.",
-            text: "Bring a large pot of salted water to a boil. Cook spaghetti according to package "
+            text:
+                "Bring a large pot of salted water to a boil. Cook spaghetti according to package "
                 + "instructions until al dente. Reserve 1 cup of pasta water before draining.",
             images: [],
             ingredientIds: ["ingredient-1"]
@@ -170,7 +179,8 @@ private let previewRecipe = RecipeDetailUi(
             id: "2",
             title: "Prepare the sauce",
             summary: "Whisk eggs and cheese, then combine with pasta.",
-            text: "Whisk together eggs and Pecorino Romano in a bowl. Remove pasta from heat, add "
+            text:
+                "Whisk together eggs and Pecorino Romano in a bowl. Remove pasta from heat, add "
                 + "guanciale, then stir in egg mixture, adding pasta water gradually to achieve a "
                 + "creamy consistency.",
             images: [],

@@ -1,5 +1,5 @@
-import SwiftUI
 import Shared
+import SwiftUI
 
 struct RecipeCard: View {
     let recipe: RecipeSummary
@@ -7,9 +7,11 @@ struct RecipeCard: View {
 
     var body: some View {
         Button(action: onTap) {
-            HStack(alignment: .top, spacing: 16) {
+            HStack(alignment: .center, spacing: 16) {
                 RemoteImage(url: recipe.image) {
-                    RoundedRectangle(cornerRadius: 8).fill(SimmerlyColor.surfaceContainer)
+                    RoundedRectangle(cornerRadius: 8).fill(
+                        SimmerlyColor.surfaceContainer
+                    )
                 }
                 .aspectRatio(contentMode: .fill)
                 .frame(width: 100, height: 100)
@@ -21,22 +23,27 @@ struct RecipeCard: View {
                         .foregroundStyle(SimmerlyColor.onSurface)
                         .multilineTextAlignment(.leading)
 
-                    HStack(spacing: 8) {
+                    HStack {
                         if recipe.isFavorite {
                             Image(systemName: "heart.fill")
                                 .font(.system(size: 12))
                                 .foregroundStyle(SimmerlyColor.primary)
                         }
                         if let rating = recipe.rating {
-                            Label("\(rating)", systemImage: "star.fill")
+                            HStack(spacing: 4) {
+                                Image(systemName: "star.fill")
+                                Text("\(rating)")
+                            }
                         }
                         if let totalTime = recipe.totalTime {
-                            Label(totalTime, systemImage: "timer")
+                            HStack(spacing: 4) {
+                                Image(systemName: "timer")
+                                Text(totalTime)
+                            }
                         }
                     }
                     .font(SimmerlyFont.bodySmall)
                     .foregroundStyle(SimmerlyColor.onSurfaceVariant)
-                    .labelStyle(.titleAndIcon)
 
                     TagRow(tags: recipe.tags)
                 }
@@ -44,10 +51,19 @@ struct RecipeCard: View {
                 Spacer(minLength: 0)
             }
             .padding(10)
+            .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .background(SimmerlyColor.surface, in: RoundedRectangle(cornerRadius: 12))
-        .overlay(RoundedRectangle(cornerRadius: 12).strokeBorder(SimmerlyColor.outlineVariant, lineWidth: 1))
+        .background(
+            SimmerlyColor.surface,
+            in: RoundedRectangle(cornerRadius: 12)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 12).strokeBorder(
+                SimmerlyColor.outlineVariant,
+                lineWidth: 1
+            )
+        )
     }
 }
 
@@ -69,4 +85,23 @@ struct RecipeCardSkeleton: View {
         .padding(10)
         .redacted(reason: .placeholder)
     }
+}
+
+// MARK: - Previews
+
+private let recipe =
+    RecipeSummary(
+        id: "1",
+        name: "Recipe 1",
+        image: "",
+        tags: [],
+        rating: 4.5,
+        totalTime: "1 hr 20 min",
+        prepTime: "20 min",
+        performTime: "1 hr",
+        description: "Recip1 is delicious"
+    )
+
+#Preview {
+    RecipeCard(recipe: recipe, onTap: {})
 }
