@@ -1,3 +1,7 @@
+import co.touchlab.skie.configuration.DefaultArgumentInterop
+import co.touchlab.skie.configuration.FlowInterop
+import co.touchlab.skie.configuration.SealedInterop
+import co.touchlab.skie.configuration.SuspendInterop
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
@@ -6,6 +10,7 @@ plugins {
     alias(libs.plugins.kotlinSerialization)
     alias(libs.plugins.room)
     alias(libs.plugins.ksp)
+    alias(libs.plugins.skie)
 }
 
 kotlin {
@@ -29,6 +34,8 @@ kotlin {
         iosTarget.binaries.framework {
             baseName = "Shared"
             isStatic = true
+            export(libs.androidx.lifecycle.viewmodel)
+            export(libs.orbit.core)
         }
     }
 
@@ -101,6 +108,17 @@ kotlin {
             not ignore the annotation.
              */
             languageSettings.optIn("kotlin.time.ExperimentalTime")
+        }
+    }
+}
+
+skie {
+    features {
+        group {
+            SuspendInterop.Enabled(true)
+            FlowInterop.Enabled(true)
+            SealedInterop.Enabled(true)
+            DefaultArgumentInterop.Enabled(true)
         }
     }
 }

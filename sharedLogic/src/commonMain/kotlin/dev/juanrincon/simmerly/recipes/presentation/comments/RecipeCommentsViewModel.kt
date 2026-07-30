@@ -6,6 +6,8 @@ import dev.juanrincon.simmerly.recipes.presentation.comments.orbit.RecipeComment
 import dev.juanrincon.simmerly.recipes.presentation.comments.orbit.RecipeCommentsSideEffect
 import dev.juanrincon.simmerly.recipes.presentation.comments.orbit.RecipeCommentsState
 import dev.juanrincon.simmerly.recipes.presentation.details.mappers.toCommentUi
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import org.orbitmvi.orbit.OrbitContainer
@@ -22,6 +24,10 @@ class RecipeCommentsViewModel(
         orbitContainer(initialState = RecipeCommentsState()) {
             observeComments()
         }
+
+    // Concrete, non-generic accessors for Swift — see WelcomeViewModel for why these are needed.
+    val stateFlow: StateFlow<RecipeCommentsState> get() = container.stateFlow
+    val sideEffectFlow: Flow<RecipeCommentsSideEffect> get() = container.sideEffectFlow
 
     fun onEvent(event: RecipeCommentsIntent) {
         when (event) {

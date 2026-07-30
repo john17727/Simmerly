@@ -9,6 +9,8 @@ import dev.juanrincon.simmerly.welcome.presentation.model.CredentialType
 import dev.juanrincon.simmerly.welcome.presentation.orbit.WelcomeIntent
 import dev.juanrincon.simmerly.welcome.presentation.orbit.WelcomeSideEffect
 import dev.juanrincon.simmerly.welcome.presentation.orbit.WelcomeState
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.StateFlow
 import org.orbitmvi.orbit.OrbitContainer
 import org.orbitmvi.orbit.OrbitContainerHost
 import org.orbitmvi.orbit.viewmodel.orbitContainer
@@ -19,6 +21,13 @@ class WelcomeViewModel(
 
     override val container: OrbitContainer<WelcomeState, WelcomeState, WelcomeSideEffect> =
         orbitContainer(initialState = WelcomeState())
+
+    // Concrete, non-generic accessors for Swift: container.stateFlow/sideEffectFlow are typed
+    // through OrbitContainer's own generic parameters, which Kotlin/Native's Objective-C exporter
+    // erases to untyped `id` in the generated header. Declaring them here as real members gives
+    // SKIE a class-level Flow declaration it can specialize into a typed AsyncSequence in Swift.
+    val stateFlow: StateFlow<WelcomeState> get() = container.stateFlow
+    val sideEffectFlow: Flow<WelcomeSideEffect> get() = container.sideEffectFlow
 
     fun onEvent(event: WelcomeIntent) {
         when (event) {

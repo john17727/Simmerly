@@ -9,6 +9,8 @@ import dev.juanrincon.simmerly.recipes.presentation.details.orbit.RecipeDetailsI
 import dev.juanrincon.simmerly.recipes.presentation.details.orbit.RecipeDetailsSideEffect
 import dev.juanrincon.simmerly.recipes.presentation.details.orbit.RecipeDetailsState
 import dev.juanrincon.simmerly.recipes.presentation.details.orbit.RecipeTab
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import org.orbitmvi.orbit.OrbitContainer
 import org.orbitmvi.orbit.OrbitContainerHost
@@ -25,6 +27,10 @@ class RecipeDetailsViewModel(
         orbitContainer(initialState = RecipeDetailsState()) {
             observeRecipe()
         }
+
+    // Concrete, non-generic accessors for Swift — see WelcomeViewModel for why these are needed.
+    val stateFlow: StateFlow<RecipeDetailsState> get() = container.stateFlow
+    val sideEffectFlow: Flow<RecipeDetailsSideEffect> get() = container.sideEffectFlow
 
     fun onEvent(event: RecipeDetailsIntent) {
         when (event) {

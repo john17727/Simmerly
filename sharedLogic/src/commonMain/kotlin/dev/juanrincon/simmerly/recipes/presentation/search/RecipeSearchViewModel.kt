@@ -5,6 +5,8 @@ import dev.juanrincon.simmerly.recipes.domain.RecipeRepository
 import dev.juanrincon.simmerly.recipes.presentation.search.orbit.RecipeSearchIntent
 import dev.juanrincon.simmerly.recipes.presentation.search.orbit.RecipeSearchSideEffect
 import dev.juanrincon.simmerly.recipes.presentation.search.orbit.RecipeSearchState
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.StateFlow
 import org.orbitmvi.orbit.OrbitContainer
 import org.orbitmvi.orbit.OrbitContainerHost
 import org.orbitmvi.orbit.viewmodel.orbitContainer
@@ -19,6 +21,10 @@ class RecipeSearchViewModel(
             loadRecentlyViewed()
             loadRecentQueries()
         }
+
+    // Concrete, non-generic accessors for Swift — see WelcomeViewModel for why these are needed.
+    val stateFlow: StateFlow<RecipeSearchState> get() = container.stateFlow
+    val sideEffectFlow: Flow<RecipeSearchSideEffect> get() = container.sideEffectFlow
 
     fun onEvent(event: RecipeSearchIntent) {
         when (event) {

@@ -27,6 +27,10 @@ class RecipeListViewModel(
     override val container: OrbitContainer<RecipeListState, RecipeListState, RecipeListSideEffect> =
         orbitContainer(initialState = RecipeListState())
 
+    // Concrete, non-generic accessors for Swift — see WelcomeViewModel for why these are needed.
+    val stateFlow: StateFlow<RecipeListState> get() = container.stateFlow
+    val sideEffectFlow: Flow<RecipeListSideEffect> get() = container.sideEffectFlow
+
     val recipes: Flow<PagingData<RecipeSummary>> = repository.recipeList()
         .cachedIn(viewModelScope)
 

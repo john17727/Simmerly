@@ -30,6 +30,7 @@ arrow = "2.2.3"
 assertk = "0.28.1"
 turbine = "1.2.1"
 orbit-mvi = "12.0.0"
+skie = "0.10.14"
 
 [libraries]
 components-resources = { module = "org.jetbrains.compose.components:components-resources", version.ref = "composeMultiplatform" }
@@ -110,6 +111,7 @@ kotlinJvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 kotlinSerialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 room = { id = "androidx.room3", version.ref = "room" }
+skie = { id = "co.touchlab.skie", version.ref = "skie" }
 
 [bundles]
 ktor = [
