@@ -22,7 +22,7 @@ import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
-import org.orbitmvi.orbit.test.test
+import org.orbitmvi.orbit.test.testWithInternalState
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -65,14 +65,14 @@ class RecipeDetailsViewModelTest {
     @Test
     fun observeRecipeEmitsLoadingThenSetsRecipeInState() = runTest(testDispatcher) {
         // Start with loading=false so the Loading emission produces an observable state change
-        viewModel.test(this, initialState = RecipeDetailsState(loading = false)) {
+        viewModel.testWithInternalState(this, initialState = RecipeDetailsState(loading = false)) {
             runOnCreate()
             repo.recipeDetailsFlow().emit(Either.Right(LoadingResult.Loading))
-            assertThat(awaitState().loading).isTrue()
+            assertThat(awaitInternalState().loading).isTrue()
 
             repo.recipeDetailsFlow()
                 .emit(Either.Right(LoadingResult.Loaded(aRecipeDetail(id = "test-recipe"))))
-            val state = awaitState()
+            val state = awaitInternalState()
             assertThat(state.loading).isFalse()
             assertThat(state.recipe.id).isEqualTo("test-recipe")
             assertThat(state.error).isNull()
@@ -82,10 +82,10 @@ class RecipeDetailsViewModelTest {
 
     @Test
     fun observeRecipeFetchErrorWhenNoRecipeLoadedSetsErrorState() = runTest(testDispatcher) {
-        viewModel.test(this) {
+        viewModel.testWithInternalState(this) {
             runOnCreate()
             repo.recipeDetailsFlow().emit(Either.Left(RecipesError.FetchError))
-            val state = awaitState()
+            val state = awaitInternalState()
             assertThat(state.error).isEqualTo(RecipesError.FetchError)
             assertThat(state.loading).isFalse()
             cancelAndIgnoreRemainingItems()
@@ -105,9 +105,9 @@ class RecipeDetailsViewModelTest {
                 ingredients = listOf(anIngredientUi(quantity = 100.0))
             )
         )
-        viewModel.test(this, initialState = loadedState) {
+        viewModel.testWithInternalState(this, initialState = loadedState) {
             viewModel.onEvent(RecipeDetailsIntent.AddServing)
-            val state = awaitState()
+            val state = awaitInternalState()
             assertThat(state.recipe.servings).isEqualTo(5.0)
             assertThat(state.recipe.ingredients[0].quantity).isEqualTo(125.0)
         }
@@ -119,9 +119,9 @@ class RecipeDetailsViewModelTest {
             loading = false,
             recipe = aRecipeDetailUi(servings = 4.0)
         )
-        viewModel.test(this, initialState = loadedState) {
+        viewModel.testWithInternalState(this, initialState = loadedState) {
             viewModel.onEvent(RecipeDetailsIntent.RemoveServing)
-            assertThat(awaitState().recipe.servings).isEqualTo(3.0)
+            assertThat(awaitInternalState().recipe.servings).isEqualTo(3.0)
         }
     }
 
@@ -131,7 +131,7 @@ class RecipeDetailsViewModelTest {
             loading = false,
             recipe = aRecipeDetailUi(servings = 1.0)
         )
-        viewModel.test(this, initialState = loadedState) {
+        viewModel.testWithInternalState(this, initialState = loadedState) {
             viewModel.onEvent(RecipeDetailsIntent.RemoveServing)
             // clamped (1.0) == current (1.0) → early return, no reduce called
         }
@@ -145,9 +145,9 @@ class RecipeDetailsViewModelTest {
     @Test
     fun showSettingsSetsShowSettingsTrue() = runTest(testDispatcher) {
         val loadedState = RecipeDetailsState(loading = false, recipe = aRecipeDetailUi())
-        viewModel.test(this, initialState = loadedState) {
+        viewModel.testWithInternalState(this, initialState = loadedState) {
             viewModel.onEvent(RecipeDetailsIntent.ShowSettings)
-            assertThat(awaitState().showSettings).isTrue()
+            assertThat(awaitInternalState().showSettings).isTrue()
         }
     }
 
@@ -158,9 +158,9 @@ class RecipeDetailsViewModelTest {
             recipe = aRecipeDetailUi(),
             showSettings = true
         )
-        viewModel.test(this, initialState = loadedState) {
+        viewModel.testWithInternalState(this, initialState = loadedState) {
             viewModel.onEvent(RecipeDetailsIntent.DismissSettings)
-            assertThat(awaitState().showSettings).isFalse()
+            assertThat(awaitInternalState().showSettings).isFalse()
         }
     }
 
@@ -172,9 +172,9 @@ class RecipeDetailsViewModelTest {
     fun updateSettingsOptimisticallyUpdatesRecipeSettingsInState() = runTest(testDispatcher) {
         val newSettings = aSettings(showNutrition = true, disableComments = false)
         val loadedState = RecipeDetailsState(loading = false, recipe = aRecipeDetailUi())
-        viewModel.test(this, initialState = loadedState) {
+        viewModel.testWithInternalState(this, initialState = loadedState) {
             viewModel.onEvent(RecipeDetailsIntent.UpdateSettings(newSettings))
-            assertThat(awaitState().recipe.settings).isEqualTo(newSettings)
+            assertThat(awaitInternalState().recipe.settings).isEqualTo(newSettings)
         }
     }
 
@@ -185,9 +185,9 @@ class RecipeDetailsViewModelTest {
             loading = false,
             recipe = aRecipeDetailUi(id = "test-recipe")
         )
-        viewModel.test(this, initialState = loadedState) {
+        viewModel.testWithInternalState(this, initialState = loadedState) {
             viewModel.onEvent(RecipeDetailsIntent.UpdateSettings(newSettings))
-            awaitState() // optimistic update
+            awaitInternalState() // optimistic update
         }
         assertThat(repo.lastUpdateSettingsCall?.first).isEqualTo("test-recipe")
         assertThat(repo.lastUpdateSettingsCall?.second).isEqualTo(newSettings)

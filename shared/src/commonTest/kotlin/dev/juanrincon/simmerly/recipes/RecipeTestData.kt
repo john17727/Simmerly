@@ -1,6 +1,5 @@
 package dev.juanrincon.simmerly.recipes
 
-import dev.juanrincon.simmerly.recipes.domain.LoadingResult
 import dev.juanrincon.simmerly.recipes.domain.model.Comment
 import dev.juanrincon.simmerly.recipes.domain.model.Nutrition
 import dev.juanrincon.simmerly.recipes.domain.model.RecipeDetail
@@ -51,7 +50,11 @@ fun aRecipeDetailUi(
     ingredients = ingredients
 )
 
-fun anIngredientUi(quantity: Double = 100.0) = IngredientUi(
+fun anIngredientUi(
+    quantity: Double = 100.0,
+    referenceId: String = "ingredient-1"
+) = IngredientUi(
+    referenceId = referenceId,
     quantity = quantity,
     display = "$quantity g pasta",
     food = null,

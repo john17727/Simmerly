@@ -1,14 +1,14 @@
 package dev.juanrincon.simmerly.recipes.presentation.details.mappers
 
 import assertk.assertThat
+import assertk.assertions.isEmpty
 import assertk.assertions.isEqualTo
 import assertk.assertions.isNull
+import dev.juanrincon.simmerly.recipes.aRecipeDetail
 import dev.juanrincon.simmerly.recipes.domain.model.Food
 import dev.juanrincon.simmerly.recipes.domain.model.Ingredient
 import dev.juanrincon.simmerly.recipes.domain.model.Instruction
 import dev.juanrincon.simmerly.recipes.domain.model.Nutrition
-import dev.juanrincon.simmerly.recipes.domain.model.Unit
-import dev.juanrincon.simmerly.recipes.aRecipeDetail
 import kotlin.test.Test
 import kotlin.time.Clock
 import kotlin.time.ExperimentalTime
@@ -160,6 +160,29 @@ class PresentationMappersTest {
         assertThat(ui.title).isNull()
     }
 
+    @Test
+    fun instructionToInstructionUiMapsAssociatedIngredientsToTheirReferenceIds() {
+        val instruction = anInstruction(
+            associatedIngredients = listOf(
+                anIngredient(referenceId = "ref-1"),
+                anIngredient(referenceId = "ref-2")
+            )
+        )
+
+        val ui = instruction.toInstructionUi(step = 1)
+
+        assertThat(ui.ingredientIds).isEqualTo(listOf("ref-1", "ref-2"))
+    }
+
+    @Test
+    fun instructionToInstructionUiWithoutAssociatedIngredientsMapsEmptyIds() {
+        val instruction = anInstruction()
+
+        val ui = instruction.toInstructionUi(step = 1)
+
+        assertThat(ui.ingredientIds).isEmpty()
+    }
+
     // endregion
 
     // region Nutrition.toNutritionUi
@@ -208,7 +231,8 @@ class PresentationMappersTest {
     private fun anIngredient(
         quantity: Double = 100.0,
         display: String = "100g pasta",
-        note: String? = null
+        note: String? = null,
+        referenceId: String = "ref-1"
     ) = Ingredient(
         quantity = quantity,
         unit = null,
@@ -217,20 +241,21 @@ class PresentationMappersTest {
         display = display,
         title = null,
         originalText = display,
-        referenceId = "ref-1"
+        referenceId = referenceId
     )
 
     private fun anInstruction(
         id: String = "instr-1",
         title: String = "",
         summary: String = "Step summary",
-        text: String = "Do something"
+        text: String = "Do something",
+        associatedIngredients: List<Ingredient> = emptyList()
     ) = Instruction(
         id = id,
         title = title,
         summary = summary,
         text = text,
-        associatedIngredients = emptyList()
+        associatedIngredients = associatedIngredients
     )
 
     private fun aNutrition(

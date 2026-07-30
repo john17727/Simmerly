@@ -16,7 +16,7 @@ import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
-import org.orbitmvi.orbit.test.test
+import org.orbitmvi.orbit.test.testWithInternalState
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -59,12 +59,12 @@ class RecipeSearchViewModelTest {
 
     @Test
     fun fetchRecipesEmitsLoadingThenRecipesInState() = runTest(testDispatcher) {
-        viewModel.test(this) {
+        viewModel.testWithInternalState(this) {
             runOnCreate()
-            assertThat(awaitState().isLoading).isTrue()
+            assertThat(awaitInternalState().isLoading).isTrue()
 
             repo.allRecipesFlow.emit(listOf(aRecipeSummary()))
-            val state = awaitState()
+            val state = awaitInternalState()
             assertThat(state.isLoading).isFalse()
             assertThat(state.recipes).hasSize(1)
             cancelAndIgnoreRemainingItems()
@@ -73,10 +73,11 @@ class RecipeSearchViewModelTest {
 
     @Test
     fun loadRecentlyViewedPopulatesRecentRecipesInState() = runTest(testDispatcher) {
-        viewModel.test(this) {
+        viewModel.testWithInternalState(this) {
             runOnCreate()
+            skipItems(1) // fetchRecipes' eager isLoading=true state, unrelated to this test
             repo.recentlyViewedFlow.emit(listOf(aRecipeSummary(id = "recent-1")))
-            val state = awaitState()
+            val state = awaitInternalState()
             assertThat(state.recentRecipes).hasSize(1)
             assertThat(state.recentRecipes[0].id).isEqualTo("recent-1")
             cancelAndIgnoreRemainingItems()
@@ -85,10 +86,11 @@ class RecipeSearchViewModelTest {
 
     @Test
     fun loadRecentQueriesPopulatesRecentQueriesInState() = runTest(testDispatcher) {
-        viewModel.test(this) {
+        viewModel.testWithInternalState(this) {
             runOnCreate()
+            skipItems(1) // fetchRecipes' eager isLoading=true state, unrelated to this test
             repo.recentQueriesFlow.emit(listOf("pasta", "pizza"))
-            val state = awaitState()
+            val state = awaitInternalState()
             assertThat(state.recentQueries).hasSize(2)
             assertThat(state.recentQueries[0]).isEqualTo("pasta")
             cancelAndIgnoreRemainingItems()
@@ -101,32 +103,32 @@ class RecipeSearchViewModelTest {
 
     @Test
     fun onQueryChangedUpdatesSearchQuery() = runTest(testDispatcher) {
-        viewModel.test(this) {
+        viewModel.testWithInternalState(this) {
             viewModel.onEvent(RecipeSearchIntent.OnQueryChanged("pasta"))
-            assertThat(awaitState().searchQuery).isEqualTo("pasta")
+            assertThat(awaitInternalState().searchQuery).isEqualTo("pasta")
         }
     }
 
     @Test
     fun onQuerySubmittedUpdatesSubmittedQuery() = runTest(testDispatcher) {
-        viewModel.test(this) {
+        viewModel.testWithInternalState(this) {
             viewModel.onEvent(RecipeSearchIntent.OnQuerySubmitted("pasta"))
-            assertThat(awaitState().submittedQuery).isEqualTo("pasta")
+            assertThat(awaitInternalState().submittedQuery).isEqualTo("pasta")
         }
     }
 
     @Test
     fun onQuerySubmittedRecordsQueryWhenNotBlank() = runTest(testDispatcher) {
-        viewModel.test(this) {
+        viewModel.testWithInternalState(this) {
             viewModel.onEvent(RecipeSearchIntent.OnQuerySubmitted("pasta"))
-            awaitState()
+            awaitInternalState()
         }
         assertThat(repo.recordedSearchQueries).contains("pasta")
     }
 
     @Test
     fun onQuerySubmittedDoesNotRecordBlankQuery() = runTest(testDispatcher) {
-        viewModel.test(this) {
+        viewModel.testWithInternalState(this) {
             viewModel.onEvent(RecipeSearchIntent.OnQuerySubmitted(""))
         }
         assertThat(repo.recordedSearchQueries).isEmpty()
@@ -134,7 +136,7 @@ class RecipeSearchViewModelTest {
 
     @Test
     fun onRecipeViewedRecordsRecipeView() = runTest(testDispatcher) {
-        viewModel.test(this) {
+        viewModel.testWithInternalState(this) {
             viewModel.onEvent(RecipeSearchIntent.OnRecipeViewed("recipe-1"))
         }
         assertThat(repo.recordedRecipeViews).contains("recipe-1")

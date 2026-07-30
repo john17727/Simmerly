@@ -1,11 +1,15 @@
 package dev.juanrincon.simmerly.recipes.data.mappers
 
 import assertk.assertThat
+import assertk.assertions.isEmpty
 import assertk.assertions.isEqualTo
 import assertk.assertions.isNull
 import dev.juanrincon.simmerly.recipes.data.remote.dto.CategoryDto
+import dev.juanrincon.simmerly.recipes.data.remote.dto.IngredientDto
+import dev.juanrincon.simmerly.recipes.data.remote.dto.InstructionDto
 import dev.juanrincon.simmerly.recipes.data.remote.dto.NutritionDto
 import dev.juanrincon.simmerly.recipes.data.remote.dto.RecipeSummaryDto
+import dev.juanrincon.simmerly.recipes.data.remote.dto.ReferenceDto
 import dev.juanrincon.simmerly.recipes.data.remote.dto.SettingsDto
 import dev.juanrincon.simmerly.recipes.data.remote.dto.TagDto
 import dev.juanrincon.simmerly.recipes.data.remote.dto.ToolDto
@@ -166,7 +170,64 @@ class DataMappersTest {
 
     // endregion
 
+    // region InstructionDto.toEntityWithRelations
+
+    @Test
+    fun instructionDtoToEntityWithRelationsResolvesIngredientReferences() {
+        val ingredients =
+            listOf(anIngredient("ref-1"), anIngredient("ref-2"), anIngredient("ref-3"))
+        val dto = anInstructionDto(referenceIds = listOf("ref-3", "ref-1"))
+
+        val entity = dto.toEntityWithRelations(recipeId = "recipe-1", ingredients = ingredients)
+
+        assertThat(entity.instruction.recipeId).isEqualTo("recipe-1")
+        assertThat(entity.ingredients.map { it.ingredient.id }).isEqualTo(listOf("ref-3", "ref-1"))
+    }
+
+    @Test
+    fun instructionDtoToEntityWithRelationsSkipsUnknownIngredientReferences() {
+        val ingredients = listOf(anIngredient("ref-1"))
+        val dto = anInstructionDto(referenceIds = listOf("ref-1", "deleted-ref"))
+
+        val entity = dto.toEntityWithRelations(recipeId = "recipe-1", ingredients = ingredients)
+
+        assertThat(entity.ingredients.map { it.ingredient.id }).isEqualTo(listOf("ref-1"))
+    }
+
+    @Test
+    fun instructionDtoToEntityWithRelationsWithNoReferencesMapsNoIngredients() {
+        val dto = anInstructionDto(referenceIds = emptyList())
+
+        val entity = dto.toEntityWithRelations(recipeId = "recipe-1", ingredients = emptyList())
+
+        assertThat(entity.ingredients).isEmpty()
+    }
+
+    // endregion
+
     // region Helpers
+
+    private fun anInstructionDto(
+        referenceIds: List<String>,
+        id: String = "instruction-1"
+    ) = InstructionDto(
+        id = id,
+        title = "",
+        summary = "Sautee Onions",
+        text = "Saute the onion.",
+        ingredientReferences = referenceIds.map { ReferenceDto(referenceId = it) }
+    )
+
+    private fun anIngredient(referenceId: String) = IngredientDto(
+        quantity = 1.0,
+        unit = null,
+        food = null,
+        note = null,
+        display = "1 onion",
+        title = null,
+        originalText = "1 onion",
+        referenceId = referenceId
+    ).toEntityWithRelations("recipe-1")
 
     private fun aRecipeSummaryDto(
         id: String = "recipe-1",

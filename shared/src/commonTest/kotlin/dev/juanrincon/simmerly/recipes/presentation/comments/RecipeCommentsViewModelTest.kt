@@ -15,7 +15,7 @@ import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
-import org.orbitmvi.orbit.test.test
+import org.orbitmvi.orbit.test.testWithInternalState
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -55,10 +55,10 @@ class RecipeCommentsViewModelTest {
 
     @Test
     fun observeCommentsEmitsCommentsMappedToCommentUi() = runTest(testDispatcher) {
-        viewModel.test(this) {
+        viewModel.testWithInternalState(this) {
             runOnCreate()
             repo.commentsFlow.emit(listOf(aComment(text = "Hello", authorName = "John Doe")))
-            val state = awaitState()
+            val state = awaitInternalState()
             assertThat(state.comments).hasSize(1)
             assertThat(state.comments[0].text).isEqualTo("Hello")
             assertThat(state.comments[0].author).isEqualTo("John Doe")
@@ -72,19 +72,19 @@ class RecipeCommentsViewModelTest {
 
     @Test
     fun onCommentTextChangedUpdatesCommentText() = runTest(testDispatcher) {
-        viewModel.test(this) {
+        viewModel.testWithInternalState(this) {
             viewModel.onEvent(RecipeCommentsIntent.OnCommentTextChanged("Great recipe!"))
-            assertThat(awaitState().commentText).isEqualTo("Great recipe!")
+            assertThat(awaitInternalState().commentText).isEqualTo("Great recipe!")
         }
     }
 
     @Test
     fun onSendCommentClickedCallsAddCommentWithRecipeIdAndText() = runTest(testDispatcher) {
-        viewModel.test(this) {
+        viewModel.testWithInternalState(this) {
             viewModel.onEvent(RecipeCommentsIntent.OnCommentTextChanged("Hello"))
-            awaitState() // commentText = "Hello"
+            awaitInternalState() // commentText = "Hello"
             viewModel.onEvent(RecipeCommentsIntent.OnSendCommentClicked)
-            awaitState() // commentText = ""
+            awaitInternalState() // commentText = ""
         }
         assertThat(repo.lastAddCommentCall?.first).isEqualTo("test-recipe")
         assertThat(repo.lastAddCommentCall?.second).isEqualTo("Hello")
@@ -92,20 +92,20 @@ class RecipeCommentsViewModelTest {
 
     @Test
     fun onSendCommentClickedClearsCommentTextOnSuccess() = runTest(testDispatcher) {
-        viewModel.test(this) {
+        viewModel.testWithInternalState(this) {
             viewModel.onEvent(RecipeCommentsIntent.OnCommentTextChanged("Hello"))
-            awaitState()
+            awaitInternalState()
             viewModel.onEvent(RecipeCommentsIntent.OnSendCommentClicked)
-            assertThat(awaitState().commentText).isEqualTo("")
+            assertThat(awaitInternalState().commentText).isEqualTo("")
         }
     }
 
     @Test
     fun onSendCommentClickedDoesNotClearCommentTextOnFailure() = runTest(testDispatcher) {
         repo.addCommentResult = RecipesError.FetchError.left()
-        viewModel.test(this) {
+        viewModel.testWithInternalState(this) {
             viewModel.onEvent(RecipeCommentsIntent.OnCommentTextChanged("Hello"))
-            awaitState() // commentText = "Hello"
+            awaitInternalState() // commentText = "Hello"
             viewModel.onEvent(RecipeCommentsIntent.OnSendCommentClicked)
             // ifLeft block is empty (TODO) → no reduce → no state emission
         }

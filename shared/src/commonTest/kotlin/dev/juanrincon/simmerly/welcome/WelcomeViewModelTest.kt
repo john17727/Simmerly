@@ -1,12 +1,12 @@
 package dev.juanrincon.simmerly.welcome
 
+import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import arrow.core.left
 import assertk.assertThat
 import assertk.assertions.isEqualTo
 import assertk.assertions.isFalse
 import assertk.assertions.isInstanceOf
 import assertk.assertions.isTrue
-import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import dev.juanrincon.simmerly.auth.FakeAuthRepository
 import dev.juanrincon.simmerly.auth.domain.LoginError
 import dev.juanrincon.simmerly.welcome.presentation.WelcomeViewModel
@@ -20,7 +20,7 @@ import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
-import org.orbitmvi.orbit.test.test
+import org.orbitmvi.orbit.test.testWithInternalState
 import simmerly.shared.generated.resources.Res
 import simmerly.shared.generated.resources.login_failed
 import simmerly.shared.generated.resources.something_went_wrong
@@ -67,19 +67,19 @@ class WelcomeViewModelTest {
 
     @Test
     fun onCredentialTypeChangedCredentialsToApiTokenUpdatesCredentialType() = runTest {
-        viewModel.test(this) {
+        viewModel.testWithInternalState(this) {
             viewModel.onEvent(WelcomeIntent.OnCredentialTypeChanged(CredentialType.API_TOKEN))
-            assertThat(awaitState().credentialType).isEqualTo(CredentialType.API_TOKEN)
+            assertThat(awaitInternalState().credentialType).isEqualTo(CredentialType.API_TOKEN)
         }
     }
 
     @Test
     fun onCredentialTypeChangedApiTokenBackToCredentialsUpdatesCredentialType() = runTest {
-        viewModel.test(this) {
+        viewModel.testWithInternalState(this) {
             viewModel.onEvent(WelcomeIntent.OnCredentialTypeChanged(CredentialType.API_TOKEN))
-            awaitState() // consume API_TOKEN state
+            awaitInternalState() // consume API_TOKEN state
             viewModel.onEvent(WelcomeIntent.OnCredentialTypeChanged(CredentialType.CREDENTIALS))
-            assertThat(awaitState().credentialType).isEqualTo(CredentialType.CREDENTIALS)
+            assertThat(awaitInternalState().credentialType).isEqualTo(CredentialType.CREDENTIALS)
         }
     }
 
@@ -174,33 +174,33 @@ class WelcomeViewModelTest {
 
     @Test
     fun loginWithPlainDomainPrependsHttpsPrefix() = runTest {
-        viewModel.test(this) {
+        viewModel.testWithInternalState(this) {
             fillCredentials(serverAddress = "myserver.com")
             viewModel.onEvent(WelcomeIntent.OnLoginClicked)
-            awaitState() // isLoading = true
-            awaitState() // isLoading = false
+            awaitInternalState() // isLoading = true
+            awaitInternalState() // isLoading = false
         }
         assertThat(repo.lastCredentialsLoginCall?.first).isEqualTo("https://myserver.com")
     }
 
     @Test
     fun loginWithExistingHttpsPrefixDoesNotDoublePrepend() = runTest {
-        viewModel.test(this) {
+        viewModel.testWithInternalState(this) {
             fillCredentials(serverAddress = "https://myserver.com")
             viewModel.onEvent(WelcomeIntent.OnLoginClicked)
-            awaitState() // isLoading = true
-            awaitState() // isLoading = false
+            awaitInternalState() // isLoading = true
+            awaitInternalState() // isLoading = false
         }
         assertThat(repo.lastCredentialsLoginCall?.first).isEqualTo("https://myserver.com")
     }
 
     @Test
     fun loginWithHttpPrefixPassesThroughUnchanged() = runTest {
-        viewModel.test(this) {
+        viewModel.testWithInternalState(this) {
             fillCredentials(serverAddress = "http://myserver.com")
             viewModel.onEvent(WelcomeIntent.OnLoginClicked)
-            awaitState() // isLoading = true
-            awaitState() // isLoading = false
+            awaitInternalState() // isLoading = true
+            awaitInternalState() // isLoading = false
         }
         assertThat(repo.lastCredentialsLoginCall?.first).isEqualTo("http://myserver.com")
     }
@@ -212,12 +212,12 @@ class WelcomeViewModelTest {
     @Test
     fun isLoadingTrueDuringLoginAndFalseAfterSuccess() = runTest {
         repo.shouldDelayLogin = true
-        viewModel.test(this) {
+        viewModel.testWithInternalState(this) {
             fillCredentials()
             viewModel.onEvent(WelcomeIntent.OnLoginClicked)
-            assertThat(awaitState().isLoading).isTrue()
+            assertThat(awaitInternalState().isLoading).isTrue()
             repo.releaseLogin()
-            assertThat(awaitState().isLoading).isFalse()
+            assertThat(awaitInternalState().isLoading).isFalse()
         }
     }
 
@@ -225,13 +225,13 @@ class WelcomeViewModelTest {
     fun isLoadingTrueDuringLoginAndFalseAfterFailure() = runTest {
         repo.shouldDelayLogin = true
         repo.loginResult = LoginError.InvalidCredentials.left()
-        viewModel.test(this) {
+        viewModel.testWithInternalState(this) {
             fillCredentials()
             viewModel.onEvent(WelcomeIntent.OnLoginClicked)
-            assertThat(awaitState().isLoading).isTrue()
+            assertThat(awaitInternalState().isLoading).isTrue()
             repo.releaseLogin()
             awaitSideEffect() // LoginFailed side effect is emitted before isLoading=false
-            assertThat(awaitState().isLoading).isFalse()
+            assertThat(awaitInternalState().isLoading).isFalse()
         }
     }
 
@@ -241,21 +241,21 @@ class WelcomeViewModelTest {
 
     @Test
     fun successfulLoginDoesNotEmitLoginFailedSideEffect() = runTest {
-        viewModel.test(this) {
+        viewModel.testWithInternalState(this) {
             fillCredentials()
             viewModel.onEvent(WelcomeIntent.OnLoginClicked)
-            awaitState() // isLoading = true
-            awaitState() // isLoading = false — login complete, no side effect emitted
+            awaitInternalState() // isLoading = true
+            awaitInternalState() // isLoading = false — login complete, no side effect emitted
         }
     }
 
     @Test
     fun credentialsLoginPassesServerAddressUsernameAndPasswordToRepository() = runTest {
-        viewModel.test(this) {
+        viewModel.testWithInternalState(this) {
             fillCredentials(serverAddress = "server.com", username = "admin", password = "secret")
             viewModel.onEvent(WelcomeIntent.OnLoginClicked)
-            awaitState() // isLoading = true
-            awaitState() // isLoading = false
+            awaitInternalState() // isLoading = true
+            awaitInternalState() // isLoading = false
         }
         assertThat(repo.lastCredentialsLoginCall?.first).isEqualTo("https://server.com")
         assertThat(repo.lastCredentialsLoginCall?.second).isEqualTo("admin")
@@ -264,15 +264,15 @@ class WelcomeViewModelTest {
 
     @Test
     fun apiTokenLoginPassesServerAddressAndTokenToRepository() = runTest {
-        viewModel.test(this) {
+        viewModel.testWithInternalState(this) {
             val s = viewModel.container.stateFlow.value
             s.serverAddress.setTextAndPlaceCursorAtEnd("server.com")
             s.password.setTextAndPlaceCursorAtEnd("my-api-token")
             viewModel.onEvent(WelcomeIntent.OnCredentialTypeChanged(CredentialType.API_TOKEN))
-            awaitState() // credentialType change
+            awaitInternalState() // credentialType change
             viewModel.onEvent(WelcomeIntent.OnLoginClicked)
-            awaitState() // isLoading = true
-            awaitState() // isLoading = false
+            awaitInternalState() // isLoading = true
+            awaitInternalState() // isLoading = false
         }
         assertThat(repo.lastApiTokenLoginCall?.first).isEqualTo("https://server.com")
         assertThat(repo.lastApiTokenLoginCall?.second).isEqualTo("my-api-token")
@@ -285,54 +285,54 @@ class WelcomeViewModelTest {
     @Test
     fun invalidCredentialsErrorEmitsLoginFailedWithLoginFailedResource() = runTest {
         repo.loginResult = LoginError.InvalidCredentials.left()
-        viewModel.test(this) {
+        viewModel.testWithInternalState(this) {
             fillCredentials()
             viewModel.onEvent(WelcomeIntent.OnLoginClicked)
-            awaitState() // isLoading = true
+            awaitInternalState() // isLoading = true
             val sideEffect = awaitSideEffect()
             assertThat(sideEffect).isInstanceOf(WelcomeSideEffect.LoginFailed::class)
             assertThat((sideEffect as WelcomeSideEffect.LoginFailed).message)
                 .isEqualTo(Res.string.login_failed)
-            awaitState() // isLoading = false
+            awaitInternalState() // isLoading = false
         }
     }
 
     @Test
     fun networkErrorEmitsLoginFailedWithUnreachableServerAddressResource() = runTest {
         repo.loginResult = LoginError.NetworkError.left()
-        viewModel.test(this) {
+        viewModel.testWithInternalState(this) {
             fillCredentials()
             viewModel.onEvent(WelcomeIntent.OnLoginClicked)
-            awaitState() // isLoading = true
+            awaitInternalState() // isLoading = true
             val sideEffect = awaitSideEffect() as WelcomeSideEffect.LoginFailed
             assertThat(sideEffect.message).isEqualTo(Res.string.unreachable_server_address)
-            awaitState() // isLoading = false
+            awaitInternalState() // isLoading = false
         }
     }
 
     @Test
     fun unresolvedAddressErrorEmitsLoginFailedWithUnreachableServerAddressResource() = runTest {
         repo.loginResult = LoginError.UnresolvedAddress.left()
-        viewModel.test(this) {
+        viewModel.testWithInternalState(this) {
             fillCredentials()
             viewModel.onEvent(WelcomeIntent.OnLoginClicked)
-            awaitState() // isLoading = true
+            awaitInternalState() // isLoading = true
             val sideEffect = awaitSideEffect() as WelcomeSideEffect.LoginFailed
             assertThat(sideEffect.message).isEqualTo(Res.string.unreachable_server_address)
-            awaitState() // isLoading = false
+            awaitInternalState() // isLoading = false
         }
     }
 
     @Test
     fun unknownErrorEmitsLoginFailedWithSomethingWentWrongResource() = runTest {
         repo.loginResult = LoginError.UnknownError.left()
-        viewModel.test(this) {
+        viewModel.testWithInternalState(this) {
             fillCredentials()
             viewModel.onEvent(WelcomeIntent.OnLoginClicked)
-            awaitState() // isLoading = true
+            awaitInternalState() // isLoading = true
             val sideEffect = awaitSideEffect() as WelcomeSideEffect.LoginFailed
             assertThat(sideEffect.message).isEqualTo(Res.string.something_went_wrong)
-            awaitState() // isLoading = false
+            awaitInternalState() // isLoading = false
         }
     }
 
@@ -343,13 +343,13 @@ class WelcomeViewModelTest {
     @Test
     fun secondLoginClickWhileInFlightDoesNotTriggerSecondRepositoryCall() = runTest {
         repo.shouldDelayLogin = true
-        viewModel.test(this) {
+        viewModel.testWithInternalState(this) {
             fillCredentials()
             viewModel.onEvent(WelcomeIntent.OnLoginClicked) // first click
             viewModel.onEvent(WelcomeIntent.OnLoginClicked) // second click — isLoading=true, ignored
-            awaitState() // isLoading = true
+            awaitInternalState() // isLoading = true
             repo.releaseLogin()
-            awaitState() // isLoading = false
+            awaitInternalState() // isLoading = false
         }
         assertThat(repo.loginCallCount).isEqualTo(1)
     }

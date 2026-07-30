@@ -10,7 +10,7 @@ import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
-import org.orbitmvi.orbit.test.test
+import org.orbitmvi.orbit.test.testWithInternalState
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -49,17 +49,17 @@ class RecipeListViewModelTest {
 
     @Test
     fun onRecipeSelectedUpdatesSelectedRecipeId() = runTest(testDispatcher) {
-        viewModel.test(this) {
+        viewModel.testWithInternalState(this) {
             viewModel.onEvent(RecipeListIntent.OnRecipeSelected("recipe-42"))
-            assertThat(awaitState().selectedRecipeId).isEqualTo("recipe-42")
+            assertThat(awaitInternalState().selectedRecipeId).isEqualTo("recipe-42")
         }
     }
 
     @Test
     fun onSearchQueryChangedUpdatesSearchQuery() = runTest(testDispatcher) {
-        viewModel.test(this) {
+        viewModel.testWithInternalState(this) {
             viewModel.onEvent(RecipeListIntent.OnSearchQueryChanged("pasta"))
-            assertThat(awaitState().searchQuery).isEqualTo("pasta")
+            assertThat(awaitInternalState().searchQuery).isEqualTo("pasta")
         }
     }
 
