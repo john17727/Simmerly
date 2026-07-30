@@ -6,8 +6,10 @@
 	<true/>
 	<key>UIAppFonts</key>
 	<array>
-		<string>font/nunito_variablefont_wght.ttf</string>
-		<string>font/nunito_italic_variablefont_wght.ttf</string>
+		<string>dm_sans_variablefont.ttf</string>
+		<string>dm_sans_italic_variablefont.ttf</string>
+		<string>dm_serif_display_regular.ttf</string>
+		<string>dm_serif_display_italic.ttf</string>
 	</array>
 	<key>UILaunchScreen</key>
 	<dict>
