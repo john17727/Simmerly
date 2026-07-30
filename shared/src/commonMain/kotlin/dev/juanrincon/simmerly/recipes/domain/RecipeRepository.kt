@@ -14,6 +14,15 @@ interface RecipeRepository {
 
     fun observeAllRecipes(): Flow<List<RecipeSummary>>
 
+    /**
+     * Loads the next cursor page of recipes into local storage, or the first page if none has
+     * been loaded yet. Returns whether more pages remain after this load.
+     */
+    suspend fun loadNextRecipePage(): Either<RecipesError, Boolean>
+
+    /** Clears cached recipes and reloads the first page. Returns whether more pages remain. */
+    suspend fun refreshRecipeList(): Either<RecipesError, Boolean>
+
     fun comments(recipeId: String): Flow<List<Comment>>
 
     fun recipeDetails(id: String): Flow<Either<RecipesError, LoadingResult<RecipeDetail>>>

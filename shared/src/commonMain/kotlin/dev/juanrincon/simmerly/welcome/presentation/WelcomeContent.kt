@@ -6,8 +6,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import dev.juanrincon.simmerly.core.presentation.asStringSuspend
 import dev.juanrincon.simmerly.welcome.presentation.orbit.WelcomeSideEffect
-import org.jetbrains.compose.resources.getString
 import org.koin.compose.viewmodel.koinViewModel
 import org.orbitmvi.orbit.compose.collectAsState
 import org.orbitmvi.orbit.compose.collectSideEffect
@@ -23,7 +23,7 @@ fun WelcomeContent(
     viewModel.collectSideEffect { sideEffect ->
         when (sideEffect) {
             is WelcomeSideEffect.LoginFailed ->
-                snackbarHostState.showSnackbar(message = getString(sideEffect.message))
+                snackbarHostState.showSnackbar(message = sideEffect.message.asStringSuspend())
         }
     }
 

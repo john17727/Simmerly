@@ -26,6 +26,22 @@ class FakeRecipeRepository : RecipeRepository {
 
     override fun observeAllRecipes(): Flow<List<RecipeSummary>> = allRecipesFlow
 
+    // --- loadNextRecipePage / refreshRecipeList ---
+    var loadNextRecipePageResult: Either<RecipesError, Boolean> = false.right()
+    var refreshRecipeListResult: Either<RecipesError, Boolean> = false.right()
+    var loadNextRecipePageCallCount = 0
+    var refreshRecipeListCallCount = 0
+
+    override suspend fun loadNextRecipePage(): Either<RecipesError, Boolean> {
+        loadNextRecipePageCallCount++
+        return loadNextRecipePageResult
+    }
+
+    override suspend fun refreshRecipeList(): Either<RecipesError, Boolean> {
+        refreshRecipeListCallCount++
+        return refreshRecipeListResult
+    }
+
     // --- recipeDetails ---
     private val recipeDetailsFlows = mutableListOf(
         MutableSharedFlow<Either<RecipesError, LoadingResult<RecipeDetail>>>(replay = 1)

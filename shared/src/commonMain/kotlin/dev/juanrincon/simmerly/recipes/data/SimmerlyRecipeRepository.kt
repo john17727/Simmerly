@@ -6,11 +6,14 @@ import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import arrow.core.Either
 import arrow.core.raise.either
+import arrow.core.right
 import dev.juanrincon.simmerly.auth.domain.SessionDataStore
 import dev.juanrincon.simmerly.core.data.local.SimmerlyDatabase
+import dev.juanrincon.simmerly.recipes.data.local.metadata.RecipeRemoteKey
 import dev.juanrincon.simmerly.recipes.data.local.recent.RecentSearchQueryEntity
 import dev.juanrincon.simmerly.recipes.data.local.recent.RecentlyViewedEntity
 import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.junction.InstructionIngredientCrossRef
+import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.junction.RecipeTagCrossRef
 import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.junction.RecipeToolCrossRef
 import dev.juanrincon.simmerly.recipes.data.mappers.toDomain
 import dev.juanrincon.simmerly.recipes.data.mappers.toDto
@@ -89,6 +92,41 @@ class SimmerlyRecipeRepository(
             }
         }.distinctUntilChanged()
     }
+
+    override suspend fun loadNextRecipePage(): Either<RecipesError, Boolean> {
+        val key = remoteKeyDao.getKey()
+        return when {
+            key == null -> fetchRecipePage(cursor = null, isRefresh = true)
+            key.nextKey == null -> false.right()
+            else -> fetchRecipePage(cursor = key.nextKey, isRefresh = false)
+        }
+    }
+
+    override suspend fun refreshRecipeList(): Either<RecipesError, Boolean> =
+        fetchRecipePage(cursor = null, isRefresh = true)
+
+    /** Returns whether more pages remain after this load. Mirrors [RecipeRemoteMediator]'s load logic. */
+    private suspend fun fetchRecipePage(cursor: String?, isRefresh: Boolean): Either<RecipesError, Boolean> =
+        either {
+            val response = networkClient.getRecipes(next = cursor, requireTags = true)
+                .mapLeft { RecipesError.FetchError }.bind()
+
+            if (isRefresh) {
+                recipeDao.clearAll()
+                remoteKeyDao.clearKey()
+            }
+
+            recipeDao.upsertAll(response.items.map { it.toEntity() })
+            tagsDao.upsertAll(response.items.flatMap { recipe -> recipe.tags.map { it.toEntity() } })
+            recipeTagDao.insertAll(response.items.flatMap { recipe ->
+                recipe.tags.map { RecipeTagCrossRef(recipeId = recipe.id, tagId = it.id) }
+            })
+            remoteKeyDao.upsert(
+                RecipeRemoteKey(id = "RECIPE_LIST", nextKey = response.next, createdAt = Clock.System.now())
+            )
+
+            response.next != null
+        }
 
     override fun comments(recipeId: String): Flow<List<Comment>> =
         sessionDataStore.observeServerAddress()

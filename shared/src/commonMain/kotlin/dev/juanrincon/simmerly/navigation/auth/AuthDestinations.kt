@@ -18,3 +18,10 @@ sealed interface AuthDestinations : NavKey {
     @Serializable
     data object InitialLoad : AuthDestinations
 }
+
+fun AuthRoute.toDestination(): AuthDestinations = when (this) {
+    AuthRoute.Splash -> AuthDestinations.Splash
+    AuthRoute.Login -> AuthDestinations.Login
+    AuthRoute.InitialLoad -> AuthDestinations.InitialLoad
+    AuthRoute.App -> AuthDestinations.App
+}

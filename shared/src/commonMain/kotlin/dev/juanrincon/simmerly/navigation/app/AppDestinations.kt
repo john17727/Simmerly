@@ -4,14 +4,11 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ListAlt
 import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.filled.AccountCircle
+import dev.juanrincon.simmerly.core.presentation.StringKey
 import dev.juanrincon.simmerly.core.presentation.UiIcon
 import dev.juanrincon.simmerly.core.presentation.UiText
 import simmerly.shared.generated.resources.Res
 import simmerly.shared.generated.resources.calendar_meal
-import simmerly.shared.generated.resources.meal_plan
-import simmerly.shared.generated.resources.profile
-import simmerly.shared.generated.resources.recipes
-import simmerly.shared.generated.resources.shopping_list
 
 enum class AppDestinations(
     val label: UiText,
@@ -19,23 +16,23 @@ enum class AppDestinations(
     val contentDescription: UiText
 ) {
     RECIPES(
-        UiText.StringResText(Res.string.recipes),
+        UiText.Resource(StringKey.Recipes),
         UiIcon.Vector(Icons.AutoMirrored.Default.MenuBook),
-        UiText.StringResText(Res.string.recipes)
+        UiText.Resource(StringKey.Recipes)
     ),
     MEAL_PLAN(
-        UiText.StringResText(Res.string.meal_plan),
+        UiText.Resource(StringKey.MealPlan),
         UiIcon.Drawable(Res.drawable.calendar_meal),
-        UiText.StringResText(Res.string.meal_plan)
+        UiText.Resource(StringKey.MealPlan)
     ),
     SHOPPING_LIST(
-        UiText.StringResText(Res.string.shopping_list),
+        UiText.Resource(StringKey.ShoppingList),
         UiIcon.Vector(Icons.AutoMirrored.Default.ListAlt),
-        UiText.StringResText(Res.string.shopping_list)
+        UiText.Resource(StringKey.ShoppingList)
     ),
     PROFILE(
-        UiText.StringResText(Res.string.profile),
+        UiText.Resource(StringKey.Profile),
         UiIcon.Vector(Icons.Default.AccountCircle),
-        UiText.StringResText(Res.string.profile)
+        UiText.Resource(StringKey.Profile)
     ),
 }

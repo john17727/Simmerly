@@ -1,7 +1,7 @@
 package dev.juanrincon.simmerly.welcome.presentation.orbit
 
-import org.jetbrains.compose.resources.StringResource
+import dev.juanrincon.simmerly.core.presentation.UiText
 
 sealed interface WelcomeSideEffect {
-    data class LoginFailed(val message: StringResource) : WelcomeSideEffect
+    data class LoginFailed(val message: UiText) : WelcomeSideEffect
 }

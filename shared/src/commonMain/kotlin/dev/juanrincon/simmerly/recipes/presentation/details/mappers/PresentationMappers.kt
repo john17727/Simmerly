@@ -24,9 +24,9 @@ import kotlin.time.Instant
 
 fun RecipeDetail.toRecipeDetailUi(): RecipeDetailUi = RecipeDetailUi(
     id = id,
-    title = UiText.DynamicText(name),
+    title = UiText.Dynamic(name),
     image = image,
-    description = UiText.DynamicText(description),
+    description = UiText.Dynamic(description),
     rating = rating,
     totalTime = totalTime,
     prepTime = prepTime,

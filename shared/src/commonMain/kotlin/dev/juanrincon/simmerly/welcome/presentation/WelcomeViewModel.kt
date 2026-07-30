@@ -3,6 +3,8 @@ package dev.juanrincon.simmerly.welcome.presentation
 import androidx.lifecycle.ViewModel
 import dev.juanrincon.simmerly.auth.domain.AuthRepository
 import dev.juanrincon.simmerly.auth.domain.LoginError
+import dev.juanrincon.simmerly.core.presentation.StringKey
+import dev.juanrincon.simmerly.core.presentation.UiText
 import dev.juanrincon.simmerly.welcome.presentation.model.CredentialType
 import dev.juanrincon.simmerly.welcome.presentation.orbit.WelcomeIntent
 import dev.juanrincon.simmerly.welcome.presentation.orbit.WelcomeSideEffect
@@ -10,10 +12,6 @@ import dev.juanrincon.simmerly.welcome.presentation.orbit.WelcomeState
 import org.orbitmvi.orbit.OrbitContainer
 import org.orbitmvi.orbit.OrbitContainerHost
 import org.orbitmvi.orbit.viewmodel.orbitContainer
-import simmerly.shared.generated.resources.Res
-import simmerly.shared.generated.resources.login_failed
-import simmerly.shared.generated.resources.something_went_wrong
-import simmerly.shared.generated.resources.unreachable_server_address
 
 class WelcomeViewModel(
     private val authRepository: AuthRepository,
@@ -28,6 +26,18 @@ class WelcomeViewModel(
                 reduce { state.copy(credentialType = event.credentialType) }
             }
 
+            is WelcomeIntent.OnServerAddressChanged -> intent {
+                reduce { state.copy(serverAddress = event.value) }
+            }
+
+            is WelcomeIntent.OnUsernameChanged -> intent {
+                reduce { state.copy(username = event.value) }
+            }
+
+            is WelcomeIntent.OnPasswordChanged -> intent {
+                reduce { state.copy(password = event.value) }
+            }
+
             WelcomeIntent.OnLoginClicked -> intent {
                 if (state.isLoading) {
                     return@intent
@@ -35,9 +45,9 @@ class WelcomeViewModel(
 
                 reduce { state.copy(isLoading = true) }
 
-                val address = state.serverAddress.text.toString()
-                val user = state.username.text.toString()
-                val pass = state.password.text.toString()
+                val address = state.serverAddress
+                val user = state.username
+                val pass = state.password
 
                 val formattedAddress = if (address.startsWith("http://") || address.startsWith("https://")) {
                     address
@@ -50,12 +60,12 @@ class WelcomeViewModel(
                     CredentialType.API_TOKEN -> authRepository.login(formattedAddress, pass)
                 }.onLeft { error ->
                     val message = when (error) {
-                        LoginError.InvalidCredentials -> Res.string.login_failed
+                        LoginError.InvalidCredentials -> StringKey.LoginFailed
                         LoginError.UnresolvedAddress,
-                        LoginError.NetworkError -> Res.string.unreachable_server_address
-                        LoginError.UnknownError -> Res.string.something_went_wrong
+                        LoginError.NetworkError -> StringKey.UnreachableServerAddress
+                        LoginError.UnknownError -> StringKey.SomethingWentWrong
                     }
-                    postSideEffect(WelcomeSideEffect.LoginFailed(message))
+                    postSideEffect(WelcomeSideEffect.LoginFailed(UiText.Resource(message)))
                 }
                 reduce { state.copy(isLoading = false) }
             }

@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.input.OutputTransformation
 import androidx.compose.foundation.text.input.TextObfuscationMode
+import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Dns
 import androidx.compose.material.icons.filled.Key
@@ -44,6 +45,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
@@ -138,9 +140,26 @@ internal fun Login(
     modifier: Modifier = Modifier
 ) {
     var passwordVisible by remember { mutableStateOf(false) }
+    val serverAddressFieldState = rememberTextFieldState()
+    val usernameFieldState = rememberTextFieldState()
+    val passwordFieldState = rememberTextFieldState()
+
+    LaunchedEffect(serverAddressFieldState) {
+        snapshotFlow { serverAddressFieldState.text.toString() }
+            .collect { onEvent(WelcomeIntent.OnServerAddressChanged(it)) }
+    }
+    LaunchedEffect(usernameFieldState) {
+        snapshotFlow { usernameFieldState.text.toString() }
+            .collect { onEvent(WelcomeIntent.OnUsernameChanged(it)) }
+    }
+    LaunchedEffect(passwordFieldState) {
+        snapshotFlow { passwordFieldState.text.toString() }
+            .collect { onEvent(WelcomeIntent.OnPasswordChanged(it)) }
+    }
+
     Column(modifier = modifier) {
         OutlinedTextField(
-            state = state.serverAddress,
+            state = serverAddressFieldState,
             modifier = Modifier.fillMaxWidth(),
             label = { Text("Server Address") },
             leadingIcon = { Icon(Icons.Default.Dns, contentDescription = null) },
@@ -187,7 +206,7 @@ internal fun Login(
             Column {
                 if (credType == CredentialType.CREDENTIALS) {
                     OutlinedTextField(
-                        state = state.username,
+                        state = usernameFieldState,
                         label = { Text("Username/Email") },
                         modifier = Modifier.fillMaxWidth(),
                         leadingIcon = { Icon(Icons.Default.Person, contentDescription = null) },
@@ -200,7 +219,7 @@ internal fun Login(
                     Spacer(modifier = Modifier.height(8.dp))
                 }
                 OutlinedSecureTextField(
-                    state = state.password,
+                    state = passwordFieldState,
                     modifier = Modifier.fillMaxWidth(),
                     label = {
                         if (credType == CredentialType.CREDENTIALS) Text("Password") else Text("Token")

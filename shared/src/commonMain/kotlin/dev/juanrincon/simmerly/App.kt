@@ -15,6 +15,7 @@ import dev.juanrincon.simmerly.initialload.presentation.InitialLoadScreen
 import dev.juanrincon.simmerly.navigation.app.AppContent
 import dev.juanrincon.simmerly.navigation.auth.AuthDestinations
 import dev.juanrincon.simmerly.navigation.auth.AuthNavigationViewModel
+import dev.juanrincon.simmerly.navigation.auth.toDestination
 import dev.juanrincon.simmerly.splash.presentation.SplashScreen
 import dev.juanrincon.simmerly.theme.SimmerlyTheme
 import dev.juanrincon.simmerly.welcome.presentation.WelcomeContent
@@ -54,7 +55,7 @@ fun SimmerlyApp(
 
     LaunchedEffect(authenticationState) {
         backStack.clear()
-        backStack.add(authenticationState)
+        backStack.add(authenticationState.toDestination())
     }
     NavDisplay(
         backStack = backStack,

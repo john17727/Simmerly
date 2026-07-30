@@ -24,6 +24,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import coil3.compose.SubcomposeAsyncImage
+import dev.juanrincon.simmerly.core.presentation.asString
 import dev.juanrincon.simmerly.profile.presentation.ProfileViewModel
 import dev.juanrincon.simmerly.recipes.presentation.RecipesContent
 import org.koin.compose.viewmodel.koinViewModel

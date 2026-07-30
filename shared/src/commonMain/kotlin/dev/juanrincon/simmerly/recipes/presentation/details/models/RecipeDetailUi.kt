@@ -39,9 +39,9 @@ data class RecipeDetailUi(
     companion object {
         val emptyRecipe = RecipeDetailUi(
             id = "",
-            title = UiText.DynamicText(""),
+            title = UiText.Dynamic(""),
             image = "",
-            description = UiText.DynamicText(""),
+            description = UiText.Dynamic(""),
             rating = null,
             totalTime = null,
             prepTime = null,

@@ -1,18 +1,17 @@
 package dev.juanrincon.simmerly.welcome.presentation.orbit
 
-import androidx.compose.foundation.text.input.TextFieldState
 import dev.juanrincon.simmerly.welcome.presentation.model.CredentialType
 
 data class WelcomeState(
-    val serverAddress: TextFieldState = TextFieldState(""),
+    val serverAddress: String = "",
     val credentialType: CredentialType = CredentialType.CREDENTIALS,
-    val username: TextFieldState = TextFieldState(""),
-    val password: TextFieldState = TextFieldState(""),
+    val username: String = "",
+    val password: String = "",
     val isLoading: Boolean = false,
 ) {
     val isLoginButtonEnabled: Boolean
         get() = when (credentialType) {
-            CredentialType.CREDENTIALS -> serverAddress.text.isNotBlank() && username.text.isNotBlank() && password.text.isNotBlank()
-            CredentialType.API_TOKEN -> serverAddress.text.isNotBlank() && password.text.isNotBlank()
+            CredentialType.CREDENTIALS -> serverAddress.isNotBlank() && username.isNotBlank() && password.isNotBlank()
+            CredentialType.API_TOKEN -> serverAddress.isNotBlank() && password.isNotBlank()
         }
 }

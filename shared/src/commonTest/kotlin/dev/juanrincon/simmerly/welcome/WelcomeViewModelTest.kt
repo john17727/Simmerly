@@ -1,6 +1,5 @@
 package dev.juanrincon.simmerly.welcome
 
-import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import arrow.core.left
 import assertk.assertThat
 import assertk.assertions.isEqualTo
@@ -9,6 +8,8 @@ import assertk.assertions.isInstanceOf
 import assertk.assertions.isTrue
 import dev.juanrincon.simmerly.auth.FakeAuthRepository
 import dev.juanrincon.simmerly.auth.domain.LoginError
+import dev.juanrincon.simmerly.core.presentation.StringKey
+import dev.juanrincon.simmerly.core.presentation.UiText
 import dev.juanrincon.simmerly.welcome.presentation.WelcomeViewModel
 import dev.juanrincon.simmerly.welcome.presentation.model.CredentialType
 import dev.juanrincon.simmerly.welcome.presentation.orbit.WelcomeIntent
@@ -20,11 +21,8 @@ import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
+import org.orbitmvi.orbit.test.OrbitScopedTestContextInternal
 import org.orbitmvi.orbit.test.testWithInternalState
-import simmerly.shared.generated.resources.Res
-import simmerly.shared.generated.resources.login_failed
-import simmerly.shared.generated.resources.something_went_wrong
-import simmerly.shared.generated.resources.unreachable_server_address
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -53,9 +51,9 @@ class WelcomeViewModelTest {
     @Test
     fun initialStateHasEmptyFieldsCredentialsTypeAndLoginButtonDisabled() {
         val state = viewModel.container.stateFlow.value
-        assertThat(state.serverAddress.text.toString()).isEqualTo("")
-        assertThat(state.username.text.toString()).isEqualTo("")
-        assertThat(state.password.text.toString()).isEqualTo("")
+        assertThat(state.serverAddress).isEqualTo("")
+        assertThat(state.username).isEqualTo("")
+        assertThat(state.password).isEqualTo("")
         assertThat(state.credentialType).isEqualTo(CredentialType.CREDENTIALS)
         assertThat(state.isLoading).isFalse()
         assertThat(state.isLoginButtonEnabled).isFalse()
@@ -85,86 +83,107 @@ class WelcomeViewModelTest {
 
     // endregion
 
+    // region Field intents update state
+
+    @Test
+    fun onServerAddressChangedUpdatesServerAddress() = runTest {
+        viewModel.testWithInternalState(this) {
+            viewModel.onEvent(WelcomeIntent.OnServerAddressChanged("server.com"))
+            assertThat(awaitInternalState().serverAddress).isEqualTo("server.com")
+        }
+    }
+
+    @Test
+    fun onUsernameChangedUpdatesUsername() = runTest {
+        viewModel.testWithInternalState(this) {
+            viewModel.onEvent(WelcomeIntent.OnUsernameChanged("user"))
+            assertThat(awaitInternalState().username).isEqualTo("user")
+        }
+    }
+
+    @Test
+    fun onPasswordChangedUpdatesPassword() = runTest {
+        viewModel.testWithInternalState(this) {
+            viewModel.onEvent(WelcomeIntent.OnPasswordChanged("pass"))
+            assertThat(awaitInternalState().password).isEqualTo("pass")
+        }
+    }
+
+    // endregion
+
     // region isLoginButtonEnabled — CREDENTIALS mode
+    // WelcomeState's computed property is tested directly since it only depends on plain fields.
 
     @Test
     fun loginButtonDisabledWhenOnlyServerAddressFilledInCredentialsMode() {
-        val state = viewModel.container.stateFlow.value
-        state.serverAddress.setTextAndPlaceCursorAtEnd("server.com")
+        val state = WelcomeState(serverAddress = "server.com")
         assertThat(state.isLoginButtonEnabled).isFalse()
     }
 
     @Test
     fun loginButtonDisabledWhenServerAddressAndUsernameFilledButPasswordEmpty() {
-        val state = viewModel.container.stateFlow.value
-        state.serverAddress.setTextAndPlaceCursorAtEnd("server.com")
-        state.username.setTextAndPlaceCursorAtEnd("user")
+        val state = WelcomeState(serverAddress = "server.com", username = "user")
         assertThat(state.isLoginButtonEnabled).isFalse()
     }
 
     @Test
     fun loginButtonDisabledWhenServerAddressAndPasswordFilledButUsernameEmpty() {
-        val state = viewModel.container.stateFlow.value
-        state.serverAddress.setTextAndPlaceCursorAtEnd("server.com")
-        state.password.setTextAndPlaceCursorAtEnd("pass")
+        val state = WelcomeState(serverAddress = "server.com", password = "pass")
         assertThat(state.isLoginButtonEnabled).isFalse()
     }
 
     @Test
     fun loginButtonEnabledWhenAllCredentialsFieldsNonBlank() {
-        val state = viewModel.container.stateFlow.value
-        state.serverAddress.setTextAndPlaceCursorAtEnd("server.com")
-        state.username.setTextAndPlaceCursorAtEnd("user")
-        state.password.setTextAndPlaceCursorAtEnd("pass")
+        val state = WelcomeState(serverAddress = "server.com", username = "user", password = "pass")
         assertThat(state.isLoginButtonEnabled).isTrue()
     }
 
     @Test
     fun loginButtonDisabledAgainAfterClearingUsername() {
-        val state = viewModel.container.stateFlow.value
-        state.serverAddress.setTextAndPlaceCursorAtEnd("server.com")
-        state.username.setTextAndPlaceCursorAtEnd("user")
-        state.password.setTextAndPlaceCursorAtEnd("pass")
-        assertThat(state.isLoginButtonEnabled).isTrue()
-        state.username.setTextAndPlaceCursorAtEnd("")
-        assertThat(state.isLoginButtonEnabled).isFalse()
+        val filled = WelcomeState(serverAddress = "server.com", username = "user", password = "pass")
+        assertThat(filled.isLoginButtonEnabled).isTrue()
+        val cleared = filled.copy(username = "")
+        assertThat(cleared.isLoginButtonEnabled).isFalse()
     }
 
     // endregion
 
     // region isLoginButtonEnabled — API_TOKEN mode
-    // These test WelcomeState's computed property directly, bypassing the ViewModel,
-    // since TextFieldState mutations never flow through the Orbit reducer.
 
     @Test
     fun loginButtonDisabledWhenOnlyServerAddressFilledInApiTokenMode() {
-        val state = WelcomeState(credentialType = CredentialType.API_TOKEN)
-        state.serverAddress.setTextAndPlaceCursorAtEnd("server.com")
+        val state = WelcomeState(credentialType = CredentialType.API_TOKEN, serverAddress = "server.com")
         assertThat(state.isLoginButtonEnabled).isFalse()
     }
 
     @Test
     fun loginButtonEnabledWhenServerAddressAndTokenNonBlankInApiTokenMode() {
-        val state = WelcomeState(credentialType = CredentialType.API_TOKEN)
-        state.serverAddress.setTextAndPlaceCursorAtEnd("server.com")
-        state.password.setTextAndPlaceCursorAtEnd("my-token")
+        val state = WelcomeState(
+            credentialType = CredentialType.API_TOKEN,
+            serverAddress = "server.com",
+            password = "my-token"
+        )
         assertThat(state.isLoginButtonEnabled).isTrue()
     }
 
     @Test
     fun switchingToApiTokenEnablesButtonWhenServerAddressAndPasswordFilledWithoutUsername() {
-        val state = WelcomeState(credentialType = CredentialType.API_TOKEN)
-        state.serverAddress.setTextAndPlaceCursorAtEnd("server.com")
-        state.password.setTextAndPlaceCursorAtEnd("my-token")
+        val state = WelcomeState(
+            credentialType = CredentialType.API_TOKEN,
+            serverAddress = "server.com",
+            password = "my-token"
+        )
         assertThat(state.isLoginButtonEnabled).isTrue()
     }
 
     @Test
     fun switchingBackToCredentialsDisablesButtonWhenUsernameBlank() {
-        val state = WelcomeState(credentialType = CredentialType.CREDENTIALS)
-        state.serverAddress.setTextAndPlaceCursorAtEnd("server.com")
-        state.password.setTextAndPlaceCursorAtEnd("my-token")
-        // username deliberately blank
+        val state = WelcomeState(
+            credentialType = CredentialType.CREDENTIALS,
+            serverAddress = "server.com",
+            password = "my-token"
+            // username deliberately blank
+        )
         assertThat(state.isLoginButtonEnabled).isFalse()
     }
 
@@ -265,9 +284,10 @@ class WelcomeViewModelTest {
     @Test
     fun apiTokenLoginPassesServerAddressAndTokenToRepository() = runTest {
         viewModel.testWithInternalState(this) {
-            val s = viewModel.container.stateFlow.value
-            s.serverAddress.setTextAndPlaceCursorAtEnd("server.com")
-            s.password.setTextAndPlaceCursorAtEnd("my-api-token")
+            viewModel.onEvent(WelcomeIntent.OnServerAddressChanged("server.com"))
+            awaitInternalState() // serverAddress change
+            viewModel.onEvent(WelcomeIntent.OnPasswordChanged("my-api-token"))
+            awaitInternalState() // password change
             viewModel.onEvent(WelcomeIntent.OnCredentialTypeChanged(CredentialType.API_TOKEN))
             awaitInternalState() // credentialType change
             viewModel.onEvent(WelcomeIntent.OnLoginClicked)
@@ -292,7 +312,7 @@ class WelcomeViewModelTest {
             val sideEffect = awaitSideEffect()
             assertThat(sideEffect).isInstanceOf(WelcomeSideEffect.LoginFailed::class)
             assertThat((sideEffect as WelcomeSideEffect.LoginFailed).message)
-                .isEqualTo(Res.string.login_failed)
+                .isEqualTo(UiText.Resource(StringKey.LoginFailed))
             awaitInternalState() // isLoading = false
         }
     }
@@ -305,7 +325,7 @@ class WelcomeViewModelTest {
             viewModel.onEvent(WelcomeIntent.OnLoginClicked)
             awaitInternalState() // isLoading = true
             val sideEffect = awaitSideEffect() as WelcomeSideEffect.LoginFailed
-            assertThat(sideEffect.message).isEqualTo(Res.string.unreachable_server_address)
+            assertThat(sideEffect.message).isEqualTo(UiText.Resource(StringKey.UnreachableServerAddress))
             awaitInternalState() // isLoading = false
         }
     }
@@ -318,7 +338,7 @@ class WelcomeViewModelTest {
             viewModel.onEvent(WelcomeIntent.OnLoginClicked)
             awaitInternalState() // isLoading = true
             val sideEffect = awaitSideEffect() as WelcomeSideEffect.LoginFailed
-            assertThat(sideEffect.message).isEqualTo(Res.string.unreachable_server_address)
+            assertThat(sideEffect.message).isEqualTo(UiText.Resource(StringKey.UnreachableServerAddress))
             awaitInternalState() // isLoading = false
         }
     }
@@ -331,7 +351,7 @@ class WelcomeViewModelTest {
             viewModel.onEvent(WelcomeIntent.OnLoginClicked)
             awaitInternalState() // isLoading = true
             val sideEffect = awaitSideEffect() as WelcomeSideEffect.LoginFailed
-            assertThat(sideEffect.message).isEqualTo(Res.string.something_went_wrong)
+            assertThat(sideEffect.message).isEqualTo(UiText.Resource(StringKey.SomethingWentWrong))
             awaitInternalState() // isLoading = false
         }
     }
@@ -358,15 +378,17 @@ class WelcomeViewModelTest {
 
     // region Helpers
 
-    private fun fillCredentials(
+    private suspend fun OrbitScopedTestContextInternal<WelcomeState, WelcomeState, WelcomeSideEffect, WelcomeViewModel>.fillCredentials(
         serverAddress: String = "server.com",
         username: String = "user",
         password: String = "pass"
     ) {
-        val s = viewModel.container.stateFlow.value
-        s.serverAddress.setTextAndPlaceCursorAtEnd(serverAddress)
-        s.username.setTextAndPlaceCursorAtEnd(username)
-        s.password.setTextAndPlaceCursorAtEnd(password)
+        containerHost.onEvent(WelcomeIntent.OnServerAddressChanged(serverAddress))
+        awaitInternalState()
+        containerHost.onEvent(WelcomeIntent.OnUsernameChanged(username))
+        awaitInternalState()
+        containerHost.onEvent(WelcomeIntent.OnPasswordChanged(password))
+        awaitInternalState()
     }
 
     // endregion

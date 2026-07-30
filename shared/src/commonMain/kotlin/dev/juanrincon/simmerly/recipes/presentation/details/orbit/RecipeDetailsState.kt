@@ -8,8 +8,8 @@ data class RecipeDetailsState(
     val isRefreshing: Boolean = false,
     val recipe: RecipeDetailUi = RecipeDetailUi.emptyRecipe,
     val error: RecipesError? = null,
-    val mobileTabs: List<String> = emptyList(),
-    val desktopTabs: List<String> = emptyList(),
+    val mobileTabs: List<RecipeTab> = emptyList(),
+    val desktopTabs: List<RecipeTab> = emptyList(),
     val mode: RecipeMode = RecipeMode.READ_ONLY,
     val showSettings: Boolean = false,
 )

@@ -37,12 +37,10 @@ import dev.juanrincon.simmerly.core.presentation.shimmer
 import dev.juanrincon.simmerly.recipes.presentation.comments.RecipeCommentsScreen
 import dev.juanrincon.simmerly.recipes.presentation.details.orbit.RecipeDetailsIntent
 import dev.juanrincon.simmerly.recipes.presentation.details.orbit.RecipeDetailsState
+import dev.juanrincon.simmerly.recipes.presentation.details.orbit.RecipeTab
+import dev.juanrincon.simmerly.recipes.presentation.details.orbit.label
 
 val EXPANDED_CARD_PADDING = 16.dp
-
-private const val EXPANDED_TAB_RECIPE = "Recipe"
-private const val EXPANDED_TAB_NOTES = "Notes"
-private const val EXPANDED_TAB_COMMENTS = "Comments"
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -86,7 +84,7 @@ internal fun ExpandedView(
                     Tab(
                         selected = selectedExpandedTabIndex == index,
                         onClick = { selectedExpandedTabIndex = index },
-                        text = { Text(title) }
+                        text = { Text(title.label) }
                     )
                 }
             }
@@ -97,7 +95,7 @@ internal fun ExpandedView(
             modifier = Modifier.weight(1f)
         ) { tabIndex ->
             when (expandedTabs.getOrNull(tabIndex)) {
-                EXPANDED_TAB_RECIPE -> {
+                RecipeTab.Recipe -> {
                     Row(
                         modifier = Modifier
                             .fillMaxSize()
@@ -182,7 +180,7 @@ internal fun ExpandedView(
                     }
                 }
 
-                EXPANDED_TAB_NOTES -> {
+                RecipeTab.Notes -> {
                     Column(
                         modifier = Modifier
                             .fillMaxSize()
@@ -198,7 +196,7 @@ internal fun ExpandedView(
                     }
                 }
 
-                EXPANDED_TAB_COMMENTS -> {
+                RecipeTab.Comments -> {
                     RecipeCommentsScreen(
                         recipeId = recipe.id,
                         modifier = Modifier.fillMaxSize()

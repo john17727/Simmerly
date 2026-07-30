@@ -8,6 +8,7 @@ import dev.juanrincon.simmerly.recipes.presentation.details.models.RecipeDetailU
 import dev.juanrincon.simmerly.recipes.presentation.details.orbit.RecipeDetailsIntent
 import dev.juanrincon.simmerly.recipes.presentation.details.orbit.RecipeDetailsSideEffect
 import dev.juanrincon.simmerly.recipes.presentation.details.orbit.RecipeDetailsState
+import dev.juanrincon.simmerly.recipes.presentation.details.orbit.RecipeTab
 import kotlinx.coroutines.flow.distinctUntilChanged
 import org.orbitmvi.orbit.OrbitContainer
 import org.orbitmvi.orbit.OrbitContainerHost
@@ -69,16 +70,16 @@ class RecipeDetailsViewModel(
                                         error = null,
                                         recipe = recipe,
                                         mobileTabs = buildList {
-                                            add("Overview")
-                                            add("Ingredients")
-                                            add("Instructions")
-                                            if (recipe.notes.isNotEmpty()) add("Notes")
-                                            if (recipe.settings.showNutrition) add("Nutrition")
+                                            add(RecipeTab.Overview)
+                                            add(RecipeTab.Ingredients)
+                                            add(RecipeTab.Instructions)
+                                            if (recipe.notes.isNotEmpty()) add(RecipeTab.Notes)
+                                            if (recipe.settings.showNutrition) add(RecipeTab.Nutrition)
                                         },
                                         desktopTabs = buildList {
-                                            add("Recipe")
-                                            if (recipe.notes.isNotEmpty()) add("Notes")
-                                            if (!recipe.settings.disableComments) add("Comments")
+                                            add(RecipeTab.Recipe)
+                                            if (recipe.notes.isNotEmpty()) add(RecipeTab.Notes)
+                                            if (!recipe.settings.disableComments) add(RecipeTab.Comments)
                                         }
                                     )
                                 }

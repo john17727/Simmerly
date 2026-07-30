@@ -40,7 +40,7 @@ class AuthNavigationViewModelTest {
         repo.emitAuthState(AuthState.Unauthenticated)
         viewModel = AuthNavigationViewModel(repo)
         viewModel.isAuthenticated.test {
-            assertThat(awaitItem()).isEqualTo(AuthDestinations.Login)
+            assertThat(awaitItem()).isEqualTo(AuthRoute.Login)
         }
     }
 
@@ -49,7 +49,7 @@ class AuthNavigationViewModelTest {
         repo.emitAuthState(AuthState.Authenticated)
         viewModel = AuthNavigationViewModel(repo)
         viewModel.isAuthenticated.test {
-            assertThat(awaitItem()).isEqualTo(AuthDestinations.InitialLoad)
+            assertThat(awaitItem()).isEqualTo(AuthRoute.InitialLoad)
         }
     }
 
@@ -58,7 +58,7 @@ class AuthNavigationViewModelTest {
         repo.emitAuthState(AuthState.Loading)
         viewModel = AuthNavigationViewModel(repo)
         viewModel.isAuthenticated.test {
-            assertThat(awaitItem()).isEqualTo(AuthDestinations.Splash)
+            assertThat(awaitItem()).isEqualTo(AuthRoute.Splash)
         }
     }
 
@@ -71,9 +71,9 @@ class AuthNavigationViewModelTest {
         repo.emitAuthState(AuthState.Unauthenticated)
         viewModel = AuthNavigationViewModel(repo)
         viewModel.isAuthenticated.test {
-            assertThat(awaitItem()).isEqualTo(AuthDestinations.Login)
+            assertThat(awaitItem()).isEqualTo(AuthRoute.Login)
             repo.emitAuthState(AuthState.Authenticated)
-            assertThat(awaitItem()).isEqualTo(AuthDestinations.InitialLoad)
+            assertThat(awaitItem()).isEqualTo(AuthRoute.InitialLoad)
         }
     }
 
@@ -82,9 +82,9 @@ class AuthNavigationViewModelTest {
         repo.emitAuthState(AuthState.Loading)
         viewModel = AuthNavigationViewModel(repo)
         viewModel.isAuthenticated.test {
-            assertThat(awaitItem()).isEqualTo(AuthDestinations.Splash)
+            assertThat(awaitItem()).isEqualTo(AuthRoute.Splash)
             repo.emitAuthState(AuthState.Unauthenticated)
-            assertThat(awaitItem()).isEqualTo(AuthDestinations.Login)
+            assertThat(awaitItem()).isEqualTo(AuthRoute.Login)
         }
     }
 
@@ -93,9 +93,9 @@ class AuthNavigationViewModelTest {
         repo.emitAuthState(AuthState.Authenticated)
         viewModel = AuthNavigationViewModel(repo)
         viewModel.isAuthenticated.test {
-            assertThat(awaitItem()).isEqualTo(AuthDestinations.InitialLoad)
+            assertThat(awaitItem()).isEqualTo(AuthRoute.InitialLoad)
             repo.emitAuthState(AuthState.Unauthenticated)
-            assertThat(awaitItem()).isEqualTo(AuthDestinations.Login)
+            assertThat(awaitItem()).isEqualTo(AuthRoute.Login)
         }
     }
 

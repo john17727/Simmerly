@@ -72,6 +72,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation3.ui.LocalNavAnimatedContentScope
 import coil3.compose.AsyncImage
 import dev.juanrincon.simmerly.core.presentation.UiText
+import dev.juanrincon.simmerly.core.presentation.asString
 import dev.juanrincon.simmerly.core.presentation.ifTrue
 import dev.juanrincon.simmerly.core.presentation.shimmer
 import dev.juanrincon.simmerly.recipes.domain.model.Settings
@@ -81,6 +82,8 @@ import dev.juanrincon.simmerly.recipes.presentation.details.models.NutritionUi
 import dev.juanrincon.simmerly.recipes.presentation.details.models.RecipeDetailUi
 import dev.juanrincon.simmerly.recipes.presentation.details.orbit.RecipeDetailsIntent
 import dev.juanrincon.simmerly.recipes.presentation.details.orbit.RecipeDetailsState
+import dev.juanrincon.simmerly.recipes.presentation.details.orbit.RecipeTab
+import dev.juanrincon.simmerly.recipes.presentation.details.orbit.label
 import dev.juanrincon.simmerly.recipes.presentation.shared.RecipeMetaRow
 import dev.juanrincon.simmerly.recipes.presentation.shared.TagRow
 import dev.juanrincon.simmerly.theme.SimmerlyTheme
@@ -464,7 +467,7 @@ private fun CompactContent(
                                     }
                                 }
                             },
-                            text = { Text(title) }
+                            text = { Text(title.label) }
                         )
                     }
                 }
@@ -580,9 +583,9 @@ private const val DESCRIPTION_MAX_LINES = 4
 
 private val previewRecipe = RecipeDetailUi(
     id = "1",
-    title = UiText.DynamicText("Spaghetti Carbonara"),
+    title = UiText.Dynamic("Spaghetti Carbonara"),
     image = "",
-    description = UiText.DynamicText(
+    description = UiText.Dynamic(
         "A classic Roman pasta dish made with eggs, Pecorino Romano, guanciale, and black pepper. " +
                 "Rich, creamy, and deeply satisfying without a drop of cream."
     ),
@@ -669,7 +672,7 @@ private val previewRecipe = RecipeDetailUi(
     )
 )
 
-private val previewTabs = listOf("Overview", "Ingredients", "Instructions")
+private val previewTabs = listOf(RecipeTab.Overview, RecipeTab.Ingredients, RecipeTab.Instructions)
 
 @Preview(apiLevel = 36, showSystemUi = true, device = Devices.PIXEL_9_PRO, wallpaper = 1)
 @Composable
