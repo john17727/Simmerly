@@ -102,3 +102,159 @@ struct RecipeDetailsView: View {
         .padding(.horizontal, 16)
     }
 }
+
+// MARK: - Previews
+// Mirrors the preview data in recipes/presentation/details/RecipeDetailsCompact.kt.
+
+private let previewRecipe = RecipeDetailUi(
+    id: "1",
+    title: UiTextDynamic(text: "Spaghetti Carbonara"),
+    image: "",
+    description: UiTextDynamic(
+        text: "A classic Roman pasta dish made with eggs, Pecorino Romano, guanciale, and black pepper. "
+            + "Rich, creamy, and deeply satisfying without a drop of cream."
+    ),
+    rating: KotlinDouble(value: 4.8),
+    totalTime: "30 min",
+    prepTime: "10 min",
+    performTime: "20 min",
+    servings: 2.0,
+    favorite: false,
+    link: nil,
+    tags: [],
+    ingredients: [
+        IngredientUi(
+            referenceId: "ingredient-1",
+            quantity: nil,
+            display: "200g spaghetti",
+            food: nil,
+            unit: nil,
+            note: nil
+        ),
+        IngredientUi(
+            referenceId: "ingredient-2",
+            quantity: nil,
+            display: "100g guanciale",
+            food: nil,
+            unit: nil,
+            note: nil
+        ),
+        IngredientUi(
+            referenceId: "ingredient-3",
+            quantity: nil,
+            display: "2 large eggs",
+            food: nil,
+            unit: nil,
+            note: nil
+        ),
+        IngredientUi(
+            referenceId: "ingredient-4",
+            quantity: nil,
+            display: "50g Pecorino Romano",
+            food: nil,
+            unit: nil,
+            note: nil
+        ),
+    ],
+    instructions: [
+        InstructionUi(
+            id: "1",
+            title: "Cook the pasta",
+            summary: "Boil spaghetti in salted water until al dente.",
+            text: "Bring a large pot of salted water to a boil. Cook spaghetti according to package "
+                + "instructions until al dente. Reserve 1 cup of pasta water before draining.",
+            images: [],
+            ingredientIds: ["ingredient-1"]
+        ),
+        InstructionUi(
+            id: "2",
+            title: "Prepare the sauce",
+            summary: "Whisk eggs and cheese, then combine with pasta.",
+            text: "Whisk together eggs and Pecorino Romano in a bowl. Remove pasta from heat, add "
+                + "guanciale, then stir in egg mixture, adding pasta water gradually to achieve a "
+                + "creamy consistency.",
+            images: [],
+            ingredientIds: ["ingredient-2", "ingredient-3", "ingredient-4"]
+        ),
+    ],
+    tools: [],
+    nutrition: NutritionUi(
+        calories: "620 kcal",
+        carbohydrateContent: "72g",
+        cholesterolContent: "210mg",
+        fatContent: "24g",
+        fiberContent: "3g",
+        proteinContent: "28g",
+        saturatedFatContent: "9g",
+        sodiumContent: "580mg",
+        sugarContent: "2g",
+        transFatContent: "0g",
+        unsaturatedFatContent: "13g"
+    ),
+    notes: [],
+    settings: Settings(
+        public: true,
+        showNutrition: false,
+        showAssets: false,
+        landscapeView: false,
+        disableComments: false,
+        locked: false
+    )
+)
+
+private let previewState = RecipeDetailsState(
+    loading: false,
+    isRefreshing: false,
+    recipe: previewRecipe,
+    error: nil,
+    mobileTabs: [.overview, .ingredients, .instructions],
+    desktopTabs: [],
+    mode: .readOnly,
+    showSettings: false
+)
+
+#Preview("Light") {
+    NavigationStack {
+        RecipeDetailsView(
+            state: previewState,
+            onAddServing: {},
+            onRemoveServing: {},
+            onShowSettings: {},
+            onNavigateToComments: {}
+        )
+    }
+}
+
+#Preview("Dark") {
+    NavigationStack {
+        RecipeDetailsView(
+            state: previewState,
+            onAddServing: {},
+            onRemoveServing: {},
+            onShowSettings: {},
+            onNavigateToComments: {}
+        )
+    }
+    .preferredColorScheme(.dark)
+}
+
+#Preview("Loading") {
+    NavigationStack {
+        RecipeDetailsView(
+            state: RecipeDetailsState(
+                loading: true,
+                isRefreshing: false,
+                recipe: RecipeDetailUi.companion.emptyRecipe,
+                error: nil,
+                mobileTabs: [],
+                desktopTabs: [],
+                mode: .readOnly,
+                showSettings: false
+            ),
+            onAddServing: {},
+            onRemoveServing: {},
+            onShowSettings: {},
+            onNavigateToComments: {}
+        )
+    }
+}
