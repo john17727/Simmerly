@@ -1,7 +1,10 @@
 package dev.juanrincon.simmerly.recipes.presentation.details
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -14,6 +17,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -109,8 +113,10 @@ private fun IngredientEntry(ingredient: IngredientUi, modifier: Modifier = Modif
 @Composable
 internal fun InstructionView(
     instructions: List<InstructionUi>,
+    ingredients: List<IngredientUi>,
     modifier: Modifier = Modifier
 ) {
+    val ingredientsById = remember(ingredients) { ingredients.associateBy { it.referenceId } }
     Column(
         modifier = modifier.padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(32.dp)
@@ -123,13 +129,21 @@ internal fun InstructionView(
             Text("Instructions", style = MaterialTheme.typography.headlineSmall)
         }
         instructions.forEach { instruction ->
-            InstructionEntry(instruction, modifier = Modifier.fillMaxWidth())
+            InstructionEntry(
+                instruction = instruction,
+                ingredients = instruction.ingredientIds.mapNotNull { ingredientsById[it] },
+                modifier = Modifier.fillMaxWidth()
+            )
         }
     }
 }
 
 @Composable
-private fun InstructionEntry(instruction: InstructionUi, modifier: Modifier = Modifier) {
+private fun InstructionEntry(
+    instruction: InstructionUi,
+    ingredients: List<IngredientUi>,
+    modifier: Modifier = Modifier
+) {
     val richTextState = rememberRichTextState()
     LaunchedEffect(instruction.text) {
         richTextState.setMarkdown(instruction.text)
@@ -140,11 +154,7 @@ private fun InstructionEntry(instruction: InstructionUi, modifier: Modifier = Mo
             style = MaterialTheme.typography.titleLarge,
             color = MaterialTheme.colorScheme.secondary
         )
-        Row {
-            instruction.associatedIngredients.forEach {
-                Text(it.formattedDisplay, style = MaterialTheme.typography.bodySmall)
-            }
-        }
+        IngredientChipRow(ingredients, modifier = Modifier.fillMaxWidth())
 
         RichText(
             state = richTextState,
@@ -160,6 +170,49 @@ private fun InstructionEntry(instruction: InstructionUi, modifier: Modifier = Mo
                     .clip(MaterialTheme.shapes.medium)
             )
         }
+    }
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun IngredientChipRow(ingredients: List<IngredientUi>, modifier: Modifier = Modifier) {
+    if (ingredients.isEmpty()) return
+    FlowRow(
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp),
+        modifier = modifier
+    ) {
+        ingredients.forEach { ingredient ->
+            IngredientChip(ingredient)
+        }
+    }
+}
+
+@Composable
+private fun IngredientChip(ingredient: IngredientUi, modifier: Modifier = Modifier) {
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = modifier
+            .background(
+                MaterialTheme.colorScheme.secondaryContainer,
+                shape = MaterialTheme.shapes.small
+            )
+            .padding(vertical = 4.dp, horizontal = 8.dp)
+    ) {
+        ingredient.formattedQuantity?.let {
+            Text(
+                text = it,
+                style = MaterialTheme.typography.bodySmall,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSecondaryContainer
+            )
+        }
+        Text(
+            text = ingredient.formattedDisplay,
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSecondaryContainer
+        )
     }
 }
 

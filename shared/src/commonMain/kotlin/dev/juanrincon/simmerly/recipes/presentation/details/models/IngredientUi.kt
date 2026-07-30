@@ -6,6 +6,7 @@ import dev.juanrincon.simmerly.core.utils.nullIfEmpty
 import dev.juanrincon.simmerly.core.utils.toFractionString
 
 data class IngredientUi(
+    val referenceId: String,
     val quantity: Double?,
     val display: String,
     val food: FoodUi?,

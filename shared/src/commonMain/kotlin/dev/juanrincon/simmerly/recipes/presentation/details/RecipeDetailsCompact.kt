@@ -518,6 +518,7 @@ private fun CompactContent(
             ) {
                 InstructionView(
                     instructions = recipe.instructions,
+                    ingredients = recipe.ingredients,
                     modifier = Modifier.fillMaxWidth()
                 )
             }
@@ -593,6 +594,7 @@ private val previewRecipe = RecipeDetailUi(
     favorite = false,
     ingredients = listOf(
         IngredientUi(
+            referenceId = "ingredient-1",
             quantity = null,
             display = "200g spaghetti",
             food = null,
@@ -600,6 +602,7 @@ private val previewRecipe = RecipeDetailUi(
             note = null
         ),
         IngredientUi(
+            referenceId = "ingredient-2",
             quantity = null,
             display = "100g guanciale",
             food = null,
@@ -607,6 +610,7 @@ private val previewRecipe = RecipeDetailUi(
             note = null
         ),
         IngredientUi(
+            referenceId = "ingredient-3",
             quantity = null,
             display = "2 large eggs",
             food = null,
@@ -614,6 +618,7 @@ private val previewRecipe = RecipeDetailUi(
             note = null
         ),
         IngredientUi(
+            referenceId = "ingredient-4",
             quantity = null,
             display = "50g Pecorino Romano",
             food = null,
@@ -627,14 +632,14 @@ private val previewRecipe = RecipeDetailUi(
             title = "Cook the pasta",
             summary = "Boil spaghetti in salted water until al dente.",
             text = "Bring a large pot of salted water to a boil. Cook spaghetti according to package instructions until al dente. Reserve 1 cup of pasta water before draining.",
-            associatedIngredients = emptyList()
+            ingredientIds = listOf("ingredient-1")
         ),
         InstructionUi(
             id = "2",
             title = "Prepare the sauce",
             summary = "Whisk eggs and cheese, then combine with pasta.",
             text = "Whisk together eggs and Pecorino Romano in a bowl. Remove pasta from heat, add guanciale, then stir in egg mixture, adding pasta water gradually to achieve a creamy consistency.",
-            associatedIngredients = emptyList()
+            ingredientIds = listOf("ingredient-2", "ingredient-3", "ingredient-4")
         ),
     ),
     tools = emptyList(),

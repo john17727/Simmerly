@@ -6,5 +6,9 @@ data class InstructionUi(
     val summary: String,
     val text: String,
     val images: List<String> = emptyList(),
-    val associatedIngredients: List<IngredientUi>
+    /**
+     * Ids of the ingredients this step uses. They are resolved against the recipe's ingredient list
+     * at render time so the quantities stay in sync when the servings are scaled.
+     */
+    val ingredientIds: List<String> = emptyList()
 )

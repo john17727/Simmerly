@@ -17,6 +17,7 @@ import dev.juanrincon.simmerly.recipes.data.local.recipe.CommentDao
 import dev.juanrincon.simmerly.recipes.data.local.recipe.FoodDao
 import dev.juanrincon.simmerly.recipes.data.local.recipe.IngredientDao
 import dev.juanrincon.simmerly.recipes.data.local.recipe.InstructionDao
+import dev.juanrincon.simmerly.recipes.data.local.recipe.InstructionIngredientDao
 import dev.juanrincon.simmerly.recipes.data.local.recipe.NoteDao
 import dev.juanrincon.simmerly.recipes.data.local.recipe.RecipeDao
 import dev.juanrincon.simmerly.recipes.data.local.recipe.RecipeTagDao
@@ -91,6 +92,8 @@ abstract class SimmerlyDatabase : RoomDatabase() {
     abstract fun recipeToolDao(): RecipeToolDao
 
     abstract fun recipeTagDao(): RecipeTagDao
+
+    abstract fun instructionIngredientDao(): InstructionIngredientDao
 
     abstract fun noteDao(): NoteDao
 

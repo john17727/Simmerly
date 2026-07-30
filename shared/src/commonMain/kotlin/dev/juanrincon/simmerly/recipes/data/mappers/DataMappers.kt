@@ -193,10 +193,14 @@ fun FoodDto.toEntity() = FoodEntity(
 fun InstructionDto.toEntityWithRelations(
     recipeId: String,
     ingredients: List<IngredientWithRelations>
-) = InstructionWithRelations(
-    instruction = this.toEntity(recipeId),
-    ingredients = ingredientReferences.map { reference -> ingredients.find { it.ingredient.id == reference.referenceId }!! } // TODO: Hacky, revisit later o
-)
+): InstructionWithRelations {
+    val ingredientsById = ingredients.associateBy { it.ingredient.id }
+    return InstructionWithRelations(
+        instruction = this.toEntity(recipeId),
+        // References pointing at an ingredient the recipe no longer has are skipped
+        ingredients = ingredientReferences.mapNotNull { ingredientsById[it.referenceId] }
+    )
+}
 
 fun InstructionDto.toEntity(recipeId: String) = InstructionEntity(
     id = id,

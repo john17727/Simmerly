@@ -10,6 +10,7 @@ import dev.juanrincon.simmerly.auth.domain.SessionDataStore
 import dev.juanrincon.simmerly.core.data.local.SimmerlyDatabase
 import dev.juanrincon.simmerly.recipes.data.local.recent.RecentSearchQueryEntity
 import dev.juanrincon.simmerly.recipes.data.local.recent.RecentlyViewedEntity
+import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.junction.InstructionIngredientCrossRef
 import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.junction.RecipeToolCrossRef
 import dev.juanrincon.simmerly.recipes.data.mappers.toDomain
 import dev.juanrincon.simmerly.recipes.data.mappers.toDto
@@ -45,6 +46,7 @@ class SimmerlyRecipeRepository(
     private val tagsDao = database.tagDao()
     private val recipeToolDao = database.recipeToolDao()
     private val recipeTagDao = database.recipeTagDao()
+    private val instructionIngredientDao = database.instructionIngredientDao()
     private val noteDao = database.noteDao()
     private val commentDao = database.commentDao()
     private val userDao = database.userDao()
@@ -151,6 +153,17 @@ class SimmerlyRecipeRepository(
         instructionsDao.deleteByRecipeId(recipeId)
         ingredientDao.upsertAll(data.ingredients.map { it.ingredient })
         instructionsDao.upsertAll(data.instructions.map { it.instruction })
+
+        val instructionIngredientRefs = data.instructions.flatMap { instruction ->
+            instruction.ingredients.map { ingredient ->
+                InstructionIngredientCrossRef(
+                    instructionId = instruction.instruction.id,
+                    ingredientId = ingredient.ingredient.id
+                )
+            }
+        }
+        instructionIngredientDao.clearForRecipe(recipeId)
+        instructionIngredientDao.insertAll(instructionIngredientRefs)
 
         noteDao.deleteByRecipeId(recipeId)
         noteDao.upsertAll(data.notes)

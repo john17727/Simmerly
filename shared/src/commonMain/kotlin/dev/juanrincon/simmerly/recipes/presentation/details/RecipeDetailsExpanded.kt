@@ -173,6 +173,7 @@ internal fun ExpandedView(
                             ) {
                                 InstructionView(
                                     instructions = recipe.instructions,
+                                    ingredients = recipe.ingredients,
                                     modifier = Modifier.fillMaxWidth()
                                 )
                             }

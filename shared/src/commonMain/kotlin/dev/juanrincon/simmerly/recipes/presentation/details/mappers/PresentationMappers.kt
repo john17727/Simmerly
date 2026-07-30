@@ -44,6 +44,7 @@ fun RecipeDetail.toRecipeDetailUi(): RecipeDetailUi = RecipeDetailUi(
 )
 
 fun Ingredient.toIngredientUi(): IngredientUi = IngredientUi(
+    referenceId = referenceId,
     quantity = quantity,
     display = display,
     food = food?.toFoodUi(),
@@ -71,7 +72,7 @@ fun Instruction.toInstructionUi(step: Int): InstructionUi = InstructionUi(
     summary = formatInstructionStep(summary, step),
     text = text,
     images = images,
-    associatedIngredients = associatedIngredients.map { it.toIngredientUi() }
+    ingredientIds = associatedIngredients.map { it.referenceId }
 )
 
 fun Nutrition.toNutritionUi(): NutritionUi = NutritionUi(
