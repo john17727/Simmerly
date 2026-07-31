@@ -223,7 +223,7 @@ private let previewState = RecipeDetailsState(
     showSettings: false
 )
 
-#Preview("Light") {
+#Preview {
     NavigationStack {
         RecipeDetailsView(
             state: previewState,
@@ -233,19 +233,6 @@ private let previewState = RecipeDetailsState(
             onNavigateToComments: {}
         )
     }
-}
-
-#Preview("Dark") {
-    NavigationStack {
-        RecipeDetailsView(
-            state: previewState,
-            onAddServing: {},
-            onRemoveServing: {},
-            onShowSettings: {},
-            onNavigateToComments: {}
-        )
-    }
-    .preferredColorScheme(.dark)
 }
 
 #Preview("Loading") {

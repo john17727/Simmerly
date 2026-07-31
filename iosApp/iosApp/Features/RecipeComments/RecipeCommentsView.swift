@@ -48,7 +48,6 @@ private struct CommentRow: View {
                     .resizable()
                     .foregroundStyle(SimmerlyColor.onSurfaceVariant)
             }
-            .aspectRatio(contentMode: .fill)
             .frame(width: 24, height: 24)
             .clipShape(RoundedRectangle(cornerRadius: 8))
 
