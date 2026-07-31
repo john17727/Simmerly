@@ -237,8 +237,8 @@ private fun CompactContent(
     state: RecipeDetailsState,
     onEvent: (RecipeDetailsIntent) -> Unit,
     paddingValues: PaddingValues,
-    sharedTransitionScope: SharedTransitionScope? = null,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    sharedTransitionScope: SharedTransitionScope? = null
 ) {
     val recipe = state.recipe
     val tabs = state.mobileTabs
@@ -296,7 +296,7 @@ private fun CompactContent(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .fillParentMaxHeight(0.33f)
+                    .fillParentMaxHeight(0.45f)
                     .padding(horizontal = 16.dp)
             ) {
                 AsyncImage(

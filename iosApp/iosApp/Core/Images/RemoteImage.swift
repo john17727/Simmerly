@@ -15,27 +15,43 @@ import Kingfisher
 /// The crop/fit is applied entirely here via Kingfisher's own `.resizing(mode:)`. Do NOT layer a
 /// SwiftUI-level `.aspectRatio(contentMode:)` on top at call sites — stacking one on a `KFImage`
 /// reintroduces the same corruption, even though the underlying bitmap is already the clean,
-/// redrawn one. Pass `targetSize` matching the view's actual display frame instead.
+/// redrawn one. Pass `targetSize` matching the view's actual display frame instead: the bitmap
+/// arrives already aspect-fill-cropped to those dimensions, so the plain `.resizable()` image fits
+/// its frame exactly and can never overflow it. `targetSize: nil` skips processing for layouts
+/// whose height derives from the image's own aspect ratio (e.g. instruction step photos).
 struct RemoteImage<Placeholder: View, Failure: View>: View {
     let url: String
+    var targetSize: CGSize? = nil
     @ViewBuilder var placeholder: () -> Placeholder
     @ViewBuilder var failure: () -> Failure
 
+    @Environment(\.displayScale) private var displayScale
+
     var body: some View {
-        KFImage(URL(string: url))
+        var image = KFImage(URL(string: url))
             .placeholder { placeholder() }
             .onFailureView { failure() }
-            .resizable()
-            .id(url)
+        if let targetSize, targetSize.width > 0, targetSize.height > 0 {
+            image =
+                image
+                .setProcessor(
+                    ResizingImageProcessor(referenceSize: targetSize, mode: .aspectFill)
+                        |> CroppingImageProcessor(size: targetSize)
+                )
+                .scaleFactor(displayScale)
+        }
+        return image.resizable().id(url)
     }
 }
 
 extension RemoteImage where Failure == Placeholder {
     init(
         url: String,
+        targetSize: CGSize? = nil,
         @ViewBuilder placeholder: @escaping () -> Placeholder
     ) {
         self.url = url
+        self.targetSize = targetSize
         self.placeholder = placeholder
         self.failure = placeholder
     }

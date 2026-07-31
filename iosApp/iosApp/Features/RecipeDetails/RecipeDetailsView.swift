@@ -99,11 +99,11 @@ struct RecipeDetailsView: View {
     }
 
     private var heroImage: some View {
-        RemoteImage(url: state.recipe.image) {
-            Rectangle().fill(SimmerlyColor.surfaceContainer)
+        GeometryReader { geometry in
+            RemoteImage(url: state.recipe.image, targetSize: geometry.size) {
+                Rectangle().fill(SimmerlyColor.surfaceContainer)
+            }
         }
-        .aspectRatio(contentMode: .fill)
-        .frame(maxWidth: .infinity)
         .frame(height: 260)
         .clipShape(RoundedRectangle(cornerRadius: 12))
         .padding(.horizontal, 16)

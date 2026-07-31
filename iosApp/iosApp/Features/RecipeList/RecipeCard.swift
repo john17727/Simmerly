@@ -8,12 +8,14 @@ struct RecipeCard: View {
     var body: some View {
         Button(action: onTap) {
             HStack(alignment: .center, spacing: 16) {
-                RemoteImage(url: recipe.image) {
+                RemoteImage(
+                    url: recipe.image,
+                    targetSize: CGSize(width: 100, height: 100)
+                ) {
                     RoundedRectangle(cornerRadius: 8).fill(
                         SimmerlyColor.surfaceContainer
                     )
                 }
-                .aspectRatio(contentMode: .fill)
                 .frame(width: 100, height: 100)
                 .clipShape(RoundedRectangle(cornerRadius: 8))
 

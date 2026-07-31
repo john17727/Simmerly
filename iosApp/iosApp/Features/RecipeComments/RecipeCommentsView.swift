@@ -43,7 +43,10 @@ private struct CommentRow: View {
 
     var body: some View {
         HStack(alignment: .top, spacing: 8) {
-            RemoteImage(url: comment.image) {
+            RemoteImage(
+                url: comment.image,
+                targetSize: CGSize(width: 24, height: 24)
+            ) {
                 Image(systemName: "person.circle.fill")
                     .resizable()
                     .foregroundStyle(SimmerlyColor.onSurfaceVariant)
