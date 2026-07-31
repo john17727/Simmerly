@@ -299,6 +299,6 @@ private fun NutritionEntry(
 ) {
     Row(modifier = modifier, horizontalArrangement = Arrangement.SpaceBetween) {
         Text(title)
-        Text(value, color = MaterialTheme.colorScheme.secondary)
+        Text(value, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }
