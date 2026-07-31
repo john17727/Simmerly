@@ -9,44 +9,49 @@ struct IngredientsSection: View {
     let onRemoveServing: () -> Void
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Text("Ingredients")
-                .font(SimmerlyFont.headlineSmall)
+        SectionCard {
+            VStack(alignment: .leading, spacing: 16) {
+                VStack(alignment: .leading, spacing: 0) {
+                    Text("Ingredients")
+                        .font(SimmerlyFont.headlineSmall)
 
-            HStack {
-                Text(recipe.formattedServings)
-                    .foregroundStyle(SimmerlyColor.primary)
-                Spacer()
-                if recipe.isParsed {
-                    HStack(spacing: 16) {
-                        Button(action: onRemoveServing) {
-                            Image(systemName: "minus.circle")
-                        }
-                        .disabled(recipe.servings <= 1)
-                        Button(action: onAddServing) {
-                            Image(systemName: "plus.circle")
+                    HStack {
+                        Text(recipe.formattedServings)
+                            .foregroundStyle(SimmerlyColor.primary)
+                        Spacer()
+                        if recipe.isParsed {
+                            HStack(spacing: 16) {
+                                Button(action: onRemoveServing) {
+                                    Image(systemName: "minus.circle")
+                                }
+                                .disabled(recipe.servings <= 1)
+                                Button(action: onAddServing) {
+                                    Image(systemName: "plus.circle")
+                                }
+                            }
+                            .font(.system(size: 22))
+                            .foregroundStyle(SimmerlyColor.primary)
                         }
                     }
-                    .font(.system(size: 22))
-                    .foregroundStyle(SimmerlyColor.primary)
                 }
-            }
+                .padding(.top, 16)
+                .padding(.bottom, 8)
 
-            ForEach(recipe.ingredients, id: \.referenceId) { ingredient in
-                IngredientEntry(ingredient: ingredient)
-            }
+                ForEach(recipe.ingredients, id: \.referenceId) { ingredient in
+                    IngredientEntry(ingredient: ingredient)
+                }
 
-            if !recipe.tools.isEmpty {
-                Text("Tools")
-                    .font(SimmerlyFont.headlineSmall)
-                    .padding(.top, 16)
-                ForEach(recipe.tools, id: \.id) { tool in
-                    Text(tool.name)
-                        .font(SimmerlyFont.bodyMedium)
+                if !recipe.tools.isEmpty {
+                    Text("Tools")
+                        .font(SimmerlyFont.headlineSmall)
+                        .padding(.top, 16)
+                    ForEach(recipe.tools, id: \.id) { tool in
+                        Text(tool.name)
+                            .font(SimmerlyFont.bodyMedium)
+                    }
                 }
             }
         }
-        .padding(.horizontal, 16)
     }
 }
 
@@ -82,18 +87,21 @@ struct InstructionsSection: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 32) {
-            Text("Instructions")
-                .font(SimmerlyFont.headlineSmall)
+        SectionCard {
+            VStack(alignment: .leading, spacing: 32) {
+                Text("Instructions")
+                    .font(SimmerlyFont.headlineSmall)
+                    .padding(.top, 16)
+                    .padding(.bottom, 8)
 
-            ForEach(instructions, id: \.id) { instruction in
-                InstructionEntry(
-                    instruction: instruction,
-                    ingredients: instruction.ingredientIds.compactMap { ingredientsById[$0] }
-                )
+                ForEach(instructions, id: \.id) { instruction in
+                    InstructionEntry(
+                        instruction: instruction,
+                        ingredients: instruction.ingredientIds.compactMap { ingredientsById[$0] }
+                    )
+                }
             }
         }
-        .padding(.horizontal, 16)
     }
 }
 
@@ -153,23 +161,26 @@ struct NotesSection: View {
     let notes: [Note]
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 32) {
-            Text("Notes")
-                .font(SimmerlyFont.headlineSmall)
+        SectionCard {
+            VStack(alignment: .leading, spacing: 32) {
+                Text("Notes")
+                    .font(SimmerlyFont.headlineSmall)
+                    .padding(.top, 16)
+                    .padding(.bottom, 8)
 
-            ForEach(notes, id: \.id) { note in
-                VStack(alignment: .leading, spacing: 6) {
-                    if !note.title.isEmpty {
-                        Text(note.title)
-                            .font(SimmerlyFont.titleLarge)
-                            .foregroundStyle(SimmerlyColor.secondary)
+                ForEach(notes, id: \.id) { note in
+                    VStack(alignment: .leading, spacing: 6) {
+                        if !note.title.isEmpty {
+                            Text(note.title)
+                                .font(SimmerlyFont.titleLarge)
+                                .foregroundStyle(SimmerlyColor.secondary)
+                        }
+                        Text(note.text)
+                            .font(SimmerlyFont.bodyMedium)
                     }
-                    Text(note.text)
-                        .font(SimmerlyFont.bodyMedium)
                 }
             }
         }
-        .padding(.horizontal, 16)
     }
 }
 
@@ -196,22 +207,24 @@ struct NutritionSection: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text("Nutrition")
-                .font(SimmerlyFont.headlineSmall)
+        SectionCard {
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Nutrition")
+                    .font(SimmerlyFont.headlineSmall)
+                    .padding(.top, 16)
 
-            ForEach(entries, id: \.0) { title, value in
-                HStack {
-                    Text(title)
-                        .font(SimmerlyFont.bodyMedium)
-                    Spacer()
-                    Text(value)
-                        .font(SimmerlyFont.bodyMedium)
-                        .foregroundStyle(SimmerlyColor.onSurfaceVariant)
+                ForEach(entries, id: \.0) { title, value in
+                    HStack {
+                        Text(title)
+                            .font(SimmerlyFont.bodyMedium)
+                        Spacer()
+                        Text(value)
+                            .font(SimmerlyFont.bodyMedium)
+                            .foregroundStyle(SimmerlyColor.onSurfaceVariant)
+                    }
                 }
             }
         }
-        .padding(.horizontal, 16)
     }
 }
 

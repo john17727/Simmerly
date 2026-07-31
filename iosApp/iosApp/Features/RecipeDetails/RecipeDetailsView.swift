@@ -48,13 +48,18 @@ struct RecipeDetailsView: View {
 
     private var content: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 24) {
+            VStack(alignment: .leading, spacing: 16) {
                 if state.isRefreshing {
                     ProgressView()
                         .frame(maxWidth: .infinity)
                 }
 
-                heroImage
+                ZStack(alignment: .bottomLeading) {
+                    heroImage
+                    TagRow(tags: state.recipe.tags)
+                        .padding(8)
+                }
+                .padding(.horizontal, 16)
 
                 VStack(alignment: .leading, spacing: 8) {
                     RecipeMetaRow(
@@ -63,7 +68,6 @@ struct RecipeDetailsView: View {
                         prepTime: state.recipe.prepTime,
                         cookTime: state.recipe.performTime
                     )
-                    TagRow(tags: state.recipe.tags)
                     if let description = state.recipe.description_?.localized,
                         !description.isEmpty
                     {
@@ -73,6 +77,7 @@ struct RecipeDetailsView: View {
                     }
                 }
                 .padding(.horizontal, 16)
+                .padding(.bottom, 8)
 
                 IngredientsSection(
                     recipe: state.recipe,
@@ -106,7 +111,6 @@ struct RecipeDetailsView: View {
         }
         .frame(height: 260)
         .clipShape(RoundedRectangle(cornerRadius: 12))
-        .padding(.horizontal, 16)
     }
 }
 
@@ -129,7 +133,7 @@ private let previewRecipe = RecipeDetailUi(
     servings: 2.0,
     favorite: false,
     link: nil,
-    tags: [],
+    tags: [Tag(id: "1", groupId: "", name: "Pasta")],
     ingredients: [
         IngredientUi(
             referenceId: "ingredient-1",
