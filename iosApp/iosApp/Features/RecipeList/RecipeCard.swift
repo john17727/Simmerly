@@ -25,27 +25,7 @@ struct RecipeCard: View {
                         .foregroundStyle(SimmerlyColor.onSurface)
                         .multilineTextAlignment(.leading)
 
-                    HStack {
-                        if recipe.isFavorite {
-                            Image(systemName: "heart.fill")
-                                .font(.system(size: 12))
-                                .foregroundStyle(SimmerlyColor.primary)
-                        }
-                        if let rating = recipe.rating {
-                            HStack(spacing: 4) {
-                                Image(systemName: "star.fill")
-                                Text("\(rating)")
-                            }
-                        }
-                        if let totalTime = recipe.totalTime {
-                            HStack(spacing: 4) {
-                                Image(systemName: "timer")
-                                Text(totalTime)
-                            }
-                        }
-                    }
-                    .font(SimmerlyFont.bodySmall)
-                    .foregroundStyle(SimmerlyColor.onSurfaceVariant)
+                    RecipeMetaRow(rating: recipe.rating?.doubleValue, totalTime: recipe.totalTime, prepTime: nil, cookTime: nil)
 
                     TagRow(tags: recipe.tags)
                 }

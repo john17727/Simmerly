@@ -195,7 +195,7 @@ private fun IngredientChip(ingredient: IngredientUi, modifier: Modifier = Modifi
         verticalAlignment = Alignment.CenterVertically,
         modifier = modifier
             .background(
-                MaterialTheme.colorScheme.secondaryContainer,
+                MaterialTheme.colorScheme.tertiaryContainer,
                 shape = MaterialTheme.shapes.small
             )
             .padding(vertical = 4.dp, horizontal = 8.dp)
@@ -205,13 +205,13 @@ private fun IngredientChip(ingredient: IngredientUi, modifier: Modifier = Modifi
                 text = it,
                 style = MaterialTheme.typography.bodySmall,
                 fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSecondaryContainer
+                color = MaterialTheme.colorScheme.onTertiaryContainer
             )
         }
         Text(
             text = ingredient.formattedDisplay,
             style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSecondaryContainer
+            color = MaterialTheme.colorScheme.onTertiaryContainer
         )
     }
 }

@@ -150,10 +150,10 @@ private struct IngredientChip: View {
             Text(ingredient.formattedDisplay)
         }
         .font(SimmerlyFont.bodySmall)
-        .foregroundStyle(SimmerlyColor.onSecondaryContainer)
+        .foregroundStyle(SimmerlyColor.onTertiaryContainer)
         .padding(.vertical, 4)
         .padding(.horizontal, 8)
-        .background(SimmerlyColor.secondaryContainer, in: RoundedRectangle(cornerRadius: 8))
+        .background(SimmerlyColor.tertiaryContainer, in: RoundedRectangle(cornerRadius: 8))
     }
 }
 
