@@ -17,6 +17,7 @@ struct RecipesTabView: View {
 }
 
 private struct RecipesStackView: View {
+    @Environment(TabAccessoryModel.self) private var accessory
     @State private var path: [AppRoute] = []
 
     var body: some View {
@@ -41,10 +42,21 @@ private struct RecipesStackView: View {
                 }
             }
         }
+        .publishesStartCooking(for: cookableRecipeId, to: accessory)
+    }
+
+    /// The recipe list is the stack's root, so a detail screen is on top exactly when the last
+    /// pushed route is one — Comments and Search push it out of view.
+    private var cookableRecipeId: String? {
+        if case .detail(let recipeId) = path.last {
+            return recipeId
+        }
+        return nil
     }
 }
 
 private struct RecipesSplitView: View {
+    @Environment(TabAccessoryModel.self) private var accessory
     @State private var selectedRecipeId: String?
     @State private var detailPath: [AppRoute] = []
 
@@ -89,6 +101,37 @@ private struct RecipesSplitView: View {
                     "Select a recipe to see details",
                     systemImage: "book.closed"
                 )
+            }
+        }
+        .publishesStartCooking(for: cookableRecipeId, to: accessory)
+    }
+
+    /// Here the detail column's root *is* a recipe detail, so an empty `detailPath` still counts —
+    /// only Comments and Search push it out of view.
+    private var cookableRecipeId: String? {
+        switch detailPath.last {
+        case .none: return selectedRecipeId
+        case .some(.detail(let recipeId)): return recipeId
+        default: return nil
+        }
+    }
+}
+
+private extension View {
+    /// Offers the Start Cooking accessory to the tab shell while a recipe's details are on top.
+    /// Keyed on the recipe id rather than a flag so moving straight from one recipe to another
+    /// still republishes — which matters once the action actually uses the id.
+    func publishesStartCooking(
+        for recipeId: String?,
+        to accessory: TabAccessoryModel
+    ) -> some View {
+        onChange(of: recipeId, initial: true) { _, id in
+            guard id != nil else {
+                accessory.startCooking = nil
+                return
+            }
+            accessory.startCooking = {
+                /* TODO: start cooking */
             }
         }
     }
