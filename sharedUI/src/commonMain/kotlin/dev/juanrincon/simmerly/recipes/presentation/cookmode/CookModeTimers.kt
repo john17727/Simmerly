@@ -27,9 +27,9 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Label
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Label
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.NotificationsActive
 import androidx.compose.material.icons.filled.Pause
@@ -45,13 +45,15 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.material3.SheetValue
+import androidx.compose.material3.rememberBottomSheetState
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -69,6 +71,7 @@ import dev.juanrincon.simmerly.recipes.presentation.cookmode.models.CookTimerUi
 import dev.juanrincon.simmerly.recipes.presentation.cookmode.models.TimerOrigin
 import dev.juanrincon.simmerly.recipes.presentation.cookmode.models.TimerPreset
 import dev.juanrincon.simmerly.recipes.presentation.cookmode.orbit.NewTimerDraft
+import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 import kotlin.time.Duration
 
@@ -372,12 +375,25 @@ fun NewTimerSheet(
     onConfirm: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    // Leaving PartiallyExpanded out of enabledValues: this sheet's content (wheel + name
+    // field + presets + buttons) is taller than the default partial-expand threshold, which
+    // was cutting the bottom off on first open. No handle and no drag-to-dismiss either —
+    // Cancel/Start are the only way out.
+    val sheetState = rememberBottomSheetState(
+        initialValue = SheetValue.Hidden,
+        enabledValues = setOf(SheetValue.Hidden, SheetValue.Expanded)
+    )
+    val scope = rememberCoroutineScope()
+
+    // Cancel/Start mutate CookModeState to unmount this composable, which would otherwise cut
+    // the sheet's hide animation short. Play it out first and only then tell the caller.
+    fun dismissAnimated(after: () -> Unit) {
+        scope.launch { sheetState.hide() }.invokeOnCompletion { after() }
+    }
+
     ModalBottomSheet(
-        onDismissRequest = onDismiss,
-        // skipPartiallyExpanded: this sheet's content (wheel + name field + presets + buttons)
-        // is taller than the default partial-expand threshold, which was cutting the bottom off
-        // on first open. No handle and no drag-to-dismiss - only the X button closes it.
-        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+        onDismissRequest = { dismissAnimated(onDismiss) },
+        sheetState = sheetState,
         dragHandle = null,
         sheetGesturesEnabled = false,
         modifier = modifier
@@ -397,7 +413,7 @@ fun NewTimerSheet(
                 value = draft.label,
                 onValueChange = { onDraftChange(draft.copy(label = it)) },
                 label = { Text("Name") },
-                leadingIcon = { Icon(Icons.Default.Label, contentDescription = null) },
+                leadingIcon = { Icon(Icons.AutoMirrored.Filled.Label, contentDescription = null) },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth()
             )
@@ -425,11 +441,11 @@ fun NewTimerSheet(
 
             Spacer(Modifier.height(20.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.fillMaxWidth()) {
-                OutlinedButton(onClick = onDismiss, modifier = Modifier.weight(1f)) {
+                OutlinedButton(onClick = { dismissAnimated(onDismiss) }, modifier = Modifier.weight(1f)) {
                     Text("Cancel")
                 }
                 Button(
-                    onClick = onConfirm,
+                    onClick = { dismissAnimated(onConfirm) },
                     enabled = draft.minutes > 0 || draft.seconds > 0,
                     modifier = Modifier.weight(1f)
                 ) {

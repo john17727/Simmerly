@@ -7,7 +7,8 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.ModalBottomSheetProperties
 import androidx.compose.material3.SheetState
-import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.material3.SheetValue
+import androidx.compose.material3.rememberBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.navigation3.runtime.NavEntry
 import androidx.navigation3.runtime.NavMetadataKey
@@ -57,7 +58,13 @@ class BottomSheetSceneStrategy<T : Any> : SceneStrategy<T> {
             private lateinit var sheetState: SheetState
 
             override val content: @Composable () -> Unit = {
-                sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+                // Omitting SheetValue.PartiallyExpanded from enabledValues is the replacement for
+                // the deprecated skipPartiallyExpanded flag: Cook Mode draws its own full-height
+                // chrome and has no half-open state to settle into.
+                sheetState = rememberBottomSheetState(
+                    initialValue = SheetValue.Hidden,
+                    enabledValues = setOf(SheetValue.Hidden, SheetValue.Expanded)
+                )
                 ModalBottomSheet(
                     onDismissRequest = onBack,
                     sheetState = sheetState,
