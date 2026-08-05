@@ -1,6 +1,7 @@
 package dev.juanrincon.simmerly.recipes
 
 import dev.juanrincon.simmerly.recipes.domain.model.Comment
+import dev.juanrincon.simmerly.recipes.domain.model.Instruction
 import dev.juanrincon.simmerly.recipes.domain.model.Nutrition
 import dev.juanrincon.simmerly.recipes.domain.model.RecipeDetail
 import dev.juanrincon.simmerly.recipes.domain.model.RecipeSummary
@@ -10,6 +11,18 @@ import dev.juanrincon.simmerly.recipes.presentation.details.models.IngredientUi
 import dev.juanrincon.simmerly.recipes.presentation.details.models.RecipeDetailUi
 import kotlin.time.Clock
 import kotlin.time.ExperimentalTime
+
+fun anInstruction(
+    id: String = "instruction-1",
+    summary: String = "",
+    text: String = ""
+) = Instruction(
+    id = id,
+    title = "",
+    summary = summary,
+    text = text,
+    associatedIngredients = emptyList()
+)
 
 fun aRecipeSummary(
     id: String = "recipe-1",
@@ -63,7 +76,11 @@ fun anIngredientUi(
 )
 
 @OptIn(ExperimentalTime::class)
-fun aRecipeDetail(id: String = "test-recipe", servings: Double = 4.0) = RecipeDetail(
+fun aRecipeDetail(
+    id: String = "test-recipe",
+    servings: Double = 4.0,
+    instructions: List<Instruction> = emptyList()
+) = RecipeDetail(
     id = id,
     userId = "",
     householdId = "",
@@ -89,7 +106,7 @@ fun aRecipeDetail(id: String = "test-recipe", servings: Double = 4.0) = RecipeDe
     updatedAt = Clock.System.now(),
     lastMade = null,
     ingredients = emptyList(),
-    instructions = emptyList(),
+    instructions = instructions,
     nutrition = Nutrition(
         calories = null,
         carbohydrateContent = null,

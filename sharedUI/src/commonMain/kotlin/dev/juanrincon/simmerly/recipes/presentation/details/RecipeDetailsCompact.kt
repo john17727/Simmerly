@@ -96,6 +96,7 @@ internal fun CompactRecipeDetails(
     onEvent: (RecipeDetailsIntent) -> Unit,
     onNavigateBack: () -> Unit,
     onNavigateToComments: (recipeId: String) -> Unit,
+    onStartCooking: (recipeId: String) -> Unit = {},
     sharedTransitionScope: SharedTransitionScope? = null,
     modifier: Modifier = Modifier
 ) {
@@ -193,9 +194,11 @@ internal fun CompactRecipeDetails(
                     }
                 },
                 floatingActionButton = {
-                    AnimatedVisibility(visible = !state.loading) {
+                    // No steps to cook means nothing for Cook Mode to show — keep the FAB hidden
+                    // rather than opening an empty stepper.
+                    AnimatedVisibility(visible = !state.loading && state.recipe.instructions.isNotEmpty()) {
                         FloatingActionButton(
-                            onClick = { /* TODO: play action */ },
+                            onClick = { onStartCooking(state.recipe.id) },
                         ) {
                             Icon(Icons.Default.PlayArrow, contentDescription = "Play")
                         }

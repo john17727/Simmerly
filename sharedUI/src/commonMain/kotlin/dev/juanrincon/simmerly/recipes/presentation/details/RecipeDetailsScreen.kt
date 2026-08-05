@@ -33,6 +33,7 @@ fun RecipeDetailsScreen(
     recipeId: String,
     onNavigateBack: () -> Unit = {},
     onNavigateToComments: (recipeId: String) -> Unit,
+    onStartCooking: (recipeId: String) -> Unit = {},
     sharedTransitionScope: SharedTransitionScope? = null,
     viewModel: RecipeDetailsViewModel = koinViewModel { parametersOf(recipeId) },
     modifier: Modifier = Modifier
@@ -43,6 +44,7 @@ fun RecipeDetailsScreen(
         onEvent = viewModel::onEvent,
         onNavigateBack = onNavigateBack,
         onNavigateToComments = onNavigateToComments,
+        onStartCooking = onStartCooking,
         sharedTransitionScope = sharedTransitionScope,
         modifier = modifier
     )
@@ -55,6 +57,7 @@ private fun Content(
     onEvent: (RecipeDetailsIntent) -> Unit,
     onNavigateBack: () -> Unit,
     onNavigateToComments: (recipeId: String) -> Unit,
+    onStartCooking: (recipeId: String) -> Unit,
     sharedTransitionScope: SharedTransitionScope? = null,
     modifier: Modifier = Modifier
 ) {
@@ -90,6 +93,7 @@ private fun Content(
                             onEvent = onEvent,
                             onNavigateBack = onNavigateBack,
                             onNavigateToComments = onNavigateToComments,
+                            onStartCooking = onStartCooking,
                             sharedTransitionScope = sharedTransitionScope,
                             modifier = modifier
                         )

@@ -32,7 +32,9 @@ import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import androidx.savedstate.serialization.SavedStateConfiguration
+import dev.juanrincon.simmerly.core.presentation.navigation.BottomSheetSceneStrategy
 import dev.juanrincon.simmerly.recipes.presentation.comments.RecipeCommentsScreen
+import dev.juanrincon.simmerly.recipes.presentation.cookmode.CookModeScreen
 import dev.juanrincon.simmerly.recipes.presentation.details.RecipeDetailsScreen
 import dev.juanrincon.simmerly.recipes.presentation.list.RecipeListScreen
 import dev.juanrincon.simmerly.recipes.presentation.navigation.RecipeDestinations
@@ -68,7 +70,9 @@ fun RecipesContent(
     SharedTransitionLayout {
         NavDisplay(
             backStack = backStack,
-            sceneStrategies = listOf(rememberListDetailSceneStrategy()),
+            // BottomSheetSceneStrategy is an overlay strategy and must run before any non-overlay
+            // one (ListDetailSceneStrategy here) — see its KDoc.
+            sceneStrategies = listOf(BottomSheetSceneStrategy(), rememberListDetailSceneStrategy()),
             modifier = modifier.fillMaxSize(),
             entryDecorators = listOf(
                 rememberSaveableStateHolderNavEntryDecorator(),
@@ -113,6 +117,16 @@ fun RecipesContent(
                         sharedTransitionScope = this@SharedTransitionLayout,
                         onNavigateBack = { backStack.removeLastOrNull() },
                         onNavigateToComments = { backStack.add(RecipeDestinations.Comments(it)) },
+                        onStartCooking = { backStack.add(RecipeDestinations.CookMode(it)) },
+                        modifier = Modifier.fillMaxSize()
+                    )
+                }
+                entry<RecipeDestinations.CookMode>(
+                    metadata = BottomSheetSceneStrategy.bottomSheet()
+                ) { key ->
+                    CookModeScreen(
+                        recipeId = key.recipeId,
+                        onExit = { backStack.removeLastOrNull() },
                         modifier = Modifier.fillMaxSize()
                     )
                 }

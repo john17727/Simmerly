@@ -20,8 +20,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import dev.juanrincon.simmerly.recipes.domain.model.Tag
+import dev.juanrincon.simmerly.recipes.presentation.details.models.IngredientUi
 
 
 @Composable
@@ -127,5 +129,50 @@ fun RecipeMetaRow(
                 Text(it, style = MaterialTheme.typography.bodySmall)
             }
         }
+    }
+}
+
+/** A row of [IngredientChip]s, used both by the recipe detail's instruction list and by Cook
+ * Mode's per-step ingredient callouts. Renders nothing for an empty list. */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+fun IngredientChipRow(ingredients: List<IngredientUi>, modifier: Modifier = Modifier) {
+    if (ingredients.isEmpty()) return
+    FlowRow(
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp),
+        modifier = modifier
+    ) {
+        ingredients.forEach { ingredient ->
+            IngredientChip(ingredient)
+        }
+    }
+}
+
+@Composable
+fun IngredientChip(ingredient: IngredientUi, modifier: Modifier = Modifier) {
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = modifier
+            .background(
+                MaterialTheme.colorScheme.tertiaryContainer,
+                shape = MaterialTheme.shapes.small
+            )
+            .padding(vertical = 4.dp, horizontal = 8.dp)
+    ) {
+        ingredient.formattedQuantity?.let {
+            Text(
+                text = it,
+                style = MaterialTheme.typography.bodySmall,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onTertiaryContainer
+            )
+        }
+        Text(
+            text = ingredient.formattedDisplay,
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onTertiaryContainer
+        )
     }
 }

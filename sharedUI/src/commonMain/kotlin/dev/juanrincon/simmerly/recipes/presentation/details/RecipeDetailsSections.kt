@@ -1,10 +1,7 @@
 package dev.juanrincon.simmerly.recipes.presentation.details
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -32,6 +29,7 @@ import dev.juanrincon.simmerly.recipes.presentation.details.models.IngredientUi
 import dev.juanrincon.simmerly.recipes.presentation.details.models.InstructionUi
 import dev.juanrincon.simmerly.recipes.presentation.details.models.NutritionUi
 import dev.juanrincon.simmerly.recipes.presentation.details.models.RecipeDetailUi
+import dev.juanrincon.simmerly.recipes.presentation.shared.IngredientChipRow
 
 @Composable
 internal fun IngredientAndToolView(
@@ -170,49 +168,6 @@ private fun InstructionEntry(
                     .clip(MaterialTheme.shapes.medium)
             )
         }
-    }
-}
-
-@OptIn(ExperimentalLayoutApi::class)
-@Composable
-private fun IngredientChipRow(ingredients: List<IngredientUi>, modifier: Modifier = Modifier) {
-    if (ingredients.isEmpty()) return
-    FlowRow(
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-        verticalArrangement = Arrangement.spacedBy(4.dp),
-        modifier = modifier
-    ) {
-        ingredients.forEach { ingredient ->
-            IngredientChip(ingredient)
-        }
-    }
-}
-
-@Composable
-private fun IngredientChip(ingredient: IngredientUi, modifier: Modifier = Modifier) {
-    Row(
-        horizontalArrangement = Arrangement.spacedBy(4.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = modifier
-            .background(
-                MaterialTheme.colorScheme.tertiaryContainer,
-                shape = MaterialTheme.shapes.small
-            )
-            .padding(vertical = 4.dp, horizontal = 8.dp)
-    ) {
-        ingredient.formattedQuantity?.let {
-            Text(
-                text = it,
-                style = MaterialTheme.typography.bodySmall,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onTertiaryContainer
-            )
-        }
-        Text(
-            text = ingredient.formattedDisplay,
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onTertiaryContainer
-        )
     }
 }
 

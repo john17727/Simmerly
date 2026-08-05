@@ -16,4 +16,7 @@ sealed interface RecipeDestinations : NavKey {
 
     @Serializable
     data object Search : RecipeDestinations
+
+    @Serializable
+    data class CookMode(val recipeId: String) : RecipeDestinations
 }
