@@ -1,6 +1,7 @@
 package dev.juanrincon.simmerly.recipes.presentation.cookmode.orbit
 
 import dev.juanrincon.simmerly.recipes.domain.ParsedDuration
+import kotlin.time.Duration
 
 sealed interface CookModeIntent {
     data class ToggleIngredient(val referenceId: String) : CookModeIntent
@@ -12,6 +13,12 @@ sealed interface CookModeIntent {
     data class JumpToStep(val index: Int) : CookModeIntent
 
     data class StartDetectedTimer(val duration: ParsedDuration, val label: String) : CookModeIntent
+
+    /** Picks one option out of a detected time range's suggestions, without starting it yet. */
+    data class SelectRangeOption(val duration: Duration) : CookModeIntent
+
+    /** Starts a timer for the option currently selected on this step's detected range. */
+    data class StartSelectedRangeTimer(val label: String) : CookModeIntent
     data object ShowNewTimerSheet : CookModeIntent
     data class UpdateTimerDraft(val draft: NewTimerDraft) : CookModeIntent
     data object ConfirmNewTimer : CookModeIntent

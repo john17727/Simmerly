@@ -383,16 +383,7 @@ fun NewTimerSheet(
         modifier = modifier
     ) {
         Column(modifier = Modifier.padding(horizontal = 24.dp).padding(bottom = 24.dp)) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text("New timer", style = MaterialTheme.typography.headlineSmall)
-                IconButton(onClick = onDismiss) {
-                    Icon(Icons.Default.Close, contentDescription = "Close")
-                }
-            }
+            Text("New timer", style = MaterialTheme.typography.headlineSmall, modifier = Modifier.padding(vertical = 16.dp))
 
             DurationWheelRow(
                 minutes = draft.minutes,
@@ -654,6 +645,13 @@ private fun formatTimer(duration: Duration): String {
 internal fun formatPresetLength(duration: Duration): String {
     val minutes = duration.inWholeMinutes
     return if (minutes > 0) "$minutes min" else "${duration.inWholeSeconds} sec"
+}
+
+/** "15 minute" / "45 second" — the spelled-out form, for prose like "Start 15 minute timer"
+ * where the abbreviated [formatPresetLength] would read as clipped. */
+internal fun formatTimerLength(duration: Duration): String {
+    val minutes = duration.inWholeMinutes
+    return if (minutes > 0) "$minutes minute" else "${duration.inWholeSeconds} second"
 }
 
 // endregion

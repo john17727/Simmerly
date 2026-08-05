@@ -143,6 +143,9 @@ internal fun MiseEnPlaceView(
                     modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp),
                     color = MaterialTheme.colorScheme.primary,
                     trackColor = MaterialTheme.colorScheme.surfaceContainer,
+                    // M3's default stop indicator draws a dot at the track's end regardless of
+                    // progress, which reads as a stray mark at 0 of N ready.
+                    drawStopIndicator = {}
                 )
                 Spacer(Modifier.height(8.dp))
             }
@@ -336,7 +339,8 @@ internal val previewCookRecipe = RecipeDetailUi(
             id = "step-1",
             title = null,
             summary = "Step 1",
-            text = "Bring a large pot of salted water to a boil. Cook spaghetti for 9 minutes until al dente.",
+            // A range rather than a single duration, so the detected-range card has a preview.
+            text = "Bring a large pot of salted water to a boil. Cook the spaghetti for 15–17 minutes, until al dente.",
             ingredientIds = listOf("ingredient-1")
         ),
         InstructionUi(

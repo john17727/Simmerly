@@ -2,9 +2,12 @@ package dev.juanrincon.simmerly.recipes.presentation.cookmode
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -24,7 +27,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.List
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
@@ -59,6 +62,7 @@ import dev.juanrincon.simmerly.recipes.presentation.cookmode.orbit.CookModeState
 import dev.juanrincon.simmerly.recipes.presentation.cookmode.orbit.CookPhase
 import dev.juanrincon.simmerly.recipes.presentation.shared.IngredientChipRow
 import dev.juanrincon.simmerly.theme.SimmerlyTheme
+import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
 
 private const val MAX_PROGRESS_SEGMENTS = 10
@@ -108,9 +112,6 @@ internal fun CookStepView(
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
                         )
-                    }
-                    IconButton(onClick = { onEvent(CookModeIntent.ShowTimerList) }) {
-                        Icon(Icons.Default.List, contentDescription = "All timers")
                     }
                 }
                 StepProgress(
@@ -172,8 +173,14 @@ internal fun CookStepView(
         StepBody(
             step = step,
             timers = state.timers,
+            timerOptions = state.currentStepTimerOptions,
+            selectedOption = state.selectedRangeOptionOrDefault,
             onStartDetectedTimer = { duration ->
                 onEvent(CookModeIntent.StartDetectedTimer(duration, step.instruction.summary))
+            },
+            onSelectRangeOption = { onEvent(CookModeIntent.SelectRangeOption(it)) },
+            onStartSelectedRangeTimer = {
+                onEvent(CookModeIntent.StartSelectedRangeTimer(step.instruction.summary))
             },
             modifier = Modifier.fillMaxSize().padding(paddingValues)
         )
@@ -206,6 +213,8 @@ private fun StepProgress(current: Int, total: Int, modifier: Modifier = Modifier
             modifier = modifier.height(4.dp).clip(RoundedCornerShape(percent = 50)),
             color = MaterialTheme.colorScheme.primary,
             trackColor = MaterialTheme.colorScheme.outlineVariant,
+            // Same stop-indicator suppression as MiseEnPlaceView's checklist bar - see there.
+            drawStopIndicator = {}
         )
     }
 }
@@ -214,7 +223,11 @@ private fun StepProgress(current: Int, total: Int, modifier: Modifier = Modifier
 private fun StepBody(
     step: CookStepUi,
     timers: List<CookTimerUi>,
+    timerOptions: List<Duration>,
+    selectedOption: Duration?,
     onStartDetectedTimer: (ParsedDuration) -> Unit,
+    onSelectRangeOption: (Duration) -> Unit,
+    onStartSelectedRangeTimer: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val richTextState = rememberRichTextState()
@@ -267,12 +280,113 @@ private fun StepBody(
         }
         if (firstDetected != null && !alreadyStarted) {
             item {
-                DetectedTimerCard(
-                    duration = firstDetected,
-                    onStart = { onStartDetectedTimer(firstDetected) },
-                    modifier = Modifier.fillMaxWidth()
+                if (firstDetected.isRange) {
+                    DetectedRangeCard(
+                        options = timerOptions,
+                        selected = selectedOption,
+                        onSelect = onSelectRangeOption,
+                        onStart = onStartSelectedRangeTimer,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                } else {
+                    DetectedTimerCard(
+                        duration = firstDetected,
+                        onStart = { onStartDetectedTimer(firstDetected) },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            }
+        }
+    }
+}
+
+/**
+ * The detected-range variant of the timer card: a step that says "cook for 15–17 minutes" can't
+ * be reduced to one number, so every reasonable duration in the range is offered as a chip with
+ * the shortest preselected. [suggestedTimerOptions][dev.juanrincon.simmerly.recipes.domain.suggestedTimerOptions]
+ * decides how many that is — a narrow range lists every minute, a wide one coarsens to round steps.
+ */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun DetectedRangeCard(
+    options: List<Duration>,
+    selected: Duration?,
+    onSelect: (Duration) -> Unit,
+    onStart: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+        modifier = modifier
+            .clip(MaterialTheme.shapes.medium)
+            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.08f))
+            .border(1.dp, MaterialTheme.colorScheme.primaryContainer, MaterialTheme.shapes.medium)
+            .padding(horizontal = 16.dp, vertical = 14.dp)
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Icon(
+                Icons.Default.Timer,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.secondary,
+                modifier = Modifier.size(22.dp)
+            )
+            Text(
+                "Range detected · ${options.size} timers suggested",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+
+        FlowRow(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            options.forEach { option ->
+                val isSelected = option == selected
+                Text(
+                    text = formatPresetLength(option),
+                    style = MaterialTheme.typography.titleSmall,
+                    color = if (isSelected) {
+                        MaterialTheme.colorScheme.onPrimary
+                    } else {
+                        MaterialTheme.colorScheme.onSurface
+                    },
+                    modifier = Modifier
+                        .clip(MaterialTheme.shapes.small)
+                        .background(
+                            if (isSelected) {
+                                MaterialTheme.colorScheme.primary
+                            } else {
+                                MaterialTheme.colorScheme.surface
+                            }
+                        )
+                        .border(
+                            1.dp,
+                            if (isSelected) {
+                                MaterialTheme.colorScheme.primary
+                            } else {
+                                MaterialTheme.colorScheme.outlineVariant
+                            },
+                            MaterialTheme.shapes.small
+                        )
+                        .clickable { onSelect(option) }
+                        .padding(horizontal = 16.dp, vertical = 10.dp)
                 )
             }
+        }
+
+        Button(
+            onClick = onStart,
+            enabled = selected != null,
+            shape = RoundedCornerShape(percent = 50),
+            modifier = Modifier.fillMaxWidth().height(44.dp)
+        ) {
+            Icon(Icons.Default.PlayArrow, contentDescription = null, modifier = Modifier.size(18.dp))
+            Spacer(Modifier.width(8.dp))
+            Text(selected?.let { "Start ${formatTimerLength(it)} timer" } ?: "Start timer")
         }
     }
 }
@@ -313,6 +427,30 @@ private fun DetectedTimerCard(
 }
 
 // region Previews
+
+@Preview(apiLevel = 36, showSystemUi = true, device = Devices.PIXEL_9_PRO)
+@Composable
+private fun CookStepDetectedRangeLightPreview() {
+    SimmerlyTheme {
+        CookStepView(
+            state = CookModeState(loading = false, recipe = previewCookRecipe, phase = CookPhase.STEPS, stepIndex = 0),
+            onEvent = {},
+            onExit = {}
+        )
+    }
+}
+
+@Preview(apiLevel = 36, showSystemUi = true, device = Devices.PIXEL_9_PRO)
+@Composable
+private fun CookStepDetectedRangeDarkPreview() {
+    SimmerlyTheme(darkTheme = true) {
+        CookStepView(
+            state = CookModeState(loading = false, recipe = previewCookRecipe, phase = CookPhase.STEPS, stepIndex = 0),
+            onEvent = {},
+            onExit = {}
+        )
+    }
+}
 
 @Preview(apiLevel = 36, showSystemUi = true, device = Devices.PIXEL_9_PRO)
 @Composable

@@ -53,6 +53,13 @@ class CookModeViewModel(
             is CookModeIntent.JumpToStep -> jumpToStep(event.index)
 
             is CookModeIntent.StartDetectedTimer -> startDetectedTimer(event.duration.duration, event.label)
+            is CookModeIntent.SelectRangeOption -> intent {
+                reduce { state.copy(selectedRangeOption = event.duration) }
+            }
+            is CookModeIntent.StartSelectedRangeTimer -> intent {
+                val selected = state.selectedRangeOptionOrDefault ?: return@intent
+                startDetectedTimer(selected, event.label)
+            }
             CookModeIntent.ShowNewTimerSheet -> showNewTimerSheet()
             is CookModeIntent.UpdateTimerDraft -> intent {
                 reduce { state.copy(newTimerDraft = event.draft) }
@@ -177,14 +184,26 @@ class CookModeViewModel(
                 state.copy(phase = CookPhase.DONE, cookingFinishedAtMillis = clock.now().toEpochMilliseconds())
             }
         } else {
-            reduce { state.copy(stepIndex = nextIndex.coerceIn(0, steps.lastIndex)) }
+            // selectedRangeOption belongs to the step it was picked on — drop it on the way out.
+            reduce {
+                state.copy(
+                    stepIndex = nextIndex.coerceIn(0, steps.lastIndex),
+                    selectedRangeOption = null
+                )
+            }
         }
     }
 
     private fun jumpToStep(index: Int) = intent {
         val steps = state.steps
         if (steps.isEmpty()) return@intent
-        reduce { state.copy(stepIndex = index.coerceIn(0, steps.lastIndex), showTimerList = false) }
+        reduce {
+            state.copy(
+                stepIndex = index.coerceIn(0, steps.lastIndex),
+                showTimerList = false,
+                selectedRangeOption = null
+            )
+        }
     }
 
     private fun startDetectedTimer(duration: Duration, label: String) = intent {
