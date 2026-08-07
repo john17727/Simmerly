@@ -12,6 +12,7 @@ import assertk.assertions.isTrue
 import dev.juanrincon.simmerly.recipes.FakeRecipeRepository
 import dev.juanrincon.simmerly.recipes.aRecipeDetail
 import dev.juanrincon.simmerly.recipes.aRecipeDetailUi
+import dev.juanrincon.simmerly.recipes.anIngredientUi
 import dev.juanrincon.simmerly.recipes.anInstruction
 import dev.juanrincon.simmerly.recipes.domain.LoadingResult
 import dev.juanrincon.simmerly.recipes.domain.ParsedDuration
@@ -175,6 +176,64 @@ class CookModeViewModelTest {
         viewModel.testWithInternalState(this, initialState = loadedState) {
             viewModel.onEvent(CookModeIntent.BeginSteps)
             assertThat(awaitInternalState().cookingStartedAtMillis).isEqualTo(5_000L)
+        }
+    }
+
+    // endregion
+
+    // region Servings
+
+    @Test
+    fun addServingIncrementsServingsAndScalesIngredients() = runTest(testDispatcher) {
+        val loadedState = CookModeState(
+            loading = false,
+            recipe = threeStepRecipe.copy(
+                servings = 4.0,
+                ingredients = listOf(anIngredientUi(quantity = 100.0))
+            )
+        )
+        viewModel.testWithInternalState(this, initialState = loadedState) {
+            viewModel.onEvent(CookModeIntent.AddServing)
+            val state = awaitInternalState()
+            assertThat(state.recipe.servings).isEqualTo(5.0)
+            assertThat(state.recipe.ingredients[0].quantity).isEqualTo(125.0)
+        }
+    }
+
+    @Test
+    fun removeServingDecrementsServings() = runTest(testDispatcher) {
+        val loadedState = CookModeState(loading = false, recipe = threeStepRecipe.copy(servings = 4.0))
+        viewModel.testWithInternalState(this, initialState = loadedState) {
+            viewModel.onEvent(CookModeIntent.RemoveServing)
+            assertThat(awaitInternalState().recipe.servings).isEqualTo(3.0)
+        }
+    }
+
+    @Test
+    fun removeServingClampsAtOneAndEmitsNoStateChange() = runTest(testDispatcher) {
+        val loadedState = CookModeState(loading = false, recipe = threeStepRecipe.copy(servings = 1.0))
+        viewModel.testWithInternalState(this, initialState = loadedState) {
+            viewModel.onEvent(CookModeIntent.RemoveServing)
+            // clamped (1.0) == current (1.0) → early return, no reduce called
+        }
+        assertThat(viewModel.container.stateFlow.value.recipe.servings).isEqualTo(1.0)
+    }
+
+    @Test
+    fun addServingDoesNotTouchCheckedIngredients() = runTest(testDispatcher) {
+        // Scaling a quantity a cook already checked off shouldn't silently un-check it — the
+        // referenceId a check is keyed on doesn't change when servings do.
+        val loadedState = CookModeState(
+            loading = false,
+            recipe = threeStepRecipe.copy(
+                servings = 4.0,
+                ingredients = listOf(anIngredientUi(quantity = 100.0, referenceId = "ingredient-1"))
+            ),
+            checkedIngredientIds = setOf("ingredient-1")
+        )
+        viewModel.testWithInternalState(this, initialState = loadedState) {
+            viewModel.onEvent(CookModeIntent.AddServing)
+            assertThat(awaitInternalState().checkedIngredientIds).contains("ingredient-1")
         }
     }
 

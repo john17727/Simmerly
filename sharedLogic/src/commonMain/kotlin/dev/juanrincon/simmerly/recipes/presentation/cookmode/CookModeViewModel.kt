@@ -12,6 +12,7 @@ import dev.juanrincon.simmerly.recipes.presentation.cookmode.orbit.CookPhase
 import dev.juanrincon.simmerly.recipes.presentation.cookmode.orbit.NewTimerDraft
 import dev.juanrincon.simmerly.recipes.presentation.details.mappers.toRecipeDetailUi
 import dev.juanrincon.simmerly.recipes.presentation.details.models.RecipeDetailUi
+import dev.juanrincon.simmerly.recipes.presentation.details.models.withServings
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
@@ -45,6 +46,8 @@ class CookModeViewModel(
     fun onEvent(event: CookModeIntent) {
         when (event) {
             is CookModeIntent.ToggleIngredient -> toggleIngredient(event.referenceId)
+            CookModeIntent.AddServing -> updateServing(1)
+            CookModeIntent.RemoveServing -> updateServing(-1)
             CookModeIntent.SkipMiseEnPlace -> beginSteps()
             CookModeIntent.BeginSteps -> beginSteps()
 
@@ -164,6 +167,16 @@ class CookModeViewModel(
                 }
             )
         }
+    }
+
+    private fun updateServing(delta: Int) = intent {
+        val current = state.recipe
+        if (current == RecipeDetailUi.emptyRecipe) return@intent
+
+        val updated = current.withServings(current.servings + delta)
+        if (updated == current) return@intent
+
+        reduce { state.copy(recipe = updated) }
     }
 
     private fun beginSteps() = intent {

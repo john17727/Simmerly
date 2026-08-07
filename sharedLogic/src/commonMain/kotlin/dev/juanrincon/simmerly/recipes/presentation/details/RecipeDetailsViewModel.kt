@@ -5,6 +5,7 @@ import dev.juanrincon.simmerly.recipes.domain.LoadingResult
 import dev.juanrincon.simmerly.recipes.domain.RecipeRepository
 import dev.juanrincon.simmerly.recipes.presentation.details.mappers.toRecipeDetailUi
 import dev.juanrincon.simmerly.recipes.presentation.details.models.RecipeDetailUi
+import dev.juanrincon.simmerly.recipes.presentation.details.models.withServings
 import dev.juanrincon.simmerly.recipes.presentation.details.orbit.RecipeDetailsIntent
 import dev.juanrincon.simmerly.recipes.presentation.details.orbit.RecipeDetailsSideEffect
 import dev.juanrincon.simmerly.recipes.presentation.details.orbit.RecipeDetailsState
@@ -15,7 +16,6 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import org.orbitmvi.orbit.OrbitContainer
 import org.orbitmvi.orbit.OrbitContainerHost
 import org.orbitmvi.orbit.viewmodel.orbitContainer
-import kotlin.math.round
 
 class RecipeDetailsViewModel(
     private val recipeId: String,
@@ -100,24 +100,10 @@ class RecipeDetailsViewModel(
         val current = state.recipe
         if (current == RecipeDetailUi.emptyRecipe) return@intent
 
-        val clamped = newServings.coerceAtLeast(1.0)
-        if (clamped == current.servings) return@intent
+        val updated = current.withServings(newServings)
+        if (updated == current) return@intent
 
-        val factor = clamped / current.servings
-        val updatedIngredients = current.ingredients.map { ingredient ->
-            if (ingredient.quantity == null) return@map ingredient
-            val rounded = round(ingredient.quantity * factor * 100.0) / 100.0
-            ingredient.copy(quantity = rounded)
-        }
-
-        reduce {
-            state.copy(
-                recipe = current.copy(
-                    servings = clamped,
-                    ingredients = updatedIngredients
-                )
-            )
-        }
+        reduce { state.copy(recipe = updated) }
     }
 
     private fun updateSettings(event: RecipeDetailsIntent.UpdateSettings) = intent {

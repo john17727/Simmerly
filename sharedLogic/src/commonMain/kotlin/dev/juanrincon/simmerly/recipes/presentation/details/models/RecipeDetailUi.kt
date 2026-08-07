@@ -6,6 +6,7 @@ import dev.juanrincon.simmerly.recipes.domain.model.Note
 import dev.juanrincon.simmerly.recipes.domain.model.Settings
 import dev.juanrincon.simmerly.recipes.domain.model.Tag
 import dev.juanrincon.simmerly.recipes.domain.model.Tool
+import kotlin.math.round
 
 data class RecipeDetailUi(
     val id: String,
@@ -77,4 +78,28 @@ data class RecipeDetailUi(
             )
         )
     }
+}
+
+/**
+ * Recomputes every ingredient's [IngredientUi.quantity] for a new serving count, scaling
+ * proportionally and rounding to two decimal places. [newServings] is clamped to at least 1 — a
+ * recipe can't serve zero people. Returns this unchanged (`===`-equal via data class equality) if
+ * the clamped value doesn't actually change anything, so callers can cheaply detect a no-op.
+ *
+ * Shared by [dev.juanrincon.simmerly.recipes.presentation.details.RecipeDetailsViewModel] and
+ * [dev.juanrincon.simmerly.recipes.presentation.cookmode.CookModeViewModel] — both let a cook
+ * scale the same recipe, and the scaling rule must stay identical between them.
+ */
+fun RecipeDetailUi.withServings(newServings: Double): RecipeDetailUi {
+    val clamped = newServings.coerceAtLeast(1.0)
+    if (clamped == servings) return this
+
+    val factor = clamped / servings
+    return copy(
+        servings = clamped,
+        ingredients = ingredients.map { ingredient ->
+            val quantity = ingredient.quantity ?: return@map ingredient
+            ingredient.copy(quantity = round(quantity * factor * 100.0) / 100.0)
+        }
+    )
 }

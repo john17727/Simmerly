@@ -18,12 +18,16 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material.icons.filled.ShoppingBasket
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material3.Button
@@ -39,8 +43,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -50,10 +57,12 @@ import dev.juanrincon.simmerly.recipes.domain.model.Settings
 import dev.juanrincon.simmerly.recipes.domain.model.Tool
 import dev.juanrincon.simmerly.recipes.presentation.cookmode.orbit.CookModeIntent
 import dev.juanrincon.simmerly.recipes.presentation.cookmode.orbit.CookModeState
+import dev.juanrincon.simmerly.recipes.presentation.details.models.FoodUi
 import dev.juanrincon.simmerly.recipes.presentation.details.models.IngredientUi
 import dev.juanrincon.simmerly.recipes.presentation.details.models.InstructionUi
 import dev.juanrincon.simmerly.recipes.presentation.details.models.NutritionUi
 import dev.juanrincon.simmerly.recipes.presentation.details.models.RecipeDetailUi
+import dev.juanrincon.simmerly.recipes.presentation.details.models.UnitUi
 import dev.juanrincon.simmerly.recipes.presentation.shared.TagChip
 import dev.juanrincon.simmerly.theme.SimmerlyTheme
 
@@ -101,12 +110,55 @@ internal fun MiseEnPlaceView(
                         Text("Skip")
                     }
                 }
-                Text(
-                    "${recipe.title.asString()} · ${recipe.formattedServings}",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(start = 24.dp, end = 24.dp, bottom = 4.dp)
-                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    modifier = Modifier.fillMaxWidth().padding(start = 24.dp, end = 24.dp, bottom = 4.dp)
+                ) {
+                    Text(
+                        recipe.title.asString(),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f)
+                    )
+                    // The stepper only makes sense when at least one ingredient has a parsed
+                    // quantity to scale — same gate RecipeDetailsSections.kt uses for the read-only
+                    // recipe screen's identical stepper.
+                    if (recipe.isParsed) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(2.dp)
+                        ) {
+                            ServingStepperButton(
+                                icon = Icons.Default.Remove,
+                                contentDescription = "Remove serving",
+                                enabled = recipe.servings > 1,
+                                onClick = { onEvent(CookModeIntent.RemoveServing) }
+                            )
+                            Text(
+                                recipe.formattedServings,
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.onSurface,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.widthIn(min = 76.dp)
+                            )
+                            ServingStepperButton(
+                                icon = Icons.Default.Add,
+                                contentDescription = "Add serving",
+                                enabled = true,
+                                onClick = { onEvent(CookModeIntent.AddServing) }
+                            )
+                        }
+                    } else {
+                        Text(
+                            recipe.formattedServings,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -280,6 +332,31 @@ private fun ToolsSection(tools: List<Tool>, modifier: Modifier = Modifier) {
     }
 }
 
+@Composable
+private fun ServingStepperButton(
+    icon: ImageVector,
+    contentDescription: String,
+    enabled: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Box(
+        contentAlignment = Alignment.Center,
+        modifier = modifier
+            .size(32.dp)
+            .clip(CircleShape)
+            .background(MaterialTheme.colorScheme.surfaceContainer)
+            .clickable(enabled = enabled, onClick = onClick)
+    ) {
+        Icon(
+            icon,
+            contentDescription = contentDescription,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = if (enabled) 1f else 0.4f),
+            modifier = Modifier.size(18.dp)
+        )
+    }
+}
+
 // region Previews
 
 /** Shared across the Cook Mode preview composables in this package — five steps, two of which
@@ -305,8 +382,18 @@ internal val previewCookRecipe = RecipeDetailUi(
             referenceId = "ingredient-1",
             quantity = 200.0,
             display = "200 g Spaghetti",
-            food = null,
-            unit = null,
+            // Parsed (food/unit != null) so the preview exercises the servings stepper, not the
+            // static-text fallback recipe.isParsed falls back to when nothing is parsed. Still
+            // renders as "200 g Spaghetti" via formattedQuantity/formattedDisplay.
+            food = FoodUi(name = "spaghetti", pluralName = "spaghetti"),
+            unit = UnitUi(
+                name = "gram",
+                pluralName = "grams",
+                fraction = false,
+                abbreviation = "g",
+                pluralAbbreviation = "g",
+                useAbbreviation = true
+            ),
             note = null
         ),
         IngredientUi(

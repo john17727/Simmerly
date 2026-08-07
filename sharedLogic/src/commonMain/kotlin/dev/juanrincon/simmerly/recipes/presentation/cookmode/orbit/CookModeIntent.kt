@@ -5,6 +5,8 @@ import kotlin.time.Duration
 
 sealed interface CookModeIntent {
     data class ToggleIngredient(val referenceId: String) : CookModeIntent
+    data object AddServing : CookModeIntent
+    data object RemoveServing : CookModeIntent
     data object SkipMiseEnPlace : CookModeIntent
     data object BeginSteps : CookModeIntent
 
