@@ -1,6 +1,0 @@
-GET {{baseUrl}}/recipes
-Authorization: {{token}}
-
-###
-GET {{baseUrl}}/recipes/ed5c98c2-800a-4435-b57b-5bb816f9eb4f
-Authorization: {{token}}

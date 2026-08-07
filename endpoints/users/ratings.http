@@ -1,0 +1,10 @@
+### Set Rating
+POST {{baseUrl}}/users/{{userId}}/ratings/{{recipeId}}
+accept: application/json
+Authorization: {{token}}
+Content-Type: application/json
+
+{
+  "rating": 4,
+  "isFavorite": false
+}

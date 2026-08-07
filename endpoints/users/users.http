@@ -1,0 +1,3 @@
+### Get Logged In User
+GET {{baseUrl}}/users/self
+Authorization: {{token}}

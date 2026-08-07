@@ -1,0 +1,19 @@
+### Get All
+GET {{baseUrl}}/recipes
+Authorization: {{token}}
+
+### Get One
+GET {{baseUrl}}/recipes/{{recipeId}}
+Authorization: {{token}}
+
+### Update Last Made
+PATCH {{baseUrl}}/recipes/{{recipeId}}/last-made
+accept: application/json
+Authorization: {{token}}
+Content-Type: application/json
+
+{
+  "timestamp": "2026-07-30T03:59:59Z"
+}
+
+###
