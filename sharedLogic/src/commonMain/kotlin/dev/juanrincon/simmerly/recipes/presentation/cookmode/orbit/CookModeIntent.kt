@@ -34,7 +34,10 @@ sealed interface CookModeIntent {
 
     data class SetRating(val rating: Int) : CookModeIntent
     data class UpdateNote(val text: String) : CookModeIntent
-    data object SubmitNote : CookModeIntent
+
+    /** The Done button: records last-made and a "Cooked" timeline event (the note as its
+     * message, if any) unconditionally, and the rating only if one was actually tapped. */
+    data object FinishCooking : CookModeIntent
 
     data object Exit : CookModeIntent
 }

@@ -11,6 +11,7 @@ class FakeSessionDataStore : SessionDataStore {
 
     var serverAddress: String? = null
     var token: String? = null
+    var userId: String? = null
 
     override suspend fun setServerAddress(address: String) {
         serverAddress = address
@@ -30,9 +31,16 @@ class FakeSessionDataStore : SessionDataStore {
 
     override fun isAuthenticated(): Flow<AuthState> = authStateFlow
 
+    override suspend fun getUserId(): String? = userId
+
+    override suspend fun setUserId(id: String) {
+        userId = id
+    }
+
     override suspend fun clear() {
         serverAddress = null
         token = null
+        userId = null
         serverAddressFlow.value = null
         authStateFlow.value = AuthState.Unauthenticated
     }

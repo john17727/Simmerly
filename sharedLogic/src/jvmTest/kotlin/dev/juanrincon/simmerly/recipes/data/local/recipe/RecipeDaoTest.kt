@@ -4,6 +4,7 @@ import app.cash.turbine.test
 import assertk.assertThat
 import assertk.assertions.hasSize
 import assertk.assertions.isEqualTo
+import assertk.assertions.isNull
 import dev.juanrincon.simmerly.core.aRecipeEntity
 import dev.juanrincon.simmerly.core.buildTestDatabase
 import dev.juanrincon.simmerly.core.data.local.SimmerlyDatabase
@@ -43,6 +44,21 @@ class RecipeDaoTest {
     fun existsByIdReturnsOneAfterInsert() = runTest {
         dao.upsert(aRecipeEntity(id = "recipe-1"))
         assertThat(dao.existsById("recipe-1")).isEqualTo(1)
+    }
+
+    // endregion
+
+    // region getSlug
+
+    @Test
+    fun getSlugReturnsNullForMissingRecipe() = runTest {
+        assertThat(dao.getSlug("nonexistent")).isNull()
+    }
+
+    @Test
+    fun getSlugReturnsTheRealSlugNotTheId() = runTest {
+        dao.upsert(aRecipeEntity(id = "recipe-1", slug = "grandmas-meatloaf"))
+        assertThat(dao.getSlug("recipe-1")).isEqualTo("grandmas-meatloaf")
     }
 
     // endregion

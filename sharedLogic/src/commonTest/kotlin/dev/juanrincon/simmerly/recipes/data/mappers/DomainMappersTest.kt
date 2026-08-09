@@ -16,6 +16,7 @@ import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.UserEntity
 import dev.juanrincon.simmerly.recipes.data.local.recipe.model.CommentWithRelations
 import dev.juanrincon.simmerly.recipes.data.local.recipe.model.InstructionWithRelations
 import dev.juanrincon.simmerly.recipes.data.local.recipe.model.ListRecipeWithTags
+import dev.juanrincon.simmerly.recipes.data.local.recipe.model.RecipeDetailWithRelations
 import kotlin.test.Test
 import kotlin.time.Clock
 import kotlin.time.ExperimentalTime
@@ -81,6 +82,37 @@ class DomainMappersTest {
         val domain = entity.toDomain(host = null)
 
         assertThat(domain.prepTime).isNull()
+    }
+
+    // endregion
+
+    // region RecipeDetailWithRelations.toDomain — personal rating fallback
+
+    @Test
+    fun recipeDetailToDomainUsesUserRatingOverAggregateWhenPresent() {
+        val entity = aRecipeDetailWithRelations(recipeRating = 3.0)
+
+        val domain = entity.toDomain(host = null, userRating = 5.0)
+
+        assertThat(domain.rating).isEqualTo(5.0)
+    }
+
+    @Test
+    fun recipeDetailToDomainFallsBackToAggregateWhenUserRatingIsNull() {
+        val entity = aRecipeDetailWithRelations(recipeRating = 3.0)
+
+        val domain = entity.toDomain(host = null, userRating = null)
+
+        assertThat(domain.rating).isEqualTo(3.0)
+    }
+
+    @Test
+    fun recipeDetailToDomainWithNeitherRatingIsNull() {
+        val entity = aRecipeDetailWithRelations(recipeRating = null)
+
+        val domain = entity.toDomain(host = null, userRating = null)
+
+        assertThat(domain.rating).isNull()
     }
 
     // endregion
@@ -353,6 +385,19 @@ class DomainMappersTest {
             text = text
         ),
         ingredients = emptyList()
+    )
+
+    private fun aRecipeDetailWithRelations(
+        recipeRating: Double? = 4.5
+    ) = RecipeDetailWithRelations(
+        recipe = aRecipeEntity(rating = recipeRating),
+        categories = emptyList(),
+        tags = emptyList(),
+        tools = emptyList(),
+        ingredients = emptyList(),
+        instructions = emptyList(),
+        notes = emptyList(),
+        comments = emptyList()
     )
 
     private fun aRecipeEntity(

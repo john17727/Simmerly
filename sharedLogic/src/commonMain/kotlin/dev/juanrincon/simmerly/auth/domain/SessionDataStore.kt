@@ -14,6 +14,13 @@ interface SessionDataStore {
 
     suspend fun setToken(token: String)
 
+    /** The logged-in user's Mealie UUID, if it has been resolved yet — see
+     * [dev.juanrincon.simmerly.initialload.domain.UserRepository.currentUserId] for a fallback
+     * that fetches and persists it when this is null (e.g. a session that predates this field). */
+    suspend fun getUserId(): String?
+
+    suspend fun setUserId(id: String)
+
     fun isAuthenticated(): Flow<AuthState>
 
     suspend fun clear()

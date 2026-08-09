@@ -1,0 +1,7 @@
+### Get All
+GET {{baseUrl}}/recipes/timeline/events?page=1&perPage=32&orderBy=timestamp&orderDirection=desc&
+    queryFilter=(recipe.slug="homemade-pizza-recipe") AND eventType IN ["info", "system", "comment"]
+accept: application/json
+Authorization: {{token}}
+
+###

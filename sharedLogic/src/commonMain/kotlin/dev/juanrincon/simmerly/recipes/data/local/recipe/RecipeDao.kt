@@ -38,6 +38,12 @@ interface RecipeDao {
     @Query("SELECT COUNT(*) FROM recipes WHERE id = :id")
     suspend fun existsById(id: String): Int
 
+    /** The real Mealie slug for a recipe id — needed because the rating and last-made endpoints
+     * are unverified on whether they accept an id in place of a slug (only `GET /api/recipes/{slug}`
+     * documents accepting either), so writes resolve the real slug rather than gamble. */
+    @Query("SELECT slug FROM recipes WHERE id = :id")
+    suspend fun getSlug(id: String): String?
+
     @Upsert
     suspend fun upsert(recipe: RecipeEntity)
 

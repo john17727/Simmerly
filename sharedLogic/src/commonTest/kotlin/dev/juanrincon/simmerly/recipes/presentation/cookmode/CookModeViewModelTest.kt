@@ -428,24 +428,108 @@ class CookModeViewModelTest {
     // region Done screen
 
     @Test
-    fun submitNoteCallsRepositoryAndClearsDraft() = runTest(testDispatcher) {
-        val loadedState = CookModeState(loading = false, recipe = threeStepRecipe, phase = CookPhase.DONE, noteDraft = "Great recipe")
+    fun finishCookingRecordsLastMadeTimelineEventAndRating() = runTest(testDispatcher) {
+        fakeClock.nowMillis = 5.minutes.inWholeMilliseconds
+        val loadedState = CookModeState(
+            loading = false,
+            recipe = threeStepRecipe,
+            phase = CookPhase.DONE,
+            rating = 4,
+            noteDraft = "Great recipe"
+        )
         viewModel.testWithInternalState(this, initialState = loadedState) {
-            viewModel.onEvent(CookModeIntent.SubmitNote)
+            viewModel.onEvent(CookModeIntent.FinishCooking)
             assertThat(awaitInternalState().noteDraft).isEqualTo("")
         }
-        assertThat(repo.lastAddCommentCall?.first).isEqualTo(threeStepRecipe.id)
-        assertThat(repo.lastAddCommentCall?.second).isEqualTo("Great recipe")
+        val call = repo.lastRecordRecipeMadeCall
+        assertThat(call?.first).isEqualTo(threeStepRecipe.id)
+        assertThat(call?.second).isEqualTo(Instant.fromEpochMilliseconds(5.minutes.inWholeMilliseconds))
+        assertThat(call?.third).isEqualTo("Great recipe")
+        assertThat(repo.lastSetRatingCall).isEqualTo(threeStepRecipe.id to 4.0)
     }
 
     @Test
-    fun submitNoteWithBlankDraftDoesNothing() = runTest(testDispatcher) {
-        val loadedState = CookModeState(loading = false, recipe = threeStepRecipe, phase = CookPhase.DONE, noteDraft = "")
+    fun finishCookingWithUntouchedRatingSkipsTheRatingWrite() = runTest(testDispatcher) {
+        // rating == 0 means "never tapped a star", not "zero stars" — the write is 1-5 only.
+        val loadedState = CookModeState(
+            loading = false,
+            recipe = threeStepRecipe,
+            phase = CookPhase.DONE,
+            rating = 0,
+            noteDraft = "Great recipe"
+        )
         viewModel.testWithInternalState(this, initialState = loadedState) {
-            viewModel.onEvent(CookModeIntent.SubmitNote)
-            // no reduce, no repository call
+            viewModel.onEvent(CookModeIntent.FinishCooking)
+            awaitInternalState()
+        }
+        assertThat(repo.lastRecordRecipeMadeCall?.first).isEqualTo(threeStepRecipe.id)
+        assertThat(repo.lastSetRatingCall).isNull()
+    }
+
+    @Test
+    fun finishCookingWithBlankNoteStillRecordsTheTimelineEventWithNoMessage() = runTest(testDispatcher) {
+        val loadedState = CookModeState(
+            loading = false,
+            recipe = threeStepRecipe,
+            phase = CookPhase.DONE,
+            rating = 0,
+            noteDraft = ""
+        )
+        viewModel.testWithInternalState(this, initialState = loadedState) {
+            viewModel.onEvent(CookModeIntent.FinishCooking)
+            // noteDraft was already "" → the reduce produces an identical state, no emission to
+            // await, matching removeServingClampsAtOneAndEmitsNoStateChange above.
+        }
+        assertThat(repo.lastRecordRecipeMadeCall?.first).isEqualTo(threeStepRecipe.id)
+        assertThat(repo.lastRecordRecipeMadeCall?.third).isNull()
+    }
+
+    @Test
+    fun finishCookingNeverCallsAddComment() = runTest(testDispatcher) {
+        // The note's destination moved to the timeline event; addComment must not fire alongside
+        // it, or the same note would show up twice in two different places in Mealie's own UI.
+        val loadedState = CookModeState(
+            loading = false,
+            recipe = threeStepRecipe,
+            phase = CookPhase.DONE,
+            rating = 4,
+            noteDraft = "Great recipe"
+        )
+        viewModel.testWithInternalState(this, initialState = loadedState) {
+            viewModel.onEvent(CookModeIntent.FinishCooking)
+            awaitInternalState()
         }
         assertThat(repo.lastAddCommentCall).isNull()
+    }
+
+    @Test
+    fun ratingPreFillsFromTheLoadedRecipeOnFirstLoadOnly() = runTest(testDispatcher) {
+        viewModel.testWithInternalState(this, initialState = CookModeState(loading = false)) {
+            runOnCreate()
+
+            repo.recipeDetailsFlow().emit(
+                Either.Right(LoadingResult.Loaded(aRecipeDetail(id = "test-recipe").copy(rating = 4.0)))
+            )
+            assertThat(awaitInternalState().rating).isEqualTo(4)
+
+            // The cook taps a different, unsubmitted rating...
+            viewModel.onEvent(CookModeIntent.SetRating(2))
+            assertThat(awaitInternalState().rating).isEqualTo(2)
+
+            // ...and a background refresh must not silently revert it back to the server's value.
+            // description differs so distinctUntilChanged doesn't swallow this as a duplicate of
+            // the first emission (two Clock.System.now() calls can land on the same instant).
+            repo.recipeDetailsFlow().emit(
+                Either.Right(
+                    LoadingResult.Loaded(
+                        aRecipeDetail(id = "test-recipe").copy(rating = 4.0, description = "refreshed")
+                    )
+                )
+            )
+            assertThat(awaitInternalState().rating).isEqualTo(2)
+
+            cancelAndIgnoreRemainingItems()
+        }
     }
 
     // endregion

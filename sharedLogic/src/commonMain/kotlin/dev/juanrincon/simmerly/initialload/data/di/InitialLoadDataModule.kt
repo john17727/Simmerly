@@ -12,7 +12,7 @@ import org.koin.dsl.module
 val initialLoadDataModule = module {
     single<UserNetworkClient> { UserNetworkClient(get(qualifier = AuthClient)) }
     single<AuxiliaryNetworkClient> { AuxiliaryNetworkClient(get(qualifier = AuthClient)) }
-    single<UserRepository> { DefaultUserRepository(get(), get(), get()) }
+    single<UserRepository> { DefaultUserRepository(get(), get(), get(), get()) }
     single<AuxiliaryRepository> {
         DefaultAuxiliaryRepository(
             get(),

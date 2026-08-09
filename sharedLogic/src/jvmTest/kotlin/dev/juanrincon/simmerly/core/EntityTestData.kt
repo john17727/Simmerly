@@ -15,14 +15,15 @@ import kotlin.time.Instant
 fun aRecipeEntity(
     id: String = "recipe-1",
     name: String = "Test Recipe",
-    createdAt: Instant = Clock.System.now()
+    createdAt: Instant = Clock.System.now(),
+    slug: String = id
 ) = RecipeEntity(
     id = id,
     userId = "user-1",
     householdId = "household-1",
     groupId = "group-1",
     name = name,
-    slug = id,
+    slug = slug,
     image = "",
     servings = 4.0,
     yieldQuantity = 4.0,

@@ -11,6 +11,12 @@ interface UserRecipePreferenceDao {
     @Upsert
     suspend fun upsertAll(preferences: List<UserRecipePreferenceEntity>)
 
+    @Upsert
+    suspend fun upsert(preference: UserRecipePreferenceEntity)
+
+    @Query("SELECT * FROM user_recipe_preferences WHERE recipeId = :recipeId")
+    suspend fun get(recipeId: String): UserRecipePreferenceEntity?
+
     @Query("SELECT * FROM user_recipe_preferences WHERE recipeId = :recipeId")
     fun observe(recipeId: String): Flow<UserRecipePreferenceEntity?>
 

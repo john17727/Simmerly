@@ -13,6 +13,7 @@ import dev.juanrincon.simmerly.recipes.domain.model.Settings
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.flowOf
+import kotlin.time.Instant
 
 class FakeRecipeRepository : RecipeRepository {
 
@@ -85,6 +86,28 @@ class FakeRecipeRepository : RecipeRepository {
     ): Either<RecipesError, Unit> {
         lastUpdateSettingsCall = recipeId to settings
         return updateSettingsResult
+    }
+
+    // --- setRating ---
+    var setRatingResult: Either<RecipesError, Unit> = Unit.right()
+    var lastSetRatingCall: Pair<String, Double?>? = null
+
+    override suspend fun setRating(recipeId: String, rating: Double?): Either<RecipesError, Unit> {
+        lastSetRatingCall = recipeId to rating
+        return setRatingResult
+    }
+
+    // --- recordRecipeMade ---
+    var recordRecipeMadeResult: Either<RecipesError, Unit> = Unit.right()
+    var lastRecordRecipeMadeCall: Triple<String, Instant, String?>? = null
+
+    override suspend fun recordRecipeMade(
+        recipeId: String,
+        timestamp: Instant,
+        note: String?
+    ): Either<RecipesError, Unit> {
+        lastRecordRecipeMadeCall = Triple(recipeId, timestamp, note)
+        return recordRecipeMadeResult
     }
 
     // --- observe flows ---

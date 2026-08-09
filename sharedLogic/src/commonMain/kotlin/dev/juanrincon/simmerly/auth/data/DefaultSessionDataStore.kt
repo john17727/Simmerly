@@ -26,6 +26,13 @@ class DefaultSessionDataStore(private val preferences: DataStore<Preferences>) :
         preferences.edit { store -> store[stringPreferencesKey(TOKEN_KEY)] = token }
     }
 
+    override suspend fun getUserId(): String? =
+        preferences.data.first()[stringPreferencesKey(USER_ID_KEY)]
+
+    override suspend fun setUserId(id: String) {
+        preferences.edit { store -> store[stringPreferencesKey(USER_ID_KEY)] = id }
+    }
+
     override fun isAuthenticated(): Flow<AuthState> = preferences.data.map { preferences ->
         if (preferences[stringPreferencesKey(TOKEN_KEY)].isNullOrBlank()) {
             AuthState.Unauthenticated
@@ -37,6 +44,7 @@ class DefaultSessionDataStore(private val preferences: DataStore<Preferences>) :
     override suspend fun clear() {
         preferences.edit { store ->
             store[stringPreferencesKey(TOKEN_KEY)] = ""
+            store.remove(stringPreferencesKey(USER_ID_KEY))
         }
     }
 
@@ -47,5 +55,6 @@ class DefaultSessionDataStore(private val preferences: DataStore<Preferences>) :
     companion object Companion {
         const val TOKEN_KEY = "token"
         const val SERVER_ADDRESS_KEY = "server_address"
+        const val USER_ID_KEY = "user_id"
     }
 }

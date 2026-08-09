@@ -20,6 +20,7 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import org.orbitmvi.orbit.OrbitContainer
 import org.orbitmvi.orbit.OrbitContainerHost
 import org.orbitmvi.orbit.viewmodel.orbitContainer
+import kotlin.math.roundToInt
 import kotlin.time.Clock
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
@@ -81,7 +82,7 @@ class CookModeViewModel(
 
             is CookModeIntent.SetRating -> intent { reduce { state.copy(rating = event.rating) } }
             is CookModeIntent.UpdateNote -> intent { reduce { state.copy(noteDraft = event.text) } }
-            CookModeIntent.SubmitNote -> submitNote()
+            CookModeIntent.FinishCooking -> finishCooking()
 
             CookModeIntent.Exit -> intent { postSideEffect(CookModeSideEffect.Exit) }
         }
@@ -111,11 +112,21 @@ class CookModeViewModel(
                                     } else {
                                         state.stepIndex.coerceIn(0, recipe.instructions.lastIndex)
                                     }
+                                    // Pre-fill the Done screen's stars from the recipe's existing
+                                    // rating, but only on the very first load — a background
+                                    // refresh mid-cook must never stomp a star the user already
+                                    // tapped and hasn't submitted yet.
+                                    val isFirstLoad = state.recipe == RecipeDetailUi.emptyRecipe
                                     state.copy(
                                         loading = false,
                                         error = null,
                                         recipe = recipe,
-                                        stepIndex = clampedIndex
+                                        stepIndex = clampedIndex,
+                                        rating = if (isFirstLoad) {
+                                            recipe.rating?.roundToInt() ?: 0
+                                        } else {
+                                            state.rating
+                                        }
                                     )
                                 }
                             }
@@ -300,13 +311,27 @@ class CookModeViewModel(
         alerts.cancel(id)
     }
 
-    private fun submitNote() = intent {
-        val note = state.noteDraft
-        if (note.isBlank()) return@intent
-        repository.addComment(state.recipe.id, note).fold(
-            ifRight = { reduce { state.copy(noteDraft = "") } },
-            ifLeft = { /* TODO: surface note submission failure */ }
-        )
+    /**
+     * The Done button. Two independent writes — a failure in one must not block the other:
+     * "the recipe was made" (last-made + its timeline entry, one repository operation — they
+     * always fire together) happens unconditionally, matching Mealie's own semantics of recording
+     * a cook regardless of whether it's rated; the rating fires only when the cook actually tapped
+     * a star. [CookModeState.rating] defaults to 0, which is "untouched", not "zero stars" — a
+     * real rating write is always 1-5.
+     */
+    private fun finishCooking() = intent {
+        val recipeId = state.recipe.id
+        val note = state.noteDraft.ifBlank { null }
+        val rating = state.rating
+
+        // TODO: surface a failure in either of these instead of swallowing it silently. Both
+        // self-correct on the next recipeDetails emission if they landed anyway.
+        repository.recordRecipeMade(recipeId, clock.now(), note)
+        if (rating > 0) {
+            repository.setRating(recipeId, rating.toDouble())
+        }
+
+        reduce { state.copy(noteDraft = "") }
     }
 
     private fun newTimerId(): String {

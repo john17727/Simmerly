@@ -60,7 +60,18 @@ fun ListRecipeWithTags.toDomain(host: String?, isFavorite: Boolean = false): Rec
         isFavorite = isFavorite,
     )
 
-fun RecipeDetailWithRelations.toDomain(host: String?, isFavorite: Boolean = false): RecipeDetail =
+/**
+ * @param userRating the logged-in user's personal rating for this recipe, from
+ * `user_recipe_preferences` (the same table [isFavorite] already comes from). Wins over the
+ * recipe's own aggregate `rating` when present, matching Mealie's own web UI — a recipe you
+ * haven't rated still shows the aggregate, but rating it in Cook Mode updates what's shown here
+ * immediately, with no refetch.
+ */
+fun RecipeDetailWithRelations.toDomain(
+    host: String?,
+    isFavorite: Boolean = false,
+    userRating: Double? = null
+): RecipeDetail =
     RecipeDetail(
         id = recipe.id,
         userId = recipe.userId,
@@ -79,7 +90,7 @@ fun RecipeDetailWithRelations.toDomain(host: String?, isFavorite: Boolean = fals
         categories = categories.map { it.toDomain() },
         tags = tags.map { it.toDomain() },
         tools = tools.map { it.toDomain() },
-        rating = recipe.rating,
+        rating = userRating ?: recipe.rating,
         originalUrl = recipe.originalUrl,
         dateAdded = recipe.dateAdded,
         dateUpdated = recipe.dateUpdated,

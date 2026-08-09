@@ -9,12 +9,15 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Comment
 import androidx.compose.material.icons.filled.Close
@@ -33,6 +36,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -43,10 +48,9 @@ import dev.juanrincon.simmerly.recipes.presentation.cookmode.orbit.CookPhase
 import dev.juanrincon.simmerly.theme.SimmerlyTheme
 
 /**
- * The exit screen (design frame 07). The star rating renders exactly as designed but is never
- * submitted — [dev.juanrincon.simmerly.recipes.domain.RecipeRepository] has no rating write to
- * send it to. The note field is real: it goes through [CookModeIntent.SubmitNote] to the same
- * `addComment` the recipe's Comments tab already uses.
+ * The exit screen (design frame 07). Tapping Done fires [CookModeIntent.FinishCooking], which
+ * records last-made and a "Cooked" timeline event (the note as its message) unconditionally, and
+ * the star rating only if the cook actually tapped one — see the ViewModel for why.
  */
 @Composable
 internal fun CookDoneView(
@@ -58,9 +62,13 @@ internal fun CookDoneView(
     val recipe = state.recipe
     val stepCount = state.steps.size
     val elapsedMinutes = elapsedCookingMinutes(state)
+    val focusManager = LocalFocusManager.current
 
     Scaffold(
-        modifier = modifier.fillMaxSize(),
+        // Shrinks the whole Scaffold to leave room for the keyboard, so the bottomBar's Done
+        // button and the note field above it end up above it instead of hidden behind it — the
+        // sheet's own zeroed insets (below) don't cover the IME, only status/nav bars.
+        modifier = modifier.fillMaxSize().imePadding(),
         // The sheet hosting this screen draws edge-to-edge with its own insets zeroed out (see
         // BottomSheetSceneStrategy), so topBar/bottomBar below pad themselves against the status
         // and navigation bars directly instead of relying on Scaffold's automatic accounting.
@@ -81,7 +89,7 @@ internal fun CookDoneView(
             ) {
                 Button(
                     onClick = {
-                        onEvent(CookModeIntent.SubmitNote)
+                        onEvent(CookModeIntent.FinishCooking)
                         onExit()
                     },
                     shape = RoundedCornerShape(percent = 50),
@@ -143,6 +151,8 @@ internal fun CookDoneView(
                     onValueChange = { onEvent(CookModeIntent.UpdateNote(it)) },
                     placeholder = { Text("Leave a note for next time") },
                     leadingIcon = { Icon(Icons.AutoMirrored.Filled.Comment, contentDescription = null) },
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                    keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() }),
                     modifier = Modifier.fillMaxWidth()
                 )
             }

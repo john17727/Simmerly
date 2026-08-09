@@ -7,6 +7,7 @@ import dev.juanrincon.simmerly.recipes.domain.model.RecipeDetail
 import dev.juanrincon.simmerly.recipes.domain.model.RecipeSummary
 import dev.juanrincon.simmerly.recipes.domain.model.Settings
 import kotlinx.coroutines.flow.Flow
+import kotlin.time.Instant
 
 interface RecipeRepository {
 
@@ -30,6 +31,21 @@ interface RecipeRepository {
     suspend fun addComment(recipeId: String, text: String): Either<RecipesError, Unit>
 
     suspend fun updateSettings(recipeId: String, settings: Settings): Either<RecipesError, Unit>
+
+    /** Sets the logged-in user's personal rating for a recipe (`null` clears it). Reflected back
+     * through [recipeDetails] via `user_recipe_preferences`, same as a favorite toggle. Kept
+     * separate from [recordRecipeMade] — unlike last-made and the timeline entry, a rating is
+     * conditional (a cook may finish without rating), so it isn't part of "the recipe was made". */
+    suspend fun setRating(recipeId: String, rating: Double?): Either<RecipesError, Unit>
+
+    /**
+     * Records that the recipe was just cooked: updates its last-made timestamp and adds a
+     * matching entry to its Mealie timeline, with [note] (if any) as the entry's message. These
+     * are two Mealie API calls, but always fire together for the same reason — there is no case
+     * in this app where you'd want one without the other — so they're one repository operation.
+     * Both are attempted even if one fails; the result is a failure if either was.
+     */
+    suspend fun recordRecipeMade(recipeId: String, timestamp: Instant, note: String?): Either<RecipesError, Unit>
 
     fun observeRecentlyViewed(): Flow<List<RecipeSummary>>
 

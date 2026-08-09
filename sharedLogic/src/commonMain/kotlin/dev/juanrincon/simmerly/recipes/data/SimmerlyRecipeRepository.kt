@@ -9,9 +9,11 @@ import arrow.core.raise.either
 import arrow.core.right
 import dev.juanrincon.simmerly.auth.domain.SessionDataStore
 import dev.juanrincon.simmerly.core.data.local.SimmerlyDatabase
+import dev.juanrincon.simmerly.initialload.domain.UserRepository
 import dev.juanrincon.simmerly.recipes.data.local.metadata.RecipeRemoteKey
 import dev.juanrincon.simmerly.recipes.data.local.recent.RecentSearchQueryEntity
 import dev.juanrincon.simmerly.recipes.data.local.recent.RecentlyViewedEntity
+import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.UserRecipePreferenceEntity
 import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.junction.InstructionIngredientCrossRef
 import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.junction.RecipeTagCrossRef
 import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.junction.RecipeToolCrossRef
@@ -36,11 +38,13 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlin.time.Clock
+import kotlin.time.Instant
 
 class SimmerlyRecipeRepository(
     private val networkClient: RecipeNetworkClient,
     private val database: SimmerlyDatabase,
     private val sessionDataStore: SessionDataStore,
+    private val userRepository: UserRepository,
 ) : RecipeRepository {
     private val recipeDao = database.recipeDao()
     private val ingredientDao = database.ingredientDao()
@@ -168,7 +172,11 @@ class SimmerlyRecipeRepository(
                 recipeDao.observeRecipeDetail(id),
                 preferenceDao.observe(id),
             ) { address, entity, preference ->
-                entity.toDomain(address, isFavorite = preference?.isFavorite ?: false)
+                entity.toDomain(
+                    address,
+                    isFavorite = preference?.isFavorite ?: false,
+                    userRating = preference?.rating
+                )
             }
                 .map { Either.Right(LoadingResult.Loaded(it)) }
                 .distinctUntilChanged()
@@ -236,6 +244,61 @@ class SimmerlyRecipeRepository(
             networkClient.patchRecipe(recipeId, RecipePatchDto(settings = settings.toDto()))
                 .mapLeft { RecipesError.UpdateError }.bind()
         recipeDao.upsert(updatedSettings.toEntity())
+    }
+
+    override suspend fun setRating(
+        recipeId: String,
+        rating: Double?
+    ): Either<RecipesError, Unit> = either {
+        val slug = recipeDao.getSlug(recipeId) ?: raise(RecipesError.UpdateError)
+        // Unlike the timeline event's userId, this one is a required URL path segment — the
+        // request literally cannot be built without it, so an unresolved id fails the whole write.
+        val userId = userRepository.currentUserId().mapLeft { RecipesError.UpdateError }.bind()
+        networkClient.setRating(userId, slug, rating).mapLeft { RecipesError.UpdateError }.bind()
+
+        val preferenceDao = database.userRecipePreferenceDao()
+        val existing = preferenceDao.get(recipeId)
+        preferenceDao.upsert(
+            UserRecipePreferenceEntity(
+                recipeId = recipeId,
+                rating = rating,
+                isFavorite = existing?.isFavorite ?: false
+            )
+        )
+    }
+
+    override suspend fun recordRecipeMade(
+        recipeId: String,
+        timestamp: Instant,
+        note: String?
+    ): Either<RecipesError, Unit> = either {
+        val slug = recipeDao.getSlug(recipeId) ?: raise(RecipesError.UpdateError)
+
+        val lastMadeResult = networkClient.updateLastMade(slug, timestamp)
+            .onRight { recipeDao.upsert(it.toEntity()) }
+
+        // The user is resolved only for the subject line's display name ("Jane Doe made this",
+        // matching Mealie's own wording) — the event itself is attributed server-side from the
+        // auth token. Falls back to a name-free subject if either the id or its cached user
+        // record is missing.
+        val userId = userRepository.currentUserId().getOrNull()
+        val subject = userId?.let { userDao.getById(it)?.fullName }?.let { "$it made this" }
+            ?: "Cooked"
+        // Same instant as the last-made write above, so the timeline entry and the recipe's
+        // lastMade agree — Mealie's own UI pairs them this way.
+        val timelineResult = networkClient.createTimelineEvent(
+            recipeId = recipeId,
+            subject = subject,
+            eventMessage = note,
+            timestamp = timestamp
+        )
+
+        // Both writes are always attempted regardless of the other's outcome — only the combined
+        // result is reported, since CookModeViewModel already treats "the recipe was made" as one
+        // operation rather than two independent ones.
+        if (lastMadeResult.isLeft() || timelineResult.isLeft()) {
+            raise(RecipesError.UpdateError)
+        }
     }
 
     override fun observeRecentlyViewed(): Flow<List<RecipeSummary>> =
