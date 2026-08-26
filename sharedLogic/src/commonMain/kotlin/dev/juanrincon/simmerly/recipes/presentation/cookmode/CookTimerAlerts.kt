@@ -19,3 +19,8 @@ object NoOpCookTimerAlerts : CookTimerAlerts {
     override fun schedule(timer: CookTimerUi) = Unit
     override fun cancel(timerId: String) = Unit
 }
+
+/** The [CookTimerAlerts] a platform actually wants wired up by default. Android and desktop stay
+ * on [NoOpCookTimerAlerts] — this seam was designed but never implemented there. iOS provides a
+ * real `UNUserNotificationCenter`-backed implementation, since that's this port's whole point. */
+expect fun defaultCookTimerAlerts(): CookTimerAlerts

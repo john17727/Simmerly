@@ -43,6 +43,21 @@ private class FakeClock(var nowMillis: Long = 0L) : Clock {
     override fun now(): Instant = Instant.fromEpochMilliseconds(nowMillis)
 }
 
+/** Records every schedule/cancel call so tests can assert on the [CookTimerAlerts] seam without a
+ * real platform notification center — see [dev.juanrincon.simmerly.recipes.presentation.cookmode.CookModeViewModelTest.pausingATimerCancelsItsScheduledAlert]. */
+private class RecordingCookTimerAlerts : CookTimerAlerts {
+    val scheduled = mutableListOf<CookTimerUi>()
+    val cancelled = mutableListOf<String>()
+
+    override fun schedule(timer: CookTimerUi) {
+        scheduled += timer
+    }
+
+    override fun cancel(timerId: String) {
+        cancelled += timerId
+    }
+}
+
 @OptIn(ExperimentalCoroutinesApi::class, ExperimentalTime::class)
 class CookModeViewModelTest {
 
@@ -337,6 +352,34 @@ class CookModeViewModelTest {
 
             assertThat(paused.isPaused).isTrue()
             assertThat(paused.pausedRemainingMillis).isEqualTo(8.minutes.inWholeMilliseconds)
+        }
+    }
+
+    @Test
+    fun pausingATimerCancelsItsScheduledAlert() = runTest(testDispatcher) {
+        // A platform alert (e.g. iOS's local notification) is armed against the deadline that
+        // startDetectedTimer scheduled. Pausing stops the countdown but, before this fix, left the
+        // alert pending — it would fire for a timer that was no longer running. See
+        // CookModeViewModel.pauseTimer.
+        val alerts = RecordingCookTimerAlerts()
+        val viewModelWithAlerts = CookModeViewModel(
+            recipeId = "test-recipe",
+            repository = repo,
+            alerts = alerts,
+            clock = fakeClock
+        )
+        val loadedState = CookModeState(loading = false, recipe = threeStepRecipe, phase = CookPhase.STEPS)
+        viewModelWithAlerts.testWithInternalState(this, initialState = loadedState) {
+            viewModelWithAlerts.onEvent(
+                CookModeIntent.StartDetectedTimer(ParsedDuration(10.minutes, "10 minutes"), "Step 1")
+            )
+            val timer = awaitInternalState().timers.single()
+            assertThat(alerts.scheduled.map { it.id }).contains(timer.id)
+
+            viewModelWithAlerts.onEvent(CookModeIntent.PauseTimer(timer.id))
+            awaitInternalState()
+
+            assertThat(alerts.cancelled).contains(timer.id)
         }
     }
 

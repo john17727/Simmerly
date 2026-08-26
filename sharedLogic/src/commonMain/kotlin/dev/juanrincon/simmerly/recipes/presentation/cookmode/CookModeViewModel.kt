@@ -282,6 +282,10 @@ class CookModeViewModel(
                 }
             )
         }
+        // A scheduled alert (e.g. iOS's local notification) is armed for the deadline that just
+        // stopped applying — leaving it pending would fire a notification for a timer that isn't
+        // even running anymore. resumeTimer() re-schedules against the new deadline.
+        alerts.cancel(id)
     }
 
     private fun resumeTimer(id: String) = intent {

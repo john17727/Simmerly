@@ -8,7 +8,12 @@ import kotlin.time.Duration.Companion.minutes
 data class TimerPreset(
     val duration: Duration,
     val label: String
-)
+) {
+    /** [duration] in milliseconds. `Duration` bridges to Swift as an opaque raw Long (Kotlin's
+     * internal encoding, not a millisecond count), so Swift can't do arithmetic on [duration]
+     * directly — this is the number it actually wants. */
+    val durationMillis: Long get() = duration.inWholeMilliseconds
+}
 
 private val QUICK_PICK_MINUTES = listOf(1, 5)
 

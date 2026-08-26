@@ -6,6 +6,7 @@ import dev.juanrincon.simmerly.navigation.auth.AuthNavigationViewModel
 import dev.juanrincon.simmerly.profile.presentation.ProfileViewModel
 import dev.juanrincon.simmerly.initialload.presentation.InitialLoadViewModel
 import dev.juanrincon.simmerly.recipes.presentation.comments.RecipeCommentsViewModel
+import dev.juanrincon.simmerly.recipes.presentation.cookmode.CookModeViewModel
 import dev.juanrincon.simmerly.recipes.presentation.details.RecipeDetailsViewModel
 import dev.juanrincon.simmerly.recipes.presentation.list.RecipeListViewModel
 import dev.juanrincon.simmerly.recipes.presentation.search.RecipeSearchViewModel
@@ -38,6 +39,9 @@ object SimmerlyViewModels {
         track(simmerlyKoin.koin.get { parametersOf(recipeId) })
 
     fun recipeComments(recipeId: String): RecipeCommentsViewModel =
+        track(simmerlyKoin.koin.get { parametersOf(recipeId) })
+
+    fun cookMode(recipeId: String): CookModeViewModel =
         track(simmerlyKoin.koin.get { parametersOf(recipeId) })
 
     fun recipeSearch(): RecipeSearchViewModel = track(simmerlyKoin.koin.get())

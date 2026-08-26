@@ -20,6 +20,14 @@ data class ParsedDuration(
 ) {
     /** True when the source text gave a span ("15–17 minutes") rather than a single value. */
     val isRange: Boolean get() = upperBound != null && upperBound > duration
+
+    /** [duration] in milliseconds. `Duration` bridges to Swift as an opaque raw Long (Kotlin's
+     * internal encoding, not a millisecond count), so Swift can't do arithmetic on [duration]
+     * directly — this is the number it actually wants. */
+    val durationMillis: Long get() = duration.inWholeMilliseconds
+
+    /** [upperBound] in milliseconds — see [durationMillis] for why this exists. */
+    val upperBoundMillis: Long? get() = upperBound?.inWholeMilliseconds
 }
 
 private val DURATION_REGEX = Regex(

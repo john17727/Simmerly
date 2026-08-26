@@ -19,6 +19,7 @@ struct RecipesTabView: View {
 private struct RecipesStackView: View {
     @Environment(TabAccessoryModel.self) private var accessory
     @State private var path: [AppRoute] = []
+    @State private var cookingSession: CookingSession?
 
     var body: some View {
         NavigationStack(path: $path) {
@@ -42,7 +43,10 @@ private struct RecipesStackView: View {
                 }
             }
         }
-        .publishesStartCooking(for: cookableRecipeId, to: accessory)
+        .publishesStartCooking(for: cookableRecipeId, to: accessory) { cookingSession = CookingSession(recipeId: $0) }
+        .fullScreenCover(item: $cookingSession) { session in
+            CookModeRoot(recipeId: session.recipeId, onExit: { cookingSession = nil })
+        }
     }
 
     /// The recipe list is the stack's root, so a detail screen is on top exactly when the last
@@ -59,6 +63,7 @@ private struct RecipesSplitView: View {
     @Environment(TabAccessoryModel.self) private var accessory
     @State private var selectedRecipeId: String?
     @State private var detailPath: [AppRoute] = []
+    @State private var cookingSession: CookingSession?
 
     var body: some View {
         NavigationSplitView {
@@ -103,7 +108,10 @@ private struct RecipesSplitView: View {
                 )
             }
         }
-        .publishesStartCooking(for: cookableRecipeId, to: accessory)
+        .publishesStartCooking(for: cookableRecipeId, to: accessory) { cookingSession = CookingSession(recipeId: $0) }
+        .fullScreenCover(item: $cookingSession) { session in
+            CookModeRoot(recipeId: session.recipeId, onExit: { cookingSession = nil })
+        }
     }
 
     /// Here the detail column's root *is* a recipe detail, so an empty `detailPath` still counts —
@@ -117,22 +125,28 @@ private struct RecipesSplitView: View {
     }
 }
 
+/// `.fullScreenCover(item:)` needs `Identifiable`, which a bare `String` isn't — this just carries
+/// the recipe id along for the cover's lifetime.
+private struct CookingSession: Identifiable {
+    let recipeId: String
+    var id: String { recipeId }
+}
+
 private extension View {
     /// Offers the Start Cooking accessory to the tab shell while a recipe's details are on top.
     /// Keyed on the recipe id rather than a flag so moving straight from one recipe to another
-    /// still republishes — which matters once the action actually uses the id.
+    /// still republishes — which matters since the action now actually uses the id.
     func publishesStartCooking(
         for recipeId: String?,
-        to accessory: TabAccessoryModel
+        to accessory: TabAccessoryModel,
+        onStart: @escaping (String) -> Void
     ) -> some View {
         onChange(of: recipeId, initial: true) { _, id in
-            guard id != nil else {
+            guard let id else {
                 accessory.startCooking = nil
                 return
             }
-            accessory.startCooking = {
-                /* TODO: start cooking */
-            }
+            accessory.startCooking = { onStart(id) }
         }
     }
 }

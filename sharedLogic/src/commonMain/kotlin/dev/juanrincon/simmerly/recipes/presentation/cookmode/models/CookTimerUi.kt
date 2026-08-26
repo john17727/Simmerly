@@ -37,4 +37,12 @@ data class CookTimerUi(
         val elapsed = total - remaining(nowMillis)
         return (elapsed / total).toFloat().coerceIn(0f, 1f)
     }
+
+    /** [total] in milliseconds. `Duration` bridges to Swift as an opaque raw Long (Kotlin's
+     * internal encoding, not a millisecond count), so Swift can't do arithmetic on [total]
+     * directly — this is the number it actually wants. */
+    val totalMillis: Long get() = total.inWholeMilliseconds
+
+    /** [remaining] in milliseconds — see [totalMillis] for why this exists. */
+    fun remainingMillis(nowMillis: Long): Long = remaining(nowMillis).inWholeMilliseconds
 }

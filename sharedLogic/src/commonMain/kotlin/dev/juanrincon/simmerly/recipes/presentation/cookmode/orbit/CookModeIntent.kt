@@ -2,6 +2,7 @@ package dev.juanrincon.simmerly.recipes.presentation.cookmode.orbit
 
 import dev.juanrincon.simmerly.recipes.domain.ParsedDuration
 import kotlin.time.Duration
+import kotlin.time.Duration.Companion.milliseconds
 
 sealed interface CookModeIntent {
     data class ToggleIngredient(val referenceId: String) : CookModeIntent
@@ -41,3 +42,10 @@ sealed interface CookModeIntent {
 
     data object Exit : CookModeIntent
 }
+
+/** [CookModeIntent.SelectRangeOption] takes a `Duration`, which bridges to Swift as an opaque raw
+ * Long (Kotlin's internal encoding, not a millisecond count) that Swift can't construct
+ * arithmetic on. iOS selects by milliseconds instead — exact, since suggested options
+ * ([CookModeState.currentStepTimerOptionsMillis]) are always whole seconds or minutes. */
+fun selectRangeOptionMillis(millis: Long): CookModeIntent =
+    CookModeIntent.SelectRangeOption(millis.milliseconds)

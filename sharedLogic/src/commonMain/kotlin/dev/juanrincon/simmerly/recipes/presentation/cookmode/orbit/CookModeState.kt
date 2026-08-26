@@ -53,4 +53,21 @@ data class CookModeState(
         }
 
     val readyIngredientCount get() = recipe.ingredients.count { it.referenceId in checkedIngredientIds }
+
+    /** [currentStepTimerOptions] in milliseconds. `Duration` bridges to Swift as an opaque raw
+     * Long (Kotlin's internal encoding, not a millisecond count), so Swift can't do arithmetic on
+     * it directly — this is the list it actually wants. */
+    val currentStepTimerOptionsMillis: List<Long>
+        get() = currentStepTimerOptions.map { it.inWholeMilliseconds }
+
+    /** [selectedRangeOptionOrDefault] in milliseconds — see [currentStepTimerOptionsMillis] for
+     * why this exists. */
+    val selectedRangeOptionMillis: Long?
+        get() = selectedRangeOptionOrDefault?.inWholeMilliseconds
+
+    /** This state with [nowMillis] zeroed out, so Swift can diff two states while ignoring the
+     * 4Hz ticker field — see [dev.juanrincon.simmerly.recipes.presentation.cookmode.CookModeViewModel]'s
+     * `runTicker`. Rendering off `==` on the full state would rebuild the whole screen on every
+     * tick instead of just the timer countdowns. */
+    fun withoutNow(): CookModeState = copy(nowMillis = 0L)
 }

@@ -3,7 +3,7 @@ package dev.juanrincon.simmerly.recipes.presentation.di
 import dev.juanrincon.simmerly.recipes.presentation.comments.RecipeCommentsViewModel
 import dev.juanrincon.simmerly.recipes.presentation.cookmode.CookModeViewModel
 import dev.juanrincon.simmerly.recipes.presentation.cookmode.CookTimerAlerts
-import dev.juanrincon.simmerly.recipes.presentation.cookmode.NoOpCookTimerAlerts
+import dev.juanrincon.simmerly.recipes.presentation.cookmode.defaultCookTimerAlerts
 import dev.juanrincon.simmerly.recipes.presentation.details.RecipeDetailsViewModel
 import dev.juanrincon.simmerly.recipes.presentation.list.RecipeListViewModel
 import dev.juanrincon.simmerly.recipes.presentation.search.RecipeSearchViewModel
@@ -18,5 +18,5 @@ val recipePresentationModule = module {
     viewModel { (recipeId: String) -> CookModeViewModel(recipeId, get(), get()) }
     viewModelOf(::RecipeSearchViewModel)
 
-    single<CookTimerAlerts> { NoOpCookTimerAlerts }
+    single<CookTimerAlerts> { defaultCookTimerAlerts() }
 }
