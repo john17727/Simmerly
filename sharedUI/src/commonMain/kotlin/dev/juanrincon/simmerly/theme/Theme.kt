@@ -21,6 +21,7 @@ fun SimmerlyTheme(
     MaterialTheme(
         colorScheme = colorScheme,
         typography = simmerlyTypography(),
+        shapes = SimmerlyShapes,
         content = content
     )
 }

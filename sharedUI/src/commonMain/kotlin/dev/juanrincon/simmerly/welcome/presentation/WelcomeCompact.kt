@@ -25,10 +25,10 @@ internal fun CompactWelcome(
             modifier = modifier.fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            WelcomeCollage(
+            WelcomeCollageCompact(
                 modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp).graphicsLayer()
             )
-            Header(modifier = Modifier.fillMaxWidth())
+            Header(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp))
             Spacer(modifier = Modifier.weight(1f))
             Login(state, onEvent, modifier = Modifier.fillMaxWidth().padding(16.dp))
             Spacer(modifier = Modifier.weight(1f))

@@ -35,6 +35,7 @@ object Simmerly {
     val HerbSageSubtle = Color(0xFFEDF3EF)  // --color-tertiary-50
     val HerbSageLight = Color(0xFFAECDB7)  // --color-tertiary-200
     val HerbSage = Color(0xFF5E9E74)  // --color-tertiary-400
+    val HerbSage500 = Color(0xFF4C8C63)  // --color-tertiary-500
     val HerbSageDark = Color(0xFF366B4A)  // --color-tertiary-600
     val HerbSageDeep = Color(0xFF1C3D2A)  // --color-tertiary-800
 

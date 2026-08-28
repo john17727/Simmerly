@@ -4,22 +4,21 @@ import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.sizeIn
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.text.input.OutputTransformation
 import androidx.compose.foundation.text.input.TextObfuscationMode
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Dns
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Key
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Person
@@ -34,7 +33,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedSecureTextField
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.SecureTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.ToggleButton
 import androidx.compose.material3.ToggleButtonDefaults
@@ -47,24 +45,24 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.window.core.layout.WindowSizeClass
+import dev.juanrincon.simmerly.theme.Simmerly
 import dev.juanrincon.simmerly.welcome.presentation.model.CredentialType
 import dev.juanrincon.simmerly.welcome.presentation.orbit.WelcomeIntent
 import dev.juanrincon.simmerly.welcome.presentation.orbit.WelcomeState
-import org.jetbrains.compose.resources.painterResource
-import simmerly.shared.generated.resources.Res
-import simmerly.shared.generated.resources.simmerly_logo
 
 @Composable
 fun WelcomeScreen(
@@ -87,32 +85,6 @@ fun WelcomeScreen(
 }
 
 @Composable
-fun Logo(modifier: Modifier = Modifier) {
-    Column(
-        modifier = modifier,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Image(
-            painter = painterResource(Res.drawable.simmerly_logo),
-            contentDescription = "Simmerly Logo",
-            modifier = Modifier.sizeIn(100.dp, 100.dp, 150.dp, 150.dp)
-        )
-        Text(
-            text = "Welcome to Simmerly",
-            style = MaterialTheme.typography.headlineLarge,
-            color = Color.White,
-            modifier = Modifier.padding(16.dp)
-        )
-        Text(
-            text = "Your self‑hosted recipe nook.",
-            style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.tertiary,
-            modifier = Modifier.padding(horizontal = 16.dp)
-        )
-    }
-}
-
-@Composable
 fun Header(modifier: Modifier = Modifier) {
     Column(
         modifier = modifier,
@@ -120,14 +92,26 @@ fun Header(modifier: Modifier = Modifier) {
     ) {
         Text(
             text = "Welcome to Simmerly",
-            style = MaterialTheme.typography.headlineLarge,
-            modifier = Modifier.padding(horizontal = 16.dp)
+            style = MaterialTheme.typography.displayMedium.copy(letterSpacing = (-0.5).sp),
+            color = MaterialTheme.colorScheme.onSurface,
+            textAlign = TextAlign.Center
         )
+        Spacer(modifier = Modifier.height(10.dp))
         Text(
             text = "Your self‑hosted recipe nook.",
-            style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.tertiary,
-            modifier = Modifier.padding(horizontal = 16.dp)
+            style = MaterialTheme.typography.bodyLarge.copy(
+                fontSize = 18.sp,
+                lineHeight = 26.sp
+            ),
+            textAlign = TextAlign.Center,
+            // The design's #4C8C63 only reads on white; dark theme needs the light
+            // sage. Derived from the scheme so it also tracks an explicit darkTheme
+            // override and dynamic color, which isSystemInDarkTheme() would miss.
+            color = if (MaterialTheme.colorScheme.surface.luminance() > 0.5f) {
+                Simmerly.HerbSage500
+            } else {
+                MaterialTheme.colorScheme.tertiary
+            }
         )
     }
 }
@@ -162,14 +146,15 @@ internal fun Login(
             state = serverAddressFieldState,
             modifier = Modifier.fillMaxWidth(),
             label = { Text("Server Address") },
+            placeholder = { Text("https://mealie.home.lan") },
             leadingIcon = { Icon(Icons.Default.Dns, contentDescription = null) },
             enabled = !state.isLoading,
             keyboardOptions = KeyboardOptions.Default.copy(
                 imeAction = ImeAction.Next,
-                keyboardType = KeyboardType.Text
+                keyboardType = KeyboardType.Uri
             ),
         )
-        Spacer(modifier = Modifier.height(32.dp))
+        Spacer(modifier = Modifier.height(20.dp))
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween)
@@ -197,13 +182,13 @@ internal fun Login(
                 Text("API Token")
             }
         }
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(20.dp))
         AnimatedContent(
             targetState = state.credentialType,
             label = "CredentialFields",
             transitionSpec = { fadeIn() togetherWith fadeOut() }
         ) { credType ->
-            Column {
+            Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
                 if (credType == CredentialType.CREDENTIALS) {
                     OutlinedTextField(
                         state = usernameFieldState,
@@ -216,7 +201,6 @@ internal fun Login(
                             keyboardType = KeyboardType.Email
                         ),
                     )
-                    Spacer(modifier = Modifier.height(8.dp))
                 }
                 OutlinedSecureTextField(
                     state = passwordFieldState,
@@ -245,11 +229,12 @@ internal fun Login(
                 )
             }
         }
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(28.dp))
         Button(
             onClick = { onEvent(WelcomeIntent.OnLoginClicked) },
             enabled = state.isLoginButtonEnabled,
-            modifier = Modifier.fillMaxWidth(),
+            shape = CircleShape,
+            modifier = Modifier.fillMaxWidth().height(56.dp),
         ) {
             AnimatedContent(
                 targetState = state.isLoading,
@@ -263,11 +248,16 @@ internal fun Login(
                             .testTag("login_loading_indicator")
                     )
                 } else {
-                    Text("Login")
+                    Text(
+                        text = "Login",
+                        style = MaterialTheme.typography.bodyLarge.copy(
+                            fontWeight = FontWeight.SemiBold,
+                            letterSpacing = 0.1.sp
+                        )
+                    )
                 }
             }
         }
+        Spacer(modifier = Modifier.height(20.dp))
     }
 }
-
-const val DESKTOP_ELEMENTS_MAX_WIDTH_FRACTION = 0.55f
