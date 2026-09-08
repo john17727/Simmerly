@@ -82,9 +82,12 @@ private fun Content(
             RecipeMode.READ_ONLY -> {
                 AnimatedContent(isExpanded) { expanded ->
                     if (expanded) {
+                        // onNavigateToComments stays compact-only: the expanded pane shows
+                        // comments as one of its own tabs rather than as a separate destination.
                         ExpandedView(
                             state = state,
                             onEvent = onEvent,
+                            onStartCooking = onStartCooking,
                             modifier = modifier
                         )
                     } else {

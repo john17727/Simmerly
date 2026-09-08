@@ -18,7 +18,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
@@ -558,10 +557,7 @@ private fun CompactContent(
                 ) {
                     NutritionView(
                         recipe.nutrition,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .wrapContentHeight(unbounded = true)
-                            .padding(top = 32.dp, bottom = 16.dp, start = 16.dp, end = 16.dp)
+                        modifier = Modifier.fillMaxWidth()
                     )
                 }
             }

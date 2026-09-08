@@ -63,7 +63,7 @@ fun AppContent(
                                     )
                                 },
                                 contentScale = ContentScale.Crop,
-                                modifier = Modifier.size(24.dp).clip(CircleShape),
+                                modifier = Modifier.size(32.dp).clip(CircleShape),
                             )
                         } else {
                             Icon(
