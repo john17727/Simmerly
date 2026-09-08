@@ -39,12 +39,11 @@ fun AppContent(
     val user by profileViewModel.user.collectAsState()
     val baseNavSuiteType =
         NavigationSuiteScaffoldDefaults.navigationSuiteType(currentWindowAdaptiveInfoV2())
+    // Drilling into a recipe should hide the *bottom bar* on a phone, where the detail screen owns
+    // the whole window — but never the rail, which the design keeps alongside the open recipe.
+    val isRail = baseNavSuiteType in RAIL_TYPES
     val effectiveNavSuiteType =
-        if (!isAtRecipesRoot && (baseNavSuiteType != NavigationSuiteType.NavigationRail || baseNavSuiteType != NavigationSuiteType.WideNavigationRailExpanded)) {
-            NavigationSuiteType.None
-        } else {
-            baseNavSuiteType
-        }
+        if (!isAtRecipesRoot && !isRail) NavigationSuiteType.None else baseNavSuiteType
     val saveableStateHolder = rememberSaveableStateHolder()
     NavigationSuiteScaffold(
         modifier = modifier,
@@ -114,3 +113,11 @@ fun AppContent(
         }
     }
 }
+
+// NavigationSuiteScaffoldDefaults.navigationSuiteType() resolves to WideNavigationRailCollapsed on
+// a desktop window; the other two are only reachable if the suite type is ever set explicitly.
+private val RAIL_TYPES = setOf(
+    NavigationSuiteType.WideNavigationRailCollapsed,
+    NavigationSuiteType.WideNavigationRailExpanded,
+    NavigationSuiteType.NavigationRail,
+)
