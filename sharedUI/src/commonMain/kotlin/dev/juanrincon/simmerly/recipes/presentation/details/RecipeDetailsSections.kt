@@ -311,8 +311,8 @@ internal fun NutritionView(nutrition: NutritionUi, modifier: Modifier = Modifier
             style = MaterialTheme.typography.titleLarge,
             modifier = Modifier.padding(bottom = 12.dp)
         )
-        nutrition.entries.forEach { (label, value) ->
-            NutritionEntry(label, value, modifier = Modifier.fillMaxWidth())
+        nutrition.entries.forEach { entry ->
+            NutritionEntry(entry.label, entry.value, modifier = Modifier.fillMaxWidth())
         }
     }
 }
