@@ -54,6 +54,19 @@ data class CookModeState(
 
     val readyIngredientCount get() = recipe.ingredients.count { it.referenceId in checkedIngredientIds }
 
+    /**
+     * How long the cook has been at it: from [cookingStartedAtMillis] to [cookingFinishedAtMillis],
+     * or to now while still cooking. Zero before the steps phase begins, since the clock starts at
+     * [CookModeIntent.BeginSteps].
+     *
+     * Note this only advances as fast as [nowMillis] is refreshed by the ViewModel's ticker.
+     */
+    val elapsedCookingMillis: Long
+        get() {
+            val started = cookingStartedAtMillis ?: return 0L
+            return ((cookingFinishedAtMillis ?: nowMillis) - started).coerceAtLeast(0L)
+        }
+
     /** [currentStepTimerOptions] in milliseconds. `Duration` bridges to Swift as an opaque raw
      * Long (Kotlin's internal encoding, not a millisecond count), so Swift can't do arithmetic on
      * it directly — this is the list it actually wants. */

@@ -614,7 +614,7 @@ private fun WheelColumn(
 // region shared helpers
 
 @Composable
-private fun TimerRing(
+internal fun TimerRing(
     progress: Float,
     color: Color,
     trackColor: Color,
@@ -649,7 +649,7 @@ private fun Modifier.dashedBorder(color: Color, cornerRadius: Dp): Modifier = dr
 
 private fun Modifier.fillMaxSizeCompat(): Modifier = this.then(Modifier.fillMaxWidth().fillMaxHeight())
 
-private fun formatTimer(duration: Duration): String {
+internal fun formatTimer(duration: Duration): String {
     val totalSeconds = duration.inWholeSeconds.coerceAtLeast(0)
     val minutes = totalSeconds / 60
     val seconds = totalSeconds % 60

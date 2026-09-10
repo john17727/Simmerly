@@ -162,6 +162,10 @@ class CookModeViewModel(
                 }
                 delay(TICK_INTERVAL)
             } else {
+                // Still refresh the clock with no timer running: the desktop console shows a live
+                // elapsed-cooking readout, and leaving nowMillis frozen would stop it dead the
+                // moment the last timer was cancelled. Half a second is ample for an m:ss label.
+                reduce { state.copy(nowMillis = clock.now().toEpochMilliseconds()) }
                 delay(IDLE_POLL_INTERVAL)
             }
         }

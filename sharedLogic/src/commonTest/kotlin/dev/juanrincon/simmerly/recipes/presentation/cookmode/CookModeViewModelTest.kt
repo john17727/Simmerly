@@ -194,6 +194,39 @@ class CookModeViewModelTest {
         }
     }
 
+    @Test
+    fun elapsedCookingMillisRunsFromTheStartTimeToNow() {
+        val state = CookModeState(
+            loading = false,
+            recipe = threeStepRecipe,
+            cookingStartedAtMillis = 5_000L,
+            nowMillis = 95_000L
+        )
+
+        assertThat(state.elapsedCookingMillis).isEqualTo(90_000L)
+    }
+
+    @Test
+    fun elapsedCookingMillisFreezesOnceCookingFinishes() {
+        val state = CookModeState(
+            loading = false,
+            recipe = threeStepRecipe,
+            cookingStartedAtMillis = 5_000L,
+            cookingFinishedAtMillis = 65_000L,
+            // The ticker keeps moving after the cook is done; elapsed must not.
+            nowMillis = 900_000L
+        )
+
+        assertThat(state.elapsedCookingMillis).isEqualTo(60_000L)
+    }
+
+    @Test
+    fun elapsedCookingMillisIsZeroBeforeCookingStarts() {
+        val state = CookModeState(loading = false, recipe = threeStepRecipe, nowMillis = 95_000L)
+
+        assertThat(state.elapsedCookingMillis).isEqualTo(0L)
+    }
+
     // endregion
 
     // region Servings

@@ -3,13 +3,18 @@
 package dev.juanrincon.simmerly.core.presentation.navigation
 
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.ModalBottomSheetProperties
 import androidx.compose.material3.SheetState
 import androidx.compose.material3.SheetValue
+import androidx.compose.material3.adaptive.currentWindowAdaptiveInfoV2
 import androidx.compose.material3.rememberBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.unit.Dp
+import androidx.window.core.layout.WindowSizeClass
 import androidx.navigation3.runtime.NavEntry
 import androidx.navigation3.runtime.NavMetadataKey
 import androidx.navigation3.runtime.get
@@ -38,6 +43,12 @@ import androidx.navigation3.scene.SceneStrategyScope
  * otherwise be a dismiss target and a cook's hand brushing the screen shouldn't cancel the flow —
  * only each screen's own close button should; and [onRemove] awaits [SheetState.hide] so back
  * animates the sheet down instead of cutting it.
+ *
+ * On an expanded window the sheet drops its 640dp `sheetMaxWidth` cap and its rounded top corners
+ * and fills the window instead. A full-height sheet that is also full-width is really just a
+ * full-window surface, which is what a screen drawing its own chrome wants on a desktop-sized
+ * window — and the cap would otherwise squeeze a layout designed for the whole width into a
+ * column down the middle.
  */
 class BottomSheetSceneStrategy<T : Any> : SceneStrategy<T> {
 
@@ -65,9 +76,15 @@ class BottomSheetSceneStrategy<T : Any> : SceneStrategy<T> {
                     initialValue = SheetValue.Hidden,
                     enabledValues = setOf(SheetValue.Hidden, SheetValue.Expanded)
                 )
+                val fillsWindow = currentWindowAdaptiveInfoV2().windowSizeClass
+                    .isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_EXPANDED_LOWER_BOUND)
                 ModalBottomSheet(
                     onDismissRequest = onBack,
                     sheetState = sheetState,
+                    // Dp.Unspecified is ModalBottomSheet's documented "span the entire width";
+                    // the default caps at BottomSheetDefaults.SheetMaxWidth (640dp).
+                    sheetMaxWidth = if (fillsWindow) Dp.Unspecified else BottomSheetDefaults.SheetMaxWidth,
+                    shape = if (fillsWindow) RectangleShape else BottomSheetDefaults.ExpandedShape,
                     dragHandle = null,
                     // With no drag handle, the whole sheet surface is otherwise a drag target —
                     // a swipe down anywhere would dismiss Cook Mode. Only the screen's own X

@@ -160,11 +160,11 @@ internal fun CookDoneView(
     }
 }
 
-private fun elapsedCookingMinutes(state: CookModeState): Long {
-    val started = state.cookingStartedAtMillis ?: return 0L
-    val finished = state.cookingFinishedAtMillis ?: state.nowMillis
-    return ((finished - started).coerceAtLeast(0L) / 60_000L).coerceAtLeast(1L)
-}
+/** Rounds [CookModeState.elapsedCookingMillis] down to whole minutes, but never below one — a
+ * recipe finished in forty seconds still reads as "1 minute" rather than "0 minutes". */
+private fun elapsedCookingMinutes(state: CookModeState): Long =
+    if (state.cookingStartedAtMillis == null) 0L
+    else (state.elapsedCookingMillis / 60_000L).coerceAtLeast(1L)
 
 // region Previews
 
