@@ -97,8 +97,11 @@ internal fun ExpandedView(
         // whole screen on compact widths, where there is nothing to separate it from.
         VerticalDivider(color = MaterialTheme.colorScheme.outlineVariant)
         Column(modifier = Modifier.weight(1f).fillMaxHeight()) {
-            ExpandedActionBar(
+            ExpandedHeader(
                 state = state,
+                tabs = expandedTabs,
+                selectedTabIndex = selectedExpandedTabIndex,
+                onTabSelected = { selectedExpandedTabIndex = it },
                 onEvent = onEvent,
                 onStartCooking = onStartCooking,
                 modifier = Modifier.fillMaxWidth()
@@ -113,25 +116,6 @@ internal fun ExpandedView(
                     color = MaterialTheme.colorScheme.primary,
                     trackColor = MaterialTheme.colorScheme.surfaceContainer,
                 )
-            }
-            // Only render the row when there is a choice to make. Guarding on `!= 1` would still
-            // draw it for an empty list — the state while the recipe loads — and
-            // PrimaryScrollableTabRow indexes tabPositions[selectedTabIndex] unguarded, so an empty
-            // row crashes on measure.
-            if (expandedTabs.size > 1) {
-                PrimaryScrollableTabRow(
-                    selectedTabIndex = selectedExpandedTabIndex,
-                    edgePadding = EXPANDED_HORIZONTAL_PADDING,
-                    modifier = Modifier.padding(top = 24.dp)
-                ) {
-                    expandedTabs.forEachIndexed { index, title ->
-                        Tab(
-                            selected = selectedExpandedTabIndex == index,
-                            onClick = { selectedExpandedTabIndex = index },
-                            text = { Text(title.label) }
-                        )
-                    }
-                }
             }
 
             AnimatedContent(
@@ -245,13 +229,21 @@ internal fun ExpandedView(
 }
 
 /**
- * The desktop mirror of the compact screen's [androidx.compose.material3.BottomAppBar] actions.
- * The Comment button is deliberately absent: on desktop the comments are a tab in this same pane
- * (see [RecipeDetailsState.desktopTabs]), so there is nowhere to navigate to.
+ * The pane's single header row: the section tabs on the left, then the desktop mirror of the
+ * compact screen's [androidx.compose.material3.BottomAppBar] actions on the right. The Comment
+ * button is deliberately absent — on desktop the comments are one of those tabs (see
+ * [RecipeDetailsState.desktopTabs]), so there is nowhere to navigate to.
+ *
+ * The tab row's own divider is suppressed and one is drawn under the whole header instead;
+ * otherwise the rule would stop where the tabs stop rather than running the width of the pane.
  */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun ExpandedActionBar(
+private fun ExpandedHeader(
     state: RecipeDetailsState,
+    tabs: List<RecipeTab>,
+    selectedTabIndex: Int,
+    onTabSelected: (Int) -> Unit,
     onEvent: (RecipeDetailsIntent) -> Unit,
     onStartCooking: (recipeId: String) -> Unit,
     modifier: Modifier = Modifier
@@ -261,10 +253,31 @@ private fun ExpandedActionBar(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(60.dp)
-                .padding(horizontal = EXPANDED_HORIZONTAL_PADDING),
+                .padding(end = EXPANDED_HORIZONTAL_PADDING),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Spacer(modifier = Modifier.weight(1f))
+            // Only render the row when there is a choice to make. Guarding on `!= 1` would still
+            // draw it for an empty list — the state while the recipe loads — and
+            // PrimaryScrollableTabRow indexes tabPositions[selectedTabIndex] unguarded, so an
+            // empty row crashes on measure.
+            if (tabs.size > 1) {
+                PrimaryScrollableTabRow(
+                    selectedTabIndex = selectedTabIndex,
+                    edgePadding = EXPANDED_HORIZONTAL_PADDING,
+                    divider = {},
+                    modifier = Modifier.weight(1f).fillMaxHeight()
+                ) {
+                    tabs.forEachIndexed { index, title ->
+                        Tab(
+                            selected = selectedTabIndex == index,
+                            onClick = { onTabSelected(index) },
+                            text = { Text(title.label) }
+                        )
+                    }
+                }
+            } else {
+                Spacer(modifier = Modifier.weight(1f))
+            }
             IconToggleButton(
                 checked = state.recipe.favorite,
                 onCheckedChange = {},
