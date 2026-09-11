@@ -97,8 +97,8 @@ internal fun IngredientAndToolView(
             }
         }
         Column(modifier = Modifier.fillMaxWidth().padding(top = 16.dp)) {
-            recipe.ingredients.forEach { ingredient ->
-                IngredientEntry(ingredient, modifier = Modifier.fillMaxWidth())
+            recipe.ingredients.forEachIndexed { index, ingredient ->
+                IngredientEntry(ingredient, modifier = Modifier.fillMaxWidth(), index != 0)
             }
         }
         if (recipe.tools.isNotEmpty()) {
@@ -151,9 +151,15 @@ private fun ServingStepperButton(
 }
 
 @Composable
-private fun IngredientEntry(ingredient: IngredientUi, modifier: Modifier = Modifier) {
+private fun IngredientEntry(
+    ingredient: IngredientUi,
+    modifier: Modifier = Modifier,
+    hasDivider: Boolean = true
+) {
     Column(modifier = modifier) {
-        HorizontalDivider(color = MaterialTheme.colorScheme.surfaceContainer)
+        if (hasDivider) {
+            HorizontalDivider(color = MaterialTheme.colorScheme.surfaceContainer)
+        }
         Row(
             modifier = Modifier.fillMaxWidth().padding(vertical = 9.dp),
             horizontalArrangement = Arrangement.spacedBy(10.dp),
@@ -196,7 +202,8 @@ internal fun InstructionView(
                 ingredients = instruction.ingredientIds.mapNotNull { ingredientsById[it] },
                 // Only the first step clears the heading; the rest butt up against the divider
                 // that closes the step above them.
-                modifier = Modifier.fillMaxWidth().ifTrue(index == 0) { padding(top = 12.dp) }
+                modifier = Modifier.fillMaxWidth().ifTrue(index == 0) { padding(top = 12.dp) },
+                hasDivider = index != 0
             )
         }
     }
@@ -207,14 +214,17 @@ private fun InstructionEntry(
     stepNumber: Int,
     instruction: InstructionUi,
     ingredients: List<IngredientUi>,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    hasDivider: Boolean = true
 ) {
     val richTextState = rememberRichTextState()
     LaunchedEffect(instruction.text) {
         richTextState.setMarkdown(instruction.text)
     }
     Column(modifier = modifier) {
-        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+        if (hasDivider) {
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+        }
         Row(
             modifier = Modifier.fillMaxWidth().padding(vertical = 20.dp),
             horizontalArrangement = Arrangement.spacedBy(20.dp),
@@ -311,8 +321,8 @@ internal fun NutritionView(nutrition: NutritionUi, modifier: Modifier = Modifier
             style = MaterialTheme.typography.titleLarge,
             modifier = Modifier.padding(bottom = 12.dp)
         )
-        nutrition.entries.forEach { entry ->
-            NutritionEntry(entry.label, entry.value, modifier = Modifier.fillMaxWidth())
+        nutrition.entries.forEachIndexed { index, entry ->
+            NutritionEntry(entry.label, entry.value, modifier = Modifier.fillMaxWidth(), index != 0)
         }
     }
 }
@@ -321,10 +331,13 @@ internal fun NutritionView(nutrition: NutritionUi, modifier: Modifier = Modifier
 private fun NutritionEntry(
     title: String,
     value: String,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    hasDivider: Boolean = true
 ) {
     Column(modifier = modifier) {
-        HorizontalDivider(color = MaterialTheme.colorScheme.surfaceContainer)
+        if (hasDivider) {
+            HorizontalDivider(color = MaterialTheme.colorScheme.surfaceContainer)
+        }
         Row(
             modifier = Modifier.fillMaxWidth().padding(vertical = 7.dp),
             horizontalArrangement = Arrangement.SpaceBetween

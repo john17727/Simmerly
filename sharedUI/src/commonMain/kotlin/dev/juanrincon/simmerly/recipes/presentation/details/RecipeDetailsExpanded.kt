@@ -146,7 +146,6 @@ internal fun ExpandedView(
                                 .padding(
                                     start = EXPANDED_HORIZONTAL_PADDING,
                                     end = EXPANDED_HORIZONTAL_PADDING,
-                                    top = 24.dp
                                 ),
                             horizontalArrangement = Arrangement.spacedBy(EXPANDED_COLUMN_GAP)
                         ) {
@@ -166,6 +165,7 @@ internal fun ExpandedView(
                                                 shape = MaterialTheme.shapes.medium
                                             )
                                         }
+                                        .padding(top = 24.dp)
                                 ) {
                                     IngredientAndToolView(
                                         recipe = recipe,
@@ -204,6 +204,7 @@ internal fun ExpandedView(
                                                 shape = MaterialTheme.shapes.medium
                                             )
                                         }
+                                        .padding(top = 24.dp)
                                 )
                                 Spacer(modifier = Modifier.height(EXPANDED_BOTTOM_PADDING))
                             }
