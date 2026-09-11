@@ -63,6 +63,7 @@ import coil3.compose.AsyncImage
 import com.mohamedrejeb.richeditor.model.rememberRichTextState
 import com.mohamedrejeb.richeditor.ui.material3.RichText
 import dev.juanrincon.simmerly.core.presentation.asString
+import dev.juanrincon.simmerly.core.presentation.VerticalScrollbar
 import dev.juanrincon.simmerly.recipes.presentation.cookmode.models.CookStepUi
 import dev.juanrincon.simmerly.recipes.presentation.cookmode.models.TimerOrigin
 import dev.juanrincon.simmerly.recipes.presentation.cookmode.orbit.CookModeIntent
@@ -244,87 +245,92 @@ private fun DesktopStepRail(
     modifier: Modifier = Modifier
 ) {
     val recipe = state.recipe
-    Column(
-        modifier = modifier
-            .verticalScroll(rememberScrollState())
-            .padding(start = 14.dp, end = 14.dp, top = 18.dp, bottom = 24.dp)
-    ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 6.dp).padding(bottom = 16.dp)
+    val scrollState = rememberScrollState()
+    Box(modifier = modifier) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(scrollState)
+                .padding(start = 14.dp, end = 14.dp, top = 18.dp, bottom = 24.dp)
         ) {
-            AsyncImage(
-                model = recipe.image,
-                contentDescription = null,
-                contentScale = ContentScale.Crop,
-                modifier = Modifier
-                    .size(56.dp)
-                    .clip(MaterialTheme.shapes.small)
-                    .background(MaterialTheme.colorScheme.surfaceContainer)
-            )
-            Column {
-                Eyebrow("The dish")
-                Text(
-                    recipe.title.asString(),
-                    style = MaterialTheme.typography.titleSmall,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 6.dp).padding(bottom = 16.dp)
+            ) {
+                AsyncImage(
+                    model = recipe.image,
+                    contentDescription = null,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                        .size(56.dp)
+                        .clip(MaterialTheme.shapes.small)
+                        .background(MaterialTheme.colorScheme.surfaceContainer)
                 )
+                Column {
+                    Eyebrow("The dish")
+                    Text(
+                        recipe.title.asString(),
+                        style = MaterialTheme.typography.titleSmall,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    Text(
+                        listOfNotNull(
+                            "${steps.size} steps".takeIf { steps.isNotEmpty() },
+                            recipe.totalTime
+                        ).joinToString(" · "),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 6.dp)
+                    .padding(top = 14.dp, bottom = 12.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.Bottom
+            ) {
+                Eyebrow("Steps")
                 Text(
-                    listOfNotNull(
-                        "${steps.size} steps".takeIf { steps.isNotEmpty() },
-                        recipe.totalTime
-                    ).joinToString(" · "),
+                    "${formatElapsed(state.elapsedCookingMillis)} elapsed",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
-        }
-        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
 
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 6.dp)
-                .padding(top = 14.dp, bottom = 12.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.Bottom
-        ) {
-            Eyebrow("Steps")
-            Text(
-                "${formatElapsed(state.elapsedCookingMillis)} elapsed",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
+            steps.forEach { railStep ->
+                StepRailRow(
+                    step = railStep,
+                    isCurrent = railStep.index == state.stepIndex,
+                    isDone = railStep.index < state.stepIndex,
+                    onClick = { onJumpToStep(railStep.index) },
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
 
-        steps.forEach { railStep ->
-            StepRailRow(
-                step = railStep,
-                isCurrent = railStep.index == state.stepIndex,
-                isDone = railStep.index < state.stepIndex,
-                onClick = { onJumpToStep(railStep.index) },
-                modifier = Modifier.fillMaxWidth()
-            )
-        }
+            if (recipe.tools.isNotEmpty()) {
+                RailSection("Tools") {
+                    FlowRow(
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        verticalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        recipe.tools.forEach { TagChip(name = it.name) }
+                    }
+                }
+            }
 
-        if (recipe.tools.isNotEmpty()) {
-            RailSection("Tools") {
-                FlowRow(
-                    horizontalArrangement = Arrangement.spacedBy(6.dp),
-                    verticalArrangement = Arrangement.spacedBy(6.dp)
-                ) {
-                    recipe.tools.forEach { TagChip(name = it.name) }
+            RailSection("Shortcuts") {
+                Column(verticalArrangement = Arrangement.spacedBy(7.dp)) {
+                    ShortcutRow("← →", "Move between steps")
+                    ShortcutRow("T", "New timer")
+                    ShortcutRow("Esc", "Leave cook mode")
                 }
             }
         }
-
-        RailSection("Shortcuts") {
-            Column(verticalArrangement = Arrangement.spacedBy(7.dp)) {
-                ShortcutRow("← →", "Move between steps")
-                ShortcutRow("T", "New timer")
-                ShortcutRow("Esc", "Leave cook mode")
-            }
-        }
+        VerticalScrollbar(scrollState, modifier = Modifier.align(Alignment.CenterEnd).fillMaxHeight())
     }
 }
 
@@ -479,72 +485,75 @@ private fun DesktopStepStage(
         }
     }
 
+    val scrollState = rememberScrollState()
     Column(modifier = modifier) {
-        Column(
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxWidth()
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = STAGE_PADDING)
-                .padding(top = 36.dp),
-            verticalArrangement = Arrangement.spacedBy(22.dp)
-        ) {
-            Row(horizontalArrangement = Arrangement.spacedBy(28.dp)) {
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        step.instruction.summary,
-                        style = MaterialTheme.typography.displaySmall.copy(
-                            fontFamily = dmSerifDisplayFontFamily(),
-                            fontSize = 46.sp,
-                            lineHeight = 54.sp,
-                            letterSpacing = (-0.4).sp
-                        ),
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                    if (step.ingredients.isNotEmpty()) {
-                        IngredientChipRow(
-                            step.ingredients,
-                            modifier = Modifier.fillMaxWidth().padding(top = 16.dp)
+        Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(scrollState)
+                    .padding(horizontal = STAGE_PADDING)
+                    .padding(top = 36.dp),
+                verticalArrangement = Arrangement.spacedBy(22.dp)
+            ) {
+                Row(horizontalArrangement = Arrangement.spacedBy(28.dp)) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            step.instruction.summary,
+                            style = MaterialTheme.typography.displaySmall.copy(
+                                fontFamily = dmSerifDisplayFontFamily(),
+                                fontSize = 46.sp,
+                                lineHeight = 54.sp,
+                                letterSpacing = (-0.4).sp
+                            ),
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        if (step.ingredients.isNotEmpty()) {
+                            IngredientChipRow(
+                                step.ingredients,
+                                modifier = Modifier.fillMaxWidth().padding(top = 16.dp)
+                            )
+                        }
+                    }
+                    step.instruction.images.firstOrNull()?.let { image ->
+                        AsyncImage(
+                            model = image,
+                            contentDescription = null,
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier
+                                .width(STEP_PHOTO_WIDTH)
+                                .height(STEP_PHOTO_HEIGHT)
+                                .clip(MaterialTheme.shapes.medium)
+                                .background(MaterialTheme.colorScheme.surfaceContainer)
                         )
                     }
                 }
-                step.instruction.images.firstOrNull()?.let { image ->
-                    AsyncImage(
-                        model = image,
-                        contentDescription = null,
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier
-                            .width(STEP_PHOTO_WIDTH)
-                            .height(STEP_PHOTO_HEIGHT)
-                            .clip(MaterialTheme.shapes.medium)
-                            .background(MaterialTheme.colorScheme.surfaceContainer)
-                    )
-                }
-            }
 
-            RichText(
-                state = richTextState,
-                style = MaterialTheme.typography.bodyLarge.copy(
-                    fontSize = 21.sp,
-                    lineHeight = 34.sp,
-                    letterSpacing = 0.1.sp
-                ),
-                color = MaterialTheme.colorScheme.onSurface,
-                modifier = Modifier.widthIn(max = STAGE_TEXT_MAX_WIDTH)
-            )
-
-            if (firstDetected != null && !alreadyStarted) {
-                DetectedTimerCallout(
-                    label = state.selectedRangeOptionOrDefault?.let { formatTimerLength(it) }
-                        ?: formatTimerLength(firstDetected.duration),
-                    onStart = {
-                        onEvent(CookModeIntent.StartSelectedRangeTimer(step.instruction.summary))
-                    },
+                RichText(
+                    state = richTextState,
+                    style = MaterialTheme.typography.bodyLarge.copy(
+                        fontSize = 21.sp,
+                        lineHeight = 34.sp,
+                        letterSpacing = 0.1.sp
+                    ),
+                    color = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier.widthIn(max = STAGE_TEXT_MAX_WIDTH)
                 )
-            }
 
-            Spacer(modifier = Modifier.height(8.dp))
+                if (firstDetected != null && !alreadyStarted) {
+                    DetectedTimerCallout(
+                        label = state.selectedRangeOptionOrDefault?.let { formatTimerLength(it) }
+                            ?: formatTimerLength(firstDetected.duration),
+                        onStart = {
+                            onEvent(CookModeIntent.StartSelectedRangeTimer(step.instruction.summary))
+                        },
+                        modifier = Modifier.widthIn(max = STAGE_TEXT_MAX_WIDTH)
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+            }
+            VerticalScrollbar(scrollState, modifier = Modifier.align(Alignment.CenterEnd).fillMaxHeight())
         }
 
         nextStep?.let {

@@ -1,18 +1,23 @@
 package dev.juanrincon.simmerly.recipes.presentation.list
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import androidx.paging.LoadState
 import androidx.paging.compose.LazyPagingItems
+import dev.juanrincon.simmerly.core.presentation.VerticalScrollbar
 import dev.juanrincon.simmerly.core.presentation.ifTrue
 import dev.juanrincon.simmerly.recipes.domain.model.RecipeSummary
 
@@ -25,42 +30,48 @@ internal fun SelectableList(
     state: LazyListState,
     modifier: Modifier = Modifier
 ) {
-    LazyColumn(
-        state = state,
-        contentPadding = PaddingValues(start = 16.dp, top = 16.dp, bottom = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
-        modifier = modifier.clip(shape = MaterialTheme.shapes.medium)
-    ) {
-        if (lazyPagingItems.loadState.refresh is LoadState.Loading) {
-            items(6) {
-                RecipeCardSkeleton(modifier = Modifier.fillMaxWidth())
-            }
-        } else {
-            items(
-                count = lazyPagingItems.itemCount,
-                key = { index -> lazyPagingItems.peek(index)?.id ?: index }
-            ) { index ->
-                val item = lazyPagingItems[index] ?: return@items
-                val isSelected = item.id == selected
-                RecipeCard(
-                    item,
-                    selected = isSelected,
-                    onClick = {
-                        onRecipeSelected(item.id)
-                        onSelected(item.id)
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .animateItem().ifTrue(isSelected) {
-                            padding(vertical = 32.dp)
-                        }
-                )
-            }
-            if (lazyPagingItems.loadState.append is LoadState.Loading) {
-                item {
+    Box(modifier = modifier) {
+        LazyColumn(
+            state = state,
+            contentPadding = PaddingValues(start = 16.dp, top = 16.dp, bottom = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier.fillMaxSize().clip(shape = MaterialTheme.shapes.medium)
+        ) {
+            if (lazyPagingItems.loadState.refresh is LoadState.Loading) {
+                items(6) {
                     RecipeCardSkeleton(modifier = Modifier.fillMaxWidth())
+                }
+            } else {
+                items(
+                    count = lazyPagingItems.itemCount,
+                    key = { index -> lazyPagingItems.peek(index)?.id ?: index }
+                ) { index ->
+                    val item = lazyPagingItems[index] ?: return@items
+                    val isSelected = item.id == selected
+                    RecipeCard(
+                        item,
+                        selected = isSelected,
+                        onClick = {
+                            onRecipeSelected(item.id)
+                            onSelected(item.id)
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .animateItem().ifTrue(isSelected) {
+                                padding(vertical = 32.dp)
+                            }
+                    )
+                }
+                if (lazyPagingItems.loadState.append is LoadState.Loading) {
+                    item {
+                        RecipeCardSkeleton(modifier = Modifier.fillMaxWidth())
+                    }
                 }
             }
         }
+        VerticalScrollbar(
+            state,
+            modifier = Modifier.align(Alignment.CenterEnd).fillMaxHeight()
+        )
     }
 }

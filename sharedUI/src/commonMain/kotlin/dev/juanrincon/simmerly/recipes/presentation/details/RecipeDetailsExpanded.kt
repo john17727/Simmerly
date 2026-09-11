@@ -5,6 +5,7 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -49,6 +50,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import dev.juanrincon.simmerly.core.presentation.VerticalScrollbar
 import dev.juanrincon.simmerly.core.presentation.ifTrue
 import dev.juanrincon.simmerly.core.presentation.shimmer
 import dev.juanrincon.simmerly.recipes.presentation.comments.RecipeCommentsScreen
@@ -133,84 +135,103 @@ internal fun ExpandedView(
                                 ),
                             horizontalArrangement = Arrangement.spacedBy(EXPANDED_COLUMN_GAP)
                         ) {
-                            Column(
-                                modifier = Modifier
-                                    .width(EXPANDED_SIDE_COLUMN_WIDTH)
-                                    .fillMaxHeight()
-                                    .verticalScroll(rememberScrollState()),
-                                verticalArrangement = Arrangement.spacedBy(16.dp)
-                            ) {
-                                OutlinedCard(
+                            val sideScrollState = rememberScrollState()
+                            val instructionScrollState = rememberScrollState()
+                            Box(modifier = Modifier.width(EXPANDED_SIDE_COLUMN_WIDTH).fillMaxHeight()) {
+                                Column(
                                     modifier = Modifier
-                                        .fillMaxWidth()
-                                        .ifTrue(state.loading) {
-                                            height(600.dp).shimmer(
-                                                colors = shimmerColors(),
-                                                shape = MaterialTheme.shapes.medium
-                                            )
-                                        }
-                                        .padding(top = 24.dp)
+                                        .fillMaxSize()
+                                        .verticalScroll(sideScrollState),
+                                    verticalArrangement = Arrangement.spacedBy(16.dp)
                                 ) {
-                                    IngredientAndToolView(
-                                        recipe = recipe,
-                                        onRemoveServingButtonClick = { onEvent(RecipeDetailsIntent.RemoveServing) },
-                                        onAddServingButtonClick = { onEvent(RecipeDetailsIntent.AddServing) },
-                                        modifier = Modifier.fillMaxWidth()
-                                    )
-                                }
-                                if (recipe.settings.showNutrition) {
-                                    OutlinedCard(modifier = Modifier.fillMaxWidth()) {
-                                        NutritionView(
-                                            recipe.nutrition,
+                                    OutlinedCard(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .ifTrue(state.loading) {
+                                                height(600.dp).shimmer(
+                                                    colors = shimmerColors(),
+                                                    shape = MaterialTheme.shapes.medium
+                                                )
+                                            }
+                                            .padding(top = 24.dp)
+                                    ) {
+                                        IngredientAndToolView(
+                                            recipe = recipe,
+                                            onRemoveServingButtonClick = { onEvent(RecipeDetailsIntent.RemoveServing) },
+                                            onAddServingButtonClick = { onEvent(RecipeDetailsIntent.AddServing) },
                                             modifier = Modifier.fillMaxWidth()
                                         )
                                     }
-                                }
-                                Spacer(modifier = Modifier.height(EXPANDED_BOTTOM_PADDING))
-                            }
-                            Column(
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .fillMaxHeight()
-                                    .verticalScroll(rememberScrollState())
-                            ) {
-                                // No card here: the design sets the instructions directly on the
-                                // surface, so only the ingredients side reads as a panel.
-                                InstructionView(
-                                    instructions = recipe.instructions,
-                                    ingredients = recipe.ingredients,
-                                    contentPadding = PaddingValues(0.dp),
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .ifTrue(state.loading) {
-                                            height(800.dp).shimmer(
-                                                colors = shimmerColors(),
-                                                shape = MaterialTheme.shapes.medium
+                                    if (recipe.settings.showNutrition) {
+                                        OutlinedCard(modifier = Modifier.fillMaxWidth()) {
+                                            NutritionView(
+                                                recipe.nutrition,
+                                                modifier = Modifier.fillMaxWidth()
                                             )
                                         }
-                                        .padding(top = 24.dp)
+                                    }
+                                    Spacer(modifier = Modifier.height(EXPANDED_BOTTOM_PADDING))
+                                }
+                                VerticalScrollbar(
+                                    sideScrollState,
+                                    modifier = Modifier.align(Alignment.CenterEnd).fillMaxHeight()
                                 )
-                                Spacer(modifier = Modifier.height(EXPANDED_BOTTOM_PADDING))
+                            }
+                            Box(modifier = Modifier.weight(1f).fillMaxHeight()) {
+                                Column(
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .verticalScroll(instructionScrollState)
+                                ) {
+                                    // No card here: the design sets the instructions directly on the
+                                    // surface, so only the ingredients side reads as a panel.
+                                    InstructionView(
+                                        instructions = recipe.instructions,
+                                        ingredients = recipe.ingredients,
+                                        contentPadding = PaddingValues(0.dp),
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .ifTrue(state.loading) {
+                                                height(800.dp).shimmer(
+                                                    colors = shimmerColors(),
+                                                    shape = MaterialTheme.shapes.medium
+                                                )
+                                            }
+                                            .padding(top = 24.dp)
+                                    )
+                                    Spacer(modifier = Modifier.height(EXPANDED_BOTTOM_PADDING))
+                                }
+                                VerticalScrollbar(
+                                    instructionScrollState,
+                                    modifier = Modifier.align(Alignment.CenterEnd).fillMaxHeight()
+                                )
                             }
                         }
                     }
 
                     RecipeTab.Notes -> {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .padding(
-                                    start = EXPANDED_HORIZONTAL_PADDING,
-                                    end = EXPANDED_HORIZONTAL_PADDING,
-                                    top = 24.dp
+                        val notesScrollState = rememberScrollState()
+                        Box(modifier = Modifier.fillMaxSize()) {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .padding(
+                                        start = EXPANDED_HORIZONTAL_PADDING,
+                                        end = EXPANDED_HORIZONTAL_PADDING,
+                                        top = 24.dp
+                                    )
+                                    .verticalScroll(notesScrollState)
+                            ) {
+                                NotesView(
+                                    recipe.notes,
+                                    modifier = Modifier.fillMaxWidth()
                                 )
-                                .verticalScroll(rememberScrollState())
-                        ) {
-                            NotesView(
-                                recipe.notes,
-                                modifier = Modifier.fillMaxWidth()
+                                Spacer(modifier = Modifier.height(EXPANDED_BOTTOM_PADDING))
+                            }
+                            VerticalScrollbar(
+                                notesScrollState,
+                                modifier = Modifier.align(Alignment.CenterEnd).fillMaxHeight()
                             )
-                            Spacer(modifier = Modifier.height(EXPANDED_BOTTOM_PADDING))
                         }
                     }
 

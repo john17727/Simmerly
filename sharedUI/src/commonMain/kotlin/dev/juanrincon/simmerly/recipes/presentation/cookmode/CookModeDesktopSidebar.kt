@@ -9,6 +9,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -16,6 +18,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -42,6 +45,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import dev.juanrincon.simmerly.core.presentation.VerticalScrollbar
 import dev.juanrincon.simmerly.recipes.presentation.cookmode.models.CookStepUi
 import dev.juanrincon.simmerly.recipes.presentation.cookmode.models.CookTimerUi
 import dev.juanrincon.simmerly.recipes.presentation.cookmode.models.TimerOrigin
@@ -166,21 +170,29 @@ internal fun DesktopCookSidebar(
             }
         }
 
-        LazyColumn(
-            contentPadding = PaddingValues(start = 12.dp, end = 12.dp, bottom = 16.dp),
-            modifier = Modifier.fillMaxWidth().weight(1f)
-        ) {
-            items(recipe.ingredients, key = { it.referenceId }) { ingredient ->
-                SidebarIngredientRow(
-                    ingredient = ingredient,
-                    checked = ingredient.referenceId in state.checkedIngredientIds,
-                    usedInThisStep = ingredient.referenceId in stepIngredientIds,
-                    onToggle = {
-                        onEvent(CookModeIntent.ToggleIngredient(ingredient.referenceId))
-                    },
-                    modifier = Modifier.fillMaxWidth()
-                )
+        val ingredientListState = rememberLazyListState()
+        Box(modifier = Modifier.fillMaxWidth().weight(1f)) {
+            LazyColumn(
+                state = ingredientListState,
+                contentPadding = PaddingValues(start = 12.dp, end = 12.dp, bottom = 16.dp),
+                modifier = Modifier.fillMaxSize()
+            ) {
+                items(recipe.ingredients, key = { it.referenceId }) { ingredient ->
+                    SidebarIngredientRow(
+                        ingredient = ingredient,
+                        checked = ingredient.referenceId in state.checkedIngredientIds,
+                        usedInThisStep = ingredient.referenceId in stepIngredientIds,
+                        onToggle = {
+                            onEvent(CookModeIntent.ToggleIngredient(ingredient.referenceId))
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
             }
+            VerticalScrollbar(
+                ingredientListState,
+                modifier = Modifier.align(Alignment.CenterEnd).fillMaxHeight()
+            )
         }
     }
 }
