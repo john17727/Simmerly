@@ -1,7 +1,6 @@
 package dev.juanrincon.simmerly.recipes.presentation.search
 
 import androidx.compose.animation.SharedTransitionScope
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
@@ -19,7 +18,6 @@ import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material3.AppBarWithSearch
 import androidx.compose.material3.ExpandedFullScreenContainedSearchBar
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
@@ -44,14 +42,14 @@ import kotlinx.coroutines.launch
 import org.orbitmvi.orbit.compose.collectAsState
 import org.koin.compose.viewmodel.koinViewModel
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RecipeSearchScreen(
     onRecipeSelected: (String) -> Unit,
     onNavigateBack: () -> Unit,
+    modifier: Modifier = Modifier,
     sharedTransitionScope: SharedTransitionScope? = null,
-    viewModel: RecipeSearchViewModel = koinViewModel(),
-    modifier: Modifier = Modifier
+    viewModel: RecipeSearchViewModel = koinViewModel()
 ) {
     val state by viewModel.collectAsState()
     val textFieldState = rememberTextFieldState()
@@ -134,27 +132,23 @@ fun RecipeSearchScreen(
                     if (state.searchQuery.isEmpty()) {
                         items(state.recentQueries, key = { it }) { query ->
                             ListItem(
-                                headlineContent = { Text(query) },
+                                onClick = { textFieldState.edit { replace(0, length, query) } },
                                 leadingContent = {
                                     Icon(Icons.Rounded.History, contentDescription = null)
                                 },
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clickable {
-                                        textFieldState.edit { replace(0, length, query) }
-                                    }
-                            )
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Text(query)
+                            }
                         }
                     } else {
                         items(suggestions, key = { it.id }) { recipe ->
                             ListItem(
-                                headlineContent = { Text(recipe.name) },
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clickable {
-                                        textFieldState.edit { replace(0, length, recipe.name) }
-                                    }
-                            )
+                                onClick = { textFieldState.edit { replace(0, length, recipe.name) } },
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Text(recipe.name)
+                            }
                         }
                     }
                 }
