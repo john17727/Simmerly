@@ -9,7 +9,7 @@ splashify = "1.0.0-alpha1"
 androidx-lifecycle = "2.11.0"
 composeHotReload = "1.2.0"
 composeMultiplatform = "1.12.1"
-kotlin = "2.4.10" # Skie version needs to be updated first
+kotlin = "2.4.20"
 ksp = "2.3.6"
 kotlinx-coroutines = "1.11.0"
 coil = "3.6.3"
@@ -30,7 +30,7 @@ arrow = "2.2.3"
 assertk = "0.28.1"
 turbine = "1.2.1"
 orbit-mvi = "12.0.1"
-skie = "0.10.14"
+skie = "0.10.15"
 
 [libraries]
 components-resources = { module = "org.jetbrains.compose.components:components-resources", version.ref = "composeMultiplatform" }
