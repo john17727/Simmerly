@@ -83,6 +83,14 @@ class RecipeNetworkClientTest {
     }
 
     @Test
+    fun getRecipesWithNullTotalTimeDecodes() = runTest {
+        val body = RECIPE_LIST_JSON.replace("\"totalTime\": \"30 minutes\"", "\"totalTime\": null")
+        val result = buildClient(body = body).getRecipes(next = null)
+        assertThat(result.isRight()).isEqualTo(true)
+        assertThat(result.getOrNull()!!.items.first().totalTime).isNull()
+    }
+
+    @Test
     fun getRecipesWith401ReturnsUnauthorized() = runTest {
         val result = buildClient(HttpStatusCode.Unauthorized, "").getRecipes(next = null)
         assertThat(result.isLeft()).isEqualTo(true)
@@ -111,6 +119,30 @@ class RecipeNetworkClientTest {
         val result = buildClient(body = RECIPE_DETAIL_JSON).getRecipe("test-slug")
         assertThat(result.isRight()).isEqualTo(true)
         assertThat(result.getOrNull()!!.name).isEqualTo("Test Recipe")
+    }
+
+    @Test
+    fun getRecipeWithNullTotalTimeDecodes() = runTest {
+        // Mealie sends an explicit null for recipes with no times set — this used to crash decoding.
+        val body = RECIPE_DETAIL_JSON.replace("\"totalTime\": \"30 minutes\"", "\"totalTime\": null")
+        val result = buildClient(body = body).getRecipe("test-slug")
+        assertThat(result.isRight()).isEqualTo(true)
+        assertThat(result.getOrNull()!!.totalTime).isNull()
+    }
+
+    @Test
+    fun getRecipeWithMissingLastMadeDecodes() = runTest {
+        val body = RECIPE_DETAIL_JSON.replace("\"lastMade\": null,", "")
+        val result = buildClient(body = body).getRecipe("test-slug")
+        assertThat(result.isRight()).isEqualTo(true)
+        assertThat(result.getOrNull()!!.lastMade).isNull()
+    }
+
+    @Test
+    fun getRecipeWithUndecodableBodyReturnsSerializationError() = runTest {
+        val result = buildClient(body = """{"id": "recipe-1"}""").getRecipe("test-slug")
+        assertThat(result.isLeft()).isEqualTo(true)
+        assertThat(result.leftOrNull()!!).isInstanceOf(DataError.NetworkError.Serialization::class)
     }
 
     // endregion

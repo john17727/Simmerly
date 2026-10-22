@@ -14,7 +14,7 @@ data class RecipeSummaryDto(
     val recipeServings: Double,
     val recipeYieldQuantity: Double,
     val recipeYield: String,
-    val totalTime: String,
+    val totalTime: String? = null,
     val prepTime: String? = null,
     val cookTime: String? = null,
     val performTime: String? = null,

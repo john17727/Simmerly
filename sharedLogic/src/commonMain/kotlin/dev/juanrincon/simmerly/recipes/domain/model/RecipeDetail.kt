@@ -14,7 +14,7 @@ data class RecipeDetail(
     val servings: Double,
     val recipeYieldQuantity: Double,
     val recipeYield: String,
-    val totalTime: String,
+    val totalTime: String?,
     val prepTime: String?,
     val cookTime: String?,
     val performTime: String?,

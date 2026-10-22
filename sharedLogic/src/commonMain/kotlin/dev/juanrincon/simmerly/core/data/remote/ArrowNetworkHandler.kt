@@ -8,6 +8,7 @@ import io.ktor.client.call.body
 import io.ktor.client.network.sockets.SocketTimeoutException
 import io.ktor.client.plugins.HttpRequestTimeoutException
 import io.ktor.client.statement.HttpResponse
+import io.ktor.serialization.ContentConvertException
 import io.ktor.util.network.UnresolvedAddressException
 import kotlinx.serialization.SerializationException
 
@@ -44,8 +45,21 @@ internal suspend inline fun <reified E> Raise<DataError.NetworkError<E>>.execute
     }
 }
 
+/**
+ * Decoding happens after [executeRequest], so its failures are mapped here — Ktor wraps them in
+ * [ContentConvertException] rather than throwing a bare [SerializationException].
+ */
 suspend inline fun <reified E, reified D> arrowNetworkHandler(call: () -> HttpResponse): Either<DataError.NetworkError<E>, D> =
-    either { executeRequest<E>(call).body<D>() }
+    either {
+        val response = executeRequest<E>(call)
+        try {
+            response.body<D>()
+        } catch (_: ContentConvertException) {
+            raise(DataError.NetworkError.Serialization)
+        } catch (_: SerializationException) {
+            raise(DataError.NetworkError.Serialization)
+        }
+    }
 
 /**
  * Like [arrowNetworkHandler], but for endpoints whose success response has no body worth decoding —
