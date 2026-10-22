@@ -38,6 +38,8 @@ data class ShoppingFood(
     val name: String,
     val pluralName: String?,
     val labelId: String?,
+    /** The name of the food's label, i.e. its aisle. */
+    val labelName: String? = null,
 )
 
 /** A Mealie label, which a shopping list treats as an aisle. */

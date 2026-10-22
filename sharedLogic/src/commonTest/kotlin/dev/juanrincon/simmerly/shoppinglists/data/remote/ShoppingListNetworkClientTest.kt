@@ -125,7 +125,35 @@ class ShoppingListNetworkClientTest {
         assertThat(requests[1].jsonBody().jsonObject["recipeDecrementQuantity"]!!.jsonPrimitive.content).isEqualTo("1.0")
     }
 
+    @Test
+    fun parseIngredientPostsTheTextAndDecodesMatchedAndUnmatchedParts() = runTest {
+        val parsed = buildClient(PARSED_JSON).parseIngredient("2 cups milk").getOrNull()!!
+
+        val request = requests.single()
+        assertThat(request.url.encodedPath).isEqualTo("/api/parser/ingredient")
+        assertThat(request.jsonBody().jsonObject["ingredient"]!!.jsonPrimitive.content).isEqualTo("2 cups milk")
+        assertThat(parsed.ingredient.quantity).isEqualTo(2.0)
+        assertThat(parsed.ingredient.food?.id).isEqualTo("food-milk")
+        // Mealie sends an unmatched unit as a bare name with no id.
+        assertThat(parsed.ingredient.unit?.id).isNull()
+        assertThat(parsed.ingredient.unit?.name).isEqualTo("cups")
+    }
+
     companion object {
+        const val PARSED_JSON = """
+        {"input": "2 cups milk",
+         "confidence": {"average": 0.9},
+         "ingredient": {
+           "quantity": 2.0,
+           "unit": {"name": "cups", "description": ""},
+           "food": {"id": "food-milk", "name": "milk", "labelId": "dairy",
+                    "label": {"id": "dairy", "name": "Dairy", "color": "#959595", "groupId": "group-1"}},
+           "note": "",
+           "display": "2 cups milk",
+           "referenceId": "ref"
+         }}
+        """
+
         const val LIST_JSON = """
         {
           "name": "Sunday brunch",

@@ -49,8 +49,13 @@ fun aRecipe(id: String = "recipe-1", name: String = "Shakshuka", quantity: Doubl
 fun aRef(recipeId: String = "recipe-1", quantity: Double = 1.0) =
     ItemRecipeRef(id = "ref-$recipeId", recipeId = recipeId, quantity = quantity, scale = 1.0, note = null)
 
-fun aFood(id: String = "food-1", name: String = "onion", pluralName: String? = null, labelId: String? = null) =
-    ShoppingFood(id = id, name = name, pluralName = pluralName, labelId = labelId)
+fun aFood(
+    id: String = "food-1",
+    name: String = "onion",
+    pluralName: String? = null,
+    labelId: String? = null,
+    labelName: String? = null,
+) = ShoppingFood(id = id, name = name, pluralName = pluralName, labelId = labelId, labelName = labelName)
 
 fun aUnit(id: String = "unit-1", name: String = "cup", pluralName: String? = "cups") =
     ShoppingUnit(id = id, name = name, pluralName = pluralName, abbreviation = "", useAbbreviation = false)

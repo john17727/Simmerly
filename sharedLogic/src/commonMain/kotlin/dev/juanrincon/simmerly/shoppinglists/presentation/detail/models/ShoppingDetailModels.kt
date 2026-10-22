@@ -48,6 +48,8 @@ data class ItemEditorUi(
 data class FoodOptionUi(
     val id: String,
     val name: String,
+    /** The food's aisle, or `null` when it has none. */
+    val aisle: String? = null,
 )
 
 data class UnitOptionUi(

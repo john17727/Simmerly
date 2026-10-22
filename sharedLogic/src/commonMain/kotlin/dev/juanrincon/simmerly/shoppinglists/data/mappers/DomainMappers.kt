@@ -2,6 +2,7 @@ package dev.juanrincon.simmerly.shoppinglists.data.mappers
 
 import dev.juanrincon.simmerly.core.data.remote.recipeImageUrl
 import dev.juanrincon.simmerly.recipes.data.remote.dto.LabelDto
+import dev.juanrincon.simmerly.shoppinglists.data.remote.dto.ParsedIngredientDto
 import dev.juanrincon.simmerly.shoppinglists.data.remote.dto.ShoppingFoodDto
 import dev.juanrincon.simmerly.shoppinglists.data.remote.dto.ShoppingListDto
 import dev.juanrincon.simmerly.shoppinglists.data.remote.dto.ShoppingListItemDto
@@ -10,6 +11,7 @@ import dev.juanrincon.simmerly.shoppinglists.data.remote.dto.outgoing.ShoppingLi
 import dev.juanrincon.simmerly.shoppinglists.data.remote.dto.outgoing.ShoppingListItemUpdateDto
 import dev.juanrincon.simmerly.shoppinglists.domain.model.ItemRecipeRef
 import dev.juanrincon.simmerly.shoppinglists.domain.model.LinkedRecipe
+import dev.juanrincon.simmerly.shoppinglists.domain.model.ParsedIngredient
 import dev.juanrincon.simmerly.shoppinglists.domain.model.ShoppingFood
 import dev.juanrincon.simmerly.shoppinglists.domain.model.ShoppingLabel
 import dev.juanrincon.simmerly.shoppinglists.domain.model.ShoppingList
@@ -69,7 +71,35 @@ fun ShoppingFoodDto.toDomain(): ShoppingFood = ShoppingFood(
     name = name,
     pluralName = pluralName,
     labelId = labelId ?: label?.id,
+    labelName = label?.name,
 )
+
+fun ParsedIngredientDto.toDomain(): ParsedIngredient = with(ingredient) {
+    ParsedIngredient(
+        quantity = quantity,
+        unit = unit?.id?.let { id ->
+            ShoppingUnit(
+                id = id,
+                name = unit.name,
+                pluralName = unit.pluralName,
+                abbreviation = unit.abbreviation,
+                useAbbreviation = unit.useAbbreviation,
+            )
+        },
+        unitName = unit?.name,
+        food = food?.id?.let { id ->
+            ShoppingFood(
+                id = id,
+                name = food.name,
+                pluralName = food.pluralName,
+                labelId = food.labelId ?: food.label?.id,
+                labelName = food.label?.name,
+            )
+        },
+        foodName = food?.name,
+        note = note.orEmpty(),
+    )
+}
 
 fun LabelDto.toDomain(): ShoppingLabel = ShoppingLabel(id = id, name = name, color = color)
 

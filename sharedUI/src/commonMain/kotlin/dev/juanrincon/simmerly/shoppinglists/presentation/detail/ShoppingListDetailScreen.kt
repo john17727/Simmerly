@@ -3,6 +3,7 @@ package dev.juanrincon.simmerly.shoppinglists.presentation.detail
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -11,8 +12,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.imePadding
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -23,8 +22,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.Add
@@ -35,6 +32,9 @@ import androidx.compose.material.icons.rounded.ExpandMore
 import androidx.compose.material.icons.rounded.MoreVert
 import androidx.compose.material.icons.rounded.Remove
 import androidx.compose.material.icons.rounded.Restaurant
+import androidx.compose.material.icons.rounded.UnfoldLess
+import androidx.compose.material.icons.rounded.UnfoldMore
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.DropdownMenu
@@ -42,7 +42,6 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
@@ -54,8 +53,6 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -67,11 +64,10 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
@@ -134,6 +130,7 @@ private fun Content(
     snackbarHostState: SnackbarHostState,
     modifier: Modifier = Modifier,
 ) {
+    var addFieldFocused by remember { mutableStateOf(false) }
     Scaffold(
         modifier = modifier,
         topBar = { TopBar(name = state.name, onNavigateBack = onNavigateBack, onEvent = onEvent) },
@@ -143,30 +140,48 @@ private fun Content(
                 isAdding = state.isAdding,
                 onTextChanged = { onEvent(ShoppingListDetailIntent.OnAddTextChanged(it)) },
                 onSubmit = { onEvent(ShoppingListDetailIntent.OnAddItemSubmitted) },
+                onFocusChanged = { addFieldFocused = it },
             )
         },
         snackbarHost = { SnackbarHost(snackbarHostState) },
     ) { padding ->
-        when {
-            state.isLoading -> Unit
-            state.name.isEmpty() && state.error != null -> Box(
-                contentAlignment = Alignment.Center,
-                modifier = Modifier.fillMaxSize().padding(padding),
-            ) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(
-                        text = state.error?.asString().orEmpty(),
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.padding(horizontal = 32.dp),
-                    )
-                    OutlinedButton(
-                        onClick = { onEvent(ShoppingListDetailIntent.OnRefresh) },
-                        modifier = Modifier.padding(top = 16.dp),
-                    ) { Text("Try again") }
+        Box(modifier = Modifier.fillMaxSize()) {
+            when {
+                state.isLoading -> Unit
+                state.name.isEmpty() && state.error != null -> Box(
+                    contentAlignment = Alignment.Center,
+                    modifier = Modifier.fillMaxSize().padding(padding),
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            text = state.error?.asString().orEmpty(),
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.padding(horizontal = 32.dp),
+                        )
+                        OutlinedButton(
+                            onClick = { onEvent(ShoppingListDetailIntent.OnRefresh) },
+                            modifier = Modifier.padding(top = 16.dp),
+                        ) { Text("Try again") }
+                    }
                 }
-            }
 
-            else -> ListBody(state = state, onEvent = onEvent, contentPadding = padding)
+                else -> ListBody(state = state, onEvent = onEvent, contentPadding = padding)
+            }
+            if (addFieldFocused && state.addSuggestions.isNotEmpty()) {
+                AddItemSuggestions(
+                    suggestions = state.addSuggestions,
+                    query = state.addSuggestionQuery,
+                    highlightedId = state.addHighlightedId,
+                    onPicked = { onEvent(ShoppingListDetailIntent.OnAddSuggestionPicked(it)) },
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .padding(
+                            start = 16.dp,
+                            end = 16.dp,
+                            bottom = padding.calculateBottomPadding() + 8.dp,
+                        ),
+                )
+            }
         }
     }
 
@@ -313,8 +328,24 @@ private fun ListBody(
             )
         }
 
+        if (state.sections.isNotEmpty()) {
+            item(key = "sections-control") {
+                SectionsControl(
+                    sectionCount = state.sections.size,
+                    grouping = state.grouping,
+                    anyExpanded = state.anySectionExpanded,
+                    onToggleAll = { onEvent(ShoppingListDetailIntent.OnToggleAllSectionsClicked) },
+                )
+            }
+        }
+
         state.sections.forEachIndexed { index, section ->
-            section(section = section, isFirst = index == 0, onEvent = onEvent)
+            section(
+                section = section,
+                isFirst = index == 0,
+                collapsed = section.key in state.collapsedSections,
+                onEvent = onEvent,
+            )
         }
 
         if (state.checkedItems.isNotEmpty()) {
@@ -333,21 +364,39 @@ private fun ListBody(
 private fun LazyListScope.section(
     section: ItemSectionUi,
     isFirst: Boolean,
+    collapsed: Boolean,
     onEvent: (ShoppingListDetailIntent) -> Unit,
 ) {
     item(key = "header-${section.key}") {
-        Column(modifier = Modifier.padding(start = 16.dp, end = 4.dp).animateItem()) {
-            if (!isFirst) HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+        val title = when (section.kind) {
+            SectionKind.Aisle, SectionKind.Recipe -> section.title
+            SectionKind.NoAisle -> "No aisle"
+            SectionKind.AddedByHand -> "Added by hand"
+        }
+        Column(modifier = Modifier.animateItem()) {
+            if (!isFirst) {
+                HorizontalDivider(
+                    color = MaterialTheme.colorScheme.outlineVariant,
+                    modifier = Modifier.padding(start = 16.dp, end = 4.dp),
+                )
+            }
+            // The whole header row toggles the section, so the target is far larger than the icon.
             Row(
+                verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
-                modifier = Modifier.padding(top = 16.dp, bottom = 4.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = 48.dp)
+                    .clickable(role = Role.Button) {
+                        onEvent(ShoppingListDetailIntent.OnSectionToggled(section.key))
+                    }
+                    .semantics {
+                        stateDescription = if (collapsed) "Collapsed" else "Expanded"
+                    }
+                    .padding(start = 16.dp, end = 16.dp, top = 8.dp),
             ) {
                 Text(
-                    text = when (section.kind) {
-                        SectionKind.Aisle, SectionKind.Recipe -> section.title
-                        SectionKind.NoAisle -> "No aisle"
-                        SectionKind.AddedByHand -> "Added by hand"
-                    },
+                    text = title,
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.SemiBold,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f),
@@ -356,10 +405,19 @@ private fun LazyListScope.section(
                     text = section.items.size.toString(),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.weight(1f),
+                )
+                Icon(
+                    if (collapsed) Icons.Rounded.ExpandMore else Icons.Rounded.ExpandLess,
+                    // The row already reads as "<title>, <count>, Expanded/Collapsed".
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.size(24.dp),
                 )
             }
         }
     }
+    if (collapsed) return
     items(section.items, key = { "${section.key}-${it.id}" }) { item ->
         Column(modifier = Modifier.padding(start = 16.dp, end = 4.dp).animateItem()) {
             if (item != section.items.first()) {
@@ -536,6 +594,46 @@ private fun QuantityStepper(
 }
 
 @Composable
+private fun SectionsControl(
+    sectionCount: Int,
+    grouping: ItemGrouping,
+    anyExpanded: Boolean,
+    onToggleAll: () -> Unit,
+) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 4.dp, top = 8.dp),
+    ) {
+        Text(
+            text = when (grouping) {
+                ItemGrouping.ByAisle -> if (sectionCount == 1) "1 aisle" else "$sectionCount aisles"
+                ItemGrouping.ByRecipe -> if (sectionCount == 1) "1 section" else "$sectionCount sections"
+            },
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.weight(1f),
+        )
+        TextButton(
+            onClick = onToggleAll,
+            contentPadding = PaddingValues(start = 8.dp, end = 12.dp),
+            colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f)),
+        ) {
+            Icon(
+                if (anyExpanded) Icons.Rounded.UnfoldLess else Icons.Rounded.UnfoldMore,
+                contentDescription = null,
+                modifier = Modifier.size(20.dp),
+            )
+            Text(
+                text = if (anyExpanded) "Collapse all" else "Expand all",
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.Medium,
+                modifier = Modifier.padding(start = 6.dp),
+            )
+        }
+    }
+}
+
+@Composable
 private fun GroupingToggle(
     selected: ItemGrouping,
     onSelected: (ItemGrouping) -> Unit,
@@ -652,56 +750,6 @@ private fun CheckedItemRow(item: ShoppingItemUi, onUncheck: () -> Unit) {
                 textDecoration = TextDecoration.LineThrough,
             )
             item.attribution?.let { Attribution(it, muted = true) }
-        }
-    }
-}
-
-@Composable
-private fun AddItemBar(
-    text: String,
-    isAdding: Boolean,
-    onTextChanged: (String) -> Unit,
-    onSubmit: () -> Unit,
-) {
-    Surface(color = MaterialTheme.colorScheme.background) {
-        Column(modifier = Modifier.navigationBarsPadding().imePadding()) {
-            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 16.dp),
-            ) {
-                TextField(
-                    value = text,
-                    onValueChange = onTextChanged,
-                    placeholder = { Text("Add an item, like 2 lb chicken thighs") },
-                    singleLine = true,
-                    shape = CircleShape,
-                    keyboardOptions = KeyboardOptions(
-                        capitalization = KeyboardCapitalization.Sentences,
-                        imeAction = ImeAction.Done,
-                    ),
-                    keyboardActions = KeyboardActions(onDone = { onSubmit() }),
-                    colors = TextFieldDefaults.colors(
-                        focusedIndicatorColor = MaterialTheme.colorScheme.surfaceContainer,
-                        unfocusedIndicatorColor = MaterialTheme.colorScheme.surfaceContainer,
-                        focusedContainerColor = MaterialTheme.colorScheme.surfaceContainer,
-                        unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainer,
-                    ),
-                    modifier = Modifier.weight(1f).semantics { contentDescription = "Add an item" },
-                )
-                IconButton(
-                    onClick = onSubmit,
-                    enabled = text.isNotBlank() && !isAdding,
-                    colors = IconButtonDefaults.iconButtonColors(
-                        containerColor = MaterialTheme.colorScheme.primaryContainer,
-                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                    ),
-                    modifier = Modifier.size(48.dp),
-                ) {
-                    Icon(Icons.Rounded.Add, contentDescription = "Add item")
-                }
-            }
         }
     }
 }

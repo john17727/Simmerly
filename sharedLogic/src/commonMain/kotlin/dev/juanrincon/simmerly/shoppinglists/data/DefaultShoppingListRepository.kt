@@ -10,6 +10,7 @@ import dev.juanrincon.simmerly.shoppinglists.data.remote.dto.ShoppingListItemsCo
 import dev.juanrincon.simmerly.shoppinglists.data.remote.dto.outgoing.NewShoppingListItemDto
 import dev.juanrincon.simmerly.shoppinglists.domain.ShoppingListError
 import dev.juanrincon.simmerly.shoppinglists.domain.ShoppingListRepository
+import dev.juanrincon.simmerly.shoppinglists.domain.model.ParsedIngredient
 import dev.juanrincon.simmerly.shoppinglists.domain.model.ShoppingFood
 import dev.juanrincon.simmerly.shoppinglists.domain.model.ShoppingList
 import dev.juanrincon.simmerly.shoppinglists.domain.model.ShoppingListItem
@@ -89,18 +90,49 @@ class DefaultShoppingListRepository(
     }
 
     override suspend fun addItem(listId: String, text: String): Either<ShoppingListError, Unit> =
+        createItem(
+            NewShoppingListItemDto(
+                shoppingListId = listId,
+                note = text,
+                quantity = 1.0,
+                position = nextPosition(listId),
+                foodId = null,
+                unitId = null,
+                labelId = null,
+            )
+        )
+
+    override suspend fun addFoodItem(
+        listId: String,
+        food: ShoppingFood,
+        quantity: Double,
+        unit: ShoppingUnit?,
+        note: String,
+    ): Either<ShoppingListError, Unit> = createItem(
+        NewShoppingListItemDto(
+            shoppingListId = listId,
+            note = note,
+            quantity = quantity,
+            position = nextPosition(listId),
+            foodId = food.id,
+            unitId = unit?.id,
+            labelId = food.labelId,
+        )
+    )
+
+    override suspend fun parseIngredient(text: String): Either<ShoppingListError, ParsedIngredient> =
+        networkClient.parseIngredient(text)
+            .map { it.toDomain() }
+            .mapLeft { ShoppingListError.FetchError }
+
+    private suspend fun createItem(item: NewShoppingListItemDto): Either<ShoppingListError, Unit> =
         either {
-            val position = (currentList(listId)?.items?.maxOfOrNull { it.position } ?: -1) + 1
-            val result = networkClient.createItem(
-                NewShoppingListItemDto(
-                    shoppingListId = listId,
-                    note = text,
-                    quantity = 1.0,
-                    position = position,
-                )
-            ).mapLeft { ShoppingListError.UpdateError }.bind()
-            applyChanges(listId, result)
+            val result = networkClient.createItem(item).mapLeft { ShoppingListError.UpdateError }.bind()
+            applyChanges(item.shoppingListId, result)
         }
+
+    private fun nextPosition(listId: String): Int =
+        (currentList(listId)?.items?.maxOfOrNull { it.position } ?: -1) + 1
 
     override suspend fun updateItem(item: ShoppingListItem): Either<ShoppingListError, Unit> =
         either {

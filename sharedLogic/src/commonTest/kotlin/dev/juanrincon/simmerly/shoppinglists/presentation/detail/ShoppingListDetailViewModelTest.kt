@@ -87,6 +87,43 @@ class ShoppingListDetailViewModelTest {
     }
 
     @Test
+    fun togglingASectionCollapsesAndExpandsIt() = runTest(testDispatcher) {
+        viewModel.testWithInternalState(this) {
+            runOnCreate()
+            val loaded = awaitStateMatching { it.sections.isNotEmpty() }
+            val key = loaded.sections.first().key
+
+            viewModel.onEvent(ShoppingListDetailIntent.OnSectionToggled(key))
+            assertThat(awaitStateMatching { key in it.collapsedSections }.collapsedSections).isEqualTo(setOf(key))
+
+            viewModel.onEvent(ShoppingListDetailIntent.OnSectionToggled(key))
+            awaitStateMatching { it.collapsedSections.isEmpty() }
+            cancelAndIgnoreRemainingItems()
+        }
+    }
+
+    @Test
+    fun toggleAllCollapsesEverySectionThenExpandsThemAgain() = runTest(testDispatcher) {
+        viewModel.testWithInternalState(this) {
+            runOnCreate()
+            val loaded = awaitStateMatching { it.sections.isNotEmpty() }
+            val keys = loaded.sections.map { it.key }.toSet()
+
+            // With one section already collapsed, "Collapse all" still applies to every section.
+            viewModel.onEvent(ShoppingListDetailIntent.OnSectionToggled(keys.first()))
+            awaitStateMatching { it.collapsedSections.isNotEmpty() }
+            viewModel.onEvent(ShoppingListDetailIntent.OnToggleAllSectionsClicked)
+            val collapsed = awaitStateMatching { it.collapsedSections == keys }
+            assertThat(collapsed.anySectionExpanded).isEqualTo(false)
+
+            viewModel.onEvent(ShoppingListDetailIntent.OnToggleAllSectionsClicked)
+            val expanded = awaitStateMatching { it.collapsedSections.isEmpty() }
+            assertThat(expanded.anySectionExpanded).isEqualTo(true)
+            cancelAndIgnoreRemainingItems()
+        }
+    }
+
+    @Test
     fun uncheckAllUnchecksEveryCheckedItem() = runTest(testDispatcher) {
         viewModel.testWithInternalState(this) {
             runOnCreate()

@@ -203,7 +203,35 @@ fun ShoppingUnit.displayName(quantity: Double): String = when {
 
 fun ShoppingUnit.toOptionUi() = UnitOptionUi(id = id, name = name)
 
-fun ShoppingFood.toOptionUi() = FoodOptionUi(id = id, name = name)
+fun ShoppingFood.toOptionUi() = FoodOptionUi(id = id, name = name, aisle = labelName)
+
+/** Whether [term] names this food, singular or plural, ignoring case. */
+fun ShoppingFood.isNamed(term: String): Boolean =
+    name.equals(term, ignoreCase = true) || pluralName?.equals(term, ignoreCase = true) == true
+
+/**
+ * What the add-item bar searches foods for: [text] without a leading quantity ("2", "1½",
+ * "1/2", "1 1/2") or, after it, a word naming one of [units]. [hasExtras] is true when anything
+ * was stripped, so the text says more than just the food's name.
+ */
+data class AddItemQuery(val term: String, val hasExtras: Boolean)
+
+private val LEADING_QUANTITY = Regex("""^(\d+\s+\d+/\d+|\d+/\d+|\d*[½¼¾⅓⅔⅛]|\d+(?:[.,]\d+)?)\s*""")
+
+fun addItemQuery(text: String, units: List<ShoppingUnit>): AddItemQuery {
+    val trimmed = text.trim()
+    var rest = trimmed
+    LEADING_QUANTITY.find(rest)?.let { rest = rest.substring(it.range.last + 1) }
+    val firstWord = rest.substringBefore(' ')
+    val unitWord = firstWord.trimEnd('.')
+    val namesUnit = rest.contains(' ') && units.any { unit ->
+        listOfNotNull(unit.name, unit.pluralName, unit.abbreviation.takeIf { it.isNotBlank() })
+            .any { it.equals(unitWord, ignoreCase = true) }
+    }
+    if (namesUnit) rest = rest.substringAfter(' ')
+    val term = rest.trim()
+    return AddItemQuery(term = term, hasExtras = term != trimmed)
+}
 
 private val FRACTIONS = listOf(
     0.25 to "¼", 0.5 to "½", 0.75 to "¾", 1.0 / 3 to "⅓", 2.0 / 3 to "⅔", 0.125 to "⅛",

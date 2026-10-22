@@ -6,10 +6,12 @@ import arrow.core.raise.either
 import dev.juanrincon.simmerly.core.data.remote.arrowNetworkHandler
 import dev.juanrincon.simmerly.core.data.remote.arrowNetworkHandlerNoContent
 import dev.juanrincon.simmerly.core.data.remote.dto.ItemListDto
+import dev.juanrincon.simmerly.shoppinglists.data.remote.dto.ParsedIngredientDto
 import dev.juanrincon.simmerly.shoppinglists.data.remote.dto.ShoppingFoodDto
 import dev.juanrincon.simmerly.shoppinglists.data.remote.dto.ShoppingListDto
 import dev.juanrincon.simmerly.shoppinglists.data.remote.dto.ShoppingListItemsCollectionDto
 import dev.juanrincon.simmerly.shoppinglists.data.remote.dto.ShoppingUnitDto
+import dev.juanrincon.simmerly.shoppinglists.data.remote.dto.outgoing.IngredientParseRequestDto
 import dev.juanrincon.simmerly.shoppinglists.data.remote.dto.outgoing.NewShoppingListDto
 import dev.juanrincon.simmerly.shoppinglists.data.remote.dto.outgoing.NewShoppingListItemDto
 import dev.juanrincon.simmerly.shoppinglists.data.remote.dto.outgoing.RecipeDecrementDto
@@ -134,7 +136,13 @@ class ShoppingListNetworkClient(private val client: HttpClient) {
         client.get("/api/foods") {
             parameter("search", query)
             parameter("page", 1)
-            parameter("perPage", 20)
+            parameter("perPage", 50)
         }
+    }
+
+    suspend fun parseIngredient(
+        text: String
+    ): Either<DataError.NetworkError<Unit>, ParsedIngredientDto> = arrowNetworkHandler {
+        client.post("/api/parser/ingredient") { setBody(IngredientParseRequestDto(text)) }
     }
 }

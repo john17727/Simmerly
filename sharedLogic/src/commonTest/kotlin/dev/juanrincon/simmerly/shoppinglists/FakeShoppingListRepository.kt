@@ -1,9 +1,11 @@
 package dev.juanrincon.simmerly.shoppinglists
 
 import arrow.core.Either
+import arrow.core.left
 import arrow.core.right
 import dev.juanrincon.simmerly.shoppinglists.domain.ShoppingListError
 import dev.juanrincon.simmerly.shoppinglists.domain.ShoppingListRepository
+import dev.juanrincon.simmerly.shoppinglists.domain.model.ParsedIngredient
 import dev.juanrincon.simmerly.shoppinglists.domain.model.ShoppingFood
 import dev.juanrincon.simmerly.shoppinglists.domain.model.ShoppingList
 import dev.juanrincon.simmerly.shoppinglists.domain.model.ShoppingListItem
@@ -21,6 +23,7 @@ class FakeShoppingListRepository : ShoppingListRepository {
     var writeResult: Either<ShoppingListError, Unit> = Unit.right()
     var unitsResult: Either<ShoppingListError, List<ShoppingUnit>> = emptyList<ShoppingUnit>().right()
     var foodsResult: Either<ShoppingListError, List<ShoppingFood>> = emptyList<ShoppingFood>().right()
+    var parseResult: Either<ShoppingListError, ParsedIngredient> = ShoppingListError.FetchError.left()
 
     val createdNames = mutableListOf<String>()
     val renamed = mutableListOf<Pair<String, String>>()
@@ -31,6 +34,10 @@ class FakeShoppingListRepository : ShoppingListRepository {
     val deletedItems = mutableListOf<Set<String>>()
     val recipeQuantityChanges = mutableListOf<Pair<String, Int>>()
     val foodQueries = mutableListOf<String>()
+    val parsedTexts = mutableListOf<String>()
+    val addedFoodItems = mutableListOf<AddedFoodItem>()
+
+    data class AddedFoodItem(val food: ShoppingFood, val quantity: Double, val unit: ShoppingUnit?, val note: String)
 
     override fun observeLists(): Flow<List<ShoppingList>?> = lists
 
@@ -59,6 +66,22 @@ class FakeShoppingListRepository : ShoppingListRepository {
     override suspend fun addItem(listId: String, text: String): Either<ShoppingListError, Unit> {
         addedItems += listId to text
         return writeResult
+    }
+
+    override suspend fun addFoodItem(
+        listId: String,
+        food: ShoppingFood,
+        quantity: Double,
+        unit: ShoppingUnit?,
+        note: String,
+    ): Either<ShoppingListError, Unit> {
+        addedFoodItems += AddedFoodItem(food, quantity, unit, note)
+        return writeResult
+    }
+
+    override suspend fun parseIngredient(text: String): Either<ShoppingListError, ParsedIngredient> {
+        parsedTexts += text
+        return parseResult
     }
 
     override suspend fun updateItem(item: ShoppingListItem): Either<ShoppingListError, Unit> {

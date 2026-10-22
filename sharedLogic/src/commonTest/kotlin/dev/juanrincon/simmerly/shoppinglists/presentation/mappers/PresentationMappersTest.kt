@@ -179,4 +179,25 @@ class PresentationMappersTest {
     }
 
     // endregion
+
+    // region Add-item search
+
+    @Test
+    fun addItemQueryStripsLeadingQuantityAndKnownUnit() {
+        val units = listOf(aUnit(name = "cup", pluralName = "cups"), aUnit(id = "lb", name = "pound").copy(abbreviation = "lb"))
+        assertThat(addItemQuery("2 cups mil", units)).isEqualTo(AddItemQuery("mil", hasExtras = true))
+        assertThat(addItemQuery("1 1/2 lb. chicken thighs", units)).isEqualTo(AddItemQuery("chicken thighs", hasExtras = true))
+        assertThat(addItemQuery("½ onion", units)).isEqualTo(AddItemQuery("onion", hasExtras = true))
+        assertThat(addItemQuery(" milk ", units)).isEqualTo(AddItemQuery("milk", hasExtras = false))
+        // An unknown word after the quantity is part of the food, not a unit.
+        assertThat(addItemQuery("3 ripe bananas", units)).isEqualTo(AddItemQuery("ripe bananas", hasExtras = true))
+    }
+
+    @Test
+    fun foodOptionsCarryTheirAisle() {
+        assertThat(aFood(labelName = "Dairy").toOptionUi().aisle).isEqualTo("Dairy")
+        assertThat(aFood().toOptionUi().aisle).isNull()
+    }
+
+    // endregion
 }

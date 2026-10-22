@@ -10,8 +10,11 @@ sealed interface ShoppingListDetailIntent {
     data object OnUncheckAllClicked : ShoppingListDetailIntent
     data object OnDeleteCheckedClicked : ShoppingListDetailIntent
     data object OnCheckedExpandedToggled : ShoppingListDetailIntent
+    data class OnSectionToggled(val sectionKey: String) : ShoppingListDetailIntent
+    data object OnToggleAllSectionsClicked : ShoppingListDetailIntent
     data class OnAddTextChanged(val text: String) : ShoppingListDetailIntent
     data object OnAddItemSubmitted : ShoppingListDetailIntent
+    data class OnAddSuggestionPicked(val food: FoodOptionUi) : ShoppingListDetailIntent
     data class OnRecipeQuantityChanged(val recipeId: String, val delta: Int) : ShoppingListDetailIntent
 
     data class OnEditItemClicked(val itemId: String) : ShoppingListDetailIntent

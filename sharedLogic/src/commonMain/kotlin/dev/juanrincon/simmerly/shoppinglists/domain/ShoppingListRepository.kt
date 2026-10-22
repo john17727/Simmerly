@@ -1,6 +1,7 @@
 package dev.juanrincon.simmerly.shoppinglists.domain
 
 import arrow.core.Either
+import dev.juanrincon.simmerly.shoppinglists.domain.model.ParsedIngredient
 import dev.juanrincon.simmerly.shoppinglists.domain.model.ShoppingFood
 import dev.juanrincon.simmerly.shoppinglists.domain.model.ShoppingList
 import dev.juanrincon.simmerly.shoppinglists.domain.model.ShoppingListItem
@@ -30,7 +31,21 @@ interface ShoppingListRepository {
 
     suspend fun deleteList(id: String): Either<ShoppingListError, Unit>
 
+    /** Adds [text] as a note-only item. */
     suspend fun addItem(listId: String, text: String): Either<ShoppingListError, Unit>
+
+    /** Adds an item for [food], filed under the food's aisle. */
+    suspend fun addFoodItem(
+        listId: String,
+        food: ShoppingFood,
+        quantity: Double,
+        unit: ShoppingUnit?,
+        note: String,
+    ): Either<ShoppingListError, Unit>
+
+    /** Splits free text like "2 cups milk" with Mealie's ingredient parser. Fails when the
+     * server's parser is unavailable. */
+    suspend fun parseIngredient(text: String): Either<ShoppingListError, ParsedIngredient>
 
     suspend fun updateItem(item: ShoppingListItem): Either<ShoppingListError, Unit>
 
