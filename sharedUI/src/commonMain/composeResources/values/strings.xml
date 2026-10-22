@@ -6,4 +6,6 @@
     <string name="meal_plan">Meal Plan</string>
     <string name="shopping_list">Shopping List</string>
     <string name="profile">Profile</string>
+    <string name="shopping_list_load_failed">Couldn't load your shopping lists. Check your connection and try again.</string>
+    <string name="shopping_list_update_failed">Couldn't save that change. Please try again.</string>
 </resources>

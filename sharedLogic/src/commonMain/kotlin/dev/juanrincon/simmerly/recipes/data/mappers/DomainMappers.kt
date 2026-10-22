@@ -1,5 +1,6 @@
 package dev.juanrincon.simmerly.recipes.data.mappers
 
+import dev.juanrincon.simmerly.core.data.remote.recipeImageUrl
 import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.CategoryEntity
 import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.CommentEntity
 import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.FoodEntity
@@ -392,10 +393,7 @@ fun Settings.toDto(): SettingsDto = SettingsDto(
 )
 
 
-private fun createRecipeImageUrl(host: String?, id: String): String {
-    if (host == null) return ""
-    return "$host/api/media/recipes/$id/images/original.webp"
-}
+private fun createRecipeImageUrl(host: String?, id: String): String = recipeImageUrl(host, id)
 
 private val imgTagRegex =
     Regex("""<img\b[^>]*?\bsrc\s*=\s*(["'])(.*?)\1[^>]*>""", RegexOption.IGNORE_CASE)

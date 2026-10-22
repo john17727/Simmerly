@@ -1,9 +1,9 @@
 package dev.juanrincon.simmerly.navigation.app
 
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ListAlt
 import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.ShoppingCart
 import dev.juanrincon.simmerly.core.presentation.StringKey
 import dev.juanrincon.simmerly.core.presentation.UiIcon
 import dev.juanrincon.simmerly.core.presentation.UiText
@@ -27,7 +27,7 @@ enum class AppDestinations(
     ),
     SHOPPING_LIST(
         UiText.Resource(StringKey.ShoppingList),
-        UiIcon.Vector(Icons.AutoMirrored.Default.ListAlt),
+        UiIcon.Vector(Icons.Default.ShoppingCart),
         UiText.Resource(StringKey.ShoppingList)
     ),
     PROFILE(
