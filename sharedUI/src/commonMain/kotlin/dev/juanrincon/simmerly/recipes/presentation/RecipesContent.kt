@@ -3,7 +3,9 @@ package dev.juanrincon.simmerly.recipes.presentation
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -152,7 +154,12 @@ fun RecipesContent(
                     ) { paddingValues ->
                         RecipeCommentsScreen(
                             recipeId = key.recipeId,
-                            modifier = Modifier.padding(paddingValues)
+                            // The activity resizes for the keyboard rather than panning, so the
+                            // comment field has to lift itself above it.
+                            modifier = Modifier
+                                .padding(paddingValues)
+                                .consumeWindowInsets(paddingValues)
+                                .imePadding()
                         )
                     }
                 }
