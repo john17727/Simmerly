@@ -56,50 +56,84 @@ class BottomSheetSceneStrategy<T : Any> : SceneStrategy<T> {
         val entry = entries.lastOrNull() ?: return null
         val properties = entry.metadata[BottomSheetKey] ?: return null
 
-        return object : OverlayScene<T> {
-            override val key: Any = entry.contentKey
-            override val entries: List<NavEntry<T>> = listOf(entry)
-            override val previousEntries: List<NavEntry<T>> = entries.dropLast(1)
+        return BottomSheetScene(
+            entry = entry,
+            previousEntries = entries.dropLast(1),
+            properties = properties,
+            onBack = onBack,
+        )
+    }
 
-            // Not `.takeLast(1)`, unlike the sample this is ported from: on expanded widths the
-            // entries below Cook Mode are List *and* Detail, and ListDetailSceneStrategy needs both
-            // to keep rendering the real two-pane scene underneath the sheet.
-            override val overlaidEntries: List<NavEntry<T>> = previousEntries
+    /**
+     * A named class rather than the sample's anonymous object: nav3 compares scenes by equality to
+     * decide whether a recalculated scene is the same one, and its lint check requires [Scene]
+     * implementations to define it. Equality mirrors nav3's own `DialogScene` — [onBack] and the
+     * remembered [sheetState] are left out, since neither identifies which sheet is showing.
+     */
+    private class BottomSheetScene<T : Any>(
+        private val entry: NavEntry<T>,
+        override val previousEntries: List<NavEntry<T>>,
+        private val properties: ModalBottomSheetProperties,
+        private val onBack: () -> Unit,
+    ) : OverlayScene<T> {
+        override val key: Any = entry.contentKey
+        override val entries: List<NavEntry<T>> = listOf(entry)
 
-            private lateinit var sheetState: SheetState
+        // Not `.takeLast(1)`, unlike the sample this is ported from: on expanded widths the
+        // entries below Cook Mode are List *and* Detail, and ListDetailSceneStrategy needs both
+        // to keep rendering the real two-pane scene underneath the sheet.
+        override val overlaidEntries: List<NavEntry<T>> = previousEntries
 
-            override val content: @Composable () -> Unit = {
-                // Omitting SheetValue.PartiallyExpanded from enabledValues is the replacement for
-                // the deprecated skipPartiallyExpanded flag: Cook Mode draws its own full-height
-                // chrome and has no half-open state to settle into.
-                sheetState = rememberBottomSheetState(
-                    initialValue = SheetValue.Hidden,
-                    enabledValues = setOf(SheetValue.Hidden, SheetValue.Expanded)
-                )
-                val fillsWindow = currentWindowAdaptiveInfoV2().windowSizeClass
-                    .isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_EXPANDED_LOWER_BOUND)
-                ModalBottomSheet(
-                    onDismissRequest = onBack,
-                    sheetState = sheetState,
-                    // Dp.Unspecified is ModalBottomSheet's documented "span the entire width";
-                    // the default caps at BottomSheetDefaults.SheetMaxWidth (640dp).
-                    sheetMaxWidth = if (fillsWindow) Dp.Unspecified else BottomSheetDefaults.SheetMaxWidth,
-                    shape = if (fillsWindow) RectangleShape else BottomSheetDefaults.ExpandedShape,
-                    dragHandle = null,
-                    // With no drag handle, the whole sheet surface is otherwise a drag target —
-                    // a swipe down anywhere would dismiss Cook Mode. Only the screen's own X
-                    // button (wired to onExit, which calls the same onBack) should be able to.
-                    sheetGesturesEnabled = false,
-                    contentWindowInsets = { WindowInsets(0, 0, 0, 0) },
-                    properties = properties,
-                ) {
-                    entry.Content()
-                }
+        private lateinit var sheetState: SheetState
+
+        override val content: @Composable () -> Unit = {
+            // Omitting SheetValue.PartiallyExpanded from enabledValues is the replacement for
+            // the deprecated skipPartiallyExpanded flag: Cook Mode draws its own full-height
+            // chrome and has no half-open state to settle into.
+            sheetState = rememberBottomSheetState(
+                initialValue = SheetValue.Hidden,
+                enabledValues = setOf(SheetValue.Hidden, SheetValue.Expanded)
+            )
+            val fillsWindow = currentWindowAdaptiveInfoV2().windowSizeClass
+                .isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_EXPANDED_LOWER_BOUND)
+            ModalBottomSheet(
+                onDismissRequest = onBack,
+                sheetState = sheetState,
+                // Dp.Unspecified is ModalBottomSheet's documented "span the entire width";
+                // the default caps at BottomSheetDefaults.SheetMaxWidth (640dp).
+                sheetMaxWidth = if (fillsWindow) Dp.Unspecified else BottomSheetDefaults.SheetMaxWidth,
+                shape = if (fillsWindow) RectangleShape else BottomSheetDefaults.ExpandedShape,
+                dragHandle = null,
+                // With no drag handle, the whole sheet surface is otherwise a drag target —
+                // a swipe down anywhere would dismiss Cook Mode. Only the screen's own X
+                // button (wired to onExit, which calls the same onBack) should be able to.
+                sheetGesturesEnabled = false,
+                contentWindowInsets = { WindowInsets(0, 0, 0, 0) },
+                properties = properties,
+            ) {
+                entry.Content()
             }
+        }
 
-            override suspend fun onRemove() {
-                sheetState.hide()
-            }
+        override suspend fun onRemove() {
+            sheetState.hide()
+        }
+
+        override fun equals(other: Any?): Boolean {
+            if (this === other) return true
+            if (other !is BottomSheetScene<*>) return false
+            return key == other.key &&
+                entry == other.entry &&
+                previousEntries == other.previousEntries &&
+                properties == other.properties
+        }
+
+        override fun hashCode(): Int {
+            var result = key.hashCode()
+            result = 31 * result + entry.hashCode()
+            result = 31 * result + previousEntries.hashCode()
+            result = 31 * result + properties.hashCode()
+            return result
         }
     }
 
