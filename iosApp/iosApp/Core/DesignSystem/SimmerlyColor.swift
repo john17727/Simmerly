@@ -97,4 +97,8 @@ enum SimmerlyColor {
 
     static let outline = Color(light: SimmerlyPalette.neutral400, dark: SimmerlyPalette.neutral500)
     static let outlineVariant = Color(light: SimmerlyPalette.neutral200, dark: SimmerlyPalette.neutral700)
+
+    static let inverseSurface = Color(light: SimmerlyPalette.neutral800, dark: SimmerlyPalette.neutral100)
+    static let inverseOnSurface = Color(light: SimmerlyPalette.neutral50, dark: SimmerlyPalette.neutral900)
+    static let inversePrimary = Color(light: SimmerlyPalette.coral200, dark: SimmerlyPalette.coral400)
 }

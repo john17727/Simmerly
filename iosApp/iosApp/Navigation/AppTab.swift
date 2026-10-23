@@ -20,7 +20,7 @@ enum AppTab: Hashable, CaseIterable {
         switch self {
         case .recipes: return "book.closed"
         case .mealPlan: return "calendar"
-        case .shoppingList: return "list.bullet"
+        case .shoppingList: return "cart"
         case .profile: return "person.circle"
         }
     }
