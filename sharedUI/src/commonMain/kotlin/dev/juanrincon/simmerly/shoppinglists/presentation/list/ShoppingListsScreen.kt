@@ -53,6 +53,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.adaptive.currentWindowAdaptiveInfoV2
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.material3.rememberTopAppBarState
@@ -78,6 +79,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.window.core.layout.WindowSizeClass
 import dev.juanrincon.simmerly.core.presentation.UiText
 import dev.juanrincon.simmerly.core.presentation.asString
 import dev.juanrincon.simmerly.core.presentation.asStringSuspend
@@ -104,6 +106,7 @@ import org.orbitmvi.orbit.compose.collectSideEffect
 fun ShoppingListsScreen(
     onListSelected: (String) -> Unit,
     modifier: Modifier = Modifier,
+    selectedListId: String? = null,
     viewModel: ShoppingListsViewModel = koinViewModel(),
 ) {
     val state by viewModel.collectAsState()
@@ -117,12 +120,23 @@ fun ShoppingListsScreen(
         }
     }
 
-    Content(
-        state = state,
-        onEvent = viewModel::onEvent,
-        snackbarHostState = snackbarHostState,
-        modifier = modifier,
-    )
+    val windowSizeClass = currentWindowAdaptiveInfoV2().windowSizeClass
+    if (windowSizeClass.isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_EXPANDED_LOWER_BOUND)) {
+        ShoppingListsExpanded(
+            state = state,
+            selectedListId = selectedListId,
+            onEvent = viewModel::onEvent,
+            snackbarHostState = snackbarHostState,
+            modifier = modifier,
+        )
+    } else {
+        Content(
+            state = state,
+            onEvent = viewModel::onEvent,
+            snackbarHostState = snackbarHostState,
+            modifier = modifier,
+        )
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -192,6 +206,12 @@ private fun Content(
         }
     }
 
+    ListDialogs(state = state, onEvent = onEvent)
+}
+
+/** The create, rename and delete dialogs, shared by the phone and desktop layouts. */
+@Composable
+internal fun ListDialogs(state: ShoppingListsState, onEvent: (ShoppingListsIntent) -> Unit) {
     when (val dialog = state.dialog) {
         ListDialog.None -> Unit
         ListDialog.Create -> ListNameDialog(
@@ -280,29 +300,35 @@ private fun FilterRow(selected: ListFilter, onEvent: (ShoppingListsIntent) -> Un
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 16.dp),
     ) {
-        ListFilter.entries.forEach { filter ->
-            val isSelected = filter == selected
-            FilterChip(
-                selected = isSelected,
-                onClick = { onEvent(ShoppingListsIntent.OnFilterSelected(filter)) },
-                label = {
-                    Text(
-                        when (filter) {
-                            ListFilter.Mine -> "Mine"
-                            ListFilter.Household -> "Household"
-                        }
-                    )
-                },
-                leadingIcon = if (isSelected) {
-                    { Icon(Icons.Rounded.Check, contentDescription = null, modifier = Modifier.size(18.dp)) }
-                } else null,
-                colors = FilterChipDefaults.filterChipColors(
-                    selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
-                    selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                    selectedLeadingIconColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                ),
-            )
-        }
+        FilterChips(selected = selected, onEvent = onEvent)
+    }
+}
+
+/** The Mine / Household chips. */
+@Composable
+internal fun FilterChips(selected: ListFilter, onEvent: (ShoppingListsIntent) -> Unit) {
+    ListFilter.entries.forEach { filter ->
+        val isSelected = filter == selected
+        FilterChip(
+            selected = isSelected,
+            onClick = { onEvent(ShoppingListsIntent.OnFilterSelected(filter)) },
+            label = {
+                Text(
+                    when (filter) {
+                        ListFilter.Mine -> "Mine"
+                        ListFilter.Household -> "Household"
+                    }
+                )
+            },
+            leadingIcon = if (isSelected) {
+                { Icon(Icons.Rounded.Check, contentDescription = null, modifier = Modifier.size(18.dp)) }
+            } else null,
+            colors = FilterChipDefaults.filterChipColors(
+                selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                selectedLeadingIconColor = MaterialTheme.colorScheme.onPrimaryContainer,
+            ),
+        )
     }
 }
 
@@ -575,7 +601,7 @@ private fun SourceChip(
 }
 
 @Composable
-private fun LoadingState() {
+internal fun LoadingState() {
     val shimmerColors = listOf(
         MaterialTheme.colorScheme.surfaceContainer,
         MaterialTheme.colorScheme.surfaceContainerHighest,
@@ -598,7 +624,7 @@ private fun LoadingState() {
 }
 
 @Composable
-private fun EmptyState(state: ShoppingListsState) {
+internal fun EmptyState(state: ShoppingListsState) {
     CenteredMessage(
         title = when {
             state.query.isNotBlank() -> "No lists match “${state.query.trim()}”"
@@ -610,7 +636,7 @@ private fun EmptyState(state: ShoppingListsState) {
 }
 
 @Composable
-private fun ErrorState(message: String, onRetry: () -> Unit) {
+internal fun ErrorState(message: String, onRetry: () -> Unit) {
     CenteredMessage(title = message, body = null) {
         OutlinedButton(onClick = onRetry) { Text("Try again") }
     }

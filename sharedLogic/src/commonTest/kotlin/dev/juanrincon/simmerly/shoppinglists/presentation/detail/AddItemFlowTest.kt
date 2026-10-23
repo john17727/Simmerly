@@ -101,6 +101,21 @@ class AddItemFlowTest {
     }
 
     @Test
+    fun aSearchWithNoMatchesKeepsItsQueryAndClearingResetsIt() = runTest(testDispatcher) {
+        viewModel.testWithInternalState(this) {
+            runOnCreate()
+            viewModel.onEvent(ShoppingListDetailIntent.OnAddTextChanged("za'atar"))
+            val searched = awaitStateMatching { it.addSuggestionQuery.isNotEmpty() }
+            assertThat(searched.addSuggestions).isEmpty()
+            assertThat(searched.addSuggestionQuery).isEqualTo("za'atar")
+
+            viewModel.onEvent(ShoppingListDetailIntent.OnAddTextChanged(""))
+            awaitStateMatching { it.addText.isEmpty() && it.addSuggestionQuery.isEmpty() }
+            cancelAndIgnoreRemainingItems()
+        }
+    }
+
+    @Test
     fun exactMatchAddsTheFoodWithoutTheParser() = runTest(testDispatcher) {
         repo.foodsResult = listOf(milk).right()
         viewModel.testWithInternalState(this) {

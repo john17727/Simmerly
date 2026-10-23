@@ -246,7 +246,9 @@ class ShoppingListDetailViewModel(
             val query = addItemQuery(text, loadUnits())
             if (query.term.isBlank()) {
                 addResults = emptyList()
-                reduce { state.copy(addSuggestions = emptyList(), addHighlightedId = null) }
+                reduce {
+                    state.copy(addSuggestions = emptyList(), addHighlightedId = null, addSuggestionQuery = "")
+                }
                 return@intent
             }
             repository.searchFoods(query.term).onRight { foods ->
@@ -276,7 +278,13 @@ class ShoppingListDetailViewModel(
             ifRight = {
                 addResults = emptyList()
                 reduce {
-                    state.copy(isAdding = false, addText = "", addSuggestions = emptyList(), addHighlightedId = null)
+                    state.copy(
+                        isAdding = false,
+                        addText = "",
+                        addSuggestions = emptyList(),
+                        addHighlightedId = null,
+                        addSuggestionQuery = "",
+                    )
                 }
             }
         )
