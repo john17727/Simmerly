@@ -148,18 +148,7 @@ private struct CheckableIngredientRow: View {
     var body: some View {
         Button(action: onToggle) {
             HStack(alignment: .top, spacing: 16) {
-                ZStack {
-                    RoundedRectangle(cornerRadius: 4)
-                        .fill(checked ? SimmerlyColor.primary : Color.clear)
-                    RoundedRectangle(cornerRadius: 4)
-                        .strokeBorder(checked ? Color.clear : SimmerlyColor.outline, lineWidth: 2)
-                    if checked {
-                        Image(systemName: "checkmark")
-                            .font(.system(size: 12, weight: .bold))
-                            .foregroundStyle(SimmerlyColor.onPrimary)
-                    }
-                }
-                .frame(width: 22, height: 22)
+                SimmerlyCheckbox(checked: checked)
 
                 VStack(alignment: .leading, spacing: 2) {
                     HStack(alignment: .top, spacing: 4) {

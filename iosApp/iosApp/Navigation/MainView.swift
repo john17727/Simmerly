@@ -21,8 +21,8 @@ final class ProfileTabModel {
     }
 }
 
-/// Tab shell, mirroring navigation/app/AppContent.kt. Only the Recipes tab has real content today —
-/// Meal Plan, Shopping List, and Profile are stubs on the Compose side too.
+/// Tab shell, mirroring navigation/app/AppContent.kt. Recipes and Shopping List have real content;
+/// Meal Plan and Profile are stubs on the Compose side too.
 struct MainView: View {
     @State private var model = ProfileTabModel()
     @State private var accessory = TabAccessoryModel()
@@ -35,7 +35,9 @@ struct MainView: View {
                     switch tab {
                     case .recipes:
                         RecipesTabView()
-                    case .mealPlan, .shoppingList:
+                    case .shoppingList:
+                        ShoppingListsTabView()
+                    case .mealPlan:
                         Text(tab.title)
                     case .profile:
                         Text(model.user?.name ?? tab.title)
