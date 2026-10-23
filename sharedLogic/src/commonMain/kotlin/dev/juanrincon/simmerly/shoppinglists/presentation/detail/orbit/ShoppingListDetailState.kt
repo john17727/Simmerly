@@ -32,7 +32,9 @@ data class ShoppingListDetailState(
     val addSuggestions: List<FoodOptionUi> = emptyList(),
     /** The suggestion whose name matches exactly — what submitting the text adds. */
     val addHighlightedId: String? = null,
-    /** The part of the typed text the suggestions matched, e.g. "milk" in "2 cups milk". */
+    /** The part of the typed text the suggestions matched, e.g. "milk" in "2 cups milk". Empty
+     * until a search has finished, so a blank query with no suggestions means "still searching"
+     * and a set one with none means "nothing matched". */
     val addSuggestionQuery: String = "",
     val editor: ItemEditorUi? = null,
     val units: List<UnitOptionUi> = emptyList(),

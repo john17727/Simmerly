@@ -68,6 +68,7 @@ fun ShoppingListsContent(
                 )
             ) {
                 ShoppingListsScreen(
+                    selectedListId = (backStack.lastOrNull() as? ShoppingListDestinations.Detail)?.listId,
                     onListSelected = { listId ->
                         backStack.removeAll { it is ShoppingListDestinations.Detail }
                         backStack.add(ShoppingListDestinations.Detail(listId))

@@ -8,6 +8,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -20,6 +22,7 @@ import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
@@ -33,6 +36,7 @@ import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
 import dev.juanrincon.simmerly.core.presentation.UiText
 import dev.juanrincon.simmerly.core.presentation.asString
 import dev.juanrincon.simmerly.shoppinglists.presentation.detail.models.FoodOptionUi
@@ -62,6 +66,31 @@ fun EditItemSheet(
             onEvent = onEvent,
             modifier = Modifier.imePadding(),
         )
+    }
+}
+
+/** The same form as [EditItemSheet] in a centred dialog, for wide windows. */
+@Composable
+fun EditItemDialog(
+    editor: ItemEditorUi,
+    units: List<UnitOptionUi>,
+    foodSuggestions: List<FoodOptionUi>,
+    onEvent: (ShoppingListDetailIntent) -> Unit,
+) {
+    Dialog(onDismissRequest = { onEvent(ShoppingListDetailIntent.OnEditorDismissed) }) {
+        Surface(
+            shape = RoundedCornerShape(28.dp),
+            color = MaterialTheme.colorScheme.surface,
+            modifier = Modifier.widthIn(max = 520.dp),
+        ) {
+            EditItemContent(
+                editor = editor,
+                units = units,
+                foodSuggestions = foodSuggestions,
+                onEvent = onEvent,
+                modifier = Modifier.padding(top = 24.dp),
+            )
+        }
     }
 }
 
