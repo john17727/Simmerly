@@ -78,6 +78,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import dev.juanrincon.simmerly.core.presentation.UiText
 import dev.juanrincon.simmerly.core.presentation.asString
 import dev.juanrincon.simmerly.core.presentation.asStringSuspend
 import dev.juanrincon.simmerly.core.presentation.shimmer
@@ -210,7 +211,7 @@ private fun Content(
         )
 
         is ListDialog.ConfirmDelete -> ConfirmDeleteListDialog(
-            name = dialog.name,
+            name = dialog.name.asString(),
             onConfirm = { onEvent(ShoppingListsIntent.OnDeleteConfirmed) },
             onDismiss = { onEvent(ShoppingListsIntent.OnDialogDismissed) },
         )
@@ -332,7 +333,7 @@ private fun ShoppingListCard(
                     modifier = Modifier.weight(1f),
                 ) {
                     Text(
-                        text = list.name,
+                        text = list.name.asString(),
                         style = MaterialTheme.typography.titleMedium,
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis,
@@ -344,7 +345,7 @@ private fun ShoppingListCard(
                     )
                 }
                 ListMenu(
-                    listName = list.name,
+                    listName = list.name.asString(),
                     onRename = onRename,
                     onDelete = onDelete,
                     modifier = Modifier.offset(x = 12.dp, y = (-12).dp),
@@ -398,11 +399,11 @@ private fun CardFooter(footer: ListCardFooterUi) {
             leading = {
                 RecipeThumb(
                     imageUrl = footer.recipe.imageUrl,
-                    contentDescription = "Recipe photo, ${footer.recipe.name}",
+                    contentDescription = "Recipe photo, ${footer.recipe.name.asString()}",
                     size = 48.dp,
                 )
             },
-            title = footer.recipe.name,
+            title = footer.recipe.name.asString(),
             subtitle = if (footer.itemCount == 1) "1 item from this recipe"
             else "All ${footer.itemCount} items from this recipe",
             trailing = { QuantityPill(footer.quantity) },
@@ -411,7 +412,7 @@ private fun CardFooter(footer: ListCardFooterUi) {
         is ListCardFooterUi.SeveralRecipes -> FooterRow(
             leading = { AvatarStack(footer.recipes, footer.recipeCount) },
             title = "${footer.recipeCount} recipes",
-            subtitle = footer.recipeNames.joinToString(),
+            subtitle = footer.recipeNames.map { it.asString() }.joinToString(),
         )
 
         is ListCardFooterUi.AddedByHand -> FooterRow(
@@ -432,7 +433,7 @@ private fun CardFooter(footer: ListCardFooterUi) {
             },
             title = "Added by hand",
             subtitle = buildString {
-                append(footer.itemNames.joinToString())
+                append(footer.itemNames.map { it.asString() }.joinToString())
                 val more = footer.itemCount - footer.itemNames.size
                 if (more > 0) append(", +$more")
             },
@@ -446,7 +447,7 @@ private fun CardFooter(footer: ListCardFooterUi) {
                     append(" and ")
                     append(if (footer.byHandCount == 1) "1 extra" else "${footer.byHandCount} extras")
                 },
-                subtitle = footer.recipeNames.joinToString(),
+                subtitle = footer.recipeNames.map { it.asString() }.joinToString(),
             )
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 SourceChip(
@@ -671,37 +672,43 @@ private fun itemSummary(itemCount: Int, checkedCount: Int): String {
 @Preview
 @Composable
 private fun ShoppingListsPreview() {
-    val recipe = RecipeThumbUi("r1", "Beef and broccoli", "")
     SimmerlyTheme {
         Content(
             state = ShoppingListsState(
-                allLists = listOf(
-                    ShoppingListCardUi(
-                        "1", "Tonight's dinner", "u", 11, 1, 1 / 11f,
-                        ListCardFooterUi.OneRecipe(recipe, 11, 1)
-                    ),
-                    ShoppingListCardUi(
-                        "2", "Week of Oct 26", "u", 34, 0, 0f,
-                        ListCardFooterUi.SeveralRecipes(
-                            List(3) { recipe.copy(recipeId = "r$it") }, 4,
-                            listOf("Beef and broccoli", "Shakshuka", "Pad see ew", "Miso salmon")
-                        )
-                    ),
-                    ShoppingListCardUi(
-                        "3", "Costco run", "u", 9, 6, 6 / 9f,
-                        ListCardFooterUi.AddedByHand(listOf("Paper towels", "olive oil", "coffee beans"), 9)
-                    ),
-                    ShoppingListCardUi(
-                        "4", "Sunday brunch", "u", 15, 3, 0.2f,
-                        ListCardFooterUi.RecipesAndExtras(
-                            List(2) { recipe.copy(recipeId = "r$it") }, 2,
-                            listOf("Shakshuka", "Lemon ricotta pancakes"), 10, 5
-                        )
-                    ),
-                ),
+                allLists = previewLists,
+                lists = previewLists,
             ),
             onEvent = {},
             snackbarHostState = remember { SnackbarHostState() },
         )
     }
+}
+
+private val previewLists = run {
+    val recipe = RecipeThumbUi("r1", UiText.Dynamic("Beef and broccoli"), "")
+    fun names(vararg names: String) = names.map { UiText.Dynamic(it) }
+    listOf(
+        ShoppingListCardUi(
+            "1", UiText.Dynamic("Tonight's dinner"), "u", 11, 1, 1 / 11f,
+            ListCardFooterUi.OneRecipe(recipe, 11, 1),
+        ),
+        ShoppingListCardUi(
+            "2", UiText.Dynamic("Week of Oct 26"), "u", 34, 0, 0f,
+            ListCardFooterUi.SeveralRecipes(
+                List(3) { recipe.copy(recipeId = "r$it") }, 4,
+                names("Beef and broccoli", "Shakshuka", "Pad see ew", "Miso salmon"),
+            ),
+        ),
+        ShoppingListCardUi(
+            "3", UiText.Dynamic("Costco run"), "u", 9, 6, 6 / 9f,
+            ListCardFooterUi.AddedByHand(names("Paper towels", "olive oil", "coffee beans"), 9),
+        ),
+        ShoppingListCardUi(
+            "4", UiText.Dynamic("Sunday brunch"), "u", 15, 3, 0.2f,
+            ListCardFooterUi.RecipesAndExtras(
+                List(2) { recipe.copy(recipeId = "r$it") }, 2,
+                names("Shakshuka", "Lemon ricotta pancakes"), 10, 5,
+            ),
+        ),
+    )
 }

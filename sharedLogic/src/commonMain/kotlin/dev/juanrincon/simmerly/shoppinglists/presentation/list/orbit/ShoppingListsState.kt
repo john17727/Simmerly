@@ -13,14 +13,9 @@ data class ShoppingListsState(
     val isLoading: Boolean = false,
     val error: UiText? = null,
     val dialog: ListDialog = ListDialog.None,
-) {
-    /** The lists to show under the current filter and search. "Mine" shows everything until the
-     * signed-in user is known, rather than briefly showing nothing. */
-    val lists: List<ShoppingListCardUi>
-        get() = allLists.orEmpty()
-            .filter { filter == ListFilter.Household || currentUserId == null || it.ownerId == currentUserId }
-            .filter { query.isBlank() || it.name.contains(query.trim(), ignoreCase = true) }
-}
+    /** [allLists] narrowed to the current filter and search. */
+    val lists: List<ShoppingListCardUi> = emptyList(),
+)
 
 enum class ListFilter { Mine, Household }
 
@@ -28,5 +23,5 @@ sealed interface ListDialog {
     data object None : ListDialog
     data object Create : ListDialog
     data class Rename(val listId: String, val currentName: String) : ListDialog
-    data class ConfirmDelete(val listId: String, val name: String) : ListDialog
+    data class ConfirmDelete(val listId: String, val name: UiText) : ListDialog
 }

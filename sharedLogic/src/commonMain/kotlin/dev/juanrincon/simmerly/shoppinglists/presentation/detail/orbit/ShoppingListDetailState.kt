@@ -12,7 +12,8 @@ import dev.juanrincon.simmerly.shoppinglists.presentation.detail.models.UnitOpti
 data class ShoppingListDetailState(
     val isLoading: Boolean = true,
     val error: UiText? = null,
-    val name: String = "",
+    /** `null` until the list has loaded. */
+    val name: UiText? = null,
     val remainingCount: Int = 0,
     val checkedCount: Int = 0,
     val progress: Float = 0f,

@@ -67,11 +67,12 @@ class ShoppingListNetworkClientTest {
 
     @Test
     fun getListsAsksForEveryListInOnePage() = runTest {
-        buildClient(PAGE_JSON).getLists()
+        buildClient(PAGE_JSON).getLists(page = 1, perPage = -1, orderBy = "name", orderDirection = "asc")
 
         val url = requests.single().url
         assertThat(url.encodedPath).isEqualTo("/api/households/shopping/lists")
         assertThat(url.parameters["perPage"]).isEqualTo("-1")
+        assertThat(url.parameters["orderBy"]).isEqualTo("name")
     }
 
     @Test
@@ -114,8 +115,8 @@ class ShoppingListNetworkClientTest {
     @Test
     fun recipeServingsChangesHitTheAddAndDeleteEndpoints() = runTest {
         val client = buildClient(LIST_JSON)
-        client.addRecipe("list-1", "recipe-1")
-        client.removeRecipe("list-1", "recipe-1")
+        client.addRecipe("list-1", "recipe-1", quantity = 1.0)
+        client.removeRecipe("list-1", "recipe-1", quantity = 1.0)
 
         assertThat(requests.map { it.url.encodedPath }).containsExactly(
             "/api/households/shopping/lists/list-1/recipe/recipe-1",

@@ -1,5 +1,6 @@
 package dev.juanrincon.simmerly.shoppinglists.presentation.mappers
 
+import dev.juanrincon.simmerly.core.presentation.UiText
 import dev.juanrincon.simmerly.shoppinglists.domain.model.LinkedRecipe
 import dev.juanrincon.simmerly.shoppinglists.domain.model.ShoppingFood
 import dev.juanrincon.simmerly.shoppinglists.domain.model.ShoppingList
@@ -29,7 +30,7 @@ fun ShoppingList.toCardUi(): ShoppingListCardUi {
     val checked = items.count { it.checked }
     return ShoppingListCardUi(
         id = id,
-        name = name,
+        name = UiText.Dynamic(name),
         ownerId = userId,
         itemCount = items.size,
         checkedCount = checked,
@@ -46,14 +47,14 @@ private fun ShoppingList.cardFooter(): ListCardFooterUi {
     val thumbs = linked.take(CARD_RECIPE_AVATARS).map { it.toThumbUi() }
     return when {
         linked.isEmpty() || fromRecipes == 0 -> ListCardFooterUi.AddedByHand(
-            itemNames = items.take(CARD_ITEM_PREVIEW).map { it.shortName() },
+            itemNames = items.take(CARD_ITEM_PREVIEW).map { UiText.Dynamic(it.shortName()) },
             itemCount = items.size,
         )
 
         byHand > 0 -> ListCardFooterUi.RecipesAndExtras(
             recipes = thumbs,
             recipeCount = linked.size,
-            recipeNames = linked.map { it.name },
+            recipeNames = linked.map { UiText.Dynamic(it.name) },
             fromRecipesCount = fromRecipes,
             byHandCount = byHand,
         )
@@ -67,12 +68,12 @@ private fun ShoppingList.cardFooter(): ListCardFooterUi {
         else -> ListCardFooterUi.SeveralRecipes(
             recipes = thumbs,
             recipeCount = linked.size,
-            recipeNames = linked.map { it.name },
+            recipeNames = linked.map { UiText.Dynamic(it.name) },
         )
     }
 }
 
-private fun LinkedRecipe.toThumbUi() = RecipeThumbUi(recipeId, name, imageUrl)
+private fun LinkedRecipe.toThumbUi() = RecipeThumbUi(recipeId, UiText.Dynamic(name), imageUrl)
 
 /** The item's food, or its note for a note-only item — what a preview line names it by. */
 private fun ShoppingListItem.shortName(): String =
@@ -82,7 +83,7 @@ fun ShoppingList.toLinkedRecipesUi(): List<LinkedRecipeUi> =
     recipes.filter { it.quantity > 0 }.map { recipe ->
         LinkedRecipeUi(
             recipeId = recipe.recipeId,
-            name = recipe.name,
+            name = UiText.Dynamic(recipe.name),
             imageUrl = recipe.imageUrl,
             quantity = recipe.quantity.roundToInt(),
             itemCount = items.count { item -> item.recipeRefs.any { it.recipeId == recipe.recipeId } },
@@ -112,12 +113,12 @@ private fun ShoppingList.aisleSections(unchecked: List<ShoppingListItem>): List<
         ItemSectionUi(
             key = "label-$labelId",
             kind = SectionKind.Aisle,
-            title = labelNames.getValue(labelId),
+            title = UiText.Dynamic(labelNames.getValue(labelId)),
             items = byLabel.getValue(labelId).map { it.toItemUi(this) },
         )
     } + listOfNotNull(
         unlabelled.takeIf { it.isNotEmpty() }?.let { items ->
-            ItemSectionUi("no-aisle", SectionKind.NoAisle, "", items.map { it.toItemUi(this) })
+            ItemSectionUi("no-aisle", SectionKind.NoAisle, UiText.Dynamic(""), items.map { it.toItemUi(this) })
         }
     )
 }
@@ -132,12 +133,12 @@ private fun ShoppingList.recipeSections(unchecked: List<ShoppingListItem>): List
         ItemSectionUi(
             key = "recipe-${recipe.recipeId}",
             kind = SectionKind.Recipe,
-            title = recipe.name,
+            title = UiText.Dynamic(recipe.name),
             items = byRecipe.getValue(recipe.recipeId).map { it.toItemUi(this) },
         )
     } + listOfNotNull(
         byHand.takeIf { it.isNotEmpty() }?.let { items ->
-            ItemSectionUi("by-hand", SectionKind.AddedByHand, "", items.map { it.toItemUi(this) })
+            ItemSectionUi("by-hand", SectionKind.AddedByHand, UiText.Dynamic(""), items.map { it.toItemUi(this) })
         }
     )
 }
@@ -151,11 +152,12 @@ fun ShoppingListItem.toItemUi(list: ShoppingList): ShoppingItemUi {
     return if (food != null) {
         ShoppingItemUi(
             id = id,
-            quantityText = listOfNotNull(quantity.takeIf { it > 0 }?.let(::formatQuantity), unitText)
-                .joinToString(" "),
-            name = if (quantity > 1 && unit == null) food.pluralName ?: food.name else food.name,
+            quantityText = UiText.Dynamic(
+                listOfNotNull(quantity.takeIf { it > 0 }?.let(::formatQuantity), unitText).joinToString(" ")
+            ),
+            name = UiText.Dynamic(if (quantity > 1 && unit == null) food.pluralName ?: food.name else food.name),
             nameIsFood = true,
-            note = note.takeIf { it.isNotBlank() },
+            note = note.takeIf { it.isNotBlank() }?.let { UiText.Dynamic(it) },
             attribution = attribution(list),
             checked = checked,
         )
@@ -164,10 +166,10 @@ fun ShoppingListItem.toItemUi(list: ShoppingList): ShoppingItemUi {
         val showQuantity = unit != null || (quantity > 0 && quantity != 1.0)
         ShoppingItemUi(
             id = id,
-            quantityText = if (showQuantity) {
-                listOfNotNull(formatQuantity(quantity), unitText).joinToString(" ")
-            } else "",
-            name = note.ifBlank { display },
+            quantityText = UiText.Dynamic(
+                if (showQuantity) listOfNotNull(formatQuantity(quantity), unitText).joinToString(" ") else ""
+            ),
+            name = UiText.Dynamic(note.ifBlank { display }),
             nameIsFood = false,
             note = null,
             attribution = attribution(list),
@@ -180,7 +182,10 @@ fun ShoppingListItem.toItemUi(list: ShoppingList): ShoppingItemUi {
  * "Shakshuka" for one recipe, "Lemon ricotta pancakes ×2" when that recipe was added twice, and
  * "Shakshuka (6), Lemon ricotta pancakes (4)" when several recipes share the item.
  */
-private fun ShoppingListItem.attribution(list: ShoppingList): String? {
+private fun ShoppingListItem.attribution(list: ShoppingList): UiText? =
+    attributionText(list)?.let { UiText.Dynamic(it) }
+
+private fun ShoppingListItem.attributionText(list: ShoppingList): String? {
     val sources = recipeRefs.mapNotNull { ref ->
         list.recipes.firstOrNull { it.recipeId == ref.recipeId }?.let { recipe -> ref to recipe }
     }
@@ -201,9 +206,13 @@ fun ShoppingUnit.displayName(quantity: Double): String = when {
     else -> name
 }
 
-fun ShoppingUnit.toOptionUi() = UnitOptionUi(id = id, name = name)
+fun ShoppingUnit.toOptionUi() = UnitOptionUi(id = id, name = UiText.Dynamic(name))
 
-fun ShoppingFood.toOptionUi() = FoodOptionUi(id = id, name = name, aisle = labelName)
+fun ShoppingFood.toOptionUi() = FoodOptionUi(
+    id = id,
+    name = UiText.Dynamic(name),
+    aisle = labelName?.let { UiText.Dynamic(it) },
+)
 
 /** Whether [term] names this food, singular or plural, ignoring case. */
 fun ShoppingFood.isNamed(term: String): Boolean =

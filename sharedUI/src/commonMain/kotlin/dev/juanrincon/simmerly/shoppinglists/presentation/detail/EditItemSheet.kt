@@ -31,11 +31,15 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import dev.juanrincon.simmerly.core.presentation.UiText
+import dev.juanrincon.simmerly.core.presentation.asString
 import dev.juanrincon.simmerly.shoppinglists.presentation.detail.models.FoodOptionUi
 import dev.juanrincon.simmerly.shoppinglists.presentation.detail.models.ItemEditorUi
 import dev.juanrincon.simmerly.shoppinglists.presentation.detail.models.UnitOptionUi
 import dev.juanrincon.simmerly.shoppinglists.presentation.detail.orbit.ShoppingListDetailIntent
+import dev.juanrincon.simmerly.theme.SimmerlyTheme
 
 /** Edits one item's quantity, unit, food and note. Choosing a food files the item under that
  * food's aisle; clearing the food field leaves a note-only item. */
@@ -51,59 +55,75 @@ fun EditItemSheet(
         onDismissRequest = { onEvent(ShoppingListDetailIntent.OnEditorDismissed) },
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
     ) {
-        Column(
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(start = 24.dp, end = 24.dp, bottom = 24.dp)
-                .imePadding(),
-        ) {
-            Text("Edit item", style = MaterialTheme.typography.titleLarge)
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                OutlinedTextField(
-                    value = editor.quantity,
-                    onValueChange = { onEvent(ShoppingListDetailIntent.OnEditorQuantityChanged(it)) },
-                    label = { Text("Quantity") },
-                    singleLine = true,
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                    modifier = Modifier.width(112.dp),
-                )
-                UnitPicker(
-                    units = units,
-                    selectedId = editor.unitId,
-                    onSelected = { onEvent(ShoppingListDetailIntent.OnEditorUnitSelected(it)) },
-                    modifier = Modifier.weight(1f),
-                )
-            }
-            FoodPicker(
-                query = editor.foodQuery,
-                suggestions = foodSuggestions,
-                onQueryChanged = { onEvent(ShoppingListDetailIntent.OnEditorFoodQueryChanged(it)) },
-                onSelected = { onEvent(ShoppingListDetailIntent.OnEditorFoodSelected(it)) },
-            )
+        EditItemContent(
+            editor = editor,
+            units = units,
+            foodSuggestions = foodSuggestions,
+            onEvent = onEvent,
+            modifier = Modifier.imePadding(),
+        )
+    }
+}
+
+/** The sheet's form, split out so it can be previewed without the sheet's popup. */
+@Composable
+private fun EditItemContent(
+    editor: ItemEditorUi,
+    units: List<UnitOptionUi>,
+    foodSuggestions: List<FoodOptionUi>,
+    onEvent: (ShoppingListDetailIntent) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(start = 24.dp, end = 24.dp, bottom = 24.dp),
+    ) {
+        Text("Edit item", style = MaterialTheme.typography.titleLarge)
+        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             OutlinedTextField(
-                value = editor.note,
-                onValueChange = { onEvent(ShoppingListDetailIntent.OnEditorNoteChanged(it)) },
-                label = { Text(if (editor.food == null) "Item" else "Note") },
-                keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
-                modifier = Modifier.fillMaxWidth(),
+                value = editor.quantity,
+                onValueChange = { onEvent(ShoppingListDetailIntent.OnEditorQuantityChanged(it)) },
+                label = { Text("Quantity") },
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                modifier = Modifier.width(112.dp),
             )
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                TextButton(
-                    onClick = { onEvent(ShoppingListDetailIntent.OnEditorDeleteClicked) },
-                    colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error),
-                ) { Text("Delete item") }
-                Spacer(Modifier.weight(1f))
-                Button(
-                    onClick = { onEvent(ShoppingListDetailIntent.OnEditorSaveClicked) },
-                    enabled = !editor.isSaving && (editor.food != null || editor.note.isNotBlank()),
-                ) { Text("Save") }
-            }
+            UnitPicker(
+                units = units,
+                selectedId = editor.unitId,
+                onSelected = { onEvent(ShoppingListDetailIntent.OnEditorUnitSelected(it)) },
+                modifier = Modifier.weight(1f),
+            )
+        }
+        FoodPicker(
+            query = editor.foodQuery,
+            suggestions = foodSuggestions,
+            onQueryChanged = { onEvent(ShoppingListDetailIntent.OnEditorFoodQueryChanged(it)) },
+            onSelected = { onEvent(ShoppingListDetailIntent.OnEditorFoodSelected(it)) },
+        )
+        OutlinedTextField(
+            value = editor.note,
+            onValueChange = { onEvent(ShoppingListDetailIntent.OnEditorNoteChanged(it)) },
+            label = { Text(if (editor.food == null) "Item" else "Note") },
+            keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
+            modifier = Modifier.fillMaxWidth(),
+        )
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            TextButton(
+                onClick = { onEvent(ShoppingListDetailIntent.OnEditorDeleteClicked) },
+                colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error),
+            ) { Text("Delete item") }
+            Spacer(Modifier.weight(1f))
+            Button(
+                onClick = { onEvent(ShoppingListDetailIntent.OnEditorSaveClicked) },
+                enabled = !editor.isSaving && (editor.food != null || editor.note.isNotBlank()),
+            ) { Text("Save") }
         }
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun UnitPicker(
     units: List<UnitOptionUi>,
@@ -115,7 +135,7 @@ private fun UnitPicker(
     val selected = units.firstOrNull { it.id == selectedId }
     ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = it }, modifier = modifier) {
         OutlinedTextField(
-            value = selected?.name ?: "No unit",
+            value = selected?.name?.asString() ?: "No unit",
             onValueChange = {},
             readOnly = true,
             label = { Text("Unit") },
@@ -132,7 +152,7 @@ private fun UnitPicker(
             )
             units.forEach { unit ->
                 DropdownMenuItem(
-                    text = { Text(unit.name) },
+                    text = { Text(unit.name.asString()) },
                     onClick = { expanded = false; onSelected(unit.id) },
                 )
             }
@@ -140,7 +160,6 @@ private fun UnitPicker(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun FoodPicker(
     query: String,
@@ -173,7 +192,7 @@ private fun FoodPicker(
         ) {
             suggestions.forEach { food ->
                 DropdownMenuItem(
-                    text = { Text(food.name) },
+                    text = { Text(food.name.asString()) },
                     onClick = {
                         expanded = false
                         onSelected(food)
@@ -181,5 +200,45 @@ private fun FoodPicker(
                 )
             }
         }
+    }
+}
+
+@Preview
+@Composable
+private fun EditItemFoodPreview() {
+    SimmerlyTheme {
+        EditItemContent(
+            editor = ItemEditorUi(
+                itemId = "1",
+                quantity = "2",
+                unitId = "cup",
+                foodQuery = "milk",
+                food = FoodOptionUi("milk", UiText.Dynamic("milk"), UiText.Dynamic("Dairy")),
+                note = "oat",
+            ),
+            units = listOf(UnitOptionUi("cup", UiText.Dynamic("cup"))),
+            foodSuggestions = emptyList(),
+            onEvent = {},
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun EditItemNotePreview() {
+    SimmerlyTheme {
+        EditItemContent(
+            editor = ItemEditorUi(
+                itemId = "1",
+                quantity = "1",
+                unitId = null,
+                foodQuery = "",
+                food = null,
+                note = "Paper napkins",
+            ),
+            units = emptyList(),
+            foodSuggestions = emptyList(),
+            onEvent = {},
+        )
     }
 }

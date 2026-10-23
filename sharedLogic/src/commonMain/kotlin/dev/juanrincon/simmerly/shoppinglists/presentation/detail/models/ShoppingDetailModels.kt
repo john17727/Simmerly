@@ -1,17 +1,19 @@
 package dev.juanrincon.simmerly.shoppinglists.presentation.detail.models
 
+import dev.juanrincon.simmerly.core.presentation.UiText
+
 /**
  * One line of the list, already split for display: "[quantityText] **[name]**" with [note]
  * beneath. [nameIsFood] is false for note-only items, which the UI doesn't embolden.
  */
 data class ShoppingItemUi(
     val id: String,
-    val quantityText: String,
-    val name: String,
+    val quantityText: UiText,
+    val name: UiText,
     val nameIsFood: Boolean,
-    val note: String?,
+    val note: UiText?,
     /** The recipes this item came from, e.g. "Shakshuka (6), Lemon ricotta pancakes (4)". */
-    val attribution: String?,
+    val attribution: UiText?,
     val checked: Boolean,
 )
 
@@ -19,7 +21,7 @@ data class ItemSectionUi(
     val key: String,
     val kind: SectionKind,
     /** The label or recipe name; empty for [SectionKind.NoAisle] and [SectionKind.AddedByHand]. */
-    val title: String,
+    val title: UiText,
     val items: List<ShoppingItemUi>,
 )
 
@@ -29,7 +31,7 @@ enum class ItemGrouping { ByAisle, ByRecipe }
 
 data class LinkedRecipeUi(
     val recipeId: String,
-    val name: String,
+    val name: UiText,
     val imageUrl: String,
     val quantity: Int,
     val itemCount: Int,
@@ -47,12 +49,12 @@ data class ItemEditorUi(
 
 data class FoodOptionUi(
     val id: String,
-    val name: String,
+    val name: UiText,
     /** The food's aisle, or `null` when it has none. */
-    val aisle: String? = null,
+    val aisle: UiText? = null,
 )
 
 data class UnitOptionUi(
     val id: String,
-    val name: String,
+    val name: UiText,
 )

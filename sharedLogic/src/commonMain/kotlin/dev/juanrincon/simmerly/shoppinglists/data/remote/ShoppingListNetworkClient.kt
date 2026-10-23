@@ -31,16 +31,20 @@ import kotlinx.serialization.json.JsonPrimitive
  * lookups the item editor needs. */
 class ShoppingListNetworkClient(private val client: HttpClient) {
 
-    /** `perPage = -1` asks Mealie for every list in one page. */
-    suspend fun getLists(): Either<DataError.NetworkError<Unit>, ItemListDto<ShoppingListDto>> =
-        arrowNetworkHandler {
-            client.get("/api/households/shopping/lists") {
-                parameter("page", 1)
-                parameter("perPage", -1)
-                parameter("orderBy", "name")
-                parameter("orderDirection", "asc")
-            }
+    /** A `perPage` of -1 asks Mealie for every list in one page. */
+    suspend fun getLists(
+        page: Int,
+        perPage: Int,
+        orderBy: String,
+        orderDirection: String,
+    ): Either<DataError.NetworkError<Unit>, ItemListDto<ShoppingListDto>> = arrowNetworkHandler {
+        client.get("/api/households/shopping/lists") {
+            parameter("page", page)
+            parameter("perPage", perPage)
+            parameter("orderBy", orderBy)
+            parameter("orderDirection", orderDirection)
         }
+    }
 
     suspend fun getList(id: String): Either<DataError.NetworkError<Unit>, ShoppingListDto> =
         arrowNetworkHandler { client.get("/api/households/shopping/lists/$id") }
@@ -76,7 +80,7 @@ class ShoppingListNetworkClient(private val client: HttpClient) {
     suspend fun addRecipe(
         listId: String,
         recipeId: String,
-        quantity: Double = 1.0
+        quantity: Double,
     ): Either<DataError.NetworkError<Unit>, ShoppingListDto> = arrowNetworkHandler {
         client.post("/api/households/shopping/lists/$listId/recipe/$recipeId") {
             setBody(RecipeIncrementDto(quantity))
@@ -87,7 +91,7 @@ class ShoppingListNetworkClient(private val client: HttpClient) {
     suspend fun removeRecipe(
         listId: String,
         recipeId: String,
-        quantity: Double = 1.0
+        quantity: Double,
     ): Either<DataError.NetworkError<Unit>, ShoppingListDto> = arrowNetworkHandler {
         client.post("/api/households/shopping/lists/$listId/recipe/$recipeId/delete") {
             setBody(RecipeDecrementDto(quantity))
@@ -120,23 +124,30 @@ class ShoppingListNetworkClient(private val client: HttpClient) {
             }
         }
 
-    suspend fun getUnits(): Either<DataError.NetworkError<Unit>, ItemListDto<ShoppingUnitDto>> =
-        arrowNetworkHandler {
-            client.get("/api/units") {
-                parameter("page", 1)
-                parameter("perPage", -1)
-                parameter("orderBy", "name")
-                parameter("orderDirection", "asc")
-            }
+    /** A `perPage` of -1 asks Mealie for every unit in one page. */
+    suspend fun getUnits(
+        page: Int,
+        perPage: Int,
+        orderBy: String,
+        orderDirection: String,
+    ): Either<DataError.NetworkError<Unit>, ItemListDto<ShoppingUnitDto>> = arrowNetworkHandler {
+        client.get("/api/units") {
+            parameter("page", page)
+            parameter("perPage", perPage)
+            parameter("orderBy", orderBy)
+            parameter("orderDirection", orderDirection)
         }
+    }
 
     suspend fun searchFoods(
-        query: String
+        query: String,
+        page: Int,
+        perPage: Int,
     ): Either<DataError.NetworkError<Unit>, ItemListDto<ShoppingFoodDto>> = arrowNetworkHandler {
         client.get("/api/foods") {
             parameter("search", query)
-            parameter("page", 1)
-            parameter("perPage", 50)
+            parameter("page", page)
+            parameter("perPage", perPage)
         }
     }
 

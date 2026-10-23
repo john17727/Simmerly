@@ -1,8 +1,10 @@
 package dev.juanrincon.simmerly.shoppinglists.presentation.list.models
 
+import dev.juanrincon.simmerly.core.presentation.UiText
+
 data class ShoppingListCardUi(
     val id: String,
-    val name: String,
+    val name: UiText,
     val ownerId: String,
     val itemCount: Int,
     val checkedCount: Int,
@@ -13,7 +15,7 @@ data class ShoppingListCardUi(
 
 data class RecipeThumbUi(
     val recipeId: String,
-    val name: String,
+    val name: UiText,
     val imageUrl: String,
 )
 
@@ -33,12 +35,12 @@ sealed interface ListCardFooterUi {
     data class SeveralRecipes(
         val recipes: List<RecipeThumbUi>,
         val recipeCount: Int,
-        val recipeNames: List<String>,
+        val recipeNames: List<UiText>,
     ) : ListCardFooterUi
 
     /** No item comes from a recipe; [itemNames] previews the first few. */
     data class AddedByHand(
-        val itemNames: List<String>,
+        val itemNames: List<UiText>,
         val itemCount: Int,
     ) : ListCardFooterUi
 
@@ -46,7 +48,7 @@ sealed interface ListCardFooterUi {
     data class RecipesAndExtras(
         val recipes: List<RecipeThumbUi>,
         val recipeCount: Int,
-        val recipeNames: List<String>,
+        val recipeNames: List<UiText>,
         val fromRecipesCount: Int,
         val byHandCount: Int,
     ) : ListCardFooterUi

@@ -96,6 +96,7 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import dev.juanrincon.simmerly.core.presentation.UiText
 import dev.juanrincon.simmerly.core.presentation.asString
 import dev.juanrincon.simmerly.core.presentation.asStringSuspend
 import dev.juanrincon.simmerly.shoppinglists.presentation.detail.models.ItemGrouping
@@ -175,7 +176,7 @@ private fun Content(
         modifier = modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
             TopBar(
-                name = state.name,
+                name = state.name?.asString().orEmpty(),
                 scrollBehavior = scrollBehavior,
                 onNavigateBack = onNavigateBack,
                 onEvent = onEvent,
@@ -195,7 +196,7 @@ private fun Content(
         Box(modifier = Modifier.fillMaxSize()) {
             when {
                 state.isLoading -> Unit
-                state.name.isEmpty() && state.error != null -> Box(
+                state.name == null && state.error != null -> Box(
                     contentAlignment = Alignment.Center,
                     modifier = Modifier.fillMaxSize().padding(padding),
                 ) {
@@ -274,7 +275,7 @@ private fun Content(
         )
 
         DetailDialog.ConfirmDelete -> ConfirmDeleteListDialog(
-            name = state.name,
+            name = state.name?.asString().orEmpty(),
             onConfirm = { onEvent(ShoppingListDetailIntent.OnDeleteListConfirmed) },
             onDismiss = { onEvent(ShoppingListDetailIntent.OnDialogDismissed) },
         )
@@ -433,7 +434,7 @@ private fun LazyListScope.section(
 ) {
     item(key = "header-${section.key}") {
         val title = when (section.kind) {
-            SectionKind.Aisle, SectionKind.Recipe -> section.title
+            SectionKind.Aisle, SectionKind.Recipe -> section.title.asString()
             SectionKind.NoAisle -> "No aisle"
             SectionKind.AddedByHand -> "Added by hand"
         }
@@ -517,10 +518,13 @@ private fun ItemRow(
                 modifier = Modifier.size(24.dp),
             )
             Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                Text(text = itemText(item), style = MaterialTheme.typography.bodyLarge)
+                Text(
+                    text = itemText(item.quantityText.asString(), item.name.asString(), item.nameIsFood),
+                    style = MaterialTheme.typography.bodyLarge,
+                )
                 item.note?.let {
                     Text(
-                        text = it,
+                        text = it.asString(),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -531,7 +535,7 @@ private fun ItemRow(
         IconButton(onClick = onEdit) {
             Icon(
                 Icons.Rounded.Edit,
-                contentDescription = "Edit ${item.name}",
+                contentDescription = "Edit ${item.name.asString()}",
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.size(20.dp),
             )
@@ -540,25 +544,25 @@ private fun ItemRow(
 }
 
 @Composable
-private fun Attribution(text: String, muted: Boolean = false) {
+private fun Attribution(text: UiText, muted: Boolean = false) {
     val color = if (muted) MaterialTheme.colorScheme.onSurfaceVariant
     else MaterialTheme.colorScheme.onTertiaryContainer
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
         Icon(Icons.Rounded.Restaurant, contentDescription = null, tint = color, modifier = Modifier.size(14.dp))
         Text(
-            text = text,
+            text = text.asString(),
             style = MaterialTheme.typography.labelMedium,
             color = color,
         )
     }
 }
 
-private fun itemText(item: ShoppingItemUi) = buildAnnotatedString {
-    if (item.quantityText.isNotEmpty()) append("${item.quantityText} ")
-    if (item.nameIsFood) {
-        withStyle(SpanStyle(fontWeight = FontWeight.SemiBold)) { append(item.name) }
+private fun itemText(quantity: String, name: String, nameIsFood: Boolean) = buildAnnotatedString {
+    if (quantity.isNotEmpty()) append("$quantity ")
+    if (nameIsFood) {
+        withStyle(SpanStyle(fontWeight = FontWeight.SemiBold)) { append(name) }
     } else {
-        append(item.name)
+        append(name)
     }
 }
 
@@ -591,12 +595,12 @@ private fun LinkedRecipesCard(
                 ) {
                     RecipeThumb(
                         imageUrl = recipe.imageUrl,
-                        contentDescription = "Recipe photo, ${recipe.name}",
+                        contentDescription = "Recipe photo, ${recipe.name.asString()}",
                         size = 40.dp,
                     )
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            text = recipe.name,
+                            text = recipe.name.asString(),
                             style = MaterialTheme.typography.bodyMedium,
                             fontWeight = FontWeight.SemiBold,
                             maxLines = 1,
@@ -610,7 +614,7 @@ private fun LinkedRecipesCard(
                     }
                     QuantityStepper(
                         quantity = recipe.quantity,
-                        recipeName = recipe.name,
+                        recipeName = recipe.name.asString(),
                         onDecrease = { onQuantityChanged(recipe.recipeId, -1) },
                         onIncrease = { onQuantityChanged(recipe.recipeId, 1) },
                     )
@@ -855,7 +859,9 @@ private fun CheckedItemRow(item: ShoppingItemUi, onUncheck: () -> Unit) {
         )
         Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
             Text(
-                text = listOf(item.quantityText, item.name).filter { it.isNotEmpty() }.joinToString(" "),
+                text = listOf(item.quantityText.asString(), item.name.asString())
+                    .filter { it.isNotEmpty() }
+                    .joinToString(" "),
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textDecoration = TextDecoration.LineThrough,
@@ -882,29 +888,38 @@ private fun recipeSummary(recipe: LinkedRecipeUi): String = buildString {
 @Preview
 @Composable
 private fun ShoppingListDetailPreview() {
+    fun text(value: String) = UiText.Dynamic(value)
     fun item(id: String, qty: String, name: String, note: String? = null, from: String? = null, checked: Boolean = false) =
-        ShoppingItemUi(id, qty, name, nameIsFood = true, note = note, attribution = from, checked = checked)
+        ShoppingItemUi(
+            id = id,
+            quantityText = text(qty),
+            name = text(name),
+            nameIsFood = true,
+            note = note?.let(::text),
+            attribution = from?.let(::text),
+            checked = checked,
+        )
     SimmerlyTheme {
         Content(
             state = ShoppingListDetailState(
                 isLoading = false,
-                name = "Sunday brunch",
+                name = text("Sunday brunch"),
                 remainingCount = 12,
                 checkedCount = 3,
                 progress = 0.2f,
                 linkedRecipes = listOf(
-                    LinkedRecipeUi("r1", "Shakshuka", "", 1, 6),
-                    LinkedRecipeUi("r2", "Lemon ricotta pancakes", "", 2, 5),
+                    LinkedRecipeUi("r1", text("Shakshuka"), "", 1, 6),
+                    LinkedRecipeUi("r2", text("Lemon ricotta pancakes"), "", 2, 5),
                 ),
                 sections = listOf(
                     ItemSectionUi(
-                        "produce", SectionKind.Aisle, "Produce", listOf(
+                        "produce", SectionKind.Aisle, text("Produce"), listOf(
                             item("1", "1", "yellow onion", "diced", "Shakshuka"),
                             item("2", "4", "lemons", "zested and juiced", "Lemon ricotta pancakes ×2"),
                             item("3", "1 pint", "strawberries"),
                         )
                     ),
-                    ItemSectionUi("none", SectionKind.NoAisle, "", listOf(item("4", "2 tsp", "baking powder"))),
+                    ItemSectionUi("none", SectionKind.NoAisle, text(""), listOf(item("4", "2 tsp", "baking powder"))),
                 ),
                 checkedItems = listOf(item("5", "1 tsp", "ground cumin", from = "Shakshuka", checked = true)),
             ),

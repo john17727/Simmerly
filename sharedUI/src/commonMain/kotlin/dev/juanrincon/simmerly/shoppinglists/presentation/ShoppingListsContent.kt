@@ -32,8 +32,8 @@ import kotlinx.serialization.modules.polymorphic
 @OptIn(ExperimentalMaterial3AdaptiveApi::class, ExperimentalSerializationApi::class)
 @Composable
 fun ShoppingListsContent(
+    modifier: Modifier = Modifier,
     onAtRootChanged: (Boolean) -> Unit = {},
-    modifier: Modifier = Modifier
 ) {
     val backStack = rememberNavBackStack(
         configuration = SavedStateConfiguration {

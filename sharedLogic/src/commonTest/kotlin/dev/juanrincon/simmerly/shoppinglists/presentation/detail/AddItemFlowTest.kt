@@ -6,6 +6,7 @@ import assertk.assertions.contains
 import assertk.assertions.containsExactly
 import assertk.assertions.isEmpty
 import assertk.assertions.isEqualTo
+import dev.juanrincon.simmerly.core.presentation.UiText
 import dev.juanrincon.simmerly.shoppinglists.FakeShoppingListRepository
 import dev.juanrincon.simmerly.shoppinglists.FakeShoppingListRepository.AddedFoodItem
 import dev.juanrincon.simmerly.shoppinglists.aFood
@@ -198,7 +199,7 @@ class AddItemFlowTest {
         viewModel.testWithInternalState(this) {
             runOnCreate()
             type("2 cups mil", expectSuggestions = true)
-            viewModel.onEvent(ShoppingListDetailIntent.OnAddSuggestionPicked(FoodOptionUi("milk", "milk")))
+            viewModel.onEvent(ShoppingListDetailIntent.OnAddSuggestionPicked(FoodOptionUi("milk", UiText.Dynamic("milk"))))
             awaitAdded()
 
             assertThat(repo.addedFoodItems).containsExactly(AddedFoodItem(milk, 2.0, cup, ""))
@@ -212,7 +213,7 @@ class AddItemFlowTest {
         viewModel.testWithInternalState(this) {
             runOnCreate()
             type("2 cups mil", expectSuggestions = true)
-            viewModel.onEvent(ShoppingListDetailIntent.OnAddSuggestionPicked(FoodOptionUi("milk", "milk")))
+            viewModel.onEvent(ShoppingListDetailIntent.OnAddSuggestionPicked(FoodOptionUi("milk", UiText.Dynamic("milk"))))
             awaitAdded()
 
             assertThat(repo.addedFoodItems).containsExactly(AddedFoodItem(milk, 1.0, null, ""))

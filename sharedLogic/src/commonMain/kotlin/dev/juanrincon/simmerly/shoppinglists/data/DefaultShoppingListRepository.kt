@@ -24,6 +24,12 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 
+/** Every list or unit fits in one page when Mealie is asked for `perPage = -1`. */
+private const val ALL_ITEMS = -1
+
+/** How many foods the add-item and editor searches show. */
+private const val FOOD_SEARCH_PAGE_SIZE = 50
+
 class DefaultShoppingListRepository(
     private val networkClient: ShoppingListNetworkClient,
     private val sessionDataStore: SessionDataStore,
@@ -43,7 +49,8 @@ class DefaultShoppingListRepository(
 
     override suspend fun refreshLists(): Either<ShoppingListError, Unit> = either {
         val host = sessionDataStore.getServerAddress()
-        val summaries = networkClient.getLists().mapLeft { ShoppingListError.FetchError }.bind()
+        val summaries = networkClient.getLists(page = 1, perPage = ALL_ITEMS, orderBy = "name", orderDirection = "asc")
+            .mapLeft { ShoppingListError.FetchError }.bind()
         val detailed = coroutineScope {
             summaries.items.map { summary -> async { networkClient.getList(summary.id) } }
                 .awaitAll()
@@ -202,13 +209,13 @@ class DefaultShoppingListRepository(
 
     override suspend fun units(): Either<ShoppingListError, List<ShoppingUnit>> {
         cachedUnits?.let { return Either.Right(it) }
-        return networkClient.getUnits()
+        return networkClient.getUnits(page = 1, perPage = ALL_ITEMS, orderBy = "name", orderDirection = "asc")
             .map { page -> page.items.map { it.toDomain() }.also { cachedUnits = it } }
             .mapLeft { ShoppingListError.FetchError }
     }
 
     override suspend fun searchFoods(query: String): Either<ShoppingListError, List<ShoppingFood>> =
-        networkClient.searchFoods(query)
+        networkClient.searchFoods(query = query, page = 1, perPage = FOOD_SEARCH_PAGE_SIZE)
             .map { page -> page.items.map { it.toDomain() } }
             .mapLeft { ShoppingListError.FetchError }
 

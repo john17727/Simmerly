@@ -51,8 +51,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import dev.juanrincon.simmerly.core.presentation.UiText
+import dev.juanrincon.simmerly.core.presentation.asString
 import dev.juanrincon.simmerly.shoppinglists.presentation.detail.models.FoodOptionUi
+import dev.juanrincon.simmerly.theme.SimmerlyTheme
 
 /** Six rows show at once; any more scroll inside the card. */
 private val SUGGESTION_ROW_HEIGHT = 48.dp
@@ -188,12 +192,12 @@ fun AddItemSuggestions(
                             .padding(horizontal = 16.dp),
                     ) {
                         Text(
-                            text = highlightMatch(food.name, query),
+                            text = highlightMatch(food.name.asString(), query),
                             style = MaterialTheme.typography.bodyLarge,
                             modifier = Modifier.weight(1f),
                         )
                         Text(
-                            text = food.aisle ?: "No aisle",
+                            text = food.aisle?.asString() ?: "No aisle",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
@@ -213,5 +217,52 @@ private fun highlightMatch(name: String, query: String): AnnotatedString {
         append(name.substring(0, start))
         withStyle(SpanStyle(fontWeight = FontWeight.Bold)) { append(name.substring(start, end)) }
         append(name.substring(end))
+    }
+}
+
+@Preview
+@Composable
+private fun AddItemBarEmptyPreview() {
+    SimmerlyTheme {
+        AddItemBar(text = "", isAdding = false, onTextChanged = {}, onSubmit = {}, onFocusChanged = {})
+    }
+}
+
+@Preview
+@Composable
+private fun AddItemBarTypingPreview() {
+    SimmerlyTheme {
+        AddItemBar(text = "2 cups milk", isAdding = false, onTextChanged = {}, onSubmit = {}, onFocusChanged = {})
+    }
+}
+
+@Preview
+@Composable
+private fun AddItemBarAddingPreview() {
+    SimmerlyTheme {
+        AddItemBar(text = "2 cups milk", isAdding = true, onTextChanged = {}, onSubmit = {}, onFocusChanged = {})
+    }
+}
+
+@Preview
+@Composable
+private fun AddItemSuggestionsPreview() {
+    fun food(id: String, name: String, aisle: String?) =
+        FoodOptionUi(id, UiText.Dynamic(name), aisle?.let { UiText.Dynamic(it) })
+    SimmerlyTheme {
+        AddItemSuggestions(
+            suggestions = listOf(
+                food("1", "milk", "Dairy and eggs"),
+                food("2", "milk cream", "Dairy and eggs"),
+                food("3", "milk powder", "Baking"),
+                food("4", "milk breads", "Bakery"),
+                food("5", "milkfats", null),
+                food("6", "nut milk", "Dairy and eggs"),
+                food("7", "oat milk", "Dairy and eggs"),
+            ),
+            query = "milk",
+            highlightedId = "1",
+            onPicked = {},
+        )
     }
 }

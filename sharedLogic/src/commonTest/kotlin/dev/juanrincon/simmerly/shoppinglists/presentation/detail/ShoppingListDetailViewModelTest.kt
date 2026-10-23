@@ -6,6 +6,7 @@ import assertk.assertThat
 import assertk.assertions.containsExactly
 import assertk.assertions.isEqualTo
 import assertk.assertions.isInstanceOf
+import dev.juanrincon.simmerly.core.presentation.UiText
 import dev.juanrincon.simmerly.shoppinglists.FakeShoppingListRepository
 import dev.juanrincon.simmerly.shoppinglists.aFood
 import dev.juanrincon.simmerly.shoppinglists.aLabel
@@ -65,7 +66,7 @@ class ShoppingListDetailViewModelTest {
     fun stateSummarisesTheObservedList() = runTest(testDispatcher) {
         viewModel.testWithInternalState(this) {
             runOnCreate()
-            val state = awaitStateMatching { it.name.isNotEmpty() && !it.isLoading }
+            val state = awaitStateMatching { it.name != null && !it.isLoading }
             assertThat(state.remainingCount).isEqualTo(2)
             assertThat(state.checkedCount).isEqualTo(1)
             assertThat(state.sections.map { it.kind }).containsExactly(SectionKind.Aisle, SectionKind.NoAisle)
@@ -78,7 +79,7 @@ class ShoppingListDetailViewModelTest {
     fun switchingToByRecipeRegroupsItems() = runTest(testDispatcher) {
         viewModel.testWithInternalState(this) {
             runOnCreate()
-            awaitStateMatching { it.name.isNotEmpty() }
+            awaitStateMatching { it.name != null }
             viewModel.onEvent(ShoppingListDetailIntent.OnGroupingSelected(ItemGrouping.ByRecipe))
             val state = awaitStateMatching { it.grouping == ItemGrouping.ByRecipe }
             assertThat(state.sections.map { it.kind }).containsExactly(SectionKind.AddedByHand)
@@ -127,7 +128,7 @@ class ShoppingListDetailViewModelTest {
     fun checkAllChecksTheRemainingItemsAndUndoUnchecksOnlyThose() = runTest(testDispatcher) {
         viewModel.testWithInternalState(this) {
             runOnCreate()
-            awaitStateMatching { it.name.isNotEmpty() }
+            awaitStateMatching { it.name != null }
 
             viewModel.onEvent(ShoppingListDetailIntent.OnCheckAllClicked)
             assertThat(awaitSideEffectSkippingStates()).isEqualTo(ShoppingListDetailSideEffect.ShowCheckedAll(2))
@@ -146,7 +147,7 @@ class ShoppingListDetailViewModelTest {
     fun uncheckAllUnchecksEveryCheckedItem() = runTest(testDispatcher) {
         viewModel.testWithInternalState(this) {
             runOnCreate()
-            awaitStateMatching { it.name.isNotEmpty() }
+            awaitStateMatching { it.name != null }
             viewModel.onEvent(ShoppingListDetailIntent.OnUncheckAllClicked)
             assertThat(repo.checkedCalls).containsExactly(Triple("list-1", setOf("cumin"), false))
             cancelAndIgnoreRemainingItems()
@@ -181,14 +182,14 @@ class ShoppingListDetailViewModelTest {
         repo.foodsResult = listOf(aFood(id = "food-milk", name = "milk", labelId = "dairy")).right()
         viewModel.testWithInternalState(this) {
             runOnCreate()
-            awaitStateMatching { it.name.isNotEmpty() }
+            awaitStateMatching { it.name != null }
             viewModel.onEvent(ShoppingListDetailIntent.OnEditItemClicked("napkins"))
             awaitStateMatching { it.editor != null }
             viewModel.onEvent(ShoppingListDetailIntent.OnEditorFoodQueryChanged("mil"))
             val searched = awaitStateMatching { it.foodSuggestions.isNotEmpty() }
-            assertThat(searched.foodSuggestions).containsExactly(FoodOptionUi("food-milk", "milk"))
+            assertThat(searched.foodSuggestions).containsExactly(FoodOptionUi("food-milk", UiText.Dynamic("milk")))
 
-            viewModel.onEvent(ShoppingListDetailIntent.OnEditorFoodSelected(FoodOptionUi("food-milk", "milk")))
+            viewModel.onEvent(ShoppingListDetailIntent.OnEditorFoodSelected(FoodOptionUi("food-milk", UiText.Dynamic("milk"))))
             viewModel.onEvent(ShoppingListDetailIntent.OnEditorNoteChanged("oat"))
             viewModel.onEvent(ShoppingListDetailIntent.OnEditorSaveClicked)
             awaitStateMatching { it.editor == null }
@@ -205,7 +206,7 @@ class ShoppingListDetailViewModelTest {
     fun typingOverAChosenFoodUnchoosesIt() = runTest(testDispatcher) {
         viewModel.testWithInternalState(this) {
             runOnCreate()
-            awaitStateMatching { it.name.isNotEmpty() }
+            awaitStateMatching { it.name != null }
             viewModel.onEvent(ShoppingListDetailIntent.OnEditItemClicked("onion"))
             awaitStateMatching { it.editor?.food != null }
             viewModel.onEvent(ShoppingListDetailIntent.OnEditorFoodQueryChanged("oni"))

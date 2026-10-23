@@ -48,6 +48,9 @@ class ShoppingListDetailViewModel(
     private var units: List<ShoppingUnit> = emptyList()
     private var foodResults: List<ShoppingFood> = emptyList()
     private var foodSearch: Job? = null
+
+    /** The raw name of the food chosen in the editor, to tell when typing has changed it. */
+    private var editorFoodName: String? = null
     private var addResults: List<ShoppingFood> = emptyList()
     private var addSearch: Job? = null
 
@@ -161,9 +164,10 @@ class ShoppingListDetailViewModel(
 
             is ShoppingListDetailIntent.OnEditorFoodSelected -> intent {
                 foodSearch?.cancel()
+                editorFoodName = event.food?.let { chosen -> foodResults.firstOrNull { it.id == chosen.id }?.name }
                 reduce {
                     state.copy(
-                        editor = state.editor?.copy(food = event.food, foodQuery = event.food?.name.orEmpty()),
+                        editor = state.editor?.copy(food = event.food, foodQuery = editorFoodName.orEmpty()),
                         foodSuggestions = emptyList(),
                     )
                 }
@@ -187,7 +191,8 @@ class ShoppingListDetailViewModel(
             }
 
             ShoppingListDetailIntent.OnRenameClicked -> intent {
-                reduce { state.copy(dialog = DetailDialog.Rename(state.name)) }
+                val name = list?.name ?: return@intent
+                reduce { state.copy(dialog = DetailDialog.Rename(name)) }
             }
 
             ShoppingListDetailIntent.OnDeleteListClicked -> intent {
@@ -201,7 +206,7 @@ class ShoppingListDetailViewModel(
             is ShoppingListDetailIntent.OnRenameConfirmed -> intent {
                 reduce { state.copy(dialog = DetailDialog.None) }
                 val name = event.name.trim()
-                if (name.isEmpty() || name == state.name) return@intent
+                if (name.isEmpty() || name == list?.name) return@intent
                 repository.renameList(listId, name).onLeft { postSideEffect(updateFailed()) }
             }
 
@@ -325,6 +330,7 @@ class ShoppingListDetailViewModel(
 
     private fun openEditor(itemId: String) = intent {
         val item = list?.items?.firstOrNull { it.id == itemId } ?: return@intent
+        editorFoodName = item.food?.name
         reduce {
             state.copy(
                 editor = ItemEditorUi(
@@ -348,7 +354,8 @@ class ShoppingListDetailViewModel(
             reduce {
                 val editor = state.editor
                 // Typing over a chosen food un-chooses it, so what's saved matches what's shown.
-                val food = editor?.food?.takeIf { it.name == query }
+                val food = editor?.food?.takeIf { editorFoodName == query }
+                if (food == null) editorFoodName = null
                 state.copy(editor = editor?.copy(foodQuery = query, food = food))
             }
             if (query.isBlank()) {
@@ -397,7 +404,7 @@ class ShoppingListDetailViewModel(
         if (list == null) return this
         val checked = list.items.count { it.checked }
         return copy(
-            name = list.name,
+            name = UiText.Dynamic(list.name),
             remainingCount = list.items.size - checked,
             checkedCount = checked,
             progress = if (list.items.isEmpty()) 0f else checked.toFloat() / list.items.size,

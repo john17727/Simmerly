@@ -5,6 +5,7 @@ import assertk.assertions.containsExactly
 import assertk.assertions.isEqualTo
 import assertk.assertions.isInstanceOf
 import assertk.assertions.isNull
+import dev.juanrincon.simmerly.core.presentation.UiText
 import dev.juanrincon.simmerly.shoppinglists.aFood
 import dev.juanrincon.simmerly.shoppinglists.aLabel
 import dev.juanrincon.simmerly.shoppinglists.aRecipe
@@ -53,7 +54,7 @@ class PresentationMappersTest {
     fun listWithoutRecipesHasAddedByHandFooter() {
         val list = aShoppingList(items = listOf(anItem(note = "Paper towels"), anItem(id = "2", food = aFood(name = "olive oil"))))
         val footer = list.toCardUi().footer as ListCardFooterUi.AddedByHand
-        assertThat(footer.itemNames).containsExactly("Paper towels", "olive oil")
+        assertThat(footer.itemNames).containsExactly(UiText.Dynamic("Paper towels"), UiText.Dynamic("olive oil"))
     }
 
     @Test
@@ -100,10 +101,10 @@ class PresentationMappersTest {
         )
         val sections = list.toSections(ItemGrouping.ByAisle)
         assertThat(sections.map { it.title to it.kind }).containsExactly(
-            "Dairy" to SectionKind.Aisle,
-            "Produce" to SectionKind.Aisle,
-            "Bakery" to SectionKind.Aisle,
-            "" to SectionKind.NoAisle,
+            UiText.Dynamic("Dairy") to SectionKind.Aisle,
+            UiText.Dynamic("Produce") to SectionKind.Aisle,
+            UiText.Dynamic("Bakery") to SectionKind.Aisle,
+            UiText.Dynamic("") to SectionKind.NoAisle,
         )
         // The checked produce item belongs to the checked card, not the aisle.
         assertThat(sections[1].items.map { it.id }).containsExactly("2")
@@ -121,9 +122,9 @@ class PresentationMappersTest {
         )
         val sections = list.toSections(ItemGrouping.ByRecipe)
         assertThat(sections.map { it.title to it.items.map { item -> item.id } }).containsExactly(
-            "Shakshuka" to listOf("2"),
-            "Pancakes" to listOf("1"),
-            "" to listOf("3"),
+            UiText.Dynamic("Shakshuka") to listOf("2"),
+            UiText.Dynamic("Pancakes") to listOf("1"),
+            UiText.Dynamic("") to listOf("3"),
         )
         assertThat(sections.last().kind).isEqualTo(SectionKind.AddedByHand)
     }
@@ -136,31 +137,31 @@ class PresentationMappersTest {
     fun foodItemSplitsQuantityUnitAndPluralFood() {
         val list = aShoppingList()
         val eggs = anItem(quantity = 10.0, food = aFood(name = "egg", pluralName = "eggs"), note = "large").toItemUi(list)
-        assertThat(eggs.quantityText).isEqualTo("10")
-        assertThat(eggs.name).isEqualTo("eggs")
-        assertThat(eggs.note).isEqualTo("large")
+        assertThat(eggs.quantityText).isEqualTo(UiText.Dynamic("10"))
+        assertThat(eggs.name).isEqualTo(UiText.Dynamic("eggs"))
+        assertThat(eggs.note).isEqualTo(UiText.Dynamic("large"))
 
         val ricotta = anItem(quantity = 2.0, unit = aUnit(), food = aFood(name = "ricotta")).toItemUi(list)
-        assertThat(ricotta.quantityText).isEqualTo("2 cups")
-        assertThat(ricotta.name).isEqualTo("ricotta")
+        assertThat(ricotta.quantityText).isEqualTo(UiText.Dynamic("2 cups"))
+        assertThat(ricotta.name).isEqualTo(UiText.Dynamic("ricotta"))
     }
 
     @Test
     fun noteOnlyItemHidesALoneQuantityOfOne() {
         val item = anItem(note = "Paper napkins").toItemUi(aShoppingList())
-        assertThat(item.quantityText).isEqualTo("")
-        assertThat(item.name).isEqualTo("Paper napkins")
+        assertThat(item.quantityText).isEqualTo(UiText.Dynamic(""))
+        assertThat(item.name).isEqualTo(UiText.Dynamic("Paper napkins"))
         assertThat(item.note).isNull()
     }
 
     @Test
     fun attributionNamesRecipeWithMultiplierOrPerRecipeAmounts() {
         val list = aShoppingList(recipes = listOf(aRecipe("a", "Shakshuka"), aRecipe("b", "Pancakes", quantity = 2.0)))
-        assertThat(anItem(recipeRefs = listOf(aRef("a"))).toItemUi(list).attribution).isEqualTo("Shakshuka")
-        assertThat(anItem(recipeRefs = listOf(aRef("b"))).toItemUi(list).attribution).isEqualTo("Pancakes ×2")
+        assertThat(anItem(recipeRefs = listOf(aRef("a"))).toItemUi(list).attribution).isEqualTo(UiText.Dynamic("Shakshuka"))
+        assertThat(anItem(recipeRefs = listOf(aRef("b"))).toItemUi(list).attribution).isEqualTo(UiText.Dynamic("Pancakes ×2"))
         assertThat(
             anItem(recipeRefs = listOf(aRef("a", 6.0), aRef("b", 4.0))).toItemUi(list).attribution
-        ).isEqualTo("Shakshuka (6), Pancakes (4)")
+        ).isEqualTo(UiText.Dynamic("Shakshuka (6), Pancakes (4)"))
     }
 
     @Test
@@ -195,7 +196,7 @@ class PresentationMappersTest {
 
     @Test
     fun foodOptionsCarryTheirAisle() {
-        assertThat(aFood(labelName = "Dairy").toOptionUi().aisle).isEqualTo("Dairy")
+        assertThat(aFood(labelName = "Dairy").toOptionUi().aisle).isEqualTo(UiText.Dynamic("Dairy"))
         assertThat(aFood().toOptionUi().aisle).isNull()
     }
 
