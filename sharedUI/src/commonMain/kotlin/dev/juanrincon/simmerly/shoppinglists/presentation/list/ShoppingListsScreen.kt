@@ -3,6 +3,10 @@ package dev.juanrincon.simmerly.shoppinglists.presentation.list
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.hoverable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsHoveredAsState
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,11 +18,13 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -36,13 +42,11 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.ExtendedFloatingActionButton
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LargeFlexibleTopAppBar
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedCard
@@ -53,11 +57,11 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.adaptive.currentWindowAdaptiveInfoV2
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.TopAppBarScrollBehavior
-import androidx.compose.material3.rememberTopAppBarState
+import androidx.compose.material3.adaptive.currentWindowAdaptiveInfoV2
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
@@ -70,8 +74,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
@@ -308,27 +313,61 @@ private fun FilterRow(selected: ListFilter, onEvent: (ShoppingListsIntent) -> Un
 @Composable
 internal fun FilterChips(selected: ListFilter, onEvent: (ShoppingListsIntent) -> Unit) {
     ListFilter.entries.forEach { filter ->
-        val isSelected = filter == selected
-        FilterChip(
-            selected = isSelected,
-            onClick = { onEvent(ShoppingListsIntent.OnFilterSelected(filter)) },
-            label = {
-                Text(
-                    when (filter) {
-                        ListFilter.Mine -> "Mine"
-                        ListFilter.Household -> "Household"
-                    }
-                )
+        ListFilterChip(
+            label = when (filter) {
+                ListFilter.Mine -> "Mine"
+                ListFilter.Household -> "Household"
             },
-            leadingIcon = if (isSelected) {
-                { Icon(Icons.Rounded.Check, contentDescription = null, modifier = Modifier.size(18.dp)) }
-            } else null,
-            colors = FilterChipDefaults.filterChipColors(
-                selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
-                selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                selectedLeadingIconColor = MaterialTheme.colorScheme.onPrimaryContainer,
-            ),
+            selected = filter == selected,
+            onClick = { onEvent(ShoppingListsIntent.OnFilterSelected(filter)) },
         )
+    }
+}
+
+/**
+ * A filter chip drawn to the design rather than with Material's `FilterChip`, whose hover state
+ * layer renders on desktop as a heavy grey wash with a pale box left behind the label. Hover and
+ * press only tint the chip's own background, like the design's ghost buttons.
+ */
+@Composable
+private fun ListFilterChip(label: String, selected: Boolean, onClick: () -> Unit) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val hovered by interactionSource.collectIsHoveredAsState()
+    val pressed by interactionSource.collectIsPressedAsState()
+    val container = when {
+        selected -> MaterialTheme.colorScheme.primaryContainer
+        pressed -> MaterialTheme.colorScheme.surfaceContainerHigh
+        hovered -> MaterialTheme.colorScheme.surfaceContainer
+        else -> Color.Transparent
+    }
+    val content = if (selected) MaterialTheme.colorScheme.onPrimaryContainer
+    else MaterialTheme.colorScheme.onSurfaceVariant
+    val shape = RoundedCornerShape(8.dp)
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        modifier = Modifier
+            .heightIn(min = 32.dp)
+            .clip(shape)
+            .background(container, shape)
+            .then(
+                if (selected) Modifier
+                else Modifier.border(1.dp, MaterialTheme.colorScheme.outline, shape)
+            )
+            .hoverable(interactionSource)
+            .selectable(
+                selected = selected,
+                interactionSource = interactionSource,
+                indication = null,
+                role = Role.Tab,
+                onClick = onClick,
+            )
+            .padding(start = if (selected) 8.dp else 16.dp, end = 16.dp),
+    ) {
+        if (selected) {
+            Icon(Icons.Rounded.Check, contentDescription = null, tint = content, modifier = Modifier.size(18.dp))
+        }
+        Text(text = label, style = MaterialTheme.typography.labelLarge, color = content)
     }
 }
 
