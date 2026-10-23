@@ -8,6 +8,8 @@ import dev.juanrincon.simmerly.initialload.presentation.di.initialLoadPresentati
 import dev.juanrincon.simmerly.profile.di.profileModule
 import dev.juanrincon.simmerly.recipes.data.di.recipeDataModule
 import dev.juanrincon.simmerly.recipes.presentation.di.recipePresentationModule
+import dev.juanrincon.simmerly.shoppinglists.data.di.shoppingListDataModule
+import dev.juanrincon.simmerly.shoppinglists.presentation.di.shoppingListPresentationModule
 import dev.juanrincon.simmerly.welcome.di.welcomeModule
 import org.koin.core.KoinApplication
 import org.koin.core.context.startKoin
@@ -29,7 +31,9 @@ fun initKoin(appDeclaration: KoinAppDeclaration = {}) {
             recipePresentationModule,
             initialLoadDataModule,
             initialLoadPresentationModule,
-            profileModule
+            profileModule,
+            shoppingListDataModule,
+            shoppingListPresentationModule
         )
     }
 }

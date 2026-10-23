@@ -8,6 +8,8 @@ enum class StringKey {
     MealPlan,
     ShoppingList,
     Profile,
+    ShoppingListLoadFailed,
+    ShoppingListUpdateFailed,
 }
 
 sealed interface UiText {

@@ -11,6 +11,8 @@ extension StringKey {
         case .mealPlan: return "meal_plan"
         case .shoppingList: return "shopping_list"
         case .profile: return "profile"
+        case .shoppingListLoadFailed: return "shopping_list_load_failed"
+        case .shoppingListUpdateFailed: return "shopping_list_update_failed"
         }
     }
 }

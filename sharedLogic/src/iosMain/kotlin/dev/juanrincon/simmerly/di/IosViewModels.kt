@@ -10,6 +10,8 @@ import dev.juanrincon.simmerly.recipes.presentation.cookmode.CookModeViewModel
 import dev.juanrincon.simmerly.recipes.presentation.details.RecipeDetailsViewModel
 import dev.juanrincon.simmerly.recipes.presentation.list.RecipeListViewModel
 import dev.juanrincon.simmerly.recipes.presentation.search.RecipeSearchViewModel
+import dev.juanrincon.simmerly.shoppinglists.presentation.detail.ShoppingListDetailViewModel
+import dev.juanrincon.simmerly.shoppinglists.presentation.list.ShoppingListsViewModel
 import dev.juanrincon.simmerly.welcome.presentation.WelcomeViewModel
 import org.koin.core.parameter.parametersOf
 
@@ -51,4 +53,9 @@ object SimmerlyViewModels {
     fun profile(): ProfileViewModel = track(simmerlyKoin.koin.get())
 
     fun initialLoad(): InitialLoadViewModel = track(simmerlyKoin.koin.get())
+
+    fun shoppingLists(): ShoppingListsViewModel = track(simmerlyKoin.koin.get())
+
+    fun shoppingListDetail(listId: String): ShoppingListDetailViewModel =
+        track(simmerlyKoin.koin.get { parametersOf(listId) })
 }

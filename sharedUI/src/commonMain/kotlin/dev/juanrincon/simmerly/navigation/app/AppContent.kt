@@ -27,6 +27,7 @@ import coil3.compose.SubcomposeAsyncImage
 import dev.juanrincon.simmerly.core.presentation.asString
 import dev.juanrincon.simmerly.profile.presentation.ProfileViewModel
 import dev.juanrincon.simmerly.recipes.presentation.RecipesContent
+import dev.juanrincon.simmerly.shoppinglists.presentation.ShoppingListsContent
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
@@ -36,14 +37,20 @@ fun AppContent(
 ) {
     var currentDestination by rememberSaveable { mutableStateOf(AppDestinations.RECIPES) }
     var isAtRecipesRoot by rememberSaveable { mutableStateOf(true) }
+    var isAtShoppingListsRoot by rememberSaveable { mutableStateOf(true) }
     val user by profileViewModel.user.collectAsState()
     val baseNavSuiteType =
         NavigationSuiteScaffoldDefaults.navigationSuiteType(currentWindowAdaptiveInfoV2())
-    // Drilling into a recipe should hide the *bottom bar* on a phone, where the detail screen owns
-    // the whole window — but never the rail, which the design keeps alongside the open recipe.
+    // Drilling into a recipe or a list should hide the *bottom bar* on a phone, where the detail
+    // screen owns the whole window — but never the rail, which the design keeps alongside it.
     val isRail = baseNavSuiteType in RAIL_TYPES
+    val isAtTabRoot = when (currentDestination) {
+        AppDestinations.RECIPES -> isAtRecipesRoot
+        AppDestinations.SHOPPING_LIST -> isAtShoppingListsRoot
+        else -> true
+    }
     val effectiveNavSuiteType =
-        if (!isAtRecipesRoot && !isRail) NavigationSuiteType.None else baseNavSuiteType
+        if (!isAtTabRoot && !isRail) NavigationSuiteType.None else baseNavSuiteType
     val saveableStateHolder = rememberSaveableStateHolder()
     NavigationSuiteScaffold(
         modifier = modifier,
@@ -102,9 +109,10 @@ fun AppContent(
                     Text(destination.label.asString())
                 }
 
-                AppDestinations.SHOPPING_LIST -> {
-                    Text(destination.label.asString())
-                }
+                AppDestinations.SHOPPING_LIST -> ShoppingListsContent(
+                    onAtRootChanged = { isAtShoppingListsRoot = it },
+                    modifier = Modifier.fillMaxSize()
+                )
 
                 AppDestinations.PROFILE -> {
                     Text(destination.label.asString())

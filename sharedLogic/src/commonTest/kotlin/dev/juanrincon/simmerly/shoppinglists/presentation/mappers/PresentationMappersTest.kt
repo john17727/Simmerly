@@ -1,0 +1,204 @@
+package dev.juanrincon.simmerly.shoppinglists.presentation.mappers
+
+import assertk.assertThat
+import assertk.assertions.containsExactly
+import assertk.assertions.isEqualTo
+import assertk.assertions.isInstanceOf
+import assertk.assertions.isNull
+import dev.juanrincon.simmerly.core.presentation.UiText
+import dev.juanrincon.simmerly.shoppinglists.aFood
+import dev.juanrincon.simmerly.shoppinglists.aLabel
+import dev.juanrincon.simmerly.shoppinglists.aRecipe
+import dev.juanrincon.simmerly.shoppinglists.aRef
+import dev.juanrincon.simmerly.shoppinglists.aShoppingList
+import dev.juanrincon.simmerly.shoppinglists.aUnit
+import dev.juanrincon.simmerly.shoppinglists.anItem
+import dev.juanrincon.simmerly.shoppinglists.presentation.detail.models.ItemGrouping
+import dev.juanrincon.simmerly.shoppinglists.presentation.detail.models.SectionKind
+import dev.juanrincon.simmerly.shoppinglists.presentation.list.models.ListCardFooterUi
+import kotlin.test.Test
+
+class PresentationMappersTest {
+
+    // region Card footers
+
+    @Test
+    fun listWithoutItemsHasEmptyFooter() {
+        assertThat(aShoppingList().toCardUi().footer).isEqualTo(ListCardFooterUi.Empty)
+    }
+
+    @Test
+    fun listWithOnlyOneRecipesItemsHasOneRecipeFooter() {
+        val list = aShoppingList(
+            items = List(3) { anItem(id = "i$it", recipeRefs = listOf(aRef())) },
+            recipes = listOf(aRecipe(quantity = 2.0)),
+        )
+        val footer = list.toCardUi().footer as ListCardFooterUi.OneRecipe
+        assertThat(footer.itemCount).isEqualTo(3)
+        assertThat(footer.quantity).isEqualTo(2)
+    }
+
+    @Test
+    fun listWithSeveralRecipesOnlyHasSeveralRecipesFooterCappedAtThreeAvatars() {
+        val recipes = List(4) { aRecipe(id = "r$it", name = "Recipe $it") }
+        val list = aShoppingList(
+            items = recipes.map { anItem(id = it.recipeId, recipeRefs = listOf(aRef(it.recipeId))) },
+            recipes = recipes,
+        )
+        val footer = list.toCardUi().footer as ListCardFooterUi.SeveralRecipes
+        assertThat(footer.recipes.size).isEqualTo(3)
+        assertThat(footer.recipeCount).isEqualTo(4)
+    }
+
+    @Test
+    fun listWithoutRecipesHasAddedByHandFooter() {
+        val list = aShoppingList(items = listOf(anItem(note = "Paper towels"), anItem(id = "2", food = aFood(name = "olive oil"))))
+        val footer = list.toCardUi().footer as ListCardFooterUi.AddedByHand
+        assertThat(footer.itemNames).containsExactly(UiText.Dynamic("Paper towels"), UiText.Dynamic("olive oil"))
+    }
+
+    @Test
+    fun mixedListHasRecipesAndExtrasFooterWithCounts() {
+        val list = aShoppingList(
+            items = listOf(
+                anItem(id = "1", recipeRefs = listOf(aRef())),
+                anItem(id = "2", recipeRefs = listOf(aRef())),
+                anItem(id = "3", note = "Napkins"),
+            ),
+            recipes = listOf(aRecipe()),
+        )
+        val footer = list.toCardUi().footer as ListCardFooterUi.RecipesAndExtras
+        assertThat(footer.fromRecipesCount).isEqualTo(2)
+        assertThat(footer.byHandCount).isEqualTo(1)
+    }
+
+    @Test
+    fun cardProgressIsShareOfCheckedItems() {
+        val list = aShoppingList(items = listOf(anItem(id = "1", checked = true), anItem(id = "2"), anItem(id = "3"), anItem(id = "4")))
+        val card = list.toCardUi()
+        assertThat(card.checkedCount).isEqualTo(1)
+        assertThat(card.progress).isEqualTo(0.25f)
+    }
+
+    // endregion
+
+    // region Sections
+
+    @Test
+    fun aisleSectionsFollowListLabelOrderThenNameWithNoAisleLast() {
+        val produce = aLabel("produce", "Produce")
+        val dairy = aLabel("dairy", "Dairy")
+        val bakery = aLabel("bakery", "Bakery")
+        val list = aShoppingList(
+            items = listOf(
+                anItem(id = "1", note = "loose", position = 0),
+                anItem(id = "2", label = produce, position = 1),
+                anItem(id = "3", label = bakery, position = 2),
+                anItem(id = "4", label = dairy, position = 3),
+                anItem(id = "5", label = produce, checked = true, position = 4),
+            ),
+            labelOrder = listOf("dairy", "produce"),
+        )
+        val sections = list.toSections(ItemGrouping.ByAisle)
+        assertThat(sections.map { it.title to it.kind }).containsExactly(
+            UiText.Dynamic("Dairy") to SectionKind.Aisle,
+            UiText.Dynamic("Produce") to SectionKind.Aisle,
+            UiText.Dynamic("Bakery") to SectionKind.Aisle,
+            UiText.Dynamic("") to SectionKind.NoAisle,
+        )
+        // The checked produce item belongs to the checked card, not the aisle.
+        assertThat(sections[1].items.map { it.id }).containsExactly("2")
+    }
+
+    @Test
+    fun recipeSectionsPutEachItemUnderItsFirstRecipeAndHandAddedLast() {
+        val list = aShoppingList(
+            items = listOf(
+                anItem(id = "1", recipeRefs = listOf(aRef("b"), aRef("a"))),
+                anItem(id = "2", recipeRefs = listOf(aRef("a"))),
+                anItem(id = "3", note = "Napkins"),
+            ),
+            recipes = listOf(aRecipe("a", "Shakshuka"), aRecipe("b", "Pancakes")),
+        )
+        val sections = list.toSections(ItemGrouping.ByRecipe)
+        assertThat(sections.map { it.title to it.items.map { item -> item.id } }).containsExactly(
+            UiText.Dynamic("Shakshuka") to listOf("2"),
+            UiText.Dynamic("Pancakes") to listOf("1"),
+            UiText.Dynamic("") to listOf("3"),
+        )
+        assertThat(sections.last().kind).isEqualTo(SectionKind.AddedByHand)
+    }
+
+    // endregion
+
+    // region Item text
+
+    @Test
+    fun foodItemSplitsQuantityUnitAndPluralFood() {
+        val list = aShoppingList()
+        val eggs = anItem(quantity = 10.0, food = aFood(name = "egg", pluralName = "eggs"), note = "large").toItemUi(list)
+        assertThat(eggs.quantityText).isEqualTo(UiText.Dynamic("10"))
+        assertThat(eggs.name).isEqualTo(UiText.Dynamic("eggs"))
+        assertThat(eggs.note).isEqualTo(UiText.Dynamic("large"))
+
+        val ricotta = anItem(quantity = 2.0, unit = aUnit(), food = aFood(name = "ricotta")).toItemUi(list)
+        assertThat(ricotta.quantityText).isEqualTo(UiText.Dynamic("2 cups"))
+        assertThat(ricotta.name).isEqualTo(UiText.Dynamic("ricotta"))
+    }
+
+    @Test
+    fun noteOnlyItemHidesALoneQuantityOfOne() {
+        val item = anItem(note = "Paper napkins").toItemUi(aShoppingList())
+        assertThat(item.quantityText).isEqualTo(UiText.Dynamic(""))
+        assertThat(item.name).isEqualTo(UiText.Dynamic("Paper napkins"))
+        assertThat(item.note).isNull()
+    }
+
+    @Test
+    fun attributionNamesRecipeWithMultiplierOrPerRecipeAmounts() {
+        val list = aShoppingList(recipes = listOf(aRecipe("a", "Shakshuka"), aRecipe("b", "Pancakes", quantity = 2.0)))
+        assertThat(anItem(recipeRefs = listOf(aRef("a"))).toItemUi(list).attribution).isEqualTo(UiText.Dynamic("Shakshuka"))
+        assertThat(anItem(recipeRefs = listOf(aRef("b"))).toItemUi(list).attribution).isEqualTo(UiText.Dynamic("Pancakes ×2"))
+        assertThat(
+            anItem(recipeRefs = listOf(aRef("a", 6.0), aRef("b", 4.0))).toItemUi(list).attribution
+        ).isEqualTo(UiText.Dynamic("Shakshuka (6), Pancakes (4)"))
+    }
+
+    @Test
+    fun formatQuantityUsesWholeNumbersCommonFractionsOrDecimals() {
+        assertThat(formatQuantity(2.0)).isEqualTo("2")
+        assertThat(formatQuantity(1.5)).isEqualTo("1½")
+        assertThat(formatQuantity(1.0 / 3)).isEqualTo("⅓")
+        assertThat(formatQuantity(1.15)).isEqualTo("1.15")
+        assertThat(formatEditableQuantity(0.5)).isEqualTo("0.5")
+    }
+
+    @Test
+    fun cardFooterTypeForAllRecipeItemsWithSingleRecipeIsOneRecipe() {
+        val list = aShoppingList(items = listOf(anItem(recipeRefs = listOf(aRef()))), recipes = listOf(aRecipe()))
+        assertThat(list.toCardUi().footer).isInstanceOf(ListCardFooterUi.OneRecipe::class)
+    }
+
+    // endregion
+
+    // region Add-item search
+
+    @Test
+    fun addItemQueryStripsLeadingQuantityAndKnownUnit() {
+        val units = listOf(aUnit(name = "cup", pluralName = "cups"), aUnit(id = "lb", name = "pound").copy(abbreviation = "lb"))
+        assertThat(addItemQuery("2 cups mil", units)).isEqualTo(AddItemQuery("mil", hasExtras = true))
+        assertThat(addItemQuery("1 1/2 lb. chicken thighs", units)).isEqualTo(AddItemQuery("chicken thighs", hasExtras = true))
+        assertThat(addItemQuery("½ onion", units)).isEqualTo(AddItemQuery("onion", hasExtras = true))
+        assertThat(addItemQuery(" milk ", units)).isEqualTo(AddItemQuery("milk", hasExtras = false))
+        // An unknown word after the quantity is part of the food, not a unit.
+        assertThat(addItemQuery("3 ripe bananas", units)).isEqualTo(AddItemQuery("ripe bananas", hasExtras = true))
+    }
+
+    @Test
+    fun foodOptionsCarryTheirAisle() {
+        assertThat(aFood(labelName = "Dairy").toOptionUi().aisle).isEqualTo(UiText.Dynamic("Dairy"))
+        assertThat(aFood().toOptionUi().aisle).isNull()
+    }
+
+    // endregion
+}
