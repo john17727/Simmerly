@@ -1,9 +1,12 @@
 import SwiftUI
 import Shared
 
-/// The pinned field for adding items. Mirrors shoppinglists/presentation/detail/AddItemBar.kt:
+/// The add-item field while it's being typed into. Mirrors shoppinglists/presentation/detail/AddItemBar.kt:
 /// free text is resolved by the ViewModel (suggestion, exact match, parser, or plain note), so this
 /// only reports typing, focus and submits.
+///
+/// At rest the field is a stand-in in the tab view's bottom accessory (`AddItemAccessory`), which
+/// the keyboard covers; tapping it brings this bar up just above the keyboard instead.
 struct AddItemBar: View {
     @Binding var text: String
     let isAdding: Bool
@@ -11,66 +14,100 @@ struct AddItemBar: View {
     let onSubmit: () -> Void
 
     var body: some View {
-        VStack(spacing: 0) {
-            Rectangle().fill(SimmerlyColor.outlineVariant).frame(height: 1)
-            HStack(spacing: 8) {
-                HStack(spacing: 4) {
-                    TextField("Add an item, like 2 lb chicken thighs", text: $text)
-                        .font(SimmerlyFont.bodyLarge)
-                        .textInputAutocapitalization(.sentences)
-                        .submitLabel(.done)
-                        .focused(focused)
-                        .onSubmit(onSubmit)
-                        .accessibilityLabel("Add an item")
-                    if !text.isEmpty {
-                        Button {
-                            text = ""
-                        } label: {
-                            Image(systemName: "xmark")
-                                .font(.system(size: 14, weight: .medium))
-                                .foregroundStyle(SimmerlyColor.onSurfaceVariant)
-                                .frame(width: 40, height: 40)
-                        }
-                        .buttonStyle(.plain)
-                        .accessibilityLabel("Clear")
-                    }
-                }
-                .padding(.leading, 20)
-                .padding(.trailing, 4)
-                .frame(height: 48)
-                .background(SimmerlyColor.surfaceContainer, in: Capsule())
-                .overlay(
-                    Capsule().strokeBorder(
-                        focused.wrappedValue ? SimmerlyColor.primary : Color.clear,
-                        lineWidth: 2
-                    )
-                )
-                Button(action: onSubmit) {
-                    Group {
-                        if isAdding {
-                            ProgressView().tint(SimmerlyColor.onPrimaryContainer)
-                        } else {
-                            Image(systemName: "plus").font(.system(size: 20, weight: .medium))
-                        }
-                    }
-                    .foregroundStyle(SimmerlyColor.onPrimaryContainer)
-                    .frame(width: 48, height: 48)
-                    .background(SimmerlyColor.primaryContainer, in: Circle())
-                    .opacity(canSubmit ? 1 : 0.5)
-                }
-                .buttonStyle(.plain)
-                .disabled(!canSubmit)
-                .accessibilityLabel("Add item")
-            }
-            .padding(.horizontal, 16)
-            .padding(.top, 12)
-            .padding(.bottom, 12)
+        KeyboardEditingBar {
+            EditingField(
+                systemImage: "plus.circle",
+                placeholder: "Add an item, like 2 lb chicken thighs",
+                text: $text,
+                focused: focused,
+                submitLabel: .done,
+                onSubmit: onSubmit
+            )
+            AddButton(isAdding: isAdding, isEnabled: canSubmit, action: onSubmit)
         }
-        .background(SimmerlyColor.background)
     }
 
     private var canSubmit: Bool {
         !text.trimmingCharacters(in: .whitespaces).isEmpty && !isAdding
+    }
+}
+
+/// The lists overview's search field while it's being typed into; see `AddItemBar`.
+struct SearchEditingBar: View {
+    @Binding var query: String
+    var focused: FocusState<Bool>.Binding
+
+    var body: some View {
+        KeyboardEditingBar {
+            EditingField(
+                systemImage: "magnifyingglass",
+                placeholder: "Search lists",
+                text: $query,
+                focused: focused,
+                submitLabel: .search,
+                onSubmit: { focused.wrappedValue = false }
+            )
+            Button("Done") { focused.wrappedValue = false }
+                .font(SimmerlyFont.labelLarge)
+                .foregroundStyle(SimmerlyColor.onPrimaryContainer)
+                .padding(.horizontal, 12)
+                .frame(maxHeight: .infinity)
+        }
+    }
+}
+
+/// The row that sits on top of the keyboard while one of the accessory's fields is being edited.
+private struct KeyboardEditingBar<Content: View>: View {
+    @ViewBuilder let content: Content
+
+    var body: some View {
+        HStack(spacing: 8) { content }
+            .frame(height: 48)
+            .padding(.horizontal, 16)
+            .padding(.vertical, 8)
+            .background(SimmerlyColor.background)
+    }
+}
+
+/// A rounded field with a coral ring while focused and a clear button once there's text.
+private struct EditingField: View {
+    let systemImage: String
+    let placeholder: String
+    @Binding var text: String
+    var focused: FocusState<Bool>.Binding
+    let submitLabel: SubmitLabel
+    let onSubmit: () -> Void
+
+    var body: some View {
+        HStack(spacing: 8) {
+            Image(systemName: systemImage)
+                .foregroundStyle(SimmerlyColor.onSurfaceVariant)
+                .accessibilityHidden(true)
+            TextField(placeholder, text: $text)
+                .font(SimmerlyFont.bodyLarge)
+                .textInputAutocapitalization(.sentences)
+                .submitLabel(submitLabel)
+                .focused(focused)
+                .onSubmit(onSubmit)
+            if !text.isEmpty {
+                Button {
+                    text = ""
+                } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .foregroundStyle(SimmerlyColor.onSurfaceVariant)
+                        .frame(width: 36, height: 36)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Clear")
+            }
+        }
+        .padding(.leading, 16)
+        .padding(.trailing, 4)
+        .frame(maxHeight: .infinity)
+        .background(SimmerlyColor.surfaceContainer, in: Capsule())
+        .overlay(
+            Capsule().strokeBorder(focused.wrappedValue ? SimmerlyColor.primary : Color.clear, lineWidth: 2)
+        )
     }
 }
 

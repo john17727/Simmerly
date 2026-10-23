@@ -2,20 +2,19 @@ import SwiftUI
 import Shared
 
 /// Mirrors shoppinglists/presentation/detail/ShoppingListDetailScreen.kt: the list name as a large
-/// title, the progress summary, linked recipes, collapsible aisle or recipe sections, the checked
-/// card and the pinned add-item bar.
+/// title, the progress summary, linked recipes, collapsible aisle or recipe sections and the
+/// checked card. The add-item field lives in the tab view's bottom accessory (`AddItemAccessory`);
+/// this screen only shows its matching-ingredients card.
 struct ShoppingListDetailView: View {
     let state: ShoppingListDetailState
-    @Binding var addText: String
+    /// Whether the add-item field is open above the keyboard.
+    let addFieldFocused: Bool
     @Binding var snackbar: SnackbarMessage?
     let onEvent: (ShoppingListDetailIntent) -> Void
-
-    @FocusState private var addFieldFocused: Bool
     @State private var scrollPosition = ScrollPosition(edge: .top)
     @State private var isScrolledDown = false
     @State private var renameDraft = ""
 
-    private var showSuggestions: Bool { addFieldFocused && !state.addSuggestions.isEmpty }
 
     var body: some View {
         content
@@ -124,7 +123,8 @@ struct ShoppingListDetailView: View {
         }
         .refreshable { onEvent(ShoppingListDetailIntentOnRefresh.shared) }
         .overlay(alignment: .bottomTrailing) {
-            if isScrolledDown && !showSuggestions {
+            // Hidden while the add-item field is open, so it doesn't crowd the keyboard.
+            if isScrolledDown && !addFieldFocused {
                 ScrollToTopButton { withAnimation { scrollPosition.scrollTo(edge: .top) } }
                     .padding(.trailing, 16)
                     // Sits above the snackbar while one is showing, as in the design.
@@ -135,25 +135,7 @@ struct ShoppingListDetailView: View {
         .animation(.snappy, value: isScrolledDown)
         .animation(.snappy, value: snackbar)
         .snackbar($snackbar)
-        .safeAreaInset(edge: .bottom, spacing: 0) {
-            VStack(spacing: 8) {
-                if showSuggestions {
-                    AddItemSuggestions(
-                        suggestions: state.addSuggestions,
-                        query: state.addSuggestionQuery,
-                        highlightedId: state.addHighlightedId,
-                        onPicked: { onEvent(ShoppingListDetailIntentOnAddSuggestionPicked(food: $0)) }
-                    )
-                    .padding(.horizontal, 16)
-                }
-                AddItemBar(
-                    text: $addText,
-                    isAdding: state.isAdding,
-                    focused: $addFieldFocused,
-                    onSubmit: { onEvent(ShoppingListDetailIntentOnAddItemSubmitted.shared) }
-                )
-            }
-        }
+
     }
 
     private var summary: some View {
@@ -652,7 +634,7 @@ private func previewState(collapsed: Set<String> = [], empty: Bool = false) -> S
 #Preview("List") {
     NavigationStack {
         ShoppingListDetailView(
-            state: previewState(), addText: .constant(""), snackbar: .constant(nil), onEvent: { _ in }
+            state: previewState(), addFieldFocused: false, snackbar: .constant(nil), onEvent: { _ in }
         )
     }
 }
@@ -660,7 +642,7 @@ private func previewState(collapsed: Set<String> = [], empty: Bool = false) -> S
 #Preview("Collapsed") {
     NavigationStack {
         ShoppingListDetailView(
-            state: previewState(collapsed: ["produce"]), addText: .constant(""), snackbar: .constant(nil),
+            state: previewState(collapsed: ["produce"]), addFieldFocused: false, snackbar: .constant(nil),
             onEvent: { _ in }
         )
     }
@@ -669,7 +651,7 @@ private func previewState(collapsed: Set<String> = [], empty: Bool = false) -> S
 #Preview("Empty") {
     NavigationStack {
         ShoppingListDetailView(
-            state: previewState(empty: true), addText: .constant(""), snackbar: .constant(nil), onEvent: { _ in }
+            state: previewState(empty: true), addFieldFocused: false, snackbar: .constant(nil), onEvent: { _ in }
         )
     }
 }

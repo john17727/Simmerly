@@ -2,11 +2,10 @@ import SwiftUI
 import Shared
 
 /// Mirrors shoppinglists/presentation/list/ShoppingListsScreen.kt: the large "Shopping lists"
-/// title (which collapses into the bar on scroll natively), Mine / Household chips, list cards and
-/// the floating "New list" button.
+/// title (which collapses into the bar on scroll natively), Mine / Household chips and list cards.
+/// Search and "New list" live in the tab view's bottom accessory (`ShoppingListsAccessory`).
 struct ShoppingListsView: View {
     let state: ShoppingListsState
-    @Binding var query: String
     let onEvent: (ShoppingListsIntent) -> Void
 
     /// The name being typed into the create or rename alert.
@@ -15,9 +14,6 @@ struct ShoppingListsView: View {
     var body: some View {
         content
             .navigationTitle("Shopping lists")
-            .searchable(text: $query, prompt: "Search lists")
-            // Stays above the tab bar rather than riding up with the keyboard behind an alert.
-            .overlay(alignment: .bottomTrailing) { newListButton.ignoresSafeArea(.keyboard) }
             .alert(dialogTitle, isPresented: nameDialogPresented) {
                 TextField("List name", text: $nameDraft)
                     .textInputAutocapitalization(.sentences)
@@ -68,8 +64,7 @@ struct ShoppingListsView: View {
                 }
             }
             .padding(.horizontal, 16)
-            // Clears the floating button so the last card stays reachable.
-            .padding(.bottom, 88)
+            .padding(.bottom, 16)
         }
         .refreshable { onEvent(ShoppingListsIntentOnRefresh.shared) }
     }
@@ -85,25 +80,6 @@ struct ShoppingListsView: View {
             }
         }
         .padding(.top, 4)
-    }
-
-    private var newListButton: some View {
-        Button {
-            onEvent(ShoppingListsIntentOnNewListClicked.shared)
-        } label: {
-            Label("New list", systemImage: "plus")
-                .font(SimmerlyFont.titleSmall)
-                .padding(.leading, 16)
-                .padding(.trailing, 20)
-                .frame(height: 56)
-                .foregroundStyle(SimmerlyColor.onPrimaryContainer)
-                .background {
-                    RoundedRectangle(cornerRadius: 16)
-                        .fill(SimmerlyColor.primaryContainer)
-                        .shadow(color: .black.opacity(0.12), radius: 4, y: 2)
-                }
-        }
-        .padding(16)
     }
 
     // MARK: - Empty state
@@ -271,18 +247,18 @@ private func previewState(lists: [ShoppingListCardUi]?) -> ShoppingListsState {
 
 #Preview("Lists") {
     NavigationStack {
-        ShoppingListsView(state: previewState(lists: previewLists), query: .constant(""), onEvent: { _ in })
+        ShoppingListsView(state: previewState(lists: previewLists), onEvent: { _ in })
     }
 }
 
 #Preview("Empty") {
     NavigationStack {
-        ShoppingListsView(state: previewState(lists: []), query: .constant(""), onEvent: { _ in })
+        ShoppingListsView(state: previewState(lists: []), onEvent: { _ in })
     }
 }
 
 #Preview("Loading") {
     NavigationStack {
-        ShoppingListsView(state: previewState(lists: nil), query: .constant(""), onEvent: { _ in })
+        ShoppingListsView(state: previewState(lists: nil), onEvent: { _ in })
     }
 }

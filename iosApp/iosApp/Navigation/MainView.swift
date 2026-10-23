@@ -52,17 +52,40 @@ struct MainView: View {
         // the owning screen publishes through TabAccessoryModel. `isEnabled` is what hides the
         // accessory — an empty body still leaves the container's glass capsule behind — and it
         // keeps the modifier attached, so the accessory animates in and out instead of popping.
-        .tabViewBottomAccessory(isEnabled: startCooking != nil) {
-            if let startCooking {
-                StartCookingAccessory(action: startCooking)
+        .tabViewBottomAccessory(isEnabled: accessoryContent != nil) {
+            switch accessoryContent {
+            case .startCooking(let action):
+                StartCookingAccessory(action: action)
+            case .shoppingLists:
+                ShoppingListsAccessory(model: accessory)
+            case .addItem:
+                AddItemAccessory(model: accessory)
+            case nil:
+                EmptyView()
             }
         }
         .task { await model.activate() }
     }
 
-    /// Only the Recipes tab publishes an accessory today, and the other tabs keep their state alive
-    /// while backgrounded — so gate on the selection here rather than expecting them to clear it.
-    private var startCooking: (() -> Void)? {
-        selectedTab == .recipes ? accessory.startCooking : nil
+    /// Tabs keep their state alive while backgrounded, so gate on the selection here rather than
+    /// expecting them to clear what they published.
+    private var accessoryContent: AccessoryContent? {
+        switch selectedTab {
+        case .recipes:
+            return accessory.startCooking.map { .startCooking($0) }
+        case .shoppingList:
+            // A list's add-item bar wins over the overview's while the list is pushed on top.
+            if accessory.addItem != nil { return .addItem }
+            if accessory.shoppingLists != nil { return .shoppingLists }
+            return nil
+        case .mealPlan, .profile:
+            return nil
+        }
     }
+}
+
+private enum AccessoryContent {
+    case startCooking(() -> Void)
+    case shoppingLists
+    case addItem
 }
