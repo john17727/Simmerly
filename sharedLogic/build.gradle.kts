@@ -45,6 +45,12 @@ kotlin {
 
     jvm()
 
+    compilerOptions {
+        // Room's generated SimmerlyDatabaseConstructor is an `expect object` with per-target
+        // `actual`s, and expect/actual classes are still Beta (KT-61573).
+        freeCompilerArgs.add("-Xexpect-actual-classes")
+    }
+
     sourceSets {
         androidMain.dependencies {
             // Ktor
