@@ -51,6 +51,9 @@ class ShoppingListDetailViewModel(
     private var addResults: List<ShoppingFood> = emptyList()
     private var addSearch: Job? = null
 
+    /** The items the last Check all checked, so Undo unchecks exactly those. */
+    private var lastCheckedAll: Set<String> = emptySet()
+
     override val container: OrbitContainer<ShoppingListDetailState, ShoppingListDetailState, ShoppingListDetailSideEffect> =
         orbitContainer(initialState = ShoppingListDetailState()) {
             observeList()
@@ -77,6 +80,24 @@ class ShoppingListDetailViewModel(
             ShoppingListDetailIntent.OnUncheckAllClicked -> intent {
                 val checked = list?.items.orEmpty().filter { it.checked }.map { it.id }.toSet()
                 repository.setChecked(listId, checked, false).onLeft { postSideEffect(updateFailed()) }
+            }
+
+            ShoppingListDetailIntent.OnCheckAllClicked -> intent {
+                val unchecked = list?.items.orEmpty().filterNot { it.checked }.map { it.id }.toSet()
+                if (unchecked.isEmpty()) return@intent
+                repository.setChecked(listId, unchecked, true).fold(
+                    ifLeft = { postSideEffect(updateFailed()) },
+                    ifRight = {
+                        lastCheckedAll = unchecked
+                        postSideEffect(ShoppingListDetailSideEffect.ShowCheckedAll(unchecked.size))
+                    }
+                )
+            }
+
+            ShoppingListDetailIntent.OnUndoCheckAllClicked -> intent {
+                val ids = lastCheckedAll.takeIf { it.isNotEmpty() } ?: return@intent
+                lastCheckedAll = emptySet()
+                repository.setChecked(listId, ids, false).onLeft { postSideEffect(updateFailed()) }
             }
 
             ShoppingListDetailIntent.OnDeleteCheckedClicked -> intent {

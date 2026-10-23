@@ -8,6 +8,8 @@ sealed interface ShoppingListDetailIntent {
     data class OnGroupingSelected(val grouping: ItemGrouping) : ShoppingListDetailIntent
     data class OnItemCheckedChanged(val itemId: String, val checked: Boolean) : ShoppingListDetailIntent
     data object OnUncheckAllClicked : ShoppingListDetailIntent
+    data object OnCheckAllClicked : ShoppingListDetailIntent
+    data object OnUndoCheckAllClicked : ShoppingListDetailIntent
     data object OnDeleteCheckedClicked : ShoppingListDetailIntent
     data object OnCheckedExpandedToggled : ShoppingListDetailIntent
     data class OnSectionToggled(val sectionKey: String) : ShoppingListDetailIntent

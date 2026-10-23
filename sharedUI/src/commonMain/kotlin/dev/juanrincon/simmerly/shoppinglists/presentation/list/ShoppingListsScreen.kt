@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -35,6 +34,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
@@ -42,6 +42,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LargeFlexibleTopAppBar
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedCard
@@ -51,6 +52,10 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.TopAppBarScrollBehavior
+import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -64,6 +69,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -126,8 +132,17 @@ private fun Content(
     snackbarHostState: SnackbarHostState,
     modifier: Modifier = Modifier,
 ) {
+    val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
     Scaffold(
-        modifier = modifier,
+        modifier = modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+        topBar = {
+            TopBar(
+                isSearching = state.isSearching,
+                query = state.query,
+                scrollBehavior = scrollBehavior,
+                onEvent = onEvent,
+            )
+        },
         snackbarHost = { SnackbarHost(snackbarHostState) },
         floatingActionButton = {
             ExtendedFloatingActionButton(
@@ -140,11 +155,6 @@ private fun Content(
         },
     ) { padding ->
         Column(modifier = Modifier.fillMaxSize().padding(padding)) {
-            Header(
-                isSearching = state.isSearching,
-                query = state.query,
-                onEvent = onEvent,
-            )
             FilterRow(selected = state.filter, onEvent = onEvent)
             PullToRefreshBox(
                 isRefreshing = state.isLoading && state.allLists != null,
@@ -207,54 +217,59 @@ private fun Content(
     }
 }
 
+/**
+ * "Shopping lists" as a large title that collapses into the bar on scroll, like Recipes. Searching
+ * swaps it for a regular bar holding the search field.
+ */
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-private fun Header(
+private fun TopBar(
     isSearching: Boolean,
     query: String,
+    scrollBehavior: TopAppBarScrollBehavior,
     onEvent: (ShoppingListsIntent) -> Unit,
 ) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(4.dp),
-        modifier = Modifier
-            .fillMaxWidth()
-            .heightIn(min = 64.dp)
-            .padding(start = 16.dp, end = 4.dp, top = 8.dp, bottom = 8.dp),
-    ) {
-        if (isSearching) {
-            val focusRequester = remember { FocusRequester() }
-            LaunchedEffect(Unit) { focusRequester.requestFocus() }
-            TextField(
-                value = query,
-                onValueChange = { onEvent(ShoppingListsIntent.OnQueryChanged(it)) },
-                placeholder = { Text("Search lists") },
-                singleLine = true,
-                shape = CircleShape,
-                colors = TextFieldDefaults.colors(
-                    focusedIndicatorColor = MaterialTheme.colorScheme.surfaceContainer,
-                    unfocusedIndicatorColor = MaterialTheme.colorScheme.surfaceContainer,
-                    focusedContainerColor = MaterialTheme.colorScheme.surfaceContainer,
-                    unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainer,
-                ),
-                modifier = Modifier.weight(1f).focusRequester(focusRequester),
-            )
-            IconButton(onClick = { onEvent(ShoppingListsIntent.OnSearchToggled) }) {
-                Icon(Icons.Rounded.Close, contentDescription = "Close search")
-            }
-        } else {
-            Text(
-                text = "Shopping lists",
-                style = MaterialTheme.typography.headlineMedium,
-                modifier = Modifier.weight(1f),
-            )
-            IconButton(onClick = { onEvent(ShoppingListsIntent.OnSearchToggled) }) {
-                Icon(
-                    Icons.Rounded.Search,
-                    contentDescription = "Search lists",
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+    if (isSearching) {
+        val focusRequester = remember { FocusRequester() }
+        LaunchedEffect(Unit) { focusRequester.requestFocus() }
+        TopAppBar(
+            title = {
+                TextField(
+                    value = query,
+                    onValueChange = { onEvent(ShoppingListsIntent.OnQueryChanged(it)) },
+                    placeholder = { Text("Search lists") },
+                    singleLine = true,
+                    shape = CircleShape,
+                    colors = TextFieldDefaults.colors(
+                        focusedIndicatorColor = MaterialTheme.colorScheme.surfaceContainer,
+                        unfocusedIndicatorColor = MaterialTheme.colorScheme.surfaceContainer,
+                        focusedContainerColor = MaterialTheme.colorScheme.surfaceContainer,
+                        unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainer,
+                    ),
+                    modifier = Modifier.fillMaxWidth().focusRequester(focusRequester),
                 )
-            }
-        }
+            },
+            actions = {
+                IconButton(onClick = { onEvent(ShoppingListsIntent.OnSearchToggled) }) {
+                    Icon(Icons.Rounded.Close, contentDescription = "Close search")
+                }
+            },
+            scrollBehavior = scrollBehavior,
+        )
+    } else {
+        LargeFlexibleTopAppBar(
+            title = { Text("Shopping lists") },
+            actions = {
+                IconButton(onClick = { onEvent(ShoppingListsIntent.OnSearchToggled) }) {
+                    Icon(
+                        Icons.Rounded.Search,
+                        contentDescription = "Search lists",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            },
+            scrollBehavior = scrollBehavior,
+        )
     }
 }
 

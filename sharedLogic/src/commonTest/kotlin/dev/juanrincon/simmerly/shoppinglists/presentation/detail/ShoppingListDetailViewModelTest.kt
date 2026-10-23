@@ -124,6 +124,25 @@ class ShoppingListDetailViewModelTest {
     }
 
     @Test
+    fun checkAllChecksTheRemainingItemsAndUndoUnchecksOnlyThose() = runTest(testDispatcher) {
+        viewModel.testWithInternalState(this) {
+            runOnCreate()
+            awaitStateMatching { it.name.isNotEmpty() }
+
+            viewModel.onEvent(ShoppingListDetailIntent.OnCheckAllClicked)
+            assertThat(awaitSideEffectSkippingStates()).isEqualTo(ShoppingListDetailSideEffect.ShowCheckedAll(2))
+            viewModel.onEvent(ShoppingListDetailIntent.OnUndoCheckAllClicked)
+
+            // "cumin" was already checked, so undo leaves it alone.
+            assertThat(repo.checkedCalls).containsExactly(
+                Triple("list-1", setOf("onion", "napkins"), true),
+                Triple("list-1", setOf("onion", "napkins"), false),
+            )
+            cancelAndIgnoreRemainingItems()
+        }
+    }
+
+    @Test
     fun uncheckAllUnchecksEveryCheckedItem() = runTest(testDispatcher) {
         viewModel.testWithInternalState(this) {
             runOnCreate()
