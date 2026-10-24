@@ -15,6 +15,7 @@ import kotlin.time.ExperimentalTime
 @Dao
 interface RecipeDao {
 
+    @Transaction
     @Query("SELECT * FROM recipes ORDER BY created_at DESC")
     fun observeRecipeList(): Flow<List<ListRecipeWithTags>>
 

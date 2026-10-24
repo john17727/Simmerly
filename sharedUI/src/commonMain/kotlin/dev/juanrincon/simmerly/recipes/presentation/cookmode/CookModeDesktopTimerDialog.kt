@@ -19,6 +19,10 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.text.input.TextFieldLineLimits
+import androidx.compose.foundation.text.input.placeCursorAtEnd
+import androidx.compose.foundation.text.input.rememberTextFieldState
+import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.KeyboardArrowDown
@@ -34,6 +38,10 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -130,7 +138,8 @@ internal fun DesktopNewTimerDialog(
                     DurationField(
                         value = draft.minutes,
                         unit = "min",
-                        onValueChange = { onDraftChange(draft.copy(minutes = it.coerceIn(0, 180))) },
+                        normalize = { it.coerceIn(0, 180) },
+                        onValueChange = { onDraftChange(draft.copy(minutes = it)) },
                         step = 1
                     )
                     Text(
@@ -147,7 +156,8 @@ internal fun DesktopNewTimerDialog(
                         unit = "sec",
                         // Seconds wrap rather than clamp, so stepping past 59 rolls to 0 the way
                         // the artboard's arrows do.
-                        onValueChange = { onDraftChange(draft.copy(seconds = (it + 60) % 60)) },
+                        normalize = { (it + 60) % 60 },
+                        onValueChange = { onDraftChange(draft.copy(seconds = it)) },
                         step = 5
                     )
                     Spacer(modifier = Modifier.weight(1f))
@@ -223,21 +233,43 @@ internal fun DesktopNewTimerDialog(
     }
 }
 
+/**
+ * [normalize] clamps or wraps a raw number into the field's range. It runs on every keystroke as
+ * well as on the stepper arrows, so typed input is reformatted as it goes — "999" minutes reads
+ * back as "180" straight away, and clearing the field reads back as "00".
+ */
 @Composable
 private fun DurationField(
     value: Int,
     unit: String,
+    normalize: (Int) -> Int,
     onValueChange: (Int) -> Unit,
     step: Int,
     modifier: Modifier = Modifier
 ) {
+    val state = rememberTextFieldState(formatDuration(value))
+    val currentNormalize by rememberUpdatedState(normalize)
+    val currentOnValueChange by rememberUpdatedState(onValueChange)
+    // The input transformation already leaves the text in its final form, so reporting each change
+    // and then syncing `value` back in below settles in one round instead of looping.
+    LaunchedEffect(state) {
+        snapshotFlow { state.text.toString() }.collect { text ->
+            text.toIntOrNull()?.let(currentOnValueChange)
+        }
+    }
+    // Stepper arrows and preset chips change `value` from outside the field.
+    LaunchedEffect(value) {
+        val formatted = formatDuration(value)
+        if (state.text.toString() != formatted) state.setTextAndPlaceCursorAtEnd(formatted)
+    }
+
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(6.dp),
         modifier = modifier
     ) {
         StepperButton(
-            onClick = { onValueChange(value + step) },
+            onClick = { onValueChange(normalize(value + step)) },
             contentDescription = "More $unit",
             icon = Icons.Default.KeyboardArrowUp
         )
@@ -253,12 +285,13 @@ private fun DurationField(
                 .border(1.dp, MaterialTheme.colorScheme.outlineVariant, MaterialTheme.shapes.medium)
         ) {
             BasicTextField(
-                value = value.toString().padStart(2, '0'),
-                onValueChange = { typed ->
-                    val digits = typed.filter { it.isDigit() }.take(3)
-                    onValueChange(digits.toIntOrNull() ?: 0)
+                state = state,
+                inputTransformation = {
+                    val digits = asCharSequence().filter { it.isDigit() }.take(3)
+                    replace(0, length, formatDuration(currentNormalize(digits.toString().toIntOrNull() ?: 0)))
+                    placeCursorAtEnd()
                 },
-                singleLine = true,
+                lineLimits = TextFieldLineLimits.SingleLine,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 textStyle = MaterialTheme.typography.displaySmall.copy(
                     fontFamily = dmSerifDisplayFontFamily(),
@@ -280,12 +313,14 @@ private fun DurationField(
             color = Simmerly.Neutral500
         )
         StepperButton(
-            onClick = { onValueChange(value - step) },
+            onClick = { onValueChange(normalize(value - step)) },
             contentDescription = "Fewer $unit",
             icon = Icons.Default.KeyboardArrowDown
         )
     }
 }
+
+private fun formatDuration(value: Int): String = value.toString().padStart(2, '0')
 
 @Composable
 private fun StepperButton(

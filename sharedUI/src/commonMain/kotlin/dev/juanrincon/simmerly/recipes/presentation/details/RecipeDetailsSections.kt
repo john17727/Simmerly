@@ -36,6 +36,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
+import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
 import com.mohamedrejeb.richeditor.model.rememberRichTextState
 import com.mohamedrejeb.richeditor.ui.material3.RichText
 import dev.juanrincon.simmerly.core.presentation.ifTrue
@@ -209,6 +210,7 @@ internal fun InstructionView(
     }
 }
 
+@OptIn(ExperimentalRichTextApi::class)
 @Composable
 private fun InstructionEntry(
     stepNumber: Int,

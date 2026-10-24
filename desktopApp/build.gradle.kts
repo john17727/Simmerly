@@ -8,7 +8,8 @@ plugins {
 
 dependencies {
     implementation(projects.sharedUI)
-    implementation(compose.desktop.currentOs)
+    implementation(libs.ui)
+    implementation(libs.foundation)
     implementation(libs.kotlinx.coroutinesSwing)
     implementation(libs.splashify)
 }

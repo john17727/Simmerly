@@ -50,6 +50,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
+import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
 import com.mohamedrejeb.richeditor.model.rememberRichTextState
 import com.mohamedrejeb.richeditor.ui.material3.RichText
 import dev.juanrincon.simmerly.core.presentation.asString
@@ -219,6 +220,7 @@ private fun StepProgress(current: Int, total: Int, modifier: Modifier = Modifier
     }
 }
 
+@OptIn(ExperimentalRichTextApi::class)
 @Composable
 private fun StepBody(
     step: CookStepUi,

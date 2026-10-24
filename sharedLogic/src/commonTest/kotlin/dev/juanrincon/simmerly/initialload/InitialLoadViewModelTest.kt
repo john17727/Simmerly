@@ -8,6 +8,7 @@ import assertk.assertions.isEqualTo
 import dev.juanrincon.simmerly.initialload.presentation.InitialLoadViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
@@ -78,7 +79,10 @@ class InitialLoadViewModelTest {
 
     @Test
     fun callsAllSevenRepositoryMethodsOnCreation() = runTest {
-        InitialLoadViewModel(userRepository, auxiliaryRepository)
+        val viewModel = InitialLoadViewModel(userRepository, auxiliaryRepository)
+        // parZip runs the loads on Dispatchers.Default, not the test dispatcher, so they may still
+        // be in flight here. The event is only sent once all seven have returned.
+        viewModel.events.first()
 
         assertThat(userRepository.loadSelfCallCount).isEqualTo(1)
         assertThat(userRepository.loadSelfRatingsCallCount).isEqualTo(1)
