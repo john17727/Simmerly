@@ -57,7 +57,6 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.TopAppBarScrollBehavior
-import androidx.compose.material3.adaptive.currentWindowAdaptiveInfoV2
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
@@ -79,10 +78,10 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
-import androidx.window.core.layout.WindowSizeClass
 import dev.juanrincon.simmerly.core.presentation.UiText
 import dev.juanrincon.simmerly.core.presentation.asString
 import dev.juanrincon.simmerly.core.presentation.asStringSuspend
+import dev.juanrincon.simmerly.core.presentation.navigation.isTwoPaneWidth
 import dev.juanrincon.simmerly.shoppinglists.presentation.detail.models.ItemSectionUi
 import dev.juanrincon.simmerly.shoppinglists.presentation.detail.models.LinkedRecipeUi
 import dev.juanrincon.simmerly.shoppinglists.presentation.detail.models.SectionKind
@@ -131,8 +130,7 @@ fun ShoppingListDetailScreen(
         }
     }
 
-    val windowSizeClass = currentWindowAdaptiveInfoV2().windowSizeClass
-    if (windowSizeClass.isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_EXPANDED_LOWER_BOUND)) {
+    if (isTwoPaneWidth()) {
         ShoppingListDetailExpanded(
             state = state,
             onEvent = viewModel::onEvent,

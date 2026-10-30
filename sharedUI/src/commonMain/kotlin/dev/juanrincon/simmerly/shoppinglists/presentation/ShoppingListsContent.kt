@@ -21,6 +21,7 @@ import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import androidx.savedstate.serialization.SavedStateConfiguration
 import dev.juanrincon.simmerly.core.presentation.navigation.AppNavRequest
+import dev.juanrincon.simmerly.core.presentation.navigation.rememberTwoPaneDirective
 import dev.juanrincon.simmerly.shoppinglists.presentation.detail.ShoppingListDetailScreen
 import dev.juanrincon.simmerly.shoppinglists.presentation.list.ShoppingListsScreen
 import dev.juanrincon.simmerly.shoppinglists.presentation.navigation.ShoppingListDestinations
@@ -62,7 +63,7 @@ fun ShoppingListsContent(
 
     NavDisplay(
         backStack = backStack,
-        sceneStrategies = listOf(rememberListDetailSceneStrategy()),
+        sceneStrategies = listOf(rememberListDetailSceneStrategy(directive = rememberTwoPaneDirective())),
         modifier = modifier.fillMaxSize(),
         entryDecorators = listOf(
             rememberSaveableStateHolderNavEntryDecorator(),
