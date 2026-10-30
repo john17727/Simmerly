@@ -15,6 +15,7 @@ import dev.juanrincon.simmerly.initialload.presentation.InitialLoadScreen
 import dev.juanrincon.simmerly.navigation.app.AppContent
 import dev.juanrincon.simmerly.navigation.auth.AuthDestinations
 import dev.juanrincon.simmerly.navigation.auth.AuthNavigationViewModel
+import dev.juanrincon.simmerly.navigation.auth.AuthRoute
 import dev.juanrincon.simmerly.navigation.auth.toDestination
 import dev.juanrincon.simmerly.splash.presentation.SplashScreen
 import dev.juanrincon.simmerly.theme.SimmerlyTheme
@@ -54,8 +55,17 @@ fun SimmerlyApp(
     val authenticationState by viewModel.isAuthenticated.collectAsState()
 
     LaunchedEffect(authenticationState) {
+        val target = authenticationState.toDestination()
+        val current = backStack.lastOrNull()
+        // This also runs when the composition is recreated (config change, process death) with the
+        // back stack restored. InitialLoad hands over to App once the load finishes, and
+        // InitialLoadViewModel won't signal again after surviving a recreation, so resetting an
+        // already-restored App stack back to InitialLoad would leave it stuck there.
+        val alreadyThere = current == target ||
+                (authenticationState == AuthRoute.InitialLoad && current is AuthDestinations.App)
+        if (alreadyThere) return@LaunchedEffect
         backStack.clear()
-        backStack.add(authenticationState.toDestination())
+        backStack.add(target)
     }
     NavDisplay(
         backStack = backStack,
