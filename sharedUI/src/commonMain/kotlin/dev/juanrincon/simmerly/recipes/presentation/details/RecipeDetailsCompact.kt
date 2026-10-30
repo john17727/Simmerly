@@ -26,7 +26,6 @@ import androidx.compose.material.icons.automirrored.filled.Comment
 import androidx.compose.material.icons.automirrored.filled.OpenInNew
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.ViewTimeline
@@ -192,9 +191,10 @@ internal fun CompactRecipeDetails(
                             contentDescription = "Comment"
                         )
                     }
-                    IconButton(onClick = { /* TODO: more action */ }, enabled = !state.loading) {
-                        Icon(Icons.Default.MoreVert, contentDescription = "More")
-                    }
+                    RecipeOverflowMenu(
+                        onAddToShoppingList = { onEvent(RecipeDetailsIntent.OpenAddToList) },
+                        enabled = !state.loading,
+                    )
                 },
                 floatingActionButton = {
                     // No steps to cook means nothing for Cook Mode to show — keep the FAB hidden
