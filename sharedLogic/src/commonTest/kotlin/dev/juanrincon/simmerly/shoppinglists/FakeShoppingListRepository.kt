@@ -33,6 +33,8 @@ class FakeShoppingListRepository : ShoppingListRepository {
     val checkedCalls = mutableListOf<Triple<String, Set<String>, Boolean>>()
     val deletedItems = mutableListOf<Set<String>>()
     val recipeQuantityChanges = mutableListOf<Pair<String, Int>>()
+    /** Every [changeRecipeQuantity] call as (listId, recipeId, delta). */
+    val recipeQuantityCalls = mutableListOf<Triple<String, String, Int>>()
     val foodQueries = mutableListOf<String>()
     val parsedTexts = mutableListOf<String>()
     val addedFoodItems = mutableListOf<AddedFoodItem>()
@@ -109,6 +111,7 @@ class FakeShoppingListRepository : ShoppingListRepository {
         delta: Int
     ): Either<ShoppingListError, Unit> {
         recipeQuantityChanges += recipeId to delta
+        recipeQuantityCalls += Triple(listId, recipeId, delta)
         return writeResult
     }
 

@@ -13,7 +13,7 @@ import org.koin.dsl.module
 
 val recipePresentationModule = module {
     viewModelOf(::RecipeListViewModel)
-    viewModel { (recipeId: String) -> RecipeDetailsViewModel(recipeId, get()) }
+    viewModel { (recipeId: String) -> RecipeDetailsViewModel(recipeId, get(), get(), get()) }
     viewModel { (recipeId: String) -> RecipeCommentsViewModel(recipeId, get()) }
     viewModel { (recipeId: String) -> CookModeViewModel(recipeId, get(), get()) }
     viewModelOf(::RecipeSearchViewModel)

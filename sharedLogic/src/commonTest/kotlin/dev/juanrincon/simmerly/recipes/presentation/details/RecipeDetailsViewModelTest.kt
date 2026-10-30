@@ -6,6 +6,7 @@ import assertk.assertions.isEqualTo
 import assertk.assertions.isFalse
 import assertk.assertions.isNull
 import assertk.assertions.isTrue
+import dev.juanrincon.simmerly.initialload.FakeUserRepository
 import dev.juanrincon.simmerly.recipes.FakeRecipeRepository
 import dev.juanrincon.simmerly.recipes.aRecipeDetail
 import dev.juanrincon.simmerly.recipes.aRecipeDetailUi
@@ -16,6 +17,7 @@ import dev.juanrincon.simmerly.recipes.domain.RecipesError
 import dev.juanrincon.simmerly.recipes.presentation.details.models.RecipeDetailUi
 import dev.juanrincon.simmerly.recipes.presentation.details.orbit.RecipeDetailsIntent
 import dev.juanrincon.simmerly.recipes.presentation.details.orbit.RecipeDetailsState
+import dev.juanrincon.simmerly.shoppinglists.FakeShoppingListRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
@@ -39,7 +41,12 @@ class RecipeDetailsViewModelTest {
     fun setUp() {
         Dispatchers.setMain(testDispatcher)
         repo = FakeRecipeRepository()
-        viewModel = RecipeDetailsViewModel(recipeId = "test-recipe", repository = repo)
+        viewModel = RecipeDetailsViewModel(
+            recipeId = "test-recipe",
+            repository = repo,
+            shoppingListRepository = FakeShoppingListRepository(),
+            userRepository = FakeUserRepository(),
+        )
     }
 
     @AfterTest

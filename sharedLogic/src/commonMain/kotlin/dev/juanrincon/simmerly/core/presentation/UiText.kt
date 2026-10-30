@@ -10,6 +10,14 @@ enum class StringKey {
     Profile,
     ShoppingListLoadFailed,
     ShoppingListUpdateFailed,
+    /** Args: list name. */
+    ItemAddedToList,
+    /** Args: item count, list name. */
+    ItemsAddedToList,
+    /** Args: list name. */
+    ListCreatedWithItem,
+    /** Args: list name, item count. */
+    ListCreatedWithItems,
 }
 
 sealed interface UiText {

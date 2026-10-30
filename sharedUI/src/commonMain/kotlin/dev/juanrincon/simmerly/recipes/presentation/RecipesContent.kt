@@ -53,6 +53,7 @@ import kotlinx.serialization.modules.polymorphic
 @Composable
 fun RecipesContent(
     onAtRootChanged: (Boolean) -> Unit = {},
+    onOpenShoppingList: (listId: String) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val backStack = rememberNavBackStack(
@@ -120,6 +121,7 @@ fun RecipesContent(
                         onNavigateBack = { backStack.removeLastOrNull() },
                         onNavigateToComments = { backStack.add(RecipeDestinations.Comments(it)) },
                         onStartCooking = { backStack.add(RecipeDestinations.CookMode(it)) },
+                        onNavigateToShoppingList = onOpenShoppingList,
                         modifier = Modifier.fillMaxSize()
                     )
                 }

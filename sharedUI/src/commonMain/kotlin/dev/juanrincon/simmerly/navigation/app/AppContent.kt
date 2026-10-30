@@ -16,6 +16,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.runtime.setValue
@@ -38,6 +39,8 @@ fun AppContent(
     var currentDestination by rememberSaveable { mutableStateOf(AppDestinations.RECIPES) }
     var isAtRecipesRoot by rememberSaveable { mutableStateOf(true) }
     var isAtShoppingListsRoot by rememberSaveable { mutableStateOf(true) }
+    // A list another tab asked to open; the Shopping List tab consumes it once it is showing.
+    var pendingListId by remember { mutableStateOf<String?>(null) }
     val user by profileViewModel.user.collectAsState()
     val baseNavSuiteType =
         NavigationSuiteScaffoldDefaults.navigationSuiteType(currentWindowAdaptiveInfoV2())
@@ -102,6 +105,10 @@ fun AppContent(
             when (val destination = currentDestination) {
                 AppDestinations.RECIPES -> RecipesContent(
                     onAtRootChanged = { isAtRecipesRoot = it },
+                    onOpenShoppingList = { listId ->
+                        pendingListId = listId
+                        currentDestination = AppDestinations.SHOPPING_LIST
+                    },
                     modifier = Modifier.fillMaxSize()
                 )
 
@@ -111,6 +118,8 @@ fun AppContent(
 
                 AppDestinations.SHOPPING_LIST -> ShoppingListsContent(
                     onAtRootChanged = { isAtShoppingListsRoot = it },
+                    openListId = pendingListId,
+                    onOpenListHandled = { pendingListId = null },
                     modifier = Modifier.fillMaxSize()
                 )
 

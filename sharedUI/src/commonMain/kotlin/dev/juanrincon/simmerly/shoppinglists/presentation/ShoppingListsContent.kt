@@ -34,6 +34,9 @@ import kotlinx.serialization.modules.polymorphic
 fun ShoppingListsContent(
     modifier: Modifier = Modifier,
     onAtRootChanged: (Boolean) -> Unit = {},
+    /** A list to open on top of the lists, e.g. from a recipe's "View list" action. */
+    openListId: String? = null,
+    onOpenListHandled: () -> Unit = {},
 ) {
     val backStack = rememberNavBackStack(
         configuration = SavedStateConfiguration {
@@ -48,6 +51,13 @@ fun ShoppingListsContent(
 
     val isAtRoot by remember { derivedStateOf { backStack.size <= 1 } }
     LaunchedEffect(isAtRoot) { onAtRootChanged(isAtRoot) }
+    LaunchedEffect(openListId) {
+        if (openListId != null) {
+            backStack.removeAll { it is ShoppingListDestinations.Detail }
+            backStack.add(ShoppingListDestinations.Detail(openListId))
+            onOpenListHandled()
+        }
+    }
 
     NavDisplay(
         backStack = backStack,

@@ -46,6 +46,8 @@ import androidx.compose.material3.MediumFlexibleTopAppBar
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.PrimaryScrollableTabRow
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -97,11 +99,13 @@ internal fun CompactRecipeDetails(
     onNavigateToComments: (recipeId: String) -> Unit,
     onStartCooking: (recipeId: String) -> Unit = {},
     sharedTransitionScope: SharedTransitionScope? = null,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
 ) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     Scaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             Column {
                 MediumFlexibleTopAppBar(
@@ -498,6 +502,7 @@ private fun CompactContent(
                     recipe = recipe,
                     onRemoveServingButtonClick = { onEvent(RecipeDetailsIntent.RemoveServing) },
                     onAddServingButtonClick = { onEvent(RecipeDetailsIntent.AddServing) },
+                    onAddToListClick = { onEvent(RecipeDetailsIntent.OpenAddToList) },
                     modifier = Modifier.fillMaxWidth()
                 )
             }
