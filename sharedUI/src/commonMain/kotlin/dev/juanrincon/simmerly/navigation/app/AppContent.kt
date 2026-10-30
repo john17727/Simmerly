@@ -25,6 +25,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import coil3.compose.SubcomposeAsyncImage
+import dev.juanrincon.simmerly.core.presentation.navigation.AppNavRequest
 import dev.juanrincon.simmerly.core.presentation.asString
 import dev.juanrincon.simmerly.profile.presentation.ProfileViewModel
 import dev.juanrincon.simmerly.recipes.presentation.RecipesContent
@@ -39,8 +40,8 @@ fun AppContent(
     var currentDestination by rememberSaveable { mutableStateOf(AppDestinations.RECIPES) }
     var isAtRecipesRoot by rememberSaveable { mutableStateOf(true) }
     var isAtShoppingListsRoot by rememberSaveable { mutableStateOf(true) }
-    // A list another tab asked to open; the Shopping List tab consumes it once it is showing.
-    var pendingListId by remember { mutableStateOf<String?>(null) }
+    // A request from one tab for another to handle; that tab consumes it once it is showing.
+    var pendingRequest by remember { mutableStateOf<AppNavRequest?>(null) }
     val user by profileViewModel.user.collectAsState()
     val baseNavSuiteType =
         NavigationSuiteScaffoldDefaults.navigationSuiteType(currentWindowAdaptiveInfoV2())
@@ -105,9 +106,11 @@ fun AppContent(
             when (val destination = currentDestination) {
                 AppDestinations.RECIPES -> RecipesContent(
                     onAtRootChanged = { isAtRecipesRoot = it },
-                    onOpenShoppingList = { listId ->
-                        pendingListId = listId
-                        currentDestination = AppDestinations.SHOPPING_LIST
+                    onNavigate = { request ->
+                        pendingRequest = request
+                        currentDestination = when (request) {
+                            is AppNavRequest.OpenShoppingList -> AppDestinations.SHOPPING_LIST
+                        }
                     },
                     modifier = Modifier.fillMaxSize()
                 )
@@ -118,8 +121,8 @@ fun AppContent(
 
                 AppDestinations.SHOPPING_LIST -> ShoppingListsContent(
                     onAtRootChanged = { isAtShoppingListsRoot = it },
-                    openListId = pendingListId,
-                    onOpenListHandled = { pendingListId = null },
+                    request = pendingRequest as? AppNavRequest.OpenShoppingList,
+                    onRequestHandled = { pendingRequest = null },
                     modifier = Modifier.fillMaxSize()
                 )
 
