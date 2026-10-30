@@ -3,6 +3,9 @@ package dev.juanrincon.simmerly.recipes.presentation.list
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -33,7 +36,11 @@ internal fun SelectableList(
     Box(modifier = modifier) {
         LazyColumn(
             state = state,
-            contentPadding = PaddingValues(start = 16.dp, top = 16.dp, bottom = 16.dp),
+            contentPadding = PaddingValues(
+                start = 16.dp,
+                top = 16.dp + WindowInsets.statusBars.asPaddingValues().calculateTopPadding(),
+                bottom = 16.dp
+            ),
             verticalArrangement = Arrangement.spacedBy(8.dp),
             modifier = Modifier.fillMaxSize().clip(shape = MaterialTheme.shapes.medium)
         ) {

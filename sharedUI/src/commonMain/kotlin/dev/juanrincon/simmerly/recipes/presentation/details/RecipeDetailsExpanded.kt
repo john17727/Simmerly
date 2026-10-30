@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
@@ -98,7 +99,7 @@ internal fun ExpandedView(
         // recipe list. It lives here rather than on the list because the list pane is also the
         // whole screen on compact widths, where there is nothing to separate it from.
         VerticalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-        Column(modifier = Modifier.weight(1f).fillMaxHeight()) {
+        Column(modifier = Modifier.weight(1f).fillMaxHeight().statusBarsPadding()) {
             ExpandedHeader(
                 state = state,
                 tabs = expandedTabs,
