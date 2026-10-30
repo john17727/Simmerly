@@ -35,6 +35,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlin.time.Clock
@@ -172,12 +173,15 @@ class SimmerlyRecipeRepository(
                 recipeDao.observeRecipeDetail(id),
                 preferenceDao.observe(id),
             ) { address, entity, preference ->
-                entity.toDomain(
+                // The row can vanish while observed (e.g. the recipes table is cleared by a list
+                // refresh); there is nothing to show until it is fetched again.
+                entity?.toDomain(
                     address,
                     isFavorite = preference?.isFavorite ?: false,
                     userRating = preference?.rating
                 )
             }
+                .filterNotNull()
                 .map { Either.Right(LoadingResult.Loaded(it)) }
                 .distinctUntilChanged()
                 .collect { send(it) }

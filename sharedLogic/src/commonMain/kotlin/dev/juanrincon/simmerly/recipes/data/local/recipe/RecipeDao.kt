@@ -30,7 +30,7 @@ interface RecipeDao {
      */
     @Transaction
     @Query("SELECT * FROM recipes WHERE id = :id")
-    fun observeRecipeDetail(id: String): Flow<RecipeDetailWithRelations>
+    fun observeRecipeDetail(id: String): Flow<RecipeDetailWithRelations?>
 
     @Transaction
     @Query("SELECT * FROM recipes WHERE id = :id")
