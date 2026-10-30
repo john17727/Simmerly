@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -23,7 +24,9 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -189,9 +192,12 @@ private fun Content(
 
                     state.lists.isEmpty() -> EmptyState(state)
 
-                    else -> LazyColumn(
+                    // One column on a phone; more as the window widens (an unfolded foldable).
+                    else -> LazyVerticalGrid(
+                        columns = GridCells.Adaptive(minSize = 320.dp),
                         contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 104.dp),
                         verticalArrangement = Arrangement.spacedBy(8.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
                         modifier = Modifier.fillMaxSize(),
                     ) {
                         items(state.lists, key = { it.id }) { list ->
@@ -200,7 +206,7 @@ private fun Content(
                                 onClick = { onEvent(ShoppingListsIntent.OnListClicked(list.id)) },
                                 onRename = { onEvent(ShoppingListsIntent.OnRenameClicked(list.id)) },
                                 onDelete = { onEvent(ShoppingListsIntent.OnDeleteClicked(list.id)) },
-                                modifier = Modifier.animateItem(),
+                                modifier = Modifier.fillMaxHeight().animateItem(),
                             )
                         }
                     }
