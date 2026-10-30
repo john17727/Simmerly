@@ -1,6 +1,7 @@
 package dev.juanrincon.simmerly.shoppinglists.domain
 
 import arrow.core.Either
+import dev.juanrincon.simmerly.recipes.domain.model.Ingredient
 import dev.juanrincon.simmerly.shoppinglists.domain.model.ParsedIngredient
 import dev.juanrincon.simmerly.shoppinglists.domain.model.ShoppingFood
 import dev.juanrincon.simmerly.shoppinglists.domain.model.ShoppingList
@@ -62,6 +63,18 @@ interface ShoppingListRepository {
         listId: String,
         recipeId: String,
         delta: Int
+    ): Either<ShoppingListError, Unit>
+
+    /**
+     * Links a recipe to the list and adds its ingredients, scaled by [scale] (1 = the recipe's own
+     * servings). [ingredients] limits it to those ingredients; `null` adds them all. Like Mealie's
+     * web app, the recipe is linked either way.
+     */
+    suspend fun addRecipe(
+        listId: String,
+        recipeId: String,
+        scale: Double,
+        ingredients: List<Ingredient>? = null,
     ): Either<ShoppingListError, Unit>
 
     suspend fun units(): Either<ShoppingListError, List<ShoppingUnit>>

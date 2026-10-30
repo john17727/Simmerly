@@ -3,6 +3,7 @@ package dev.juanrincon.simmerly.shoppinglists
 import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
+import dev.juanrincon.simmerly.recipes.domain.model.Ingredient
 import dev.juanrincon.simmerly.shoppinglists.domain.ShoppingListError
 import dev.juanrincon.simmerly.shoppinglists.domain.ShoppingListRepository
 import dev.juanrincon.simmerly.shoppinglists.domain.model.ParsedIngredient
@@ -35,9 +36,12 @@ class FakeShoppingListRepository : ShoppingListRepository {
     val recipeQuantityChanges = mutableListOf<Pair<String, Int>>()
     /** Every [changeRecipeQuantity] call as (listId, recipeId, delta). */
     val recipeQuantityCalls = mutableListOf<Triple<String, String, Int>>()
+    val addedRecipes = mutableListOf<AddedRecipe>()
     val foodQueries = mutableListOf<String>()
     val parsedTexts = mutableListOf<String>()
     val addedFoodItems = mutableListOf<AddedFoodItem>()
+
+    data class AddedRecipe(val listId: String, val recipeId: String, val scale: Double, val ingredients: List<Ingredient>?)
 
     data class AddedFoodItem(val food: ShoppingFood, val quantity: Double, val unit: ShoppingUnit?, val note: String)
 
@@ -112,6 +116,16 @@ class FakeShoppingListRepository : ShoppingListRepository {
     ): Either<ShoppingListError, Unit> {
         recipeQuantityChanges += recipeId to delta
         recipeQuantityCalls += Triple(listId, recipeId, delta)
+        return writeResult
+    }
+
+    override suspend fun addRecipe(
+        listId: String,
+        recipeId: String,
+        scale: Double,
+        ingredients: List<Ingredient>?,
+    ): Either<ShoppingListError, Unit> {
+        addedRecipes += AddedRecipe(listId, recipeId, scale, ingredients)
         return writeResult
     }
 

@@ -7,6 +7,7 @@ import dev.juanrincon.simmerly.recipes.domain.model.RecipeDetail
 import dev.juanrincon.simmerly.recipes.domain.model.RecipeSummary
 import dev.juanrincon.simmerly.recipes.domain.model.Settings
 import dev.juanrincon.simmerly.recipes.domain.model.User
+import dev.juanrincon.simmerly.recipes.domain.model.Ingredient
 import dev.juanrincon.simmerly.recipes.presentation.details.models.IngredientUi
 import dev.juanrincon.simmerly.recipes.presentation.details.models.RecipeDetailUi
 import kotlin.time.Clock
@@ -63,6 +64,22 @@ fun aRecipeDetailUi(
     ingredients = ingredients
 )
 
+fun anIngredient(
+    referenceId: String = "ingredient-1",
+    display: String = "1 pound pasta",
+    quantity: Double? = 1.0,
+    note: String? = null,
+) = Ingredient(
+    quantity = quantity,
+    unit = null,
+    food = null,
+    note = note,
+    display = display,
+    title = null,
+    originalText = null,
+    referenceId = referenceId,
+)
+
 fun anIngredientUi(
     quantity: Double = 100.0,
     referenceId: String = "ingredient-1"
@@ -79,7 +96,8 @@ fun anIngredientUi(
 fun aRecipeDetail(
     id: String = "test-recipe",
     servings: Double = 4.0,
-    instructions: List<Instruction> = emptyList()
+    instructions: List<Instruction> = emptyList(),
+    ingredients: List<Ingredient> = emptyList(),
 ) = RecipeDetail(
     id = id,
     userId = "",
@@ -105,7 +123,7 @@ fun aRecipeDetail(
     createdAt = Clock.System.now(),
     updatedAt = Clock.System.now(),
     lastMade = null,
-    ingredients = emptyList(),
+    ingredients = ingredients,
     instructions = instructions,
     nutrition = Nutrition(
         calories = null,

@@ -1,15 +1,13 @@
 package dev.juanrincon.simmerly.recipes.presentation.details
 
 import androidx.lifecycle.ViewModel
-import arrow.core.Either
-import arrow.core.raise.either
 import dev.juanrincon.simmerly.core.presentation.StringKey
 import dev.juanrincon.simmerly.core.presentation.UiText
 import dev.juanrincon.simmerly.initialload.domain.UserRepository
 import dev.juanrincon.simmerly.recipes.domain.LoadingResult
+import dev.juanrincon.simmerly.recipes.domain.model.Ingredient
 import dev.juanrincon.simmerly.recipes.domain.RecipeRepository
 import dev.juanrincon.simmerly.recipes.presentation.details.mappers.toRecipeDetailUi
-import dev.juanrincon.simmerly.recipes.presentation.details.models.IngredientUi
 import dev.juanrincon.simmerly.recipes.presentation.details.models.RecipeDetailUi
 import dev.juanrincon.simmerly.recipes.presentation.details.models.withServings
 import dev.juanrincon.simmerly.recipes.presentation.details.orbit.AddToListRowUi
@@ -20,10 +18,8 @@ import dev.juanrincon.simmerly.recipes.presentation.details.orbit.RecipeDetailsI
 import dev.juanrincon.simmerly.recipes.presentation.details.orbit.RecipeDetailsSideEffect
 import dev.juanrincon.simmerly.recipes.presentation.details.orbit.RecipeDetailsState
 import dev.juanrincon.simmerly.recipes.presentation.details.orbit.RecipeTab
-import dev.juanrincon.simmerly.shoppinglists.domain.ShoppingListError
 import dev.juanrincon.simmerly.shoppinglists.domain.ShoppingListRepository
 import dev.juanrincon.simmerly.shoppinglists.domain.model.ShoppingList
-import dev.juanrincon.simmerly.shoppinglists.domain.model.ShoppingUnit
 import dev.juanrincon.simmerly.shoppinglists.presentation.list.orbit.ListFilter
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
@@ -49,6 +45,9 @@ class RecipeDetailsViewModel(
     private var rawLists: List<ShoppingList> = emptyList()
     private var currentUserId: String? = null
     private var observingLists = false
+
+    /** The recipe's ingredients as Mealie has them, unscaled; the shopping list API takes these back. */
+    private var sourceIngredients: List<Ingredient> = emptyList()
 
     // Concrete, non-generic accessors for Swift — see WelcomeViewModel for why these are needed.
     val stateFlow: StateFlow<RecipeDetailsState> get() = container.stateFlow
@@ -92,6 +91,7 @@ class RecipeDetailsViewModel(
                             LoadingResult.RefreshComplete -> reduce { state.copy(isRefreshing = false) }
                             is LoadingResult.Loaded -> {
                                 val recipe = result.data.toRecipeDetailUi()
+                                sourceIngredients = result.data.ingredients
                                 reduce {
                                     state.copy(
                                         loading = false,
@@ -283,15 +283,17 @@ class RecipeDetailsViewModel(
             )
         }
 
-        val wholeRecipe = sheet.selected.size == recipe.ingredients.size && sheet.servings == baseServings
-        val ingredients = recipe.withServings(sheet.servings).ingredients
-            .filterIndexed { index, _ -> index in sheet.selected }
-
-        val result = if (wholeRecipe) {
-            shoppingListRepository.changeRecipeQuantity(listId, recipeId, 1)
-        } else {
-            addIngredients(listId, ingredients)
-        }
+        // The recipe is linked either way, as in Mealie's web app. Mealie scales by a multiple of the
+        // recipe's own servings and takes just the ingredients to add when not every one is ticked.
+        val ticked = recipe.ingredients.filterIndexed { index, _ -> index in sheet.selected }
+            .map { it.referenceId }.toSet()
+        val chosen = sourceIngredients.filter { it.referenceId in ticked }
+        val result = shoppingListRepository.addRecipe(
+            listId = listId,
+            recipeId = recipeId,
+            scale = if (baseServings > 0) sheet.servings / baseServings else 1.0,
+            ingredients = chosen.takeUnless { sheet.selected.size == recipe.ingredients.size },
+        )
 
         result.fold(
             ifLeft = {
@@ -309,46 +311,10 @@ class RecipeDetailsViewModel(
             },
             ifRight = {
                 reduce { state.copy(addToList = null) }
-                postSideEffect(RecipeDetailsSideEffect.ItemsAdded(addedMessage(target, ingredients.size), listId))
+                postSideEffect(RecipeDetailsSideEffect.ItemsAdded(addedMessage(target, sheet.selected.size), listId))
             },
         )
     }
-
-    private suspend fun addIngredients(
-        listId: String,
-        ingredients: List<IngredientUi>,
-    ): Either<ShoppingListError, Unit> = either {
-        var units: List<ShoppingUnit>? = null
-        for (ingredient in ingredients) {
-            val food = ingredient.food
-            val matchedFood = food?.let {
-                shoppingListRepository.searchFoods(it.name).getOrNull()
-                    ?.firstOrNull { match -> match.name.equals(it.name, ignoreCase = true) }
-            }
-            val unitName = ingredient.unit?.name
-            val matchedUnit = unitName?.let { name ->
-                val known = units ?: shoppingListRepository.units().getOrNull().orEmpty().also { units = it }
-                known.firstOrNull { it.name.equals(name, ignoreCase = true) }
-            }
-            // Without the exact food (and unit, when there is one) in Mealie, keep the amount as note text.
-            if (matchedFood != null && (unitName == null || matchedUnit != null)) {
-                shoppingListRepository.addFoodItem(
-                    listId = listId,
-                    food = matchedFood,
-                    quantity = ingredient.quantity ?: 1.0,
-                    unit = matchedUnit,
-                    note = ingredient.note.orEmpty(),
-                ).bind()
-            } else {
-                shoppingListRepository.addItem(listId, ingredient.asNoteText()).bind()
-            }
-        }
-    }
-
-    private fun IngredientUi.asNoteText(): String =
-        listOfNotNull(formattedQuantity, formattedDisplay.takeIf { it.isNotBlank() })
-            .joinToString(" ")
-            .let { text -> if (note.isNullOrBlank()) text else "$text, $note" }
 
     private fun addedMessage(target: AddToListTarget, count: Int): UiText = when (target) {
         is AddToListTarget.Existing ->

@@ -1,21 +1,22 @@
 package dev.juanrincon.simmerly.recipes.presentation.details
 
+import arrow.core.Either
 import arrow.core.left
-import arrow.core.right
 import assertk.assertThat
 import assertk.assertions.containsExactly
 import assertk.assertions.isEmpty
 import assertk.assertions.isEqualTo
 import assertk.assertions.isInstanceOf
 import assertk.assertions.isNotNull
-import assertk.assertions.isTrue
 import dev.juanrincon.simmerly.core.presentation.StringKey
 import dev.juanrincon.simmerly.core.presentation.UiText
 import dev.juanrincon.simmerly.initialload.FakeUserRepository
+import dev.juanrincon.simmerly.recipes.aRecipeDetail
 import dev.juanrincon.simmerly.recipes.aRecipeDetailUi
+import dev.juanrincon.simmerly.recipes.anIngredient
 import dev.juanrincon.simmerly.recipes.anIngredientUi
-import dev.juanrincon.simmerly.recipes.presentation.details.models.FoodUi
-import dev.juanrincon.simmerly.recipes.presentation.details.models.IngredientUi
+import dev.juanrincon.simmerly.recipes.domain.LoadingResult
+import dev.juanrincon.simmerly.recipes.domain.model.Ingredient
 import dev.juanrincon.simmerly.recipes.presentation.details.orbit.AddToListState
 import dev.juanrincon.simmerly.recipes.presentation.details.orbit.AddToListStep
 import dev.juanrincon.simmerly.recipes.presentation.details.orbit.AddToListTarget
@@ -24,7 +25,6 @@ import dev.juanrincon.simmerly.recipes.presentation.details.orbit.RecipeDetailsS
 import dev.juanrincon.simmerly.recipes.presentation.details.orbit.RecipeDetailsState
 import dev.juanrincon.simmerly.recipes.FakeRecipeRepository
 import dev.juanrincon.simmerly.shoppinglists.FakeShoppingListRepository
-import dev.juanrincon.simmerly.shoppinglists.aFood
 import dev.juanrincon.simmerly.shoppinglists.aRecipe
 import dev.juanrincon.simmerly.shoppinglists.aShoppingList
 import dev.juanrincon.simmerly.shoppinglists.awaitSideEffectSkippingStates
@@ -36,10 +36,14 @@ import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
+import org.orbitmvi.orbit.test.OrbitScopedTestContextInternal
 import org.orbitmvi.orbit.test.testWithInternalState
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
+
+private typealias DetailsTestContext = OrbitScopedTestContextInternal<
+    RecipeDetailsState, RecipeDetailsState, RecipeDetailsSideEffect, RecipeDetailsViewModel>
 
 /** The recipe's "Add to shopping list" sheet: choosing a list, picking ingredients, adding them. */
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -47,23 +51,21 @@ class AddToListFlowTest {
 
     private val testDispatcher = UnconfinedTestDispatcher()
     private lateinit var shoppingRepo: FakeShoppingListRepository
+    private lateinit var recipeRepo: FakeRecipeRepository
     private lateinit var viewModel: RecipeDetailsViewModel
 
-    private val pasta = IngredientUi(
-        referenceId = "i-1", quantity = null, display = "1 pound pasta", food = null, unit = null, note = null,
-    )
-    private val salt = IngredientUi(
-        referenceId = "i-2", quantity = null, display = "salt", food = null, unit = null, note = "to taste",
-    )
+    private val pasta = anIngredient(referenceId = "i-1", display = "1 pound pasta", quantity = 1.0)
+    private val salt = anIngredient(referenceId = "i-2", display = "salt", quantity = null, note = "to taste")
 
     @BeforeTest
     fun setUp() {
         Dispatchers.setMain(testDispatcher)
         shoppingRepo = FakeShoppingListRepository()
         shoppingRepo.lists.value = listOf(aShoppingList(id = "list-1", name = "Sunday brunch"))
+        recipeRepo = FakeRecipeRepository()
         viewModel = RecipeDetailsViewModel(
             recipeId = "test-recipe",
-            repository = FakeRecipeRepository(),
+            repository = recipeRepo,
             shoppingListRepository = shoppingRepo,
             userRepository = FakeUserRepository(),
         )
@@ -74,16 +76,13 @@ class AddToListFlowTest {
         Dispatchers.resetMain()
     }
 
-    /** A loaded recipe with the sheet already on its ingredient step. */
+    /** The sheet already on its ingredient step; [loadRecipe] supplies the recipe it is for. */
     private fun pickingState(
-        ingredients: List<IngredientUi> = listOf(pasta, salt),
-        selected: Set<Int> = ingredients.indices.toSet(),
+        selected: Set<Int> = setOf(0, 1),
         target: AddToListTarget = AddToListTarget.Existing("list-1", "Sunday brunch"),
         servings: Double = 4.0,
     ) = RecipeDetailsState(
         loading = false,
-        recipe = aRecipeDetailUi(id = "test-recipe", servings = 4.0, ingredients = ingredients),
-        baseServings = 4.0,
         addToList = AddToListState(
             step = AddToListStep.PickIngredients,
             target = target,
@@ -92,13 +91,21 @@ class AddToListFlowTest {
         ),
     )
 
+    /** Loads the recipe the way the screen does, so the ViewModel holds its source ingredients. */
+    private suspend fun DetailsTestContext.loadRecipe(ingredients: List<Ingredient> = listOf(pasta, salt)) {
+        runOnCreate()
+        recipeRepo.recipeDetailsFlow()
+            .emit(Either.Right(LoadingResult.Loaded(aRecipeDetail(id = "test-recipe", ingredients = ingredients))))
+        awaitStateMatching { it.recipe.ingredients.size == ingredients.size }
+    }
+
     @Test
     fun openingTheSheetListsShoppingListsAndFlagsOnesWithThisRecipe() = runTest(testDispatcher) {
         shoppingRepo.lists.value = listOf(
             aShoppingList(id = "list-1", name = "Sunday brunch"),
             aShoppingList(id = "list-2", name = "Weeknights", recipes = listOf(aRecipe(id = "test-recipe"))),
         )
-        val loaded = RecipeDetailsState(loading = false, recipe = aRecipeDetailUi(id = "test-recipe", ingredients = listOf(pasta)))
+        val loaded = RecipeDetailsState(loading = false, recipe = aRecipeDetailUi(id = "test-recipe", ingredients = listOf(anIngredientUi())))
         viewModel.testWithInternalState(this, initialState = loaded) {
             viewModel.onEvent(RecipeDetailsIntent.OpenAddToList)
             val state = awaitStateMatching { it.addToList?.lists?.size == 2 }
@@ -110,8 +117,9 @@ class AddToListFlowTest {
     }
 
     @Test
-    fun addingEveryIngredientAtTheRecipesServingsLinksTheRecipe() = runTest(testDispatcher) {
+    fun addingEveryIngredientLinksTheWholeRecipe() = runTest(testDispatcher) {
         viewModel.testWithInternalState(this, initialState = pickingState()) {
+            loadRecipe()
             viewModel.onEvent(RecipeDetailsIntent.AddToListConfirm)
             val effect = awaitSideEffectSkippingStates()
             assertThat(effect).isInstanceOf<RecipeDetailsSideEffect.ItemsAdded>()
@@ -121,70 +129,52 @@ class AddToListFlowTest {
                 .isEqualTo(UiText.Resource(StringKey.ItemsAddedToList, listOf("2", "Sunday brunch")))
             cancelAndIgnoreRemainingItems()
         }
-        assertThat(shoppingRepo.recipeQuantityCalls).containsExactly(Triple("list-1", "test-recipe", 1))
-        assertThat(shoppingRepo.addedItems).isEmpty()
+        assertThat(shoppingRepo.addedRecipes)
+            .containsExactly(FakeShoppingListRepository.AddedRecipe("list-1", "test-recipe", 1.0, null))
     }
 
     @Test
-    fun aPartialSelectionAddsEachTickedIngredientAsNoteText() = runTest(testDispatcher) {
+    fun aPartialSelectionStillLinksTheRecipeWithJustTheTickedIngredients() = runTest(testDispatcher) {
         viewModel.testWithInternalState(this, initialState = pickingState(selected = setOf(1))) {
+            loadRecipe()
             viewModel.onEvent(RecipeDetailsIntent.AddToListConfirm)
             val effect = awaitSideEffectSkippingStates()
             assertThat((effect as RecipeDetailsSideEffect.ItemsAdded).message)
                 .isEqualTo(UiText.Resource(StringKey.ItemAddedToList, listOf("Sunday brunch")))
             cancelAndIgnoreRemainingItems()
         }
-        assertThat(shoppingRepo.recipeQuantityCalls).isEmpty()
-        assertThat(shoppingRepo.addedItems).containsExactly("list-1" to "salt, to taste")
+        assertThat(shoppingRepo.addedRecipes)
+            .containsExactly(FakeShoppingListRepository.AddedRecipe("list-1", "test-recipe", 1.0, listOf(salt)))
     }
 
     @Test
-    fun changedServingsScaleAmountsOfIngredientsMatchedToAMealieFood() = runTest(testDispatcher) {
-        val milk = aFood(id = "milk", name = "milk")
-        shoppingRepo.foodsResult = listOf(milk).right()
-        val parsedMilk = anIngredientUi(quantity = 100.0).copy(food = FoodUi(name = "milk", pluralName = null))
-        viewModel.testWithInternalState(
-            this,
-            initialState = pickingState(ingredients = listOf(parsedMilk), servings = 8.0),
-        ) {
+    fun changedServingsScaleTheRecipeByAMultipleOfItsOwnServings() = runTest(testDispatcher) {
+        viewModel.testWithInternalState(this, initialState = pickingState(servings = 6.0)) {
+            loadRecipe()
             viewModel.onEvent(RecipeDetailsIntent.AddToListConfirm)
             awaitSideEffectSkippingStates()
             cancelAndIgnoreRemainingItems()
         }
-        assertThat(shoppingRepo.recipeQuantityCalls).isEmpty()
-        assertThat(shoppingRepo.addedFoodItems.map { it.food to it.quantity }).containsExactly(milk to 200.0)
-    }
-
-    @Test
-    fun aFoodMealieDoesNotKnowIsAddedAsNoteText() = runTest(testDispatcher) {
-        val parsedMilk = anIngredientUi(quantity = 100.0).copy(food = FoodUi(name = "milk", pluralName = null))
-        viewModel.testWithInternalState(
-            this,
-            initialState = pickingState(ingredients = listOf(parsedMilk, salt), selected = setOf(0)),
-        ) {
-            viewModel.onEvent(RecipeDetailsIntent.AddToListConfirm)
-            awaitSideEffectSkippingStates()
-            cancelAndIgnoreRemainingItems()
-        }
-        assertThat(shoppingRepo.addedFoodItems).isEmpty()
-        assertThat(shoppingRepo.addedItems).containsExactly("list-1" to "100 Milk")
+        assertThat(shoppingRepo.addedRecipes.single().scale).isEqualTo(1.5)
     }
 
     @Test
     fun confirmingWithNothingSelectedDoesNothing() = runTest(testDispatcher) {
         viewModel.testWithInternalState(this, initialState = pickingState(selected = emptySet())) {
+            loadRecipe()
             viewModel.onEvent(RecipeDetailsIntent.AddToListConfirm)
+            cancelAndIgnoreRemainingItems()
         }
-        assertThat(shoppingRepo.recipeQuantityCalls).isEmpty()
-        assertThat(shoppingRepo.addedItems).isEmpty()
+        assertThat(shoppingRepo.addedRecipes).isEmpty()
     }
 
     @Test
-    fun aNewListIsCreatedBeforeItsItemsAreAdded() = runTest(testDispatcher) {
+    fun aNewListIsCreatedBeforeTheRecipeIsAdded() = runTest(testDispatcher) {
         viewModel.testWithInternalState(
             this,
             initialState = pickingState(target = AddToListTarget.New("Weeknight dinners")),
         ) {
+            loadRecipe()
             viewModel.onEvent(RecipeDetailsIntent.AddToListConfirm)
             val effect = awaitSideEffectSkippingStates() as RecipeDetailsSideEffect.ItemsAdded
             assertThat(effect.listId).isEqualTo("new-list")
@@ -193,13 +183,14 @@ class AddToListFlowTest {
             cancelAndIgnoreRemainingItems()
         }
         assertThat(shoppingRepo.createdNames).containsExactly("Weeknight dinners")
-        assertThat(shoppingRepo.recipeQuantityCalls).containsExactly(Triple("new-list", "test-recipe", 1))
+        assertThat(shoppingRepo.addedRecipes.single().listId).isEqualTo("new-list")
     }
 
     @Test
     fun aFailedAddKeepsTheSheetOpenAndShowsAMessage() = runTest(testDispatcher) {
         shoppingRepo.writeResult = ShoppingListError.UpdateError.left()
         viewModel.testWithInternalState(this, initialState = pickingState()) {
+            loadRecipe()
             viewModel.onEvent(RecipeDetailsIntent.AddToListConfirm)
             val effect = awaitSideEffectSkippingStates()
             assertThat(effect).isEqualTo(
