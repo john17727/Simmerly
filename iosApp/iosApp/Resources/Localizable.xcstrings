@@ -507,6 +507,46 @@
         }
       }
     },
+    "item_added_to_list" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1 item added to %1$@"
+          }
+        }
+      }
+    },
+    "items_added_to_list" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ items added to %2$@"
+          }
+        }
+      }
+    },
+    "list_created_with_item" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Created %1$@ with 1 item"
+          }
+        }
+      }
+    },
+    "list_created_with_items" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Created %1$@ with %2$@ items"
+          }
+        }
+      }
+    },
     "shopping_list_load_failed" : {
       "localizations" : {
         "en" : {

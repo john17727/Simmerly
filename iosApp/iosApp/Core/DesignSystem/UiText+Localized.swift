@@ -13,6 +13,10 @@ extension StringKey {
         case .profile: return "profile"
         case .shoppingListLoadFailed: return "shopping_list_load_failed"
         case .shoppingListUpdateFailed: return "shopping_list_update_failed"
+        case .itemAddedToList: return "item_added_to_list"
+        case .itemsAddedToList: return "items_added_to_list"
+        case .listCreatedWithItem: return "list_created_with_item"
+        case .listCreatedWithItems: return "list_created_with_items"
         }
     }
 }

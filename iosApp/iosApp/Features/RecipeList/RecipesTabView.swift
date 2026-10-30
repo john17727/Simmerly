@@ -6,17 +6,19 @@ import Shared
 /// ListDetailSceneStrategy behaviour.
 struct RecipesTabView: View {
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+    let onOpenShoppingList: (String) -> Void
 
     var body: some View {
         if horizontalSizeClass == .regular {
-            RecipesSplitView()
+            RecipesSplitView(onOpenShoppingList: onOpenShoppingList)
         } else {
-            RecipesStackView()
+            RecipesStackView(onOpenShoppingList: onOpenShoppingList)
         }
     }
 }
 
 private struct RecipesStackView: View {
+    let onOpenShoppingList: (String) -> Void
     @Environment(TabAccessoryModel.self) private var accessory
     @State private var path: [AppRoute] = []
     @State private var cookingSession: CookingSession?
@@ -32,7 +34,8 @@ private struct RecipesStackView: View {
                 case .detail(let recipeId):
                     RecipeDetailsRoot(
                         recipeId: recipeId,
-                        onNavigateToComments: { path.append(.comments(recipeId: $0)) }
+                        onNavigateToComments: { path.append(.comments(recipeId: $0)) },
+                        onNavigateToShoppingList: onOpenShoppingList
                     )
                 case .comments(let recipeId):
                     RecipeCommentsRoot(recipeId: recipeId)
@@ -60,6 +63,7 @@ private struct RecipesStackView: View {
 }
 
 private struct RecipesSplitView: View {
+    let onOpenShoppingList: (String) -> Void
     @Environment(TabAccessoryModel.self) private var accessory
     @State private var selectedRecipeId: String?
     @State private var detailPath: [AppRoute] = []
@@ -82,7 +86,8 @@ private struct RecipesSplitView: View {
                 NavigationStack(path: $detailPath) {
                     RecipeDetailsRoot(
                         recipeId: recipeId,
-                        onNavigateToComments: { detailPath.append(.comments(recipeId: $0)) }
+                        onNavigateToComments: { detailPath.append(.comments(recipeId: $0)) },
+                        onNavigateToShoppingList: onOpenShoppingList
                     )
                     .id(recipeId)
                     .navigationDestination(for: AppRoute.self) { route in
@@ -92,7 +97,8 @@ private struct RecipesSplitView: View {
                         case .detail(let detailRecipeId):
                             RecipeDetailsRoot(
                                 recipeId: detailRecipeId,
-                                onNavigateToComments: { detailPath.append(.comments(recipeId: $0)) }
+                                onNavigateToComments: { detailPath.append(.comments(recipeId: $0)) },
+                                onNavigateToShoppingList: onOpenShoppingList
                             )
                         case .search:
                             RecipeSearchRoot(

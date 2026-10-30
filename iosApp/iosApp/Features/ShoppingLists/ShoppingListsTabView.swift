@@ -6,12 +6,15 @@ import Shared
 /// iPad: NavigationSplitView list-detail, mirroring the ListDetailSceneStrategy behaviour.
 struct ShoppingListsTabView: View {
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+    /// A list to open, handed over from another tab. Cleared through `onRequestHandled` once shown.
+    let request: String?
+    let onRequestHandled: () -> Void
 
     var body: some View {
         if horizontalSizeClass == .regular {
-            ShoppingListsSplitView()
+            ShoppingListsSplitView(request: request, onRequestHandled: onRequestHandled)
         } else {
-            ShoppingListsStackView()
+            ShoppingListsStackView(request: request, onRequestHandled: onRequestHandled)
         }
     }
 }
@@ -22,6 +25,8 @@ enum ShoppingRoute: Hashable {
 }
 
 private struct ShoppingListsStackView: View {
+    let request: String?
+    let onRequestHandled: () -> Void
     @State private var path: [ShoppingRoute] = []
 
     var body: some View {
@@ -37,10 +42,19 @@ private struct ShoppingListsStackView: View {
                     }
                 }
         }
+        // Replace whatever is pushed rather than stacking on it, like ShoppingListsContent.kt.
+        // `initial` covers the tab being created by the very selection change that sent the request.
+        .onChange(of: request, initial: true) { _, listId in
+            guard let listId else { return }
+            path = [.detail(listId: listId)]
+            onRequestHandled()
+        }
     }
 }
 
 private struct ShoppingListsSplitView: View {
+    let request: String?
+    let onRequestHandled: () -> Void
     @State private var selectedListId: String?
 
     var body: some View {
@@ -61,6 +75,11 @@ private struct ShoppingListsSplitView: View {
                     systemImage: "cart"
                 )
             }
+        }
+        .onChange(of: request, initial: true) { _, listId in
+            guard let listId else { return }
+            selectedListId = listId
+            onRequestHandled()
         }
     }
 }

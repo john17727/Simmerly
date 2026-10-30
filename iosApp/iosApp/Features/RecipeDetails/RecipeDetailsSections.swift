@@ -7,6 +7,7 @@ struct IngredientsSection: View {
     let recipe: RecipeDetailUi
     let onAddServing: () -> Void
     let onRemoveServing: () -> Void
+    let onAddToList: () -> Void
 
     var body: some View {
         SectionCard {
@@ -55,9 +56,7 @@ struct IngredientsSection: View {
                     }
                 }
 
-                Button {
-                    // TODO: add to shopping list
-                } label: {
+                Button(action: onAddToList) {
                     HStack(spacing: 8) {
                         Image(systemName: "list.bullet.rectangle")
                             .foregroundStyle(SimmerlyColor.onSurfaceVariant)
