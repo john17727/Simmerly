@@ -6,6 +6,7 @@ struct RecipeDetailsView: View {
     let onAddServing: () -> Void
     let onRemoveServing: () -> Void
     let onShowSettings: () -> Void
+    let onAddToList: () -> Void
     let onNavigateToComments: () -> Void
 
     /// Section tops, keyed by tab, measured against `scrollSpace`.
@@ -44,6 +45,12 @@ struct RecipeDetailsView: View {
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Menu {
+                    Button(
+                        "Add to shopping list",
+                        systemImage: "cart.badge.plus",
+                        action: onAddToList
+                    )
+                    .disabled(state.loading || state.recipe.id.isEmpty)
                     Button(
                         "Recipe Settings",
                         systemImage: "gearshape",
@@ -84,7 +91,8 @@ struct RecipeDetailsView: View {
                             IngredientsSection(
                                 recipe: state.recipe,
                                 onAddServing: onAddServing,
-                                onRemoveServing: onRemoveServing
+                                onRemoveServing: onRemoveServing,
+                                onAddToList: onAddToList
                             )
                             .recipeSection(.ingredients, in: scrollSpace)
 
@@ -342,7 +350,9 @@ private let previewState = RecipeDetailsState(
     mobileTabs: [.overview, .ingredients, .instructions],
     desktopTabs: [],
     mode: .readOnly,
-    showSettings: false
+    showSettings: false,
+    baseServings: 2.0,
+    addToList: nil
 )
 
 #Preview {
@@ -352,6 +362,7 @@ private let previewState = RecipeDetailsState(
             onAddServing: {},
             onRemoveServing: {},
             onShowSettings: {},
+            onAddToList: {},
             onNavigateToComments: {}
         )
     }
@@ -368,11 +379,14 @@ private let previewState = RecipeDetailsState(
                 mobileTabs: [],
                 desktopTabs: [],
                 mode: .readOnly,
-                showSettings: false
+                showSettings: false,
+                baseServings: 0.0,
+                addToList: nil
             ),
             onAddServing: {},
             onRemoveServing: {},
             onShowSettings: {},
+            onAddToList: {},
             onNavigateToComments: {}
         )
     }

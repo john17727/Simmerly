@@ -27,6 +27,9 @@ struct MainView: View {
     @State private var model = ProfileTabModel()
     @State private var accessory = TabAccessoryModel()
     @State private var selectedTab: AppTab = .recipes
+    /// A list the Shopping List tab should open, set by a cross-tab request such as the "View
+    /// list" snackbar action on recipe details. Mirrors `pendingRequest` in AppContent.kt.
+    @State private var pendingShoppingListId: String?
 
     var body: some View {
         TabView(selection: $selectedTab) {
@@ -34,9 +37,15 @@ struct MainView: View {
                 Tab(tab.title, systemImage: tab.systemImage, value: tab) {
                     switch tab {
                     case .recipes:
-                        RecipesTabView()
+                        RecipesTabView(onOpenShoppingList: { listId in
+                            pendingShoppingListId = listId
+                            selectedTab = .shoppingList
+                        })
                     case .shoppingList:
-                        ShoppingListsTabView()
+                        ShoppingListsTabView(
+                            request: pendingShoppingListId,
+                            onRequestHandled: { pendingShoppingListId = nil }
+                        )
                     case .mealPlan:
                         Text(tab.title)
                     case .profile:
