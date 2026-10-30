@@ -74,6 +74,7 @@ import coil3.compose.AsyncImage
 import dev.juanrincon.simmerly.core.presentation.UiText
 import dev.juanrincon.simmerly.core.presentation.asString
 import dev.juanrincon.simmerly.core.presentation.ifTrue
+import dev.juanrincon.simmerly.core.presentation.navigation.isMediumWidthOrWider
 import dev.juanrincon.simmerly.core.presentation.shimmer
 import dev.juanrincon.simmerly.recipes.domain.model.Settings
 import dev.juanrincon.simmerly.recipes.presentation.details.models.IngredientUi
@@ -231,6 +232,7 @@ internal fun CompactRecipeDetails(
                 onEvent = onEvent,
                 paddingValues = paddingValues,
                 sharedTransitionScope = sharedTransitionScope,
+                medium = isMediumWidthOrWider(),
                 modifier = modifier.fillMaxSize()
             )
         }
@@ -244,7 +246,8 @@ private fun CompactContent(
     onEvent: (RecipeDetailsIntent) -> Unit,
     paddingValues: PaddingValues,
     modifier: Modifier = Modifier,
-    sharedTransitionScope: SharedTransitionScope? = null
+    sharedTransitionScope: SharedTransitionScope? = null,
+    medium: Boolean = false
 ) {
     val recipe = state.recipe
     val tabs = state.mobileTabs
@@ -255,7 +258,10 @@ private fun CompactContent(
 
     var programmaticScrollTargetIndex by remember { mutableStateOf<Int?>(null) }
 
-    val selectedTabIndex by remember(tabs) {
+    // The medium layout folds the hero and summary into one item, so everything shifts up by one.
+    val contentStartIndex = if (medium) CONTENT_START_INDEX - 1 else CONTENT_START_INDEX
+
+    val selectedTabIndex by remember(tabs, medium) {
         derivedStateOf {
             programmaticScrollTargetIndex?.let { return@derivedStateOf it }
 
@@ -264,11 +270,11 @@ private fun CompactContent(
             val visibleItems = listState.layoutInfo.visibleItemsInfo
 
             val activeItem = visibleItems
-                .filter { it.index >= CONTENT_START_INDEX && it.index < CONTENT_START_INDEX + tabs.size - CONTENT_TAB_OFFSET }
+                .filter { it.index >= contentStartIndex && it.index < contentStartIndex + tabs.size - CONTENT_TAB_OFFSET }
                 .lastOrNull { it.offset <= tabRowHeightPx }
                 ?: return@derivedStateOf OVERVIEW_TAB_INDEX
 
-            (activeItem.index - CONTENT_START_INDEX + CONTENT_TAB_OFFSET).coerceIn(
+            (activeItem.index - contentStartIndex + CONTENT_TAB_OFFSET).coerceIn(
                 OVERVIEW_TAB_INDEX,
                 tabs.lastIndex
             )
@@ -284,165 +290,37 @@ private fun CompactContent(
         )
     ) {
 
-        // Hero image
-        item {
-            val uriHandler = LocalUriHandler.current
-            val (sharedModifier, isNavTransitionRunning) = if (sharedTransitionScope != null) {
-                val animatedScope = LocalNavAnimatedContentScope.current
-                val modifier = with(sharedTransitionScope) {
-                    Modifier.sharedElement(
-                        sharedContentState = rememberSharedContentState(key = "recipe-image-${recipe.id}"),
-                        animatedVisibilityScope = animatedScope,
+        if (medium) {
+            // Hero beside the description + meta: stacked, each would stretch across the window.
+            item {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(24.dp),
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)
+                ) {
+                    RecipeHero(
+                        state = state,
+                        sharedTransitionScope = sharedTransitionScope,
+                        modifier = Modifier.weight(1f).height(MEDIUM_HERO_HEIGHT)
                     )
+                    RecipeSummary(state, modifier = Modifier.weight(1f))
                 }
-                modifier to animatedScope.transition.isRunning
-            } else {
-                Modifier to false
             }
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .fillParentMaxHeight(0.45f)
-                    .padding(horizontal = 16.dp)
-            ) {
-                AsyncImage(
-                    model = recipe.image,
-                    contentDescription = null,
-                    contentScale = ContentScale.Crop,
+        } else {
+            // Hero image
+            item {
+                RecipeHero(
+                    state = state,
+                    sharedTransitionScope = sharedTransitionScope,
                     modifier = Modifier
-                        .matchParentSize()
-                        .then(sharedModifier)
-                        .ifTrue(state.loading) {
-                            shimmer(
-                                colors = listOf(
-                                    MaterialTheme.colorScheme.surfaceContainer,
-                                    MaterialTheme.colorScheme.surfaceContainerHighest,
-                                    MaterialTheme.colorScheme.surfaceContainer,
-                                ),
-                                shape = MaterialTheme.shapes.medium
-                            )
-                        }.clip(MaterialTheme.shapes.medium)
+                        .fillMaxWidth()
+                        .fillParentMaxHeight(0.45f)
+                        .padding(horizontal = 16.dp)
                 )
-                AnimatedVisibility(
-                    !state.loading && recipe.tags.isNotEmpty() && !isNavTransitionRunning,
-                    modifier = Modifier.align(Alignment.BottomStart),
-                    enter = fadeIn(),
-                    exit = fadeOut(),
-                ) {
-                    TagRow(
-                        tags = recipe.tags,
-                        modifier = Modifier
-                            .padding(12.dp)
-                    )
-                }
-                AnimatedVisibility(
-                    !state.loading && recipe.link != null && !isNavTransitionRunning,
-                    modifier = Modifier.align(Alignment.BottomEnd),
-                    enter = fadeIn(),
-                    exit = fadeOut(),
-                ) {
-                    FilledIconButton(
-                        onClick = { uriHandler.openUri(recipe.link!!) },
-                        shape = IconButtonDefaults.extraSmallSquareShape,
-                        modifier = Modifier.padding(12.dp)
-                            .size(IconButtonDefaults.extraSmallContainerSize())
-                    ) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Default.OpenInNew,
-                            contentDescription = "Open original recipe",
-                            modifier = Modifier.size(IconButtonDefaults.extraSmallIconSize)
-                        )
-                    }
-                }
             }
-        }
 
-        // Description + meta
-        item {
-            val shimmerColors = listOf(
-                MaterialTheme.colorScheme.surfaceContainer,
-                MaterialTheme.colorScheme.surfaceContainerHighest,
-                MaterialTheme.colorScheme.surfaceContainer,
-            )
-            var descriptionExpanded by remember { mutableStateOf(false) }
-            var descriptionOverflowing by remember { mutableStateOf(false) }
-            Column(modifier = Modifier.padding(horizontal = 24.dp)) {
-                Spacer(modifier = Modifier.height(16.dp))
-                if (state.loading) {
-                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                        Box(
-                            modifier = Modifier.width(64.dp).height(16.dp)
-                                .clip(MaterialTheme.shapes.small)
-                                .shimmer(shimmerColors, MaterialTheme.shapes.small)
-                        )
-                        Box(
-                            modifier = Modifier.width(80.dp).height(16.dp)
-                                .clip(MaterialTheme.shapes.small)
-                                .shimmer(shimmerColors, MaterialTheme.shapes.small)
-                        )
-                        Box(
-                            modifier = Modifier.width(72.dp).height(16.dp)
-                                .clip(MaterialTheme.shapes.small)
-                                .shimmer(shimmerColors, MaterialTheme.shapes.small)
-                        )
-                    }
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Box(
-                            modifier = Modifier.fillMaxWidth().height(14.dp)
-                                .clip(MaterialTheme.shapes.small)
-                                .shimmer(shimmerColors, MaterialTheme.shapes.small)
-                        )
-                        Box(
-                            modifier = Modifier.fillMaxWidth().height(14.dp)
-                                .clip(MaterialTheme.shapes.small)
-                                .shimmer(shimmerColors, MaterialTheme.shapes.small)
-                        )
-                        Box(
-                            modifier = Modifier.fillMaxWidth(0.9f).height(14.dp)
-                                .clip(MaterialTheme.shapes.small)
-                                .shimmer(shimmerColors, MaterialTheme.shapes.small)
-                        )
-                        Box(
-                            modifier = Modifier.fillMaxWidth(0.55f).height(14.dp)
-                                .clip(MaterialTheme.shapes.small)
-                                .shimmer(shimmerColors, MaterialTheme.shapes.small)
-                        )
-                    }
-                    Spacer(modifier = Modifier.height(16.dp))
-                } else {
-                    RecipeMetaRow(
-                        recipe.rating,
-                        recipe.totalTime,
-                        recipe.prepTime,
-                        recipe.performTime
-                    )
-                    Spacer(modifier = Modifier.height(16.dp))
-                    recipe.description?.let {
-                        Column(modifier = Modifier.animateContentSize()) {
-                            Text(
-                                it.asString(),
-                                style = MaterialTheme.typography.bodyMedium,
-                                maxLines = if (descriptionExpanded) Int.MAX_VALUE else DESCRIPTION_MAX_LINES,
-                                overflow = TextOverflow.Ellipsis,
-                                onTextLayout = { layoutResult ->
-                                    if (!descriptionExpanded) {
-                                        descriptionOverflowing = layoutResult.hasVisualOverflow
-                                    }
-                                }
-                            )
-                            if (descriptionOverflowing || descriptionExpanded) {
-                                TextButton(
-                                    onClick = { descriptionExpanded = !descriptionExpanded },
-                                    modifier = Modifier.align(Alignment.End)
-                                ) {
-                                    Text(if (descriptionExpanded) "Show less" else "Read more")
-                                }
-                            }
-                        }
-                        Spacer(modifier = Modifier.height(16.dp))
-                    }
-                }
+            // Description + meta
+            item {
+                RecipeSummary(state, modifier = Modifier.padding(horizontal = 24.dp))
             }
         }
 
@@ -464,7 +342,7 @@ private fun CompactContent(
                                             listState.animateScrollToItem(index = 0)
                                         } else {
                                             listState.animateScrollToItem(
-                                                index = index - CONTENT_TAB_OFFSET + CONTENT_START_INDEX,
+                                                index = index - CONTENT_TAB_OFFSET + contentStartIndex,
                                                 scrollOffset = tabRowHeightPx * -1
                                             )
                                         }
@@ -503,6 +381,7 @@ private fun CompactContent(
                     onRemoveServingButtonClick = { onEvent(RecipeDetailsIntent.RemoveServing) },
                     onAddServingButtonClick = { onEvent(RecipeDetailsIntent.AddServing) },
                     onAddToListClick = { onEvent(RecipeDetailsIntent.OpenAddToList) },
+                    columns = if (medium) MEDIUM_INGREDIENT_COLUMNS else 1,
                     modifier = Modifier.fillMaxWidth()
                 )
             }
@@ -529,6 +408,7 @@ private fun CompactContent(
                 InstructionView(
                     instructions = recipe.instructions,
                     ingredients = recipe.ingredients,
+                    imagesOnSide = medium,
                     modifier = Modifier.fillMaxWidth()
                 )
             }
@@ -570,8 +450,182 @@ private fun CompactContent(
     }
 }
 
-// Lazy list layout: image(0), meta(1), stickyHeader(2), content sections start at 3
+@OptIn(ExperimentalSharedTransitionApi::class)
+@Composable
+internal fun RecipeHero(
+    state: RecipeDetailsState,
+    modifier: Modifier = Modifier,
+    sharedTransitionScope: SharedTransitionScope? = null,
+) {
+    val recipe = state.recipe
+    val uriHandler = LocalUriHandler.current
+    val (sharedModifier, isNavTransitionRunning) = if (sharedTransitionScope != null) {
+        val animatedScope = LocalNavAnimatedContentScope.current
+        val shared = with(sharedTransitionScope) {
+            Modifier.sharedElement(
+                sharedContentState = rememberSharedContentState(key = "recipe-image-${recipe.id}"),
+                animatedVisibilityScope = animatedScope,
+            )
+        }
+        shared to animatedScope.transition.isRunning
+    } else {
+        Modifier to false
+    }
+    Box(modifier = modifier) {
+        AsyncImage(
+            model = recipe.image,
+            contentDescription = null,
+            contentScale = ContentScale.Crop,
+            modifier = Modifier
+                .matchParentSize()
+                .then(sharedModifier)
+                .ifTrue(state.loading) {
+                    shimmer(
+                        colors = listOf(
+                            MaterialTheme.colorScheme.surfaceContainer,
+                            MaterialTheme.colorScheme.surfaceContainerHighest,
+                            MaterialTheme.colorScheme.surfaceContainer,
+                        ),
+                        shape = MaterialTheme.shapes.medium
+                    )
+                }.clip(MaterialTheme.shapes.medium)
+        )
+        AnimatedVisibility(
+            !state.loading && recipe.tags.isNotEmpty() && !isNavTransitionRunning,
+            modifier = Modifier.align(Alignment.BottomStart),
+            enter = fadeIn(),
+            exit = fadeOut(),
+        ) {
+            TagRow(
+                tags = recipe.tags,
+                modifier = Modifier
+                    .padding(12.dp)
+            )
+        }
+        AnimatedVisibility(
+            !state.loading && recipe.link != null && !isNavTransitionRunning,
+            modifier = Modifier.align(Alignment.BottomEnd),
+            enter = fadeIn(),
+            exit = fadeOut(),
+        ) {
+            FilledIconButton(
+                onClick = { uriHandler.openUri(recipe.link!!) },
+                shape = IconButtonDefaults.extraSmallSquareShape,
+                modifier = Modifier.padding(12.dp)
+                    .size(IconButtonDefaults.extraSmallContainerSize())
+            ) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Default.OpenInNew,
+                    contentDescription = "Open original recipe",
+                    modifier = Modifier.size(IconButtonDefaults.extraSmallIconSize)
+                )
+            }
+        }
+    }
+}
+
+@Composable
+internal fun RecipeSummary(
+    state: RecipeDetailsState,
+    modifier: Modifier = Modifier,
+) {
+    val recipe = state.recipe
+    val shimmerColors = listOf(
+        MaterialTheme.colorScheme.surfaceContainer,
+        MaterialTheme.colorScheme.surfaceContainerHighest,
+        MaterialTheme.colorScheme.surfaceContainer,
+    )
+    var descriptionExpanded by remember { mutableStateOf(false) }
+    var descriptionOverflowing by remember { mutableStateOf(false) }
+    Column(modifier = modifier) {
+        Spacer(modifier = Modifier.height(16.dp))
+        if (state.loading) {
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                Box(
+                    modifier = Modifier.width(64.dp).height(16.dp)
+                        .clip(MaterialTheme.shapes.small)
+                        .shimmer(shimmerColors, MaterialTheme.shapes.small)
+                )
+                Box(
+                    modifier = Modifier.width(80.dp).height(16.dp)
+                        .clip(MaterialTheme.shapes.small)
+                        .shimmer(shimmerColors, MaterialTheme.shapes.small)
+                )
+                Box(
+                    modifier = Modifier.width(72.dp).height(16.dp)
+                        .clip(MaterialTheme.shapes.small)
+                        .shimmer(shimmerColors, MaterialTheme.shapes.small)
+                )
+            }
+            Spacer(modifier = Modifier.height(16.dp))
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Box(
+                    modifier = Modifier.fillMaxWidth().height(14.dp)
+                        .clip(MaterialTheme.shapes.small)
+                        .shimmer(shimmerColors, MaterialTheme.shapes.small)
+                )
+                Box(
+                    modifier = Modifier.fillMaxWidth().height(14.dp)
+                        .clip(MaterialTheme.shapes.small)
+                        .shimmer(shimmerColors, MaterialTheme.shapes.small)
+                )
+                Box(
+                    modifier = Modifier.fillMaxWidth(0.9f).height(14.dp)
+                        .clip(MaterialTheme.shapes.small)
+                        .shimmer(shimmerColors, MaterialTheme.shapes.small)
+                )
+                Box(
+                    modifier = Modifier.fillMaxWidth(0.55f).height(14.dp)
+                        .clip(MaterialTheme.shapes.small)
+                        .shimmer(shimmerColors, MaterialTheme.shapes.small)
+                )
+            }
+            Spacer(modifier = Modifier.height(16.dp))
+        } else {
+            RecipeMetaRow(
+                recipe.rating,
+                recipe.totalTime,
+                recipe.prepTime,
+                recipe.performTime
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            recipe.description?.let {
+                Column(modifier = Modifier.animateContentSize()) {
+                    Text(
+                        it.asString(),
+                        style = MaterialTheme.typography.bodyMedium,
+                        maxLines = if (descriptionExpanded) Int.MAX_VALUE else DESCRIPTION_MAX_LINES,
+                        overflow = TextOverflow.Ellipsis,
+                        onTextLayout = { layoutResult ->
+                            if (!descriptionExpanded) {
+                                descriptionOverflowing = layoutResult.hasVisualOverflow
+                            }
+                        }
+                    )
+                    if (descriptionOverflowing || descriptionExpanded) {
+                        TextButton(
+                            onClick = { descriptionExpanded = !descriptionExpanded },
+                            modifier = Modifier.align(Alignment.End)
+                        ) {
+                            Text(if (descriptionExpanded) "Show less" else "Read more")
+                        }
+                    }
+                }
+                Spacer(modifier = Modifier.height(16.dp))
+            }
+        }
+    }
+}
+
+// Lazy list layout: image(0), meta(1), stickyHeader(2), content sections start at 3. In the
+// medium layout the image and meta share item 0, so the sections start at 2.
 private const val CONTENT_START_INDEX = 3
+
+// Height of the hero image beside the summary; the phone's 45%-of-screen is too tall there
+private val MEDIUM_HERO_HEIGHT = 300.dp
+
+// Columns the ingredient list uses in the medium layout
+private const val MEDIUM_INGREDIENT_COLUMNS = 2
 
 // Number of tabs before the first content tab (just Overview)
 private const val CONTENT_TAB_OFFSET = 1

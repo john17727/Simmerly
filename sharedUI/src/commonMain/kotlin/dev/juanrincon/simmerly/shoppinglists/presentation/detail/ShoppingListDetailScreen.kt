@@ -11,6 +11,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -20,11 +21,14 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyListScope
-import androidx.compose.foundation.lazy.LazyListState
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
+import androidx.compose.foundation.lazy.grid.LazyGridItemSpanScope
+import androidx.compose.foundation.lazy.grid.LazyGridScope
+import androidx.compose.foundation.lazy.grid.LazyGridState
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.itemsIndexed
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -57,7 +61,6 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.TopAppBarScrollBehavior
-import androidx.compose.material3.adaptive.currentWindowAdaptiveInfoV2
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
@@ -79,10 +82,10 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
-import androidx.window.core.layout.WindowSizeClass
 import dev.juanrincon.simmerly.core.presentation.UiText
 import dev.juanrincon.simmerly.core.presentation.asString
 import dev.juanrincon.simmerly.core.presentation.asStringSuspend
+import dev.juanrincon.simmerly.core.presentation.navigation.isTwoPaneWidth
 import dev.juanrincon.simmerly.shoppinglists.presentation.detail.models.ItemSectionUi
 import dev.juanrincon.simmerly.shoppinglists.presentation.detail.models.LinkedRecipeUi
 import dev.juanrincon.simmerly.shoppinglists.presentation.detail.models.SectionKind
@@ -131,8 +134,7 @@ fun ShoppingListDetailScreen(
         }
     }
 
-    val windowSizeClass = currentWindowAdaptiveInfoV2().windowSizeClass
-    if (windowSizeClass.isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_EXPANDED_LOWER_BOUND)) {
+    if (isTwoPaneWidth()) {
         ShoppingListDetailExpanded(
             state = state,
             onEvent = viewModel::onEvent,
@@ -162,7 +164,7 @@ private fun Content(
 ) {
     var addFieldFocused by remember { mutableStateOf(false) }
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
-    val listState = rememberLazyListState()
+    val listState = rememberLazyGridState()
     val coroutineScope = rememberCoroutineScope()
     // Long lists only: the button appears once the summary has scrolled out of view.
     val showScrollToTop by remember { derivedStateOf { listState.firstVisibleItemIndex > 0 } }
@@ -330,109 +332,124 @@ private fun TopBar(
     )
 }
 
+/** Minimum width of an item column; below twice this the list stays a single column. */
+private val ITEM_COLUMN_MIN_WIDTH = 360.dp
+
+/** Spans a grid item across every column. */
+private val FullSpan: LazyGridItemSpanScope.() -> GridItemSpan = { GridItemSpan(maxLineSpan) }
+
 @Composable
 private fun ListBody(
     state: ShoppingListDetailState,
     onEvent: (ShoppingListDetailIntent) -> Unit,
-    listState: LazyListState,
+    listState: LazyGridState,
     contentPadding: PaddingValues,
 ) {
-    LazyColumn(
-        state = listState,
-        contentPadding = PaddingValues(
-            top = contentPadding.calculateTopPadding(),
-            bottom = contentPadding.calculateBottomPadding() + 24.dp,
-        ),
-        modifier = Modifier.fillMaxSize(),
-    ) {
-        item(key = "summary") {
-            Column(
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-                modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 16.dp),
-            ) {
-                Text(
-                    text = progressSummary(state.remainingCount, state.checkedCount),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-                ListProgressBar(progress = state.progress)
+    // Items flow into columns as the window widens (an unfolded foldable) while everything else
+    // spans the full width. The count is worked out here rather than with GridCells.Adaptive
+    // because the item dividers need to know it.
+    BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+        val columns = (maxWidth / ITEM_COLUMN_MIN_WIDTH).toInt().coerceAtLeast(1)
+        LazyVerticalGrid(
+            columns = GridCells.Fixed(columns),
+            state = listState,
+            contentPadding = PaddingValues(
+                top = contentPadding.calculateTopPadding(),
+                bottom = contentPadding.calculateBottomPadding() + 24.dp,
+            ),
+            modifier = Modifier.fillMaxSize(),
+        ) {
+            item(key = "summary", span = FullSpan) {
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 16.dp),
+                ) {
+                    Text(
+                        text = progressSummary(state.remainingCount, state.checkedCount),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    ListProgressBar(progress = state.progress)
+                }
             }
-        }
 
-        if (state.linkedRecipes.isNotEmpty()) {
-            item(key = "recipes") {
-                LinkedRecipesCard(
-                    recipes = state.linkedRecipes,
-                    onQuantityChanged = { recipeId, delta ->
-                        onEvent(ShoppingListDetailIntent.OnRecipeQuantityChanged(recipeId, delta))
-                    },
-                    modifier = Modifier.padding(horizontal = 16.dp),
-                )
+            if (state.linkedRecipes.isNotEmpty()) {
+                item(key = "recipes", span = FullSpan) {
+                    LinkedRecipesCard(
+                        recipes = state.linkedRecipes,
+                        onQuantityChanged = { recipeId, delta ->
+                            onEvent(ShoppingListDetailIntent.OnRecipeQuantityChanged(recipeId, delta))
+                        },
+                        modifier = Modifier.padding(horizontal = 16.dp),
+                    )
+                }
             }
-        }
 
-        if (state.sections.isEmpty() && state.checkedItems.isEmpty()) {
-            item(key = "empty") {
-                Text(
-                    text = "Nothing on this list yet. Add your first item below.",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 32.dp, vertical = 48.dp),
-                )
+            if (state.sections.isEmpty() && state.checkedItems.isEmpty()) {
+                item(key = "empty", span = FullSpan) {
+                    Text(
+                        text = "Nothing on this list yet. Add your first item below.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = 32.dp, vertical = 48.dp),
+                    )
+                }
+                return@LazyVerticalGrid
             }
-            return@LazyColumn
-        }
 
-        item(key = "grouping") {
-            GroupingToggle(
-                selected = state.grouping,
-                onSelected = { onEvent(ShoppingListDetailIntent.OnGroupingSelected(it)) },
-                modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 4.dp),
-            )
-        }
-
-        if (state.sections.isNotEmpty()) {
-            item(key = "sections-control") {
-                SectionsControl(
-                    sectionCount = state.sections.size,
-                    grouping = state.grouping,
-                    anyExpanded = state.anySectionExpanded,
-                    onCheckAll = { onEvent(ShoppingListDetailIntent.OnCheckAllClicked) },
-                    onToggleAll = { onEvent(ShoppingListDetailIntent.OnToggleAllSectionsClicked) },
+            item(key = "grouping", span = FullSpan) {
+                GroupingToggle(
+                    selected = state.grouping,
+                    onSelected = { onEvent(ShoppingListDetailIntent.OnGroupingSelected(it)) },
+                    modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 4.dp),
                 )
             }
-        }
 
-        state.sections.forEachIndexed { index, section ->
-            section(
-                section = section,
-                isFirst = index == 0,
-                collapsed = section.key in state.collapsedSections,
-                onEvent = onEvent,
-            )
-        }
+            if (state.sections.isNotEmpty()) {
+                item(key = "sections-control", span = FullSpan) {
+                    SectionsControl(
+                        sectionCount = state.sections.size,
+                        grouping = state.grouping,
+                        anyExpanded = state.anySectionExpanded,
+                        onCheckAll = { onEvent(ShoppingListDetailIntent.OnCheckAllClicked) },
+                        onToggleAll = { onEvent(ShoppingListDetailIntent.OnToggleAllSectionsClicked) },
+                    )
+                }
+            }
 
-        if (state.checkedItems.isNotEmpty()) {
-            item(key = "checked") {
-                CheckedCard(
-                    items = state.checkedItems,
-                    expanded = state.checkedExpanded,
+            state.sections.forEachIndexed { index, section ->
+                section(
+                    section = section,
+                    isFirst = index == 0,
+                    columns = columns,
+                    collapsed = section.key in state.collapsedSections,
                     onEvent = onEvent,
-                    modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 16.dp),
                 )
+            }
+
+            if (state.checkedItems.isNotEmpty()) {
+                item(key = "checked", span = FullSpan) {
+                    CheckedCard(
+                        items = state.checkedItems,
+                        expanded = state.checkedExpanded,
+                        onEvent = onEvent,
+                        modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 16.dp),
+                    )
+                }
             }
         }
     }
 }
 
-private fun LazyListScope.section(
+private fun LazyGridScope.section(
     section: ItemSectionUi,
+    columns: Int,
     isFirst: Boolean,
     collapsed: Boolean,
     onEvent: (ShoppingListDetailIntent) -> Unit,
 ) {
-    item(key = "header-${section.key}") {
+    item(key = "header-${section.key}", span = FullSpan) {
         val title = when (section.kind) {
             SectionKind.Aisle, SectionKind.Recipe -> section.title.asString()
             SectionKind.NoAisle -> "No aisle"
@@ -483,9 +500,10 @@ private fun LazyListScope.section(
         }
     }
     if (collapsed) return
-    items(section.items, key = { "${section.key}-${it.id}" }) { item ->
+    itemsIndexed(section.items, key = { _, it -> "${section.key}-${it.id}" }) { index, item ->
         Column(modifier = Modifier.padding(start = 16.dp, end = 4.dp).animateItem()) {
-            if (item != section.items.first()) {
+            // Only the first row clears the section header, as the first item always did.
+            if (index >= columns) {
                 HorizontalDivider(color = MaterialTheme.colorScheme.surfaceContainer)
             }
             ItemRow(

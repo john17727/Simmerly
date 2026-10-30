@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
-import androidx.compose.material3.adaptive.currentWindowAdaptiveInfoV2
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -14,8 +13,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.ui.unit.dp
-import androidx.window.core.layout.WindowSizeClass
 import dev.juanrincon.simmerly.core.presentation.KeepScreenOn
+import dev.juanrincon.simmerly.core.presentation.navigation.isTwoPaneWidth
 import dev.juanrincon.simmerly.recipes.presentation.cookmode.models.toTimerPresets
 import dev.juanrincon.simmerly.recipes.presentation.cookmode.orbit.CookModeIntent
 import dev.juanrincon.simmerly.recipes.presentation.cookmode.orbit.CookModeSideEffect
@@ -59,8 +58,7 @@ private fun Content(
 ) {
     KeepScreenOn()
 
-    val isExpanded = currentWindowAdaptiveInfoV2().windowSizeClass
-        .isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_EXPANDED_LOWER_BOUND)
+    val isExpanded = isTwoPaneWidth()
 
     Surface(modifier = modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
         if (state.loading) {

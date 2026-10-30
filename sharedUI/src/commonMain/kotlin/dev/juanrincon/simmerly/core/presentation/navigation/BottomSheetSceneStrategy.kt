@@ -9,12 +9,10 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.ModalBottomSheetProperties
 import androidx.compose.material3.SheetState
 import androidx.compose.material3.SheetValue
-import androidx.compose.material3.adaptive.currentWindowAdaptiveInfoV2
 import androidx.compose.material3.rememberBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.unit.Dp
-import androidx.window.core.layout.WindowSizeClass
 import androidx.navigation3.runtime.NavEntry
 import androidx.navigation3.runtime.NavMetadataKey
 import androidx.navigation3.runtime.get
@@ -94,8 +92,7 @@ class BottomSheetSceneStrategy<T : Any> : SceneStrategy<T> {
                 initialValue = SheetValue.Hidden,
                 enabledValues = setOf(SheetValue.Hidden, SheetValue.Expanded)
             )
-            val fillsWindow = currentWindowAdaptiveInfoV2().windowSizeClass
-                .isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_EXPANDED_LOWER_BOUND)
+            val fillsWindow = isTwoPaneWidth()
             ModalBottomSheet(
                 onDismissRequest = onBack,
                 sheetState = sheetState,

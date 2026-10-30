@@ -36,6 +36,7 @@ import androidx.navigation3.ui.NavDisplay
 import androidx.savedstate.serialization.SavedStateConfiguration
 import dev.juanrincon.simmerly.core.presentation.navigation.AppNavRequest
 import dev.juanrincon.simmerly.core.presentation.navigation.BottomSheetSceneStrategy
+import dev.juanrincon.simmerly.core.presentation.navigation.rememberTwoPaneDirective
 import dev.juanrincon.simmerly.recipes.presentation.comments.RecipeCommentsScreen
 import dev.juanrincon.simmerly.recipes.presentation.cookmode.CookModeScreen
 import dev.juanrincon.simmerly.recipes.presentation.details.RecipeDetailsScreen
@@ -76,7 +77,7 @@ fun RecipesContent(
             backStack = backStack,
             // BottomSheetSceneStrategy is an overlay strategy and must run before any non-overlay
             // one (ListDetailSceneStrategy here) — see its KDoc.
-            sceneStrategies = listOf(BottomSheetSceneStrategy(), rememberListDetailSceneStrategy()),
+            sceneStrategies = listOf(BottomSheetSceneStrategy(), rememberListDetailSceneStrategy(directive = rememberTwoPaneDirective())),
             modifier = modifier.fillMaxSize(),
             entryDecorators = listOf(
                 rememberSaveableStateHolderNavEntryDecorator(),
