@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -62,6 +63,9 @@ private val SECTION_PADDING = 20.dp
  */
 private val INGREDIENT_QUANTITY_WIDTH = 104.dp
 
+/** Gap between ingredient columns when the ingredients are laid out as a grid. */
+private val INGREDIENT_COLUMN_GAP = 24.dp
+
 @Composable
 internal fun IngredientAndToolView(
     recipe: RecipeDetailUi,
@@ -69,6 +73,7 @@ internal fun IngredientAndToolView(
     onRemoveServingButtonClick: () -> Unit,
     modifier: Modifier = Modifier,
     onAddToListClick: () -> Unit = {},
+    columns: Int = 1,
 ) {
     Column(modifier = modifier.padding(SECTION_PADDING)) {
         Text("Ingredients", style = MaterialTheme.typography.headlineSmall)
@@ -99,8 +104,17 @@ internal fun IngredientAndToolView(
             }
         }
         Column(modifier = Modifier.fillMaxWidth().padding(top = 16.dp)) {
-            recipe.ingredients.forEachIndexed { index, ingredient ->
-                IngredientEntry(ingredient, modifier = Modifier.fillMaxWidth(), index != 0)
+            // Filled row by row, so with several columns the ingredients read left to right.
+            recipe.ingredients.chunked(columns).forEachIndexed { rowIndex, row ->
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(INGREDIENT_COLUMN_GAP)
+                ) {
+                    row.forEach { ingredient ->
+                        IngredientEntry(ingredient, modifier = Modifier.weight(1f), rowIndex != 0)
+                    }
+                    repeat(columns - row.size) { Spacer(Modifier.weight(1f)) }
+                }
             }
         }
         if (recipe.tools.isNotEmpty()) {
@@ -192,7 +206,8 @@ internal fun InstructionView(
     instructions: List<InstructionUi>,
     ingredients: List<IngredientUi>,
     modifier: Modifier = Modifier,
-    contentPadding: PaddingValues = PaddingValues(SECTION_PADDING)
+    contentPadding: PaddingValues = PaddingValues(SECTION_PADDING),
+    imagesOnSide: Boolean = false,
 ) {
     val ingredientsById = remember(ingredients) { ingredients.associateBy { it.referenceId } }
     Column(modifier = modifier.padding(contentPadding)) {
@@ -205,7 +220,8 @@ internal fun InstructionView(
                 // Only the first step clears the heading; the rest butt up against the divider
                 // that closes the step above them.
                 modifier = Modifier.fillMaxWidth().ifTrue(index == 0) { padding(top = 12.dp) },
-                hasDivider = index != 0
+                hasDivider = index != 0,
+                imagesOnSide = imagesOnSide
             )
         }
     }
@@ -218,7 +234,8 @@ private fun InstructionEntry(
     instruction: InstructionUi,
     ingredients: List<IngredientUi>,
     modifier: Modifier = Modifier,
-    hasDivider: Boolean = true
+    hasDivider: Boolean = true,
+    imagesOnSide: Boolean = false
 ) {
     val richTextState = rememberRichTextState()
     LaunchedEffect(instruction.text) {
@@ -246,39 +263,63 @@ private fun InstructionEntry(
                     color = MaterialTheme.colorScheme.secondary
                 )
             }
-            Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                // Skip the generated "Step N" heading — the badge to the left already says it.
-                if (instruction.hasOwnSummary && instruction.summary.isNotBlank()) {
-                    Text(
-                        instruction.summary,
-                        style = MaterialTheme.typography.titleLarge,
-                        color = MaterialTheme.colorScheme.secondary
-                    )
-                }
-                IngredientChipRow(ingredients, modifier = Modifier.fillMaxWidth())
-                // RichText picks its style up from LocalTextStyle; providing it that way keeps
-                // us off the experimental `style` parameter while still applying DM Sans and the
-                // design's 16/27 step metrics.
-                ProvideTextStyle(
-                    MaterialTheme.typography.bodyLarge.copy(lineHeight = 27.sp)
+            Row(
+                modifier = Modifier.weight(1f),
+                horizontalArrangement = Arrangement.spacedBy(20.dp)
+            ) {
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                    modifier = Modifier.weight(1f)
                 ) {
-                    RichText(
-                        state = richTextState,
-                        modifier = Modifier.widthIn(max = INSTRUCTION_TEXT_MAX_WIDTH)
-                    )
+                    // Skip the generated "Step N" heading — the badge to the left already says it.
+                    if (instruction.hasOwnSummary && instruction.summary.isNotBlank()) {
+                        Text(
+                            instruction.summary,
+                            style = MaterialTheme.typography.titleLarge,
+                            color = MaterialTheme.colorScheme.secondary
+                        )
+                    }
+                    IngredientChipRow(ingredients, modifier = Modifier.fillMaxWidth())
+                    // RichText picks its style up from LocalTextStyle; providing it that way keeps
+                    // us off the experimental `style` parameter while still applying DM Sans and the
+                    // design's 16/27 step metrics.
+                    ProvideTextStyle(
+                        MaterialTheme.typography.bodyLarge.copy(lineHeight = 27.sp)
+                    ) {
+                        RichText(
+                            state = richTextState,
+                            modifier = Modifier.widthIn(max = INSTRUCTION_TEXT_MAX_WIDTH)
+                        )
+                    }
+                    if (!imagesOnSide) {
+                        InstructionImages(instruction.images)
+                    }
                 }
-                instruction.images.forEach { image ->
-                    AsyncImage(
-                        model = image,
-                        contentDescription = null,
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier
-                            .widthIn(max = INSTRUCTION_IMAGE_MAX_WIDTH)
-                            .height(INSTRUCTION_IMAGE_HEIGHT)
-                            .clip(MaterialTheme.shapes.medium)
+                if (imagesOnSide && instruction.images.isNotEmpty()) {
+                    InstructionImages(
+                        instruction.images,
+                        modifier = Modifier.width(INSTRUCTION_SIDE_IMAGE_WIDTH)
                     )
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun InstructionImages(images: List<String>, modifier: Modifier = Modifier) {
+    Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        images.forEach { image ->
+            AsyncImage(
+                model = image,
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier
+                    .widthIn(max = INSTRUCTION_IMAGE_MAX_WIDTH)
+                    .fillMaxWidth()
+                    .height(INSTRUCTION_IMAGE_HEIGHT)
+                    .clip(MaterialTheme.shapes.medium)
+            )
         }
     }
 }
@@ -289,6 +330,9 @@ private fun InstructionEntry(
 private val INSTRUCTION_TEXT_MAX_WIDTH = 640.dp
 private val INSTRUCTION_IMAGE_MAX_WIDTH = 560.dp
 private val INSTRUCTION_IMAGE_HEIGHT = 260.dp
+
+/** Width of the photo column when step images sit beside the step text. */
+private val INSTRUCTION_SIDE_IMAGE_WIDTH = 240.dp
 
 @Composable
 internal fun NotesView(notes: List<Note>, modifier: Modifier = Modifier) {
