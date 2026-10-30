@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.relocation.BringIntoViewRequester
 import androidx.compose.foundation.relocation.bringIntoViewRequester
@@ -92,6 +93,7 @@ private fun Content(
 ) {
     val windowSizeClass = currentWindowAdaptiveInfoV2().windowSizeClass
     val lazyListState = rememberLazyListState()
+    val lazyGridState = rememberLazyGridState()
 
     if (windowSizeClass.isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_EXPANDED_LOWER_BOUND)) {
         SelectableList(
@@ -108,7 +110,7 @@ private fun Content(
             onSearchClicked = onSearchClicked,
             onRecipeSelected = onRecipeSelected,
             sharedTransitionScope = sharedTransitionScope,
-            lazyListState = lazyListState,
+            lazyGridState = lazyGridState,
             modifier = modifier
         )
     }

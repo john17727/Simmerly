@@ -5,8 +5,10 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
+import androidx.compose.foundation.lazy.grid.LazyGridState
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -34,7 +36,7 @@ internal fun CompactRecipeList(
     lazyPagingItems: LazyPagingItems<RecipeSummary>,
     onSearchClicked: () -> Unit,
     onRecipeSelected: (String) -> Unit,
-    lazyListState: LazyListState,
+    lazyGridState: LazyGridState,
     modifier: Modifier = Modifier,
     sharedTransitionScope: SharedTransitionScope? = null,
 ) {
@@ -58,7 +60,7 @@ internal fun CompactRecipeList(
             lazyPagingItems = lazyPagingItems,
             onRecipeSelected = onRecipeSelected,
             sharedTransitionScope = sharedTransitionScope,
-            lazyListState = lazyListState,
+            lazyGridState = lazyGridState,
             modifier = modifier.padding(paddingValues)
         )
     }
@@ -68,14 +70,16 @@ internal fun CompactRecipeList(
 private fun RecipeList(
     lazyPagingItems: LazyPagingItems<RecipeSummary>,
     onRecipeSelected: (String) -> Unit,
-    lazyListState: LazyListState,
+    lazyGridState: LazyGridState,
     modifier: Modifier = Modifier,
     sharedTransitionScope: SharedTransitionScope? = null,
 ) {
-    LazyColumn(
-        state = lazyListState,
+    LazyVerticalGrid(
+        columns = GridCells.Adaptive(minSize = 320.dp),
+        state = lazyGridState,
         contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
         modifier = modifier.clip(shape = MaterialTheme.shapes.medium)
     ) {
         if (lazyPagingItems.loadState.refresh is LoadState.Loading) {
@@ -96,7 +100,7 @@ private fun RecipeList(
                 )
             }
             if (lazyPagingItems.loadState.append is LoadState.Loading) {
-                item {
+                item(span = { GridItemSpan(maxLineSpan) }) {
                     RecipeCardSkeleton(modifier = Modifier.fillMaxWidth())
                 }
             }
