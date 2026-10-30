@@ -8,4 +8,8 @@
     <string name="profile">Profile</string>
     <string name="shopping_list_load_failed">Couldn't load your shopping lists. Check your connection and try again.</string>
     <string name="shopping_list_update_failed">Couldn't save that change. Please try again.</string>
+    <string name="item_added_to_list">1 item added to %1$s</string>
+    <string name="items_added_to_list">%1$s items added to %2$s</string>
+    <string name="list_created_with_item">Created %1$s with 1 item</string>
+    <string name="list_created_with_items">Created %1$s with %2$s items</string>
 </resources>

@@ -3,7 +3,9 @@ package dev.juanrincon.simmerly.shoppinglists.data
 import arrow.core.Either
 import arrow.core.raise.either
 import dev.juanrincon.simmerly.auth.domain.SessionDataStore
+import dev.juanrincon.simmerly.recipes.domain.model.Ingredient
 import dev.juanrincon.simmerly.shoppinglists.data.mappers.toDomain
+import dev.juanrincon.simmerly.shoppinglists.data.mappers.toDto
 import dev.juanrincon.simmerly.shoppinglists.data.mappers.toUpdateDto
 import dev.juanrincon.simmerly.shoppinglists.data.remote.ShoppingListNetworkClient
 import dev.juanrincon.simmerly.shoppinglists.data.remote.dto.ShoppingListItemsCollectionDto
@@ -205,6 +207,18 @@ class DefaultShoppingListRepository(
                 updateList(listId) { list -> list.copy(recipes = previous.recipes) }
                 ShoppingListError.UpdateError
             }
+    }
+
+    override suspend fun addRecipe(
+        listId: String,
+        recipeId: String,
+        scale: Double,
+        ingredients: List<Ingredient>?,
+    ): Either<ShoppingListError, Unit> {
+        val host = sessionDataStore.getServerAddress()
+        return networkClient.addRecipe(listId, recipeId, scale, ingredients?.map { it.toDto() })
+            .map { upsert(it.toDomain(host)) }
+            .mapLeft { ShoppingListError.UpdateError }
     }
 
     override suspend fun units(): Either<ShoppingListError, List<ShoppingUnit>> {

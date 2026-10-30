@@ -5,6 +5,7 @@ import assertk.assertions.containsExactly
 import assertk.assertions.isEqualTo
 import assertk.assertions.isNull
 import assertk.assertions.isTrue
+import dev.juanrincon.simmerly.shoppinglists.data.remote.dto.outgoing.RecipeIngredientDto
 import dev.juanrincon.simmerly.shoppinglists.data.mappers.toUpdateDto
 import dev.juanrincon.simmerly.shoppinglists.aRef
 import dev.juanrincon.simmerly.shoppinglists.anItem
@@ -124,6 +125,21 @@ class ShoppingListNetworkClientTest {
         )
         assertThat(requests[0].jsonBody().jsonObject["recipeIncrementQuantity"]!!.jsonPrimitive.content).isEqualTo("1.0")
         assertThat(requests[1].jsonBody().jsonObject["recipeDecrementQuantity"]!!.jsonPrimitive.content).isEqualTo("1.0")
+    }
+
+    @Test
+    fun addRecipeSendsOnlyTheGivenIngredients() = runTest {
+        val client = buildClient(LIST_JSON)
+        val ingredient = RecipeIngredientDto(
+            quantity = 2.0, unit = null, food = null, note = null, display = "2 eggs",
+            title = null, originalText = null, referenceId = "ref-1",
+        )
+        client.addRecipe("list-1", "recipe-1", quantity = 1.5, ingredients = listOf(ingredient))
+
+        val body = requests.single().jsonBody().jsonObject
+        assertThat(body["recipeIncrementQuantity"]!!.jsonPrimitive.content).isEqualTo("1.5")
+        assertThat(body["recipeIngredients"]!!.jsonArray.single().jsonObject["referenceId"]!!.jsonPrimitive.content)
+            .isEqualTo("ref-1")
     }
 
     @Test

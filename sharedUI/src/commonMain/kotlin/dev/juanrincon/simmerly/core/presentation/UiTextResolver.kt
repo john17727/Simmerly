@@ -5,6 +5,10 @@ import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.stringResource
 import simmerly.shared.generated.resources.Res
+import simmerly.shared.generated.resources.item_added_to_list
+import simmerly.shared.generated.resources.items_added_to_list
+import simmerly.shared.generated.resources.list_created_with_item
+import simmerly.shared.generated.resources.list_created_with_items
 import simmerly.shared.generated.resources.login_failed
 import simmerly.shared.generated.resources.meal_plan
 import simmerly.shared.generated.resources.profile
@@ -36,4 +40,8 @@ private fun StringKey.toStringResource(): StringResource = when (this) {
     StringKey.Profile -> Res.string.profile
     StringKey.ShoppingListLoadFailed -> Res.string.shopping_list_load_failed
     StringKey.ShoppingListUpdateFailed -> Res.string.shopping_list_update_failed
+    StringKey.ItemAddedToList -> Res.string.item_added_to_list
+    StringKey.ItemsAddedToList -> Res.string.items_added_to_list
+    StringKey.ListCreatedWithItem -> Res.string.list_created_with_item
+    StringKey.ListCreatedWithItems -> Res.string.list_created_with_items
 }

@@ -67,7 +67,8 @@ internal fun IngredientAndToolView(
     recipe: RecipeDetailUi,
     onAddServingButtonClick: () -> Unit,
     onRemoveServingButtonClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onAddToListClick: () -> Unit = {},
 ) {
     Column(modifier = modifier.padding(SECTION_PADDING)) {
         Text("Ingredients", style = MaterialTheme.typography.headlineSmall)
@@ -113,7 +114,7 @@ internal fun IngredientAndToolView(
             }
         }
         OutlinedButton(
-            onClick = { /* TODO: add to shopping list */ },
+            onClick = onAddToListClick,
             shape = CircleShape,
             modifier = Modifier.fillMaxWidth().padding(top = 16.dp).height(40.dp)
         ) {

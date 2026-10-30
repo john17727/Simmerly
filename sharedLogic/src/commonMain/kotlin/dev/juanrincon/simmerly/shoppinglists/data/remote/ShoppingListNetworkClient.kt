@@ -16,6 +16,7 @@ import dev.juanrincon.simmerly.shoppinglists.data.remote.dto.outgoing.NewShoppin
 import dev.juanrincon.simmerly.shoppinglists.data.remote.dto.outgoing.NewShoppingListItemDto
 import dev.juanrincon.simmerly.shoppinglists.data.remote.dto.outgoing.RecipeDecrementDto
 import dev.juanrincon.simmerly.shoppinglists.data.remote.dto.outgoing.RecipeIncrementDto
+import dev.juanrincon.simmerly.shoppinglists.data.remote.dto.outgoing.RecipeIngredientDto
 import dev.juanrincon.simmerly.shoppinglists.data.remote.dto.outgoing.ShoppingListItemUpdateDto
 import io.ktor.client.HttpClient
 import io.ktor.client.request.delete
@@ -76,14 +77,15 @@ class ShoppingListNetworkClient(private val client: HttpClient) {
     suspend fun deleteList(id: String): Either<DataError.NetworkError<Unit>, Unit> =
         arrowNetworkHandlerNoContent { client.delete("/api/households/shopping/lists/$id") }
 
-    /** Adds a recipe's ingredients once more (or the first time). */
+    /** Adds a recipe's ingredients once more (or the first time), or just [ingredients] of them. */
     suspend fun addRecipe(
         listId: String,
         recipeId: String,
         quantity: Double,
+        ingredients: List<RecipeIngredientDto>? = null,
     ): Either<DataError.NetworkError<Unit>, ShoppingListDto> = arrowNetworkHandler {
         client.post("/api/households/shopping/lists/$listId/recipe/$recipeId") {
-            setBody(RecipeIncrementDto(quantity))
+            setBody(RecipeIncrementDto(quantity, ingredients))
         }
     }
 

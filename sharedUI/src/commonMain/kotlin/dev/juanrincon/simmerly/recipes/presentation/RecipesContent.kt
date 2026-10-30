@@ -34,6 +34,7 @@ import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import androidx.savedstate.serialization.SavedStateConfiguration
+import dev.juanrincon.simmerly.core.presentation.navigation.AppNavRequest
 import dev.juanrincon.simmerly.core.presentation.navigation.BottomSheetSceneStrategy
 import dev.juanrincon.simmerly.recipes.presentation.comments.RecipeCommentsScreen
 import dev.juanrincon.simmerly.recipes.presentation.cookmode.CookModeScreen
@@ -53,6 +54,7 @@ import kotlinx.serialization.modules.polymorphic
 @Composable
 fun RecipesContent(
     onAtRootChanged: (Boolean) -> Unit = {},
+    onNavigate: (AppNavRequest) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val backStack = rememberNavBackStack(
@@ -120,6 +122,7 @@ fun RecipesContent(
                         onNavigateBack = { backStack.removeLastOrNull() },
                         onNavigateToComments = { backStack.add(RecipeDestinations.Comments(it)) },
                         onStartCooking = { backStack.add(RecipeDestinations.CookMode(it)) },
+                        onNavigateToShoppingList = { onNavigate(AppNavRequest.OpenShoppingList(it)) },
                         modifier = Modifier.fillMaxSize()
                     )
                 }

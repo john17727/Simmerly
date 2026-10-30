@@ -12,6 +12,9 @@ data class RecipeDetailsState(
     val desktopTabs: List<RecipeTab> = emptyList(),
     val mode: RecipeMode = RecipeMode.READ_ONLY,
     val showSettings: Boolean = false,
+    /** The recipe's own servings as loaded, before the reader scaled them. */
+    val baseServings: Double = 0.0,
+    val addToList: AddToListState? = null,
 )
 
 enum class RecipeMode {

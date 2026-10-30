@@ -11,22 +11,30 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.adaptive.currentWindowAdaptiveInfoV2
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.window.core.layout.WindowSizeClass
+import dev.juanrincon.simmerly.core.presentation.asString
+import dev.juanrincon.simmerly.core.presentation.asStringSuspend
 import dev.juanrincon.simmerly.recipes.domain.model.Settings
 import dev.juanrincon.simmerly.recipes.presentation.details.orbit.RecipeDetailsIntent
+import dev.juanrincon.simmerly.recipes.presentation.details.orbit.RecipeDetailsSideEffect
 import dev.juanrincon.simmerly.recipes.presentation.details.orbit.RecipeDetailsState
 import dev.juanrincon.simmerly.recipes.presentation.details.orbit.RecipeMode
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
 import org.orbitmvi.orbit.compose.collectAsState
+import org.orbitmvi.orbit.compose.collectSideEffect
 
 @Composable
 fun RecipeDetailsScreen(
@@ -34,11 +42,28 @@ fun RecipeDetailsScreen(
     onNavigateBack: () -> Unit = {},
     onNavigateToComments: (recipeId: String) -> Unit,
     onStartCooking: (recipeId: String) -> Unit = {},
+    onNavigateToShoppingList: (listId: String) -> Unit = {},
     sharedTransitionScope: SharedTransitionScope? = null,
     viewModel: RecipeDetailsViewModel = koinViewModel { parametersOf(recipeId) },
     modifier: Modifier = Modifier
 ) {
     val state by viewModel.collectAsState()
+    val snackbarHostState = remember { SnackbarHostState() }
+    viewModel.collectSideEffect { effect ->
+        when (effect) {
+            is RecipeDetailsSideEffect.ShowMessage ->
+                snackbarHostState.showSnackbar(effect.message.asStringSuspend())
+
+            is RecipeDetailsSideEffect.ItemsAdded -> {
+                val result = snackbarHostState.showSnackbar(
+                    message = effect.message.asStringSuspend(),
+                    actionLabel = "View list",
+                    duration = SnackbarDuration.Long,
+                )
+                if (result == SnackbarResult.ActionPerformed) onNavigateToShoppingList(effect.listId)
+            }
+        }
+    }
     Content(
         state = state,
         onEvent = viewModel::onEvent,
@@ -46,6 +71,7 @@ fun RecipeDetailsScreen(
         onNavigateToComments = onNavigateToComments,
         onStartCooking = onStartCooking,
         sharedTransitionScope = sharedTransitionScope,
+        snackbarHostState = snackbarHostState,
         modifier = modifier
     )
 }
@@ -58,9 +84,19 @@ private fun Content(
     onNavigateBack: () -> Unit,
     onNavigateToComments: (recipeId: String) -> Unit,
     onStartCooking: (recipeId: String) -> Unit,
+    snackbarHostState: SnackbarHostState,
     sharedTransitionScope: SharedTransitionScope? = null,
     modifier: Modifier = Modifier
 ) {
+    state.addToList?.let { sheet ->
+        AddToListSheet(
+            sheet = sheet,
+            recipeTitle = state.recipe.title.asString(),
+            ingredients = state.recipe.ingredients,
+            onEvent = onEvent,
+        )
+    }
+
     if (state.showSettings) {
         ModalBottomSheet(
             dragHandle = null,
@@ -98,7 +134,8 @@ private fun Content(
                             onNavigateToComments = onNavigateToComments,
                             onStartCooking = onStartCooking,
                             sharedTransitionScope = sharedTransitionScope,
-                            modifier = modifier
+                            modifier = modifier,
+                            snackbarHostState = snackbarHostState,
                         )
                     }
                 }

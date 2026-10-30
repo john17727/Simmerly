@@ -2,11 +2,15 @@ package dev.juanrincon.simmerly.shoppinglists.data.mappers
 
 import dev.juanrincon.simmerly.core.data.remote.recipeImageUrl
 import dev.juanrincon.simmerly.recipes.data.remote.dto.LabelDto
+import dev.juanrincon.simmerly.recipes.domain.model.Ingredient
 import dev.juanrincon.simmerly.shoppinglists.data.remote.dto.ParsedIngredientDto
 import dev.juanrincon.simmerly.shoppinglists.data.remote.dto.ShoppingFoodDto
 import dev.juanrincon.simmerly.shoppinglists.data.remote.dto.ShoppingListDto
 import dev.juanrincon.simmerly.shoppinglists.data.remote.dto.ShoppingListItemDto
 import dev.juanrincon.simmerly.shoppinglists.data.remote.dto.ShoppingUnitDto
+import dev.juanrincon.simmerly.shoppinglists.data.remote.dto.outgoing.RecipeIngredientDto
+import dev.juanrincon.simmerly.shoppinglists.data.remote.dto.outgoing.RecipeIngredientFoodDto
+import dev.juanrincon.simmerly.shoppinglists.data.remote.dto.outgoing.RecipeIngredientUnitDto
 import dev.juanrincon.simmerly.shoppinglists.data.remote.dto.outgoing.ShoppingListItemRecipeRefUpdateDto
 import dev.juanrincon.simmerly.shoppinglists.data.remote.dto.outgoing.ShoppingListItemUpdateDto
 import dev.juanrincon.simmerly.shoppinglists.domain.model.ItemRecipeRef
@@ -130,3 +134,26 @@ fun ShoppingListItem.toUpdateDto(display: String = this.display): ShoppingListIt
             )
         },
     )
+
+fun Ingredient.toDto(): RecipeIngredientDto = RecipeIngredientDto(
+    quantity = quantity,
+    unit = unit?.let {
+        RecipeIngredientUnitDto(
+            id = it.id,
+            name = it.name,
+            pluralName = it.pluralName,
+            abbreviation = it.abbreviation,
+            pluralAbbreviation = it.pluralAbbreviation,
+            useAbbreviation = it.useAbbreviation,
+            fraction = it.fraction,
+        )
+    },
+    food = food?.let {
+        RecipeIngredientFoodDto(id = it.id, name = it.name, pluralName = it.pluralName, labelId = it.labelId)
+    },
+    note = note,
+    display = display,
+    title = title,
+    originalText = originalText,
+    referenceId = referenceId,
+)

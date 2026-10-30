@@ -26,7 +26,6 @@ import androidx.compose.material.icons.automirrored.filled.Comment
 import androidx.compose.material.icons.automirrored.filled.OpenInNew
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.ViewTimeline
@@ -46,6 +45,8 @@ import androidx.compose.material3.MediumFlexibleTopAppBar
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.PrimaryScrollableTabRow
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -97,11 +98,13 @@ internal fun CompactRecipeDetails(
     onNavigateToComments: (recipeId: String) -> Unit,
     onStartCooking: (recipeId: String) -> Unit = {},
     sharedTransitionScope: SharedTransitionScope? = null,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
 ) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     Scaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             Column {
                 MediumFlexibleTopAppBar(
@@ -188,9 +191,10 @@ internal fun CompactRecipeDetails(
                             contentDescription = "Comment"
                         )
                     }
-                    IconButton(onClick = { /* TODO: more action */ }, enabled = !state.loading) {
-                        Icon(Icons.Default.MoreVert, contentDescription = "More")
-                    }
+                    RecipeOverflowMenu(
+                        onAddToShoppingList = { onEvent(RecipeDetailsIntent.OpenAddToList) },
+                        enabled = !state.loading,
+                    )
                 },
                 floatingActionButton = {
                     // No steps to cook means nothing for Cook Mode to show — keep the FAB hidden
@@ -498,6 +502,7 @@ private fun CompactContent(
                     recipe = recipe,
                     onRemoveServingButtonClick = { onEvent(RecipeDetailsIntent.RemoveServing) },
                     onAddServingButtonClick = { onEvent(RecipeDetailsIntent.AddServing) },
+                    onAddToListClick = { onEvent(RecipeDetailsIntent.OpenAddToList) },
                     modifier = Modifier.fillMaxWidth()
                 )
             }

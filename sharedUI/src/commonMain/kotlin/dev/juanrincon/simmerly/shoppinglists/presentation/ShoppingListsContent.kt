@@ -20,6 +20,7 @@ import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import androidx.savedstate.serialization.SavedStateConfiguration
+import dev.juanrincon.simmerly.core.presentation.navigation.AppNavRequest
 import dev.juanrincon.simmerly.shoppinglists.presentation.detail.ShoppingListDetailScreen
 import dev.juanrincon.simmerly.shoppinglists.presentation.list.ShoppingListsScreen
 import dev.juanrincon.simmerly.shoppinglists.presentation.navigation.ShoppingListDestinations
@@ -34,6 +35,9 @@ import kotlinx.serialization.modules.polymorphic
 fun ShoppingListsContent(
     modifier: Modifier = Modifier,
     onAtRootChanged: (Boolean) -> Unit = {},
+    /** A list to open on top of the lists, e.g. from a recipe's "View list" action. */
+    request: AppNavRequest.OpenShoppingList? = null,
+    onRequestHandled: () -> Unit = {},
 ) {
     val backStack = rememberNavBackStack(
         configuration = SavedStateConfiguration {
@@ -48,6 +52,13 @@ fun ShoppingListsContent(
 
     val isAtRoot by remember { derivedStateOf { backStack.size <= 1 } }
     LaunchedEffect(isAtRoot) { onAtRootChanged(isAtRoot) }
+    LaunchedEffect(request) {
+        if (request != null) {
+            backStack.removeAll { it is ShoppingListDestinations.Detail }
+            backStack.add(ShoppingListDestinations.Detail(request.listId))
+            onRequestHandled()
+        }
+    }
 
     NavDisplay(
         backStack = backStack,
