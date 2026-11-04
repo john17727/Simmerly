@@ -14,9 +14,11 @@ import dev.juanrincon.simmerly.recipes.aSettings
 import dev.juanrincon.simmerly.recipes.anIngredientUi
 import dev.juanrincon.simmerly.recipes.domain.LoadingResult
 import dev.juanrincon.simmerly.recipes.domain.RecipesError
+import dev.juanrincon.simmerly.recipes.domain.model.Note
 import dev.juanrincon.simmerly.recipes.presentation.details.models.RecipeDetailUi
 import dev.juanrincon.simmerly.recipes.presentation.details.orbit.RecipeDetailsIntent
 import dev.juanrincon.simmerly.recipes.presentation.details.orbit.RecipeDetailsState
+import dev.juanrincon.simmerly.recipes.presentation.details.orbit.RecipeTab
 import dev.juanrincon.simmerly.shoppinglists.FakeShoppingListRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -97,6 +99,45 @@ class RecipeDetailsViewModelTest {
             assertThat(state.loading).isFalse()
             cancelAndIgnoreRemainingItems()
         }
+    }
+
+    // endregion
+
+    // region Tabs
+
+    private suspend fun loadedTabs(recipe: dev.juanrincon.simmerly.recipes.domain.model.RecipeDetail) =
+        kotlinx.coroutines.test.TestScope(testDispatcher).let { scope ->
+            var tabs = emptyList<RecipeTab>()
+            viewModel.testWithInternalState(scope, initialState = RecipeDetailsState(loading = false)) {
+                runOnCreate()
+                repo.recipeDetailsFlow().emit(Either.Right(LoadingResult.Loading))
+                awaitInternalState()
+                repo.recipeDetailsFlow().emit(Either.Right(LoadingResult.Loaded(recipe)))
+                tabs = awaitInternalState().mobileTabs
+                cancelAndIgnoreRemainingItems()
+            }
+            tabs
+        }
+
+    @Test
+    fun tabsAreOverviewIngredientsInstructionsWhenNoNotesOrNutrition() = runTest(testDispatcher) {
+        assertThat(loadedTabs(aRecipeDetail())).isEqualTo(
+            listOf(RecipeTab.Overview, RecipeTab.Ingredients, RecipeTab.Instructions)
+        )
+    }
+
+    @Test
+    fun tabsIncludeNotesAndNutritionWhenPresent() = runTest(testDispatcher) {
+        val recipe = aRecipeDetail(
+            notes = listOf(Note(id = 1, title = "Tip", text = "Salt early")),
+            settings = aSettings(showNutrition = true)
+        )
+        assertThat(loadedTabs(recipe)).isEqualTo(
+            listOf(
+                RecipeTab.Overview, RecipeTab.Ingredients, RecipeTab.Instructions,
+                RecipeTab.Notes, RecipeTab.Nutrition
+            )
+        )
     }
 
     // endregion

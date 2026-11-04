@@ -32,18 +32,15 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.AppBarRow
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.PrimaryScrollableTabRow
 import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
@@ -57,9 +54,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import dev.juanrincon.simmerly.core.presentation.VerticalScrollbar
-import dev.juanrincon.simmerly.core.presentation.ifTrue
-import dev.juanrincon.simmerly.core.presentation.shimmer
-import dev.juanrincon.simmerly.core.presentation.shimmerColors
 import dev.juanrincon.simmerly.recipes.presentation.comments.RecipeCommentsScreen
 import dev.juanrincon.simmerly.recipes.presentation.details.orbit.RecipeDetailsIntent
 import dev.juanrincon.simmerly.recipes.presentation.details.orbit.RecipeDetailsState
@@ -72,12 +66,12 @@ private val EXPANDED_HORIZONTAL_PADDING = 28.dp
 /** Keeps the single-column content readable on very wide panes. */
 private val EXPANDED_CONTENT_MAX_WIDTH = 1040.dp
 
-/** Trailing space so the last card/step clears the Start cooking FAB (same as the foldable). */
 /** The desktop pane is wide, so show more actions before overflowing (counts the overflow button). */
 private const val EXPANDED_TOP_BAR_MAX_ITEMS = 10
 
 private val COMMENTS_PANEL_WIDTH = 440.dp
 
+/** Trailing space so the last card/step clears the Start cooking FAB (same as the foldable). */
 private val EXPANDED_BOTTOM_PADDING = 96.dp
 
 /**
@@ -172,14 +166,10 @@ internal fun ExpandedView(
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         item {
-                            OutlinedCard(
+                            RecipeSectionCard(
                                 colors = cardColors,
-                                modifier = cardModifier.ifTrue(state.loading) {
-                                    height(300.dp).shimmer(
-                                        colors = shimmerColors(),
-                                        shape = MaterialTheme.shapes.medium
-                                    )
-                                }
+                                loadingHeight = if (state.loading) 300.dp else null,
+                                modifier = cardModifier
                             ) {
                                 IngredientAndToolView(
                                     recipe = recipe,
@@ -193,14 +183,10 @@ internal fun ExpandedView(
                             }
                         }
                         item {
-                            OutlinedCard(
+                            RecipeSectionCard(
                                 colors = cardColors,
-                                modifier = cardModifier.ifTrue(state.loading) {
-                                    height(600.dp).shimmer(
-                                        colors = shimmerColors(),
-                                        shape = MaterialTheme.shapes.medium
-                                    )
-                                }
+                                loadingHeight = if (state.loading) 600.dp else null,
+                                modifier = cardModifier
                             ) {
                                 InstructionView(
                                     instructions = recipe.instructions,
@@ -212,17 +198,17 @@ internal fun ExpandedView(
                         }
                         if (recipe.notes.isNotEmpty()) {
                             item {
-                                OutlinedCard(colors = cardColors, modifier = cardModifier) {
+                                RecipeSectionCard(colors = cardColors, modifier = cardModifier) {
                                     NotesView(recipe.notes, columns = 2, modifier = Modifier.fillMaxWidth())
                                 }
                             }
                         }
                         if (recipe.settings.showNutrition) {
                             item {
-                                OutlinedCard(colors = cardColors, modifier = cardModifier) {
+                                RecipeSectionCard(colors = cardColors, modifier = cardModifier) {
                                     NutritionView(
                                         recipe.nutrition,
-                                        medium = true,
+                                        showTiles = true,
                                         modifier = Modifier.fillMaxWidth()
                                     )
                                 }
@@ -236,17 +222,11 @@ internal fun ExpandedView(
                 }
             }
         }
-        // No steps to cook means nothing for Cook Mode to show, so the FAB stays hidden.
-        AnimatedVisibility(
+        StartCookingFab(
             visible = !state.loading && recipe.instructions.isNotEmpty(),
+            onClick = { onStartCooking(recipe.id) },
             modifier = Modifier.align(Alignment.BottomEnd).padding(24.dp)
-        ) {
-            ExtendedFloatingActionButton(
-                onClick = { onStartCooking(recipe.id) },
-                icon = { Icon(Icons.Default.PlayArrow, contentDescription = null) },
-                text = { Text("Start cooking") },
-            )
-        }
+        )
         CommentsSidePanel(
             visible = showComments,
             recipeId = recipe.id,
