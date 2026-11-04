@@ -335,14 +335,20 @@ private val INSTRUCTION_IMAGE_HEIGHT = 260.dp
 private val INSTRUCTION_SIDE_IMAGE_WIDTH = 240.dp
 
 @Composable
-internal fun NotesView(notes: List<Note>, modifier: Modifier = Modifier) {
+internal fun NotesView(notes: List<Note>, modifier: Modifier = Modifier, columns: Int = 1) {
     Column(
         modifier = modifier.padding(SECTION_PADDING),
         verticalArrangement = Arrangement.spacedBy(24.dp)
     ) {
         Text("Notes", style = MaterialTheme.typography.headlineSmall)
-        notes.forEach { note ->
-            NoteEntry(note, modifier = Modifier.fillMaxWidth())
+        notes.chunked(columns.coerceAtLeast(1)).forEach { row ->
+            Row(horizontalArrangement = Arrangement.spacedBy(INGREDIENT_COLUMN_GAP)) {
+                row.forEach { note ->
+                    NoteEntry(note, modifier = Modifier.weight(1f))
+                }
+                // Keep a short last row aligned to the same column width.
+                repeat(columns.coerceAtLeast(1) - row.size) { Spacer(Modifier.weight(1f)) }
+            }
         }
     }
 }
@@ -361,18 +367,72 @@ private fun NoteEntry(note: Note, modifier: Modifier = Modifier) {
 }
 
 @Composable
-internal fun NutritionView(nutrition: NutritionUi, modifier: Modifier = Modifier) {
+internal fun NutritionView(
+    nutrition: NutritionUi,
+    modifier: Modifier = Modifier,
+    medium: Boolean = false,
+) {
+    val entries = nutrition.entries
     Column(modifier = modifier.padding(SECTION_PADDING)) {
         Text(
             "Nutrition",
             style = MaterialTheme.typography.titleLarge,
             modifier = Modifier.padding(bottom = 12.dp)
         )
-        nutrition.entries.forEachIndexed { index, entry ->
-            NutritionEntry(entry.label, entry.value, modifier = Modifier.fillMaxWidth(), index != 0)
+        if (medium) {
+            // Headline stats as tiles, the remainder as a two-column list.
+            val tiles = NUTRITION_TILE_LABELS.mapNotNull { (label, short) ->
+                entries.firstOrNull { it.label == label }?.let { short to it.value.abbreviateUnit() }
+            }
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                tiles.forEach { (short, value) ->
+                    Column(
+                        modifier = Modifier
+                            .weight(1f)
+                            .clip(MaterialTheme.shapes.medium)
+                            .background(MaterialTheme.colorScheme.surfaceContainer)
+                            .padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        Text(
+                            short,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Text(value, style = MaterialTheme.typography.headlineMedium)
+                    }
+                }
+            }
+            Spacer(Modifier.height(12.dp))
+            entries.filter { e -> NUTRITION_TILE_LABELS.none { it.first == e.label } }.chunked(2).forEach { row ->
+                Row(horizontalArrangement = Arrangement.spacedBy(INGREDIENT_COLUMN_GAP)) {
+                    row.forEach { entry ->
+                        NutritionEntry(entry.label, entry.value, modifier = Modifier.weight(1f))
+                    }
+                    repeat(2 - row.size) { Spacer(Modifier.weight(1f)) }
+                }
+            }
+        } else {
+            entries.forEachIndexed { index, entry ->
+                NutritionEntry(entry.label, entry.value, modifier = Modifier.fillMaxWidth(), index != 0)
+            }
         }
     }
 }
+
+/** "30 grams" -> "30g", "400 milligrams" -> "400mg", "620 kilocalories" -> "620 kcal". */
+private fun String.abbreviateUnit(): String = this
+    .replace(Regex("""\s*milligrams?\b""", RegexOption.IGNORE_CASE), "mg")
+    .replace(Regex("""\s*grams?\b""", RegexOption.IGNORE_CASE), "g")
+    .replace(Regex("""\s*(kilocalories|calories)\b""", RegexOption.IGNORE_CASE), " kcal")
+
+/** Headline nutrition facts shown as tiles at medium width: full label to the short form shown. */
+private val NUTRITION_TILE_LABELS = listOf(
+    "Calories" to "Cal",
+    "Protein" to "Protein",
+    "Carbohydrates" to "Carbs",
+    "Fat" to "Fat",
+)
 
 @Composable
 private fun NutritionEntry(

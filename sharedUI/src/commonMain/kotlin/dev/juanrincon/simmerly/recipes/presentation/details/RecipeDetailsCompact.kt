@@ -76,6 +76,7 @@ import dev.juanrincon.simmerly.core.presentation.asString
 import dev.juanrincon.simmerly.core.presentation.ifTrue
 import dev.juanrincon.simmerly.core.presentation.navigation.isMediumWidthOrWider
 import dev.juanrincon.simmerly.core.presentation.shimmer
+import dev.juanrincon.simmerly.recipes.domain.model.Note
 import dev.juanrincon.simmerly.recipes.domain.model.Settings
 import dev.juanrincon.simmerly.recipes.presentation.details.models.IngredientUi
 import dev.juanrincon.simmerly.recipes.presentation.details.models.InstructionUi
@@ -425,6 +426,7 @@ private fun CompactContent(
                 ) {
                     NotesView(
                         recipe.notes,
+                        columns = if (medium) 2 else 1,
                         modifier = Modifier.fillMaxWidth()
                     )
                 }
@@ -442,6 +444,7 @@ private fun CompactContent(
                 ) {
                     NutritionView(
                         recipe.nutrition,
+                        medium = medium,
                         modifier = Modifier.fillMaxWidth()
                     )
                 }
@@ -731,6 +734,57 @@ private val previewRecipe = RecipeDetailUi(
 )
 
 private val previewTabs = listOf(RecipeTab.Overview, RecipeTab.Ingredients, RecipeTab.Instructions)
+
+// Fuller recipe for the medium previews, so the two-column notes and the nutrition tiles show.
+private val previewMediumRecipe = previewRecipe.copy(
+    notes = listOf(
+        Note(id = 1, title = "A word on guanciale.", text = "Guanciale is a salty cured pork product made from pork jowls. If you can't find it, use pancetta."),
+        Note(id = 2, title = "The cheese.", text = "Carbonara is a Roman pasta, so Pecorino Romano is traditional. Parmigiano Reggiano works with a little extra salt."),
+        Note(id = 3, title = "Avoid scrambled eggs.", text = "Take the pan off the heat before the eggs go in so they thicken into a sauce."),
+    ),
+    settings = previewRecipe.settings.copy(showNutrition = true)
+)
+
+private val previewMediumTabs = RecipeTab.entries.filter {
+    it in listOf(
+        RecipeTab.Overview, RecipeTab.Ingredients, RecipeTab.Instructions,
+        RecipeTab.Notes, RecipeTab.Nutrition
+    )
+}
+
+@Preview(apiLevel = 36, showSystemUi = true, device = "spec:width=700dp,height=900dp,dpi=320")
+@Composable
+private fun MediumPreview() {
+    SimmerlyTheme {
+        CompactRecipeDetails(
+            state = RecipeDetailsState(
+                loading = false,
+                recipe = previewMediumRecipe,
+                mobileTabs = previewMediumTabs
+            ),
+            onEvent = {},
+            onNavigateBack = {},
+            onNavigateToComments = {}
+        )
+    }
+}
+
+@Preview(apiLevel = 36, showSystemUi = true, device = "spec:width=700dp,height=900dp,dpi=320")
+@Composable
+private fun MediumDarkPreview() {
+    SimmerlyTheme(darkTheme = true) {
+        CompactRecipeDetails(
+            state = RecipeDetailsState(
+                loading = false,
+                recipe = previewMediumRecipe,
+                mobileTabs = previewMediumTabs
+            ),
+            onEvent = {},
+            onNavigateBack = {},
+            onNavigateToComments = {}
+        )
+    }
+}
 
 @Preview(apiLevel = 36, showSystemUi = true, device = Devices.PIXEL_9_PRO, wallpaper = 1)
 @Composable
