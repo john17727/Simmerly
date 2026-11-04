@@ -38,6 +38,7 @@ import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.ViewTimeline
 import androidx.compose.material3.AppBarRow
+import androidx.compose.material3.AppBarRowScope
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Button
 import androidx.compose.material3.CardDefaults
@@ -119,45 +120,84 @@ internal fun CompactRecipeDetails(
 ) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     val medium = isMediumWidthOrWider()
-    val recipeActions: @Composable RowScope.() -> Unit = {
-        IconToggleButton(
-            checked = state.recipe.favorite,
-            onCheckedChange = {},
-            enabled = !state.loading
-        ) {
-            Icon(
-                Icons.Default.Favorite,
-                contentDescription = "Favorite",
-            )
-        }
-        IconButton(
-            onClick = { /* TODO: timeline action */ },
-            enabled = !state.loading
-        ) {
-            Icon(Icons.Default.ViewTimeline, contentDescription = "Timeline")
-        }
-        IconButton(onClick = { /* TODO: edit action */ }, enabled = !state.loading) {
-            Icon(Icons.Default.Edit, contentDescription = "Edit")
-        }
-        IconButton(
-            onClick = { onEvent(RecipeDetailsIntent.ShowSettings) },
-            enabled = !state.loading
-        ) {
-            Icon(Icons.Default.Settings, contentDescription = "Settings")
-        }
-        IconButton(
-            onClick = { onNavigateToComments(state.recipe.id) },
-            enabled = !state.loading && !state.recipe.settings.disableComments
-        ) {
-            Icon(
-                Icons.AutoMirrored.Default.Comment,
-                contentDescription = "Comment"
-            )
-        }
-        RecipeOverflowMenu(
-            onAddToShoppingList = { onEvent(RecipeDetailsIntent.OpenAddToList) },
-            enabled = !state.loading,
-        )
+    // Shared by the phone bottom bar and the medium top bar. AppBarRow measures its own items and
+    // moves the ones that don't fit into its overflow menu. Items drop from the end, so they are
+    // ordered by how often they are likely to be used, most used first.
+    val recipeActions: AppBarRowScope.() -> Unit = {
+                toggleableItem(
+                    checked = state.recipe.favorite,
+                    onCheckedChange = {},
+                    icon = { Icon(Icons.Default.Favorite, contentDescription = null) },
+                    label = "Favorite",
+                    enabled = !state.loading,
+                )
+                clickableItem(
+                    onClick = { onEvent(RecipeDetailsIntent.OpenAddToList) },
+                    icon = { Icon(Icons.Default.AddShoppingCart, contentDescription = null) },
+                    label = "Add to shopping list",
+                    enabled = !state.loading,
+                )
+                clickableItem(
+                    onClick = { onNavigateToComments(state.recipe.id) },
+                    icon = { Icon(Icons.AutoMirrored.Default.Comment, contentDescription = null) },
+                    label = "Comments",
+                    enabled = !state.loading && !state.recipe.settings.disableComments,
+                )
+                clickableItem(
+                    onClick = { /* TODO: edit action */ },
+                    icon = { Icon(Icons.Default.Edit, contentDescription = null) },
+                    label = "Edit",
+                    enabled = !state.loading,
+                )
+                clickableItem(
+                    onClick = { onEvent(RecipeDetailsIntent.ShowSettings) },
+                    icon = { Icon(Icons.Default.Settings, contentDescription = null) },
+                    label = "Settings",
+                    enabled = !state.loading,
+                )
+                clickableItem(
+                    onClick = { /* TODO: timeline action */ },
+                    icon = { Icon(Icons.Default.ViewTimeline, contentDescription = null) },
+                    label = "Timeline",
+                    enabled = !state.loading,
+                )
+                // Not built yet: disabled, as in the phone menu.
+                clickableItem(
+                    onClick = {},
+                    icon = { Icon(Icons.Default.EditCalendar, contentDescription = null) },
+                    label = "Add to meal plan",
+                    enabled = false,
+                )
+                clickableItem(
+                    onClick = {},
+                    icon = { Icon(Icons.Default.EventAvailable, contentDescription = null) },
+                    label = "Mark as made today",
+                    enabled = false,
+                )
+                clickableItem(
+                    onClick = {},
+                    icon = { Icon(Icons.Default.Share, contentDescription = null) },
+                    label = "Share",
+                    enabled = false,
+                )
+                clickableItem(
+                    onClick = {},
+                    icon = { Icon(Icons.Default.ContentCopy, contentDescription = null) },
+                    label = "Duplicate",
+                    enabled = false,
+                )
+                clickableItem(
+                    onClick = {},
+                    icon = { Icon(Icons.Default.Print, contentDescription = null) },
+                    label = "Print",
+                    enabled = false,
+                )
+                clickableItem(
+                    onClick = {},
+                    icon = { Icon(Icons.Default.Delete, contentDescription = null) },
+                    label = "Delete recipe",
+                    enabled = false,
+                )
     }
     Scaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
@@ -198,85 +238,7 @@ internal fun CompactRecipeDetails(
                     },
                     actions = {
                         if (medium) {
-                            // AppBarRow measures its own items and moves the ones that don't fit
-                            // into its overflow menu. Items drop from the end, so they are ordered
-                            // by how often they are likely to be used, most used first.
-                            AppBarRow(maxItemCount = TOP_BAR_MAX_ITEMS) {
-                                toggleableItem(
-                                    checked = state.recipe.favorite,
-                                    onCheckedChange = {},
-                                    icon = { Icon(Icons.Default.Favorite, contentDescription = null) },
-                                    label = "Favorite",
-                                    enabled = !state.loading,
-                                )
-                                clickableItem(
-                                    onClick = { onEvent(RecipeDetailsIntent.OpenAddToList) },
-                                    icon = { Icon(Icons.Default.AddShoppingCart, contentDescription = null) },
-                                    label = "Add to shopping list",
-                                    enabled = !state.loading,
-                                )
-                                clickableItem(
-                                    onClick = { onNavigateToComments(state.recipe.id) },
-                                    icon = { Icon(Icons.AutoMirrored.Default.Comment, contentDescription = null) },
-                                    label = "Comments",
-                                    enabled = !state.loading && !state.recipe.settings.disableComments,
-                                )
-                                clickableItem(
-                                    onClick = { /* TODO: edit action */ },
-                                    icon = { Icon(Icons.Default.Edit, contentDescription = null) },
-                                    label = "Edit",
-                                    enabled = !state.loading,
-                                )
-                                clickableItem(
-                                    onClick = { onEvent(RecipeDetailsIntent.ShowSettings) },
-                                    icon = { Icon(Icons.Default.Settings, contentDescription = null) },
-                                    label = "Settings",
-                                    enabled = !state.loading,
-                                )
-                                clickableItem(
-                                    onClick = { /* TODO: timeline action */ },
-                                    icon = { Icon(Icons.Default.ViewTimeline, contentDescription = null) },
-                                    label = "Timeline",
-                                    enabled = !state.loading,
-                                )
-                                // Not built yet: disabled, as in the phone menu.
-                                clickableItem(
-                                    onClick = {},
-                                    icon = { Icon(Icons.Default.EditCalendar, contentDescription = null) },
-                                    label = "Add to meal plan",
-                                    enabled = false,
-                                )
-                                clickableItem(
-                                    onClick = {},
-                                    icon = { Icon(Icons.Default.EventAvailable, contentDescription = null) },
-                                    label = "Mark as made today",
-                                    enabled = false,
-                                )
-                                clickableItem(
-                                    onClick = {},
-                                    icon = { Icon(Icons.Default.Share, contentDescription = null) },
-                                    label = "Share",
-                                    enabled = false,
-                                )
-                                clickableItem(
-                                    onClick = {},
-                                    icon = { Icon(Icons.Default.ContentCopy, contentDescription = null) },
-                                    label = "Duplicate",
-                                    enabled = false,
-                                )
-                                clickableItem(
-                                    onClick = {},
-                                    icon = { Icon(Icons.Default.Print, contentDescription = null) },
-                                    label = "Print",
-                                    enabled = false,
-                                )
-                                clickableItem(
-                                    onClick = {},
-                                    icon = { Icon(Icons.Default.Delete, contentDescription = null) },
-                                    label = "Delete recipe",
-                                    enabled = false,
-                                )
-                            }
+                            AppBarRow(maxItemCount = TOP_BAR_MAX_ITEMS, content = recipeActions)
                         }
                     },
                     scrollBehavior = scrollBehavior
@@ -297,7 +259,7 @@ internal fun CompactRecipeDetails(
         bottomBar = {
             if (!medium) {
                 BottomAppBar(
-                    actions = recipeActions,
+                    actions = { AppBarRow(content = recipeActions) },
                     floatingActionButton = {
                         // No steps to cook means nothing for Cook Mode to show — keep the FAB hidden
                         // rather than opening an empty stepper.
