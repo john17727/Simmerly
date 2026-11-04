@@ -1,41 +1,47 @@
 package dev.juanrincon.simmerly.recipes.presentation.details
 
-import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.BoxScope
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Surface
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.ViewTimeline
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.AppBarRow
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.IconToggleButton
 import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.PrimaryScrollableTabRow
@@ -43,9 +49,8 @@ import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -60,22 +65,26 @@ import dev.juanrincon.simmerly.recipes.presentation.details.orbit.RecipeDetailsS
 import dev.juanrincon.simmerly.recipes.presentation.details.orbit.RecipeTab
 import dev.juanrincon.simmerly.recipes.presentation.details.orbit.label
 
-/** Gap between the ingredients/nutrition column and the instructions column. */
-private val EXPANDED_COLUMN_GAP = 32.dp
-
-/** Horizontal inset shared by the action bar, the tab row and the two-column body. */
+/** Horizontal inset shared by the action bar, the tab row and the tab bodies. */
 private val EXPANDED_HORIZONTAL_PADDING = 28.dp
 
+/** Keeps the single-column content readable on very wide panes. */
+private val EXPANDED_CONTENT_MAX_WIDTH = 1040.dp
+
+/** Trailing space so the last card/step clears the Start cooking FAB (same as the foldable). */
+/** The desktop pane is wide, so show more actions before overflowing (counts the overflow button). */
+private const val EXPANDED_TOP_BAR_MAX_ITEMS = 10
+
+private val COMMENTS_PANEL_WIDTH = 440.dp
+
+private val EXPANDED_BOTTOM_PADDING = 96.dp
+
 /**
- * Width of the ingredients/nutrition column. Fixed, as the design draws it, but wider than its
- * 320px so the roomier quantity column doesn't eat into the ingredient names.
+ * The detail pane of the list + detail layout. Mirrors the foldable design (tinted cards, two
+ * column ingredients/notes, nutrition tiles, AppBarRow actions, extended FAB) minus the overview,
+ * with real tabs instead of scroll-linked ones. It never navigates: comments are a tab.
  */
-private val EXPANDED_SIDE_COLUMN_WIDTH = 360.dp
-
-/** Trailing breathing room so the last card/step clears the bottom of the scrolling pane. */
-private val EXPANDED_BOTTOM_PADDING = 48.dp
-
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 internal fun ExpandedView(
     state: RecipeDetailsState,
@@ -86,180 +95,222 @@ internal fun ExpandedView(
     val recipe = state.recipe
     val expandedTabs = state.desktopTabs
 
-    var selectedExpandedTabIndex by remember { mutableIntStateOf(0) }
+    val listState = rememberLazyListState()
+    val coroutineScope = rememberCoroutineScope()
+    var showComments by remember { mutableStateOf(false) }
+    var programmaticTarget by remember { mutableStateOf<Int?>(null) }
 
-    LaunchedEffect(expandedTabs) {
-        if (selectedExpandedTabIndex >= expandedTabs.size) {
-            selectedExpandedTabIndex = 0
+    // Section i of the page is tab i: Ingredients, Instructions, then Notes and Nutrition when
+    // present, in the same order as the tabs. Scrolling drives the selection and clicking a tab
+    // scrolls, as on the foldable.
+    val selectedTabIndex by remember(expandedTabs) {
+        derivedStateOf {
+            programmaticTarget?.let { return@derivedStateOf it }
+            if (expandedTabs.isEmpty()) return@derivedStateOf 0
+            val index = if (!listState.canScrollForward && listState.canScrollBackward) {
+                expandedTabs.lastIndex
+            } else {
+                listState.firstVisibleItemIndex
+            }
+            index.coerceIn(0, expandedTabs.lastIndex)
         }
     }
 
-    Row(modifier = modifier.fillMaxSize()) {
-        // The design rules a line down the left edge of the detail pane, separating it from the
-        // recipe list. It lives here rather than on the list because the list pane is also the
-        // whole screen on compact widths, where there is nothing to separate it from.
-        VerticalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-        Column(modifier = Modifier.weight(1f).fillMaxHeight().statusBarsPadding()) {
-            ExpandedHeader(
-                state = state,
-                tabs = expandedTabs,
-                selectedTabIndex = selectedExpandedTabIndex,
-                onTabSelected = { selectedExpandedTabIndex = it },
-                onEvent = onEvent,
-                onStartCooking = onStartCooking,
-                modifier = Modifier.fillMaxWidth()
-            )
-            AnimatedVisibility(
-                visible = state.isRefreshing,
-                enter = fadeIn(),
-                exit = fadeOut()
-            ) {
-                LinearProgressIndicator(
-                    modifier = Modifier.fillMaxWidth(),
-                    color = MaterialTheme.colorScheme.primary,
-                    trackColor = MaterialTheme.colorScheme.surfaceContainer,
-                )
-            }
+    val cardColors = CardDefaults.outlinedCardColors(
+        containerColor = MaterialTheme.colorScheme.surfaceContainerLow
+    )
+    val cardModifier = Modifier.widthIn(max = EXPANDED_CONTENT_MAX_WIDTH).fillMaxWidth()
 
-            AnimatedContent(
-                targetState = selectedExpandedTabIndex,
-                modifier = Modifier.weight(1f)
-            ) { tabIndex ->
-                when (expandedTabs.getOrNull(tabIndex)) {
-                    RecipeTab.Recipe -> {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .padding(
-                                    start = EXPANDED_HORIZONTAL_PADDING,
-                                    end = EXPANDED_HORIZONTAL_PADDING,
-                                ),
-                            horizontalArrangement = Arrangement.spacedBy(EXPANDED_COLUMN_GAP)
-                        ) {
-                            val sideScrollState = rememberScrollState()
-                            val instructionScrollState = rememberScrollState()
-                            Box(modifier = Modifier.width(EXPANDED_SIDE_COLUMN_WIDTH).fillMaxHeight()) {
-                                Column(
-                                    modifier = Modifier
-                                        .fillMaxSize()
-                                        .verticalScroll(sideScrollState),
-                                    verticalArrangement = Arrangement.spacedBy(16.dp)
-                                ) {
-                                    OutlinedCard(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .ifTrue(state.loading) {
-                                                height(600.dp).shimmer(
-                                                    colors = shimmerColors(),
-                                                    shape = MaterialTheme.shapes.medium
-                                                )
-                                            }
-                                            .padding(top = 24.dp)
-                                    ) {
-                                        IngredientAndToolView(
-                                            recipe = recipe,
-                                            onRemoveServingButtonClick = { onEvent(RecipeDetailsIntent.RemoveServing) },
-                                            onAddServingButtonClick = { onEvent(RecipeDetailsIntent.AddServing) },
-                                            modifier = Modifier.fillMaxWidth()
-                                        )
-                                    }
-                                    if (recipe.settings.showNutrition) {
-                                        OutlinedCard(modifier = Modifier.fillMaxWidth()) {
-                                            NutritionView(
-                                                recipe.nutrition,
-                                                modifier = Modifier.fillMaxWidth()
-                                            )
-                                        }
-                                    }
-                                    Spacer(modifier = Modifier.height(EXPANDED_BOTTOM_PADDING))
-                                }
-                                VerticalScrollbar(
-                                    sideScrollState,
-                                    modifier = Modifier.align(Alignment.CenterEnd).fillMaxHeight()
-                                )
-                            }
-                            Box(modifier = Modifier.weight(1f).fillMaxHeight()) {
-                                Column(
-                                    modifier = Modifier
-                                        .fillMaxSize()
-                                        .verticalScroll(instructionScrollState)
-                                ) {
-                                    // No card here: the design sets the instructions directly on the
-                                    // surface, so only the ingredients side reads as a panel.
-                                    InstructionView(
-                                        instructions = recipe.instructions,
-                                        ingredients = recipe.ingredients,
-                                        contentPadding = PaddingValues(0.dp),
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .ifTrue(state.loading) {
-                                                height(800.dp).shimmer(
-                                                    colors = shimmerColors(),
-                                                    shape = MaterialTheme.shapes.medium
-                                                )
-                                            }
-                                            .padding(top = 24.dp)
-                                    )
-                                    Spacer(modifier = Modifier.height(EXPANDED_BOTTOM_PADDING))
-                                }
-                                VerticalScrollbar(
-                                    instructionScrollState,
-                                    modifier = Modifier.align(Alignment.CenterEnd).fillMaxHeight()
-                                )
+    Box(modifier = modifier.fillMaxSize()) {
+        Row(modifier = Modifier.fillMaxSize()) {
+            // Rules a line down the left edge of the detail pane, separating it from the list.
+            VerticalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+            Column(modifier = Modifier.weight(1f).fillMaxHeight().statusBarsPadding()) {
+                ExpandedHeader(
+                    state = state,
+                    tabs = expandedTabs,
+                    selectedTabIndex = selectedTabIndex,
+                    onTabSelected = { index ->
+                        coroutineScope.launch {
+                            programmaticTarget = index
+                            try {
+                                listState.animateScrollToItem(index)
+                            } finally {
+                                programmaticTarget = null
                             }
                         }
-                    }
+                    },
+                    onEvent = onEvent,
+                    onShowComments = { showComments = true },
+                    modifier = Modifier.fillMaxWidth()
+                )
+                AnimatedVisibility(
+                    visible = state.isRefreshing,
+                    enter = fadeIn(),
+                    exit = fadeOut()
+                ) {
+                    LinearProgressIndicator(
+                        modifier = Modifier.fillMaxWidth(),
+                        color = MaterialTheme.colorScheme.primary,
+                        trackColor = MaterialTheme.colorScheme.surfaceContainer,
+                    )
+                }
 
-                    RecipeTab.Notes -> {
-                        val notesScrollState = rememberScrollState()
-                        Box(modifier = Modifier.fillMaxSize()) {
-                            Column(
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .padding(
-                                        start = EXPANDED_HORIZONTAL_PADDING,
-                                        end = EXPANDED_HORIZONTAL_PADDING,
-                                        top = 24.dp
+                Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
+                    LazyColumn(
+                        state = listState,
+                        modifier = Modifier.fillMaxSize(),
+                        contentPadding = PaddingValues(
+                            start = EXPANDED_HORIZONTAL_PADDING,
+                            end = EXPANDED_HORIZONTAL_PADDING,
+                            top = 16.dp,
+                            bottom = EXPANDED_BOTTOM_PADDING
+                        ),
+                        verticalArrangement = Arrangement.spacedBy(16.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        item {
+                            OutlinedCard(
+                                colors = cardColors,
+                                modifier = cardModifier.ifTrue(state.loading) {
+                                    height(300.dp).shimmer(
+                                        colors = shimmerColors(),
+                                        shape = MaterialTheme.shapes.medium
                                     )
-                                    .verticalScroll(notesScrollState)
+                                }
                             ) {
-                                NotesView(
-                                    recipe.notes,
+                                IngredientAndToolView(
+                                    recipe = recipe,
+                                    onRemoveServingButtonClick = { onEvent(RecipeDetailsIntent.RemoveServing) },
+                                    onAddServingButtonClick = { onEvent(RecipeDetailsIntent.AddServing) },
+                                    onAddToListClick = { onEvent(RecipeDetailsIntent.OpenAddToList) },
+                                    columns = 2,
+                                    segmentedServings = true,
                                     modifier = Modifier.fillMaxWidth()
                                 )
-                                Spacer(modifier = Modifier.height(EXPANDED_BOTTOM_PADDING))
                             }
-                            VerticalScrollbar(
-                                notesScrollState,
-                                modifier = Modifier.align(Alignment.CenterEnd).fillMaxHeight()
-                            )
+                        }
+                        item {
+                            OutlinedCard(
+                                colors = cardColors,
+                                modifier = cardModifier.ifTrue(state.loading) {
+                                    height(600.dp).shimmer(
+                                        colors = shimmerColors(),
+                                        shape = MaterialTheme.shapes.medium
+                                    )
+                                }
+                            ) {
+                                InstructionView(
+                                    instructions = recipe.instructions,
+                                    ingredients = recipe.ingredients,
+                                    imagesOnSide = true,
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                            }
+                        }
+                        if (recipe.notes.isNotEmpty()) {
+                            item {
+                                OutlinedCard(colors = cardColors, modifier = cardModifier) {
+                                    NotesView(recipe.notes, columns = 2, modifier = Modifier.fillMaxWidth())
+                                }
+                            }
+                        }
+                        if (recipe.settings.showNutrition) {
+                            item {
+                                OutlinedCard(colors = cardColors, modifier = cardModifier) {
+                                    NutritionView(
+                                        recipe.nutrition,
+                                        medium = true,
+                                        modifier = Modifier.fillMaxWidth()
+                                    )
+                                }
+                            }
                         }
                     }
-
-                    RecipeTab.Comments -> {
-                        RecipeCommentsScreen(
-                            recipeId = recipe.id,
-                            modifier = Modifier.fillMaxSize()
-                        )
-                    }
-
-                    else -> Unit
+                    VerticalScrollbar(
+                        listState,
+                        modifier = Modifier.align(Alignment.CenterEnd).fillMaxHeight()
+                    )
                 }
+            }
+        }
+        // No steps to cook means nothing for Cook Mode to show, so the FAB stays hidden.
+        AnimatedVisibility(
+            visible = !state.loading && recipe.instructions.isNotEmpty(),
+            modifier = Modifier.align(Alignment.BottomEnd).padding(24.dp)
+        ) {
+            ExtendedFloatingActionButton(
+                onClick = { onStartCooking(recipe.id) },
+                icon = { Icon(Icons.Default.PlayArrow, contentDescription = null) },
+                text = { Text("Start cooking") },
+            )
+        }
+        CommentsSidePanel(
+            visible = showComments,
+            recipeId = recipe.id,
+            onDismiss = { showComments = false }
+        )
+    }
+}
+
+/**
+ * Comments are a full screen with their own list, so they can't be a section of the scrolling
+ * page. On desktop they slide over the right edge of the detail pane instead of navigating away,
+ * which keeps the list + detail view intact.
+ */
+@Composable
+private fun BoxScope.CommentsSidePanel(
+    visible: Boolean,
+    recipeId: String,
+    onDismiss: () -> Unit
+) {
+    AnimatedVisibility(visible = visible, enter = fadeIn(), exit = fadeOut()) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.32f))
+                .clickable(onClick = onDismiss)
+        )
+    }
+    AnimatedVisibility(
+        visible = visible,
+        enter = slideInHorizontally { it },
+        exit = slideOutHorizontally { it },
+        modifier = Modifier.align(Alignment.CenterEnd)
+    ) {
+        Surface(
+            // Plain surface: tonalElevation would blend the primary color in and tint it pink.
+            color = MaterialTheme.colorScheme.surface,
+            shadowElevation = 8.dp,
+            modifier = Modifier.width(COMMENTS_PANEL_WIDTH).fillMaxHeight()
+        ) {
+            Column(modifier = Modifier.statusBarsPadding()) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth().padding(start = 20.dp, end = 4.dp)
+                ) {
+                    Text(
+                        "Comments",
+                        style = MaterialTheme.typography.titleLarge,
+                        modifier = Modifier.weight(1f)
+                    )
+                    IconButton(onClick = onDismiss) {
+                        Icon(Icons.Default.Close, contentDescription = "Close comments")
+                    }
+                }
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                RecipeCommentsScreen(recipeId = recipeId, modifier = Modifier.fillMaxSize())
             }
         }
     }
 }
 
 /**
- * The pane's single header row: the section tabs on the left, then the desktop mirror of the
- * compact screen's [androidx.compose.material3.BottomAppBar] actions on the right. The Comment
- * button is deliberately absent — on desktop the comments are one of those tabs (see
- * [RecipeDetailsState.desktopTabs]), so there is nowhere to navigate to.
- *
- * The tab row's own divider is suppressed and one is drawn under the whole header instead;
- * otherwise the rule would stop where the tabs stop rather than running the width of the pane.
+ * The pane's header row: the section tabs on the left, the same [recipeActions] as the foldable
+ * top bar on the right. The Comments action opens the comments side panel, since desktop never
+ * navigates away from the list + detail view.
  */
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun ExpandedHeader(
     state: RecipeDetailsState,
@@ -267,9 +318,10 @@ private fun ExpandedHeader(
     selectedTabIndex: Int,
     onTabSelected: (Int) -> Unit,
     onEvent: (RecipeDetailsIntent) -> Unit,
-    onStartCooking: (recipeId: String) -> Unit,
+    onShowComments: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val actions = recipeActions(state, onEvent) { onShowComments() }
     Column(modifier = modifier) {
         Row(
             modifier = Modifier
@@ -278,13 +330,11 @@ private fun ExpandedHeader(
                 .padding(end = EXPANDED_HORIZONTAL_PADDING),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Only render the row when there is a choice to make. Guarding on `!= 1` would still
-            // draw it for an empty list — the state while the recipe loads — and
-            // PrimaryScrollableTabRow indexes tabPositions[selectedTabIndex] unguarded, so an
-            // empty row crashes on measure.
-            if (tabs.size > 1) {
+            // PrimaryTabRow indexes tabPositions[selectedTabIndex] unguarded, so an empty row
+            // (the state while the recipe loads) crashes on measure.
+            if (tabs.isNotEmpty()) {
                 PrimaryScrollableTabRow(
-                    selectedTabIndex = selectedTabIndex,
+                    selectedTabIndex = selectedTabIndex.coerceIn(0, tabs.lastIndex),
                     edgePadding = EXPANDED_HORIZONTAL_PADDING,
                     divider = {},
                     modifier = Modifier.weight(1f).fillMaxHeight()
@@ -300,47 +350,10 @@ private fun ExpandedHeader(
             } else {
                 Spacer(modifier = Modifier.weight(1f))
             }
-            IconToggleButton(
-                checked = state.recipe.favorite,
-                onCheckedChange = {},
-                enabled = !state.loading
-            ) {
-                Icon(Icons.Default.Favorite, contentDescription = "Favorite")
-            }
-            IconButton(onClick = { /* TODO: edit action */ }, enabled = !state.loading) {
-                Icon(Icons.Default.Edit, contentDescription = "Edit")
-            }
-            IconButton(onClick = { /* TODO: timeline action */ }, enabled = !state.loading) {
-                Icon(Icons.Default.ViewTimeline, contentDescription = "Timeline")
-            }
-            IconButton(
-                onClick = { onEvent(RecipeDetailsIntent.ShowSettings) },
-                enabled = !state.loading
-            ) {
-                Icon(Icons.Default.Settings, contentDescription = "Settings")
-            }
-            IconButton(onClick = { /* TODO: more action */ }, enabled = !state.loading) {
-                Icon(Icons.Default.MoreVert, contentDescription = "More")
-            }
-            // No steps to cook means nothing for Cook Mode to show — keep the button hidden
-            // rather than opening an empty stepper, same as the compact FAB.
-            AnimatedVisibility(
-                visible = !state.loading && state.recipe.instructions.isNotEmpty()
-            ) {
-                Button(
-                    onClick = { onStartCooking(state.recipe.id) },
-                    shape = CircleShape,
-                    contentPadding = PaddingValues(start = 16.dp, end = 20.dp),
-                    modifier = Modifier.padding(start = 12.dp).height(40.dp)
-                ) {
-                    Icon(
-                        Icons.Default.PlayArrow,
-                        contentDescription = null,
-                        modifier = Modifier.size(ButtonDefaults.IconSize)
-                    )
-                    Spacer(modifier = Modifier.size(ButtonDefaults.IconSpacing))
-                    Text("Start cooking", style = MaterialTheme.typography.titleSmall)
-                }
+            // TopAppBar/BottomAppBar tint their action icons onSurfaceVariant; this row sits on the
+            // plain surface, so set the same content color to match phone and foldable.
+            CompositionLocalProvider(LocalContentColor provides MaterialTheme.colorScheme.onSurfaceVariant) {
+                AppBarRow(maxItemCount = EXPANDED_TOP_BAR_MAX_ITEMS, content = actions)
             }
         }
         HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)

@@ -107,9 +107,10 @@ class RecipeDetailsViewModel(
                                             if (recipe.settings.showNutrition) add(RecipeTab.Nutrition)
                                         },
                                         desktopTabs = buildList {
-                                            add(RecipeTab.Recipe)
+                                            add(RecipeTab.Ingredients)
+                                            add(RecipeTab.Instructions)
                                             if (recipe.notes.isNotEmpty()) add(RecipeTab.Notes)
-                                            if (!recipe.settings.disableComments) add(RecipeTab.Comments)
+                                            if (recipe.settings.showNutrition) add(RecipeTab.Nutrition)
                                         }
                                     )
                                 }
