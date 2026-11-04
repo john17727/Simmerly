@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -31,8 +32,10 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.ViewTimeline
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Button
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -104,6 +107,47 @@ internal fun CompactRecipeDetails(
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
 ) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
+    val medium = isMediumWidthOrWider()
+    val recipeActions: @Composable RowScope.() -> Unit = {
+        IconToggleButton(
+            checked = state.recipe.favorite,
+            onCheckedChange = {},
+            enabled = !state.loading
+        ) {
+            Icon(
+                Icons.Default.Favorite,
+                contentDescription = "Favorite",
+            )
+        }
+        IconButton(
+            onClick = { /* TODO: timeline action */ },
+            enabled = !state.loading
+        ) {
+            Icon(Icons.Default.ViewTimeline, contentDescription = "Timeline")
+        }
+        IconButton(onClick = { /* TODO: edit action */ }, enabled = !state.loading) {
+            Icon(Icons.Default.Edit, contentDescription = "Edit")
+        }
+        IconButton(
+            onClick = { onEvent(RecipeDetailsIntent.ShowSettings) },
+            enabled = !state.loading
+        ) {
+            Icon(Icons.Default.Settings, contentDescription = "Settings")
+        }
+        IconButton(
+            onClick = { onNavigateToComments(state.recipe.id) },
+            enabled = !state.loading && !state.recipe.settings.disableComments
+        ) {
+            Icon(
+                Icons.AutoMirrored.Default.Comment,
+                contentDescription = "Comment"
+            )
+        }
+        RecipeOverflowMenu(
+            onAddToShoppingList = { onEvent(RecipeDetailsIntent.OpenAddToList) },
+            enabled = !state.loading,
+        )
+    }
     Scaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         snackbarHost = { SnackbarHost(snackbarHostState) },
@@ -141,6 +185,7 @@ internal fun CompactRecipeDetails(
                             )
                         }
                     },
+                    actions = { if (medium) recipeActions() },
                     scrollBehavior = scrollBehavior
                 )
                 AnimatedVisibility(
@@ -157,59 +202,35 @@ internal fun CompactRecipeDetails(
             }
         },
         bottomBar = {
-            BottomAppBar(
-                actions = {
-                    IconToggleButton(
-                        checked = state.recipe.favorite,
-                        onCheckedChange = {},
-                        enabled = !state.loading
-                    ) {
-                        Icon(
-                            Icons.Default.Favorite,
-                            contentDescription = "Favorite",
-                        )
-                    }
-                    IconButton(
-                        onClick = { /* TODO: timeline action */ },
-                        enabled = !state.loading
-                    ) {
-                        Icon(Icons.Default.ViewTimeline, contentDescription = "Timeline")
-                    }
-                    IconButton(onClick = { /* TODO: edit action */ }, enabled = !state.loading) {
-                        Icon(Icons.Default.Edit, contentDescription = "Edit")
-                    }
-                    IconButton(
-                        onClick = { onEvent(RecipeDetailsIntent.ShowSettings) },
-                        enabled = !state.loading
-                    ) {
-                        Icon(Icons.Default.Settings, contentDescription = "Settings")
-                    }
-                    IconButton(
-                        onClick = { onNavigateToComments(state.recipe.id) },
-                        enabled = !state.loading && !state.recipe.settings.disableComments
-                    ) {
-                        Icon(
-                            Icons.AutoMirrored.Default.Comment,
-                            contentDescription = "Comment"
-                        )
-                    }
-                    RecipeOverflowMenu(
-                        onAddToShoppingList = { onEvent(RecipeDetailsIntent.OpenAddToList) },
-                        enabled = !state.loading,
-                    )
-                },
-                floatingActionButton = {
-                    // No steps to cook means nothing for Cook Mode to show — keep the FAB hidden
-                    // rather than opening an empty stepper.
-                    AnimatedVisibility(visible = !state.loading && state.recipe.instructions.isNotEmpty()) {
-                        FloatingActionButton(
-                            onClick = { onStartCooking(state.recipe.id) },
-                        ) {
-                            Icon(Icons.Default.PlayArrow, contentDescription = "Play")
+            if (!medium) {
+                BottomAppBar(
+                    actions = recipeActions,
+                    floatingActionButton = {
+                        // No steps to cook means nothing for Cook Mode to show — keep the FAB hidden
+                        // rather than opening an empty stepper.
+                        AnimatedVisibility(visible = !state.loading && state.recipe.instructions.isNotEmpty()) {
+                            FloatingActionButton(
+                                onClick = { onStartCooking(state.recipe.id) },
+                            ) {
+                                Icon(Icons.Default.PlayArrow, contentDescription = "Play")
+                            }
                         }
                     }
+                )
+            }
+        },
+        floatingActionButton = {
+            if (medium) {
+                // Medium and foldable widths drop the bottom bar: the actions move to the top bar
+                // and Start cooking floats on its own, as the design draws it.
+                AnimatedVisibility(visible = !state.loading && state.recipe.instructions.isNotEmpty()) {
+                    ExtendedFloatingActionButton(
+                        onClick = { onStartCooking(state.recipe.id) },
+                        icon = { Icon(Icons.Default.PlayArrow, contentDescription = null) },
+                        text = { Text("Start cooking") },
+                    )
                 }
-            )
+            }
         }
     ) { paddingValues ->
         if (state.error != null) {
@@ -233,7 +254,7 @@ internal fun CompactRecipeDetails(
                 onEvent = onEvent,
                 paddingValues = paddingValues,
                 sharedTransitionScope = sharedTransitionScope,
-                medium = isMediumWidthOrWider(),
+                medium = medium,
                 modifier = modifier.fillMaxSize()
             )
         }
@@ -282,12 +303,23 @@ private fun CompactContent(
         }
     }
 
+    // The foldable design tints the section cards (Neutral50) instead of leaving them white.
+    val cardColors = CardDefaults.outlinedCardColors(
+        containerColor = if (medium) {
+            MaterialTheme.colorScheme.surfaceContainerLow
+        } else {
+            MaterialTheme.colorScheme.surface
+        }
+    )
+
     LazyColumn(
         state = listState,
         modifier = modifier.padding(paddingValues),
         contentPadding = PaddingValues(
             top = 8.dp,
-            bottom = 8.dp
+            // Medium widths float the FAB over the list (56dp + 16dp margin), so leave room to
+            // scroll the last item clear of it. Phones keep the FAB inside the bottom bar.
+            bottom = if (medium) 96.dp else 8.dp
         )
     ) {
 
@@ -362,6 +394,7 @@ private fun CompactContent(
         // Ingredients & Tools (always shown, index 3)
         item {
             OutlinedCard(
+                colors = cardColors,
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(vertical = 8.dp)
@@ -383,6 +416,7 @@ private fun CompactContent(
                     onAddServingButtonClick = { onEvent(RecipeDetailsIntent.AddServing) },
                     onAddToListClick = { onEvent(RecipeDetailsIntent.OpenAddToList) },
                     columns = if (medium) MEDIUM_INGREDIENT_COLUMNS else 1,
+                    segmentedServings = medium,
                     modifier = Modifier.fillMaxWidth()
                 )
             }
@@ -391,6 +425,7 @@ private fun CompactContent(
         // Instructions (always shown, index 4)
         item {
             OutlinedCard(
+                colors = cardColors,
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(vertical = 8.dp)
@@ -419,6 +454,7 @@ private fun CompactContent(
         if (recipe.notes.isNotEmpty()) {
             item {
                 OutlinedCard(
+                    colors = cardColors,
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(vertical = 8.dp)
@@ -437,6 +473,7 @@ private fun CompactContent(
         if (recipe.settings.showNutrition) {
             item {
                 OutlinedCard(
+                    colors = cardColors,
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(vertical = 8.dp)
