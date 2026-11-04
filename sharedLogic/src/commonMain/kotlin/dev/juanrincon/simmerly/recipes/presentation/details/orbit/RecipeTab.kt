@@ -6,8 +6,6 @@ enum class RecipeTab {
     Instructions,
     Notes,
     Nutrition,
-    Recipe,
-    Comments,
 }
 
 val RecipeTab.label: String
@@ -17,6 +15,4 @@ val RecipeTab.label: String
         RecipeTab.Instructions -> "Instructions"
         RecipeTab.Notes -> "Notes"
         RecipeTab.Nutrition -> "Nutrition"
-        RecipeTab.Recipe -> "Recipe"
-        RecipeTab.Comments -> "Comments"
     }

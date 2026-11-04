@@ -106,11 +106,6 @@ class RecipeDetailsViewModel(
                                             if (recipe.notes.isNotEmpty()) add(RecipeTab.Notes)
                                             if (recipe.settings.showNutrition) add(RecipeTab.Nutrition)
                                         },
-                                        desktopTabs = buildList {
-                                            add(RecipeTab.Recipe)
-                                            if (recipe.notes.isNotEmpty()) add(RecipeTab.Notes)
-                                            if (!recipe.settings.disableComments) add(RecipeTab.Comments)
-                                        }
                                     )
                                 }
                             }

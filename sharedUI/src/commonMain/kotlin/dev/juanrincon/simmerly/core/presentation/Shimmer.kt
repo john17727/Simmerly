@@ -1,5 +1,7 @@
 package dev.juanrincon.simmerly.core.presentation
 
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.Composable
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.AnimationVector1D
 import androidx.compose.animation.core.infiniteRepeatable
@@ -127,3 +129,11 @@ private class ShimmerModifierNode(
         }
     }
 }
+
+/** The skeleton colors used by loading placeholders across the app. */
+@Composable
+fun shimmerColors(): List<Color> = listOf(
+    MaterialTheme.colorScheme.surfaceContainer,
+    MaterialTheme.colorScheme.surfaceContainerHighest,
+    MaterialTheme.colorScheme.surfaceContainer,
+)
