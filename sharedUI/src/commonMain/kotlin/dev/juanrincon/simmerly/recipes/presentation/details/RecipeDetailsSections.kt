@@ -172,7 +172,7 @@ internal fun IngredientAndToolView(
 }
 
 /**
- * The medium-width servings control: a pill track holding two 40dp round buttons around the
+ * The wide-layout servings control: a pill track holding two 40dp round buttons around the
  * servings label, as the foldable design draws it.
  */
 @Composable
@@ -450,7 +450,7 @@ private fun NoteEntry(note: Note, modifier: Modifier = Modifier) {
 internal fun NutritionView(
     nutrition: NutritionUi,
     modifier: Modifier = Modifier,
-    medium: Boolean = false,
+    showTiles: Boolean = false,
 ) {
     val entries = nutrition.entries
     Column(modifier = modifier.padding(SECTION_PADDING)) {
@@ -459,7 +459,7 @@ internal fun NutritionView(
             style = MaterialTheme.typography.titleLarge,
             modifier = Modifier.padding(bottom = 12.dp)
         )
-        if (medium) {
+        if (showTiles) {
             // Headline stats as tiles, the remainder as a two-column list.
             val tiles = NUTRITION_TILE_LABELS.mapNotNull { (label, short) ->
                 entries.firstOrNull { it.label == label }?.let { short to it.value.abbreviateUnit() }
@@ -507,7 +507,7 @@ private fun String.abbreviateUnit(): String = this
     .replace(Regex("""\s*grams?\b""", RegexOption.IGNORE_CASE), "g")
     .replace(Regex("""\s*(kilocalories|calories)\b""", RegexOption.IGNORE_CASE), " kcal")
 
-/** Headline nutrition facts shown as tiles at medium width: full label to the short form shown. */
+/** Headline nutrition facts shown as tiles on wider layouts: full label to the short form shown. */
 private val NUTRITION_TILE_LABELS = listOf(
     "Calories" to "Cal",
     "Protein" to "Protein",

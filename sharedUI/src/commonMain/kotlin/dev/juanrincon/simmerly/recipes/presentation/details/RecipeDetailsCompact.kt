@@ -43,7 +43,6 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -52,7 +51,6 @@ import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MediumFlexibleTopAppBar
-import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.PrimaryScrollableTabRow
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -282,13 +280,10 @@ internal fun CompactRecipeDetails(
             if (medium) {
                 // Medium and foldable widths drop the bottom bar: the actions move to the top bar
                 // and Start cooking floats on its own, as the design draws it.
-                AnimatedVisibility(visible = !state.loading && state.recipe.instructions.isNotEmpty()) {
-                    ExtendedFloatingActionButton(
-                        onClick = { onStartCooking(state.recipe.id) },
-                        icon = { Icon(Icons.Default.PlayArrow, contentDescription = null) },
-                        text = { Text("Start cooking") },
-                    )
-                }
+                StartCookingFab(
+                    visible = !state.loading && state.recipe.instructions.isNotEmpty(),
+                    onClick = { onStartCooking(state.recipe.id) },
+                )
             }
         }
     ) { paddingValues ->
@@ -452,18 +447,13 @@ private fun CompactContent(
 
         // Ingredients & Tools (always shown, index 3)
         item {
-            OutlinedCard(
+            RecipeSectionCard(
                 colors = cardColors,
+                loadingHeight = if (state.loading) 400.dp else null,
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(vertical = 8.dp)
                     .padding(horizontal = 16.dp)
-                    .ifTrue(state.loading) {
-                        height(400.dp).shimmer(
-                            colors = shimmerColors(),
-                            shape = MaterialTheme.shapes.medium
-                        )
-                    }
             ) {
                 IngredientAndToolView(
                     recipe = recipe,
@@ -479,18 +469,13 @@ private fun CompactContent(
 
         // Instructions (always shown, index 4)
         item {
-            OutlinedCard(
+            RecipeSectionCard(
                 colors = cardColors,
+                loadingHeight = if (state.loading) 600.dp else null,
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(vertical = 8.dp)
                     .padding(horizontal = 16.dp)
-                    .ifTrue(state.loading) {
-                        height(600.dp).shimmer(
-                            colors = shimmerColors(),
-                            shape = MaterialTheme.shapes.medium
-                        )
-                    }
             ) {
                 InstructionView(
                     instructions = recipe.instructions,
@@ -504,7 +489,7 @@ private fun CompactContent(
         // Notes (conditional)
         if (recipe.notes.isNotEmpty()) {
             item {
-                OutlinedCard(
+                RecipeSectionCard(
                     colors = cardColors,
                     modifier = Modifier
                         .fillMaxWidth()
@@ -523,7 +508,7 @@ private fun CompactContent(
         // Nutrition (conditional)
         if (recipe.settings.showNutrition) {
             item {
-                OutlinedCard(
+                RecipeSectionCard(
                     colors = cardColors,
                     modifier = Modifier
                         .fillMaxWidth()
@@ -532,7 +517,7 @@ private fun CompactContent(
                 ) {
                     NutritionView(
                         recipe.nutrition,
-                        medium = medium,
+                        showTiles = medium,
                         modifier = Modifier.fillMaxWidth()
                     )
                 }

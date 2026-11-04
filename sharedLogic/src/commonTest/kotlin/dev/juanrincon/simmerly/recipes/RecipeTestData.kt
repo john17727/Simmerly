@@ -2,6 +2,7 @@ package dev.juanrincon.simmerly.recipes
 
 import dev.juanrincon.simmerly.recipes.domain.model.Comment
 import dev.juanrincon.simmerly.recipes.domain.model.Instruction
+import dev.juanrincon.simmerly.recipes.domain.model.Note
 import dev.juanrincon.simmerly.recipes.domain.model.Nutrition
 import dev.juanrincon.simmerly.recipes.domain.model.RecipeDetail
 import dev.juanrincon.simmerly.recipes.domain.model.RecipeSummary
@@ -98,6 +99,8 @@ fun aRecipeDetail(
     servings: Double = 4.0,
     instructions: List<Instruction> = emptyList(),
     ingredients: List<Ingredient> = emptyList(),
+    notes: List<Note> = emptyList(),
+    settings: Settings = aSettings(),
 ) = RecipeDetail(
     id = id,
     userId = "",
@@ -138,9 +141,9 @@ fun aRecipeDetail(
         transFatContent = null,
         unsaturatedFatContent = null
     ),
-    settings = aSettings(),
+    settings = settings,
     assets = emptyList(),
-    notes = emptyList(),
+    notes = notes,
     comments = emptyList()
 )
 
