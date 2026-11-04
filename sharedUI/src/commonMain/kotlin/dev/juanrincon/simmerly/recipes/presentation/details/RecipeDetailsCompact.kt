@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -24,15 +25,25 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Comment
 import androidx.compose.material.icons.automirrored.filled.OpenInNew
+import androidx.compose.material.icons.filled.AddShoppingCart
+import androidx.compose.material.icons.filled.ContentCopy
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.EditCalendar
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.EventAvailable
+import androidx.compose.material.icons.filled.Print
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.ViewTimeline
+import androidx.compose.material3.AppBarRow
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Button
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -76,6 +87,7 @@ import dev.juanrincon.simmerly.core.presentation.asString
 import dev.juanrincon.simmerly.core.presentation.ifTrue
 import dev.juanrincon.simmerly.core.presentation.navigation.isMediumWidthOrWider
 import dev.juanrincon.simmerly.core.presentation.shimmer
+import dev.juanrincon.simmerly.recipes.domain.model.Note
 import dev.juanrincon.simmerly.recipes.domain.model.Settings
 import dev.juanrincon.simmerly.recipes.presentation.details.models.IngredientUi
 import dev.juanrincon.simmerly.recipes.presentation.details.models.InstructionUi
@@ -90,6 +102,9 @@ import dev.juanrincon.simmerly.recipes.presentation.shared.TagRow
 import dev.juanrincon.simmerly.theme.SimmerlyTheme
 import kotlinx.coroutines.launch
 
+/** Most items the medium top bar shows before overflowing: five icons plus the overflow button (maxItemCount counts the overflow button). */
+private const val TOP_BAR_MAX_ITEMS = 6
+
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 internal fun CompactRecipeDetails(
@@ -103,6 +118,47 @@ internal fun CompactRecipeDetails(
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
 ) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
+    val medium = isMediumWidthOrWider()
+    val recipeActions: @Composable RowScope.() -> Unit = {
+        IconToggleButton(
+            checked = state.recipe.favorite,
+            onCheckedChange = {},
+            enabled = !state.loading
+        ) {
+            Icon(
+                Icons.Default.Favorite,
+                contentDescription = "Favorite",
+            )
+        }
+        IconButton(
+            onClick = { /* TODO: timeline action */ },
+            enabled = !state.loading
+        ) {
+            Icon(Icons.Default.ViewTimeline, contentDescription = "Timeline")
+        }
+        IconButton(onClick = { /* TODO: edit action */ }, enabled = !state.loading) {
+            Icon(Icons.Default.Edit, contentDescription = "Edit")
+        }
+        IconButton(
+            onClick = { onEvent(RecipeDetailsIntent.ShowSettings) },
+            enabled = !state.loading
+        ) {
+            Icon(Icons.Default.Settings, contentDescription = "Settings")
+        }
+        IconButton(
+            onClick = { onNavigateToComments(state.recipe.id) },
+            enabled = !state.loading && !state.recipe.settings.disableComments
+        ) {
+            Icon(
+                Icons.AutoMirrored.Default.Comment,
+                contentDescription = "Comment"
+            )
+        }
+        RecipeOverflowMenu(
+            onAddToShoppingList = { onEvent(RecipeDetailsIntent.OpenAddToList) },
+            enabled = !state.loading,
+        )
+    }
     Scaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         snackbarHost = { SnackbarHost(snackbarHostState) },
@@ -140,6 +196,89 @@ internal fun CompactRecipeDetails(
                             )
                         }
                     },
+                    actions = {
+                        if (medium) {
+                            // AppBarRow measures its own items and moves the ones that don't fit
+                            // into its overflow menu. Items drop from the end, so they are ordered
+                            // by how often they are likely to be used, most used first.
+                            AppBarRow(maxItemCount = TOP_BAR_MAX_ITEMS) {
+                                toggleableItem(
+                                    checked = state.recipe.favorite,
+                                    onCheckedChange = {},
+                                    icon = { Icon(Icons.Default.Favorite, contentDescription = null) },
+                                    label = "Favorite",
+                                    enabled = !state.loading,
+                                )
+                                clickableItem(
+                                    onClick = { onEvent(RecipeDetailsIntent.OpenAddToList) },
+                                    icon = { Icon(Icons.Default.AddShoppingCart, contentDescription = null) },
+                                    label = "Add to shopping list",
+                                    enabled = !state.loading,
+                                )
+                                clickableItem(
+                                    onClick = { onNavigateToComments(state.recipe.id) },
+                                    icon = { Icon(Icons.AutoMirrored.Default.Comment, contentDescription = null) },
+                                    label = "Comments",
+                                    enabled = !state.loading && !state.recipe.settings.disableComments,
+                                )
+                                clickableItem(
+                                    onClick = { /* TODO: edit action */ },
+                                    icon = { Icon(Icons.Default.Edit, contentDescription = null) },
+                                    label = "Edit",
+                                    enabled = !state.loading,
+                                )
+                                clickableItem(
+                                    onClick = { onEvent(RecipeDetailsIntent.ShowSettings) },
+                                    icon = { Icon(Icons.Default.Settings, contentDescription = null) },
+                                    label = "Settings",
+                                    enabled = !state.loading,
+                                )
+                                clickableItem(
+                                    onClick = { /* TODO: timeline action */ },
+                                    icon = { Icon(Icons.Default.ViewTimeline, contentDescription = null) },
+                                    label = "Timeline",
+                                    enabled = !state.loading,
+                                )
+                                // Not built yet: disabled, as in the phone menu.
+                                clickableItem(
+                                    onClick = {},
+                                    icon = { Icon(Icons.Default.EditCalendar, contentDescription = null) },
+                                    label = "Add to meal plan",
+                                    enabled = false,
+                                )
+                                clickableItem(
+                                    onClick = {},
+                                    icon = { Icon(Icons.Default.EventAvailable, contentDescription = null) },
+                                    label = "Mark as made today",
+                                    enabled = false,
+                                )
+                                clickableItem(
+                                    onClick = {},
+                                    icon = { Icon(Icons.Default.Share, contentDescription = null) },
+                                    label = "Share",
+                                    enabled = false,
+                                )
+                                clickableItem(
+                                    onClick = {},
+                                    icon = { Icon(Icons.Default.ContentCopy, contentDescription = null) },
+                                    label = "Duplicate",
+                                    enabled = false,
+                                )
+                                clickableItem(
+                                    onClick = {},
+                                    icon = { Icon(Icons.Default.Print, contentDescription = null) },
+                                    label = "Print",
+                                    enabled = false,
+                                )
+                                clickableItem(
+                                    onClick = {},
+                                    icon = { Icon(Icons.Default.Delete, contentDescription = null) },
+                                    label = "Delete recipe",
+                                    enabled = false,
+                                )
+                            }
+                        }
+                    },
                     scrollBehavior = scrollBehavior
                 )
                 AnimatedVisibility(
@@ -156,59 +295,35 @@ internal fun CompactRecipeDetails(
             }
         },
         bottomBar = {
-            BottomAppBar(
-                actions = {
-                    IconToggleButton(
-                        checked = state.recipe.favorite,
-                        onCheckedChange = {},
-                        enabled = !state.loading
-                    ) {
-                        Icon(
-                            Icons.Default.Favorite,
-                            contentDescription = "Favorite",
-                        )
-                    }
-                    IconButton(
-                        onClick = { /* TODO: timeline action */ },
-                        enabled = !state.loading
-                    ) {
-                        Icon(Icons.Default.ViewTimeline, contentDescription = "Timeline")
-                    }
-                    IconButton(onClick = { /* TODO: edit action */ }, enabled = !state.loading) {
-                        Icon(Icons.Default.Edit, contentDescription = "Edit")
-                    }
-                    IconButton(
-                        onClick = { onEvent(RecipeDetailsIntent.ShowSettings) },
-                        enabled = !state.loading
-                    ) {
-                        Icon(Icons.Default.Settings, contentDescription = "Settings")
-                    }
-                    IconButton(
-                        onClick = { onNavigateToComments(state.recipe.id) },
-                        enabled = !state.loading && !state.recipe.settings.disableComments
-                    ) {
-                        Icon(
-                            Icons.AutoMirrored.Default.Comment,
-                            contentDescription = "Comment"
-                        )
-                    }
-                    RecipeOverflowMenu(
-                        onAddToShoppingList = { onEvent(RecipeDetailsIntent.OpenAddToList) },
-                        enabled = !state.loading,
-                    )
-                },
-                floatingActionButton = {
-                    // No steps to cook means nothing for Cook Mode to show — keep the FAB hidden
-                    // rather than opening an empty stepper.
-                    AnimatedVisibility(visible = !state.loading && state.recipe.instructions.isNotEmpty()) {
-                        FloatingActionButton(
-                            onClick = { onStartCooking(state.recipe.id) },
-                        ) {
-                            Icon(Icons.Default.PlayArrow, contentDescription = "Play")
+            if (!medium) {
+                BottomAppBar(
+                    actions = recipeActions,
+                    floatingActionButton = {
+                        // No steps to cook means nothing for Cook Mode to show — keep the FAB hidden
+                        // rather than opening an empty stepper.
+                        AnimatedVisibility(visible = !state.loading && state.recipe.instructions.isNotEmpty()) {
+                            FloatingActionButton(
+                                onClick = { onStartCooking(state.recipe.id) },
+                            ) {
+                                Icon(Icons.Default.PlayArrow, contentDescription = "Play")
+                            }
                         }
                     }
+                )
+            }
+        },
+        floatingActionButton = {
+            if (medium) {
+                // Medium and foldable widths drop the bottom bar: the actions move to the top bar
+                // and Start cooking floats on its own, as the design draws it.
+                AnimatedVisibility(visible = !state.loading && state.recipe.instructions.isNotEmpty()) {
+                    ExtendedFloatingActionButton(
+                        onClick = { onStartCooking(state.recipe.id) },
+                        icon = { Icon(Icons.Default.PlayArrow, contentDescription = null) },
+                        text = { Text("Start cooking") },
+                    )
                 }
-            )
+            }
         }
     ) { paddingValues ->
         if (state.error != null) {
@@ -232,7 +347,7 @@ internal fun CompactRecipeDetails(
                 onEvent = onEvent,
                 paddingValues = paddingValues,
                 sharedTransitionScope = sharedTransitionScope,
-                medium = isMediumWidthOrWider(),
+                medium = medium,
                 modifier = modifier.fillMaxSize()
             )
         }
@@ -281,12 +396,23 @@ private fun CompactContent(
         }
     }
 
+    // The foldable design tints the section cards (Neutral50) instead of leaving them white.
+    val cardColors = CardDefaults.outlinedCardColors(
+        containerColor = if (medium) {
+            MaterialTheme.colorScheme.surfaceContainerLow
+        } else {
+            MaterialTheme.colorScheme.surface
+        }
+    )
+
     LazyColumn(
         state = listState,
         modifier = modifier.padding(paddingValues),
         contentPadding = PaddingValues(
             top = 8.dp,
-            bottom = 8.dp
+            // Medium widths float the FAB over the list (56dp + 16dp margin), so leave room to
+            // scroll the last item clear of it. Phones keep the FAB inside the bottom bar.
+            bottom = if (medium) 96.dp else 8.dp
         )
     ) {
 
@@ -361,6 +487,7 @@ private fun CompactContent(
         // Ingredients & Tools (always shown, index 3)
         item {
             OutlinedCard(
+                colors = cardColors,
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(vertical = 8.dp)
@@ -382,6 +509,7 @@ private fun CompactContent(
                     onAddServingButtonClick = { onEvent(RecipeDetailsIntent.AddServing) },
                     onAddToListClick = { onEvent(RecipeDetailsIntent.OpenAddToList) },
                     columns = if (medium) MEDIUM_INGREDIENT_COLUMNS else 1,
+                    segmentedServings = medium,
                     modifier = Modifier.fillMaxWidth()
                 )
             }
@@ -390,6 +518,7 @@ private fun CompactContent(
         // Instructions (always shown, index 4)
         item {
             OutlinedCard(
+                colors = cardColors,
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(vertical = 8.dp)
@@ -418,6 +547,7 @@ private fun CompactContent(
         if (recipe.notes.isNotEmpty()) {
             item {
                 OutlinedCard(
+                    colors = cardColors,
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(vertical = 8.dp)
@@ -425,6 +555,7 @@ private fun CompactContent(
                 ) {
                     NotesView(
                         recipe.notes,
+                        columns = if (medium) 2 else 1,
                         modifier = Modifier.fillMaxWidth()
                     )
                 }
@@ -435,6 +566,7 @@ private fun CompactContent(
         if (recipe.settings.showNutrition) {
             item {
                 OutlinedCard(
+                    colors = cardColors,
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(vertical = 8.dp)
@@ -442,6 +574,7 @@ private fun CompactContent(
                 ) {
                     NutritionView(
                         recipe.nutrition,
+                        medium = medium,
                         modifier = Modifier.fillMaxWidth()
                     )
                 }
@@ -731,6 +864,57 @@ private val previewRecipe = RecipeDetailUi(
 )
 
 private val previewTabs = listOf(RecipeTab.Overview, RecipeTab.Ingredients, RecipeTab.Instructions)
+
+// Fuller recipe for the medium previews, so the two-column notes and the nutrition tiles show.
+private val previewMediumRecipe = previewRecipe.copy(
+    notes = listOf(
+        Note(id = 1, title = "A word on guanciale.", text = "Guanciale is a salty cured pork product made from pork jowls. If you can't find it, use pancetta."),
+        Note(id = 2, title = "The cheese.", text = "Carbonara is a Roman pasta, so Pecorino Romano is traditional. Parmigiano Reggiano works with a little extra salt."),
+        Note(id = 3, title = "Avoid scrambled eggs.", text = "Take the pan off the heat before the eggs go in so they thicken into a sauce."),
+    ),
+    settings = previewRecipe.settings.copy(showNutrition = true)
+)
+
+private val previewMediumTabs = RecipeTab.entries.filter {
+    it in listOf(
+        RecipeTab.Overview, RecipeTab.Ingredients, RecipeTab.Instructions,
+        RecipeTab.Notes, RecipeTab.Nutrition
+    )
+}
+
+@Preview(apiLevel = 36, showSystemUi = true, device = "spec:width=700dp,height=900dp,dpi=320")
+@Composable
+private fun MediumPreview() {
+    SimmerlyTheme {
+        CompactRecipeDetails(
+            state = RecipeDetailsState(
+                loading = false,
+                recipe = previewMediumRecipe,
+                mobileTabs = previewMediumTabs
+            ),
+            onEvent = {},
+            onNavigateBack = {},
+            onNavigateToComments = {}
+        )
+    }
+}
+
+@Preview(apiLevel = 36, showSystemUi = true, device = "spec:width=700dp,height=900dp,dpi=320")
+@Composable
+private fun MediumDarkPreview() {
+    SimmerlyTheme(darkTheme = true) {
+        CompactRecipeDetails(
+            state = RecipeDetailsState(
+                loading = false,
+                recipe = previewMediumRecipe,
+                mobileTabs = previewMediumTabs
+            ),
+            onEvent = {},
+            onNavigateBack = {},
+            onNavigateToComments = {}
+        )
+    }
+}
 
 @Preview(apiLevel = 36, showSystemUi = true, device = Devices.PIXEL_9_PRO, wallpaper = 1)
 @Composable
