@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -50,7 +49,6 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
-import androidx.compose.material3.IconToggleButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MediumFlexibleTopAppBar
@@ -88,6 +86,7 @@ import dev.juanrincon.simmerly.core.presentation.asString
 import dev.juanrincon.simmerly.core.presentation.ifTrue
 import dev.juanrincon.simmerly.core.presentation.navigation.isMediumWidthOrWider
 import dev.juanrincon.simmerly.core.presentation.shimmer
+import dev.juanrincon.simmerly.core.presentation.shimmerColors
 import dev.juanrincon.simmerly.recipes.domain.model.Note
 import dev.juanrincon.simmerly.recipes.domain.model.Settings
 import dev.juanrincon.simmerly.recipes.presentation.details.models.IngredientUi
@@ -216,17 +215,13 @@ internal fun CompactRecipeDetails(
                 MediumFlexibleTopAppBar(
                     title = {
                         if (state.loading) {
-                            val shimmerColors = listOf(
-                                MaterialTheme.colorScheme.surfaceContainer,
-                                MaterialTheme.colorScheme.surfaceContainerHighest,
-                                MaterialTheme.colorScheme.surfaceContainer,
-                            )
+                            val colors = shimmerColors()
                             Box(
                                 modifier = Modifier
                                     .width(160.dp)
                                     .height(20.dp)
                                     .clip(MaterialTheme.shapes.small)
-                                    .shimmer(shimmerColors, MaterialTheme.shapes.small)
+                                    .shimmer(colors, MaterialTheme.shapes.small)
                             )
                         } else {
                             val isCollapsed = scrollBehavior.state.collapsedFraction > 0.5f
@@ -465,11 +460,7 @@ private fun CompactContent(
                     .padding(horizontal = 16.dp)
                     .ifTrue(state.loading) {
                         height(400.dp).shimmer(
-                            colors = listOf(
-                                MaterialTheme.colorScheme.surfaceContainer,
-                                MaterialTheme.colorScheme.surfaceContainerHighest,
-                                MaterialTheme.colorScheme.surfaceContainer,
-                            ),
+                            colors = shimmerColors(),
                             shape = MaterialTheme.shapes.medium
                         )
                     }
@@ -496,11 +487,7 @@ private fun CompactContent(
                     .padding(horizontal = 16.dp)
                     .ifTrue(state.loading) {
                         height(600.dp).shimmer(
-                            colors = listOf(
-                                MaterialTheme.colorScheme.surfaceContainer,
-                                MaterialTheme.colorScheme.surfaceContainerHighest,
-                                MaterialTheme.colorScheme.surfaceContainer,
-                            ),
+                            colors = shimmerColors(),
                             shape = MaterialTheme.shapes.medium
                         )
                     }
@@ -585,11 +572,7 @@ internal fun RecipeHero(
                 .then(sharedModifier)
                 .ifTrue(state.loading) {
                     shimmer(
-                        colors = listOf(
-                            MaterialTheme.colorScheme.surfaceContainer,
-                            MaterialTheme.colorScheme.surfaceContainerHighest,
-                            MaterialTheme.colorScheme.surfaceContainer,
-                        ),
+                        colors = shimmerColors(),
                         shape = MaterialTheme.shapes.medium
                     )
                 }.clip(MaterialTheme.shapes.medium)
@@ -634,11 +617,7 @@ internal fun RecipeSummary(
     modifier: Modifier = Modifier,
 ) {
     val recipe = state.recipe
-    val shimmerColors = listOf(
-        MaterialTheme.colorScheme.surfaceContainer,
-        MaterialTheme.colorScheme.surfaceContainerHighest,
-        MaterialTheme.colorScheme.surfaceContainer,
-    )
+    val colors = shimmerColors()
     var descriptionExpanded by remember { mutableStateOf(false) }
     var descriptionOverflowing by remember { mutableStateOf(false) }
     Column(modifier = modifier) {
@@ -648,17 +627,17 @@ internal fun RecipeSummary(
                 Box(
                     modifier = Modifier.width(64.dp).height(16.dp)
                         .clip(MaterialTheme.shapes.small)
-                        .shimmer(shimmerColors, MaterialTheme.shapes.small)
+                        .shimmer(colors, MaterialTheme.shapes.small)
                 )
                 Box(
                     modifier = Modifier.width(80.dp).height(16.dp)
                         .clip(MaterialTheme.shapes.small)
-                        .shimmer(shimmerColors, MaterialTheme.shapes.small)
+                        .shimmer(colors, MaterialTheme.shapes.small)
                 )
                 Box(
                     modifier = Modifier.width(72.dp).height(16.dp)
                         .clip(MaterialTheme.shapes.small)
-                        .shimmer(shimmerColors, MaterialTheme.shapes.small)
+                        .shimmer(colors, MaterialTheme.shapes.small)
                 )
             }
             Spacer(modifier = Modifier.height(16.dp))
@@ -666,22 +645,22 @@ internal fun RecipeSummary(
                 Box(
                     modifier = Modifier.fillMaxWidth().height(14.dp)
                         .clip(MaterialTheme.shapes.small)
-                        .shimmer(shimmerColors, MaterialTheme.shapes.small)
+                        .shimmer(colors, MaterialTheme.shapes.small)
                 )
                 Box(
                     modifier = Modifier.fillMaxWidth().height(14.dp)
                         .clip(MaterialTheme.shapes.small)
-                        .shimmer(shimmerColors, MaterialTheme.shapes.small)
+                        .shimmer(colors, MaterialTheme.shapes.small)
                 )
                 Box(
                     modifier = Modifier.fillMaxWidth(0.9f).height(14.dp)
                         .clip(MaterialTheme.shapes.small)
-                        .shimmer(shimmerColors, MaterialTheme.shapes.small)
+                        .shimmer(colors, MaterialTheme.shapes.small)
                 )
                 Box(
                     modifier = Modifier.fillMaxWidth(0.55f).height(14.dp)
                         .clip(MaterialTheme.shapes.small)
-                        .shimmer(shimmerColors, MaterialTheme.shapes.small)
+                        .shimmer(colors, MaterialTheme.shapes.small)
                 )
             }
             Spacer(modifier = Modifier.height(16.dp))
@@ -969,8 +948,6 @@ private fun LoadingPreview() {
 }
 
 
-private val previewDesktopTabs = listOf(RecipeTab.Ingredients, RecipeTab.Instructions, RecipeTab.Notes, RecipeTab.Nutrition)
-
 @Preview(apiLevel = 36, showSystemUi = true, device = "spec:width=1280dp,height=800dp,dpi=160")
 @Composable
 private fun ExpandedPreview() {
@@ -979,7 +956,7 @@ private fun ExpandedPreview() {
             state = RecipeDetailsState(
                 loading = false,
                 recipe = previewMediumRecipe,
-                desktopTabs = previewDesktopTabs
+                mobileTabs = previewMediumTabs
             ),
             onEvent = {},
             onStartCooking = {}
@@ -995,7 +972,7 @@ private fun ExpandedDarkPreview() {
             state = RecipeDetailsState(
                 loading = false,
                 recipe = previewMediumRecipe,
-                desktopTabs = previewDesktopTabs
+                mobileTabs = previewMediumTabs
             ),
             onEvent = {},
             onStartCooking = {}

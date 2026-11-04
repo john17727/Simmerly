@@ -59,6 +59,7 @@ import androidx.compose.ui.unit.dp
 import dev.juanrincon.simmerly.core.presentation.VerticalScrollbar
 import dev.juanrincon.simmerly.core.presentation.ifTrue
 import dev.juanrincon.simmerly.core.presentation.shimmer
+import dev.juanrincon.simmerly.core.presentation.shimmerColors
 import dev.juanrincon.simmerly.recipes.presentation.comments.RecipeCommentsScreen
 import dev.juanrincon.simmerly.recipes.presentation.details.orbit.RecipeDetailsIntent
 import dev.juanrincon.simmerly.recipes.presentation.details.orbit.RecipeDetailsState
@@ -93,7 +94,8 @@ internal fun ExpandedView(
     modifier: Modifier = Modifier
 ) {
     val recipe = state.recipe
-    val expandedTabs = state.desktopTabs
+    // Same sections as the mobile page, minus the overview: desktop has no hero or summary.
+    val expandedTabs = state.mobileTabs.filter { it != RecipeTab.Overview }
 
     val listState = rememberLazyListState()
     val coroutineScope = rememberCoroutineScope()
@@ -359,10 +361,3 @@ private fun ExpandedHeader(
         HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
     }
 }
-
-@Composable
-private fun shimmerColors() = listOf(
-    MaterialTheme.colorScheme.surfaceContainer,
-    MaterialTheme.colorScheme.surfaceContainerHighest,
-    MaterialTheme.colorScheme.surfaceContainer,
-)

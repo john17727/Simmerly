@@ -9,7 +9,6 @@ data class RecipeDetailsState(
     val recipe: RecipeDetailUi = RecipeDetailUi.emptyRecipe,
     val error: RecipesError? = null,
     val mobileTabs: List<RecipeTab> = emptyList(),
-    val desktopTabs: List<RecipeTab> = emptyList(),
     val mode: RecipeMode = RecipeMode.READ_ONLY,
     val showSettings: Boolean = false,
     /** The recipe's own servings as loaded, before the reader scaled them. */

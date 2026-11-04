@@ -106,12 +106,6 @@ class RecipeDetailsViewModel(
                                             if (recipe.notes.isNotEmpty()) add(RecipeTab.Notes)
                                             if (recipe.settings.showNutrition) add(RecipeTab.Nutrition)
                                         },
-                                        desktopTabs = buildList {
-                                            add(RecipeTab.Ingredients)
-                                            add(RecipeTab.Instructions)
-                                            if (recipe.notes.isNotEmpty()) add(RecipeTab.Notes)
-                                            if (recipe.settings.showNutrition) add(RecipeTab.Nutrition)
-                                        }
                                     )
                                 }
                             }
