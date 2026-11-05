@@ -177,7 +177,6 @@ internal fun ExpandedView(
                                     onAddServingButtonClick = { onEvent(RecipeDetailsIntent.AddServing) },
                                     onAddToListClick = { onEvent(RecipeDetailsIntent.OpenAddToList) },
                                     columns = 2,
-                                    segmentedServings = true,
                                     modifier = Modifier.fillMaxWidth()
                                 )
                             }
@@ -208,7 +207,6 @@ internal fun ExpandedView(
                                 RecipeSectionCard(colors = cardColors, modifier = cardModifier) {
                                     NutritionView(
                                         recipe.nutrition,
-                                        showTiles = true,
                                         modifier = Modifier.fillMaxWidth()
                                     )
                                 }
