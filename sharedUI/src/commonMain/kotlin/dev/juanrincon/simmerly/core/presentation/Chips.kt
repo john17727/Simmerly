@@ -7,6 +7,7 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
@@ -15,6 +16,7 @@ import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Check
+import androidx.compose.material.icons.rounded.Restaurant
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
@@ -22,14 +24,18 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import dev.juanrincon.simmerly.theme.SimmerlyTheme
 
 enum class ChipTone { Tertiary, Neutral }
 
@@ -142,5 +148,44 @@ fun SelectableChip(
             Icon(Icons.Rounded.Check, contentDescription = null, tint = content, modifier = Modifier.size(18.dp))
         }
         Text(text = label, style = MaterialTheme.typography.labelLarge, color = content)
+    }
+}
+
+@Preview
+@Composable
+private fun SimmerlyChipPreview() {
+    SimmerlyTheme {
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier.padding(16.dp),
+        ) {
+            SimmerlyChip(label = "Dinner")
+            SimmerlyChip(label = "olive oil", emphasis = "2 tbsp", bordered = false)
+            SimmerlyChip(
+                label = "3 from recipes",
+                icon = { ChipIcon(Icons.Rounded.Restaurant) },
+            )
+            SimmerlyChip(label = "2 added by hand", tone = ChipTone.Neutral)
+        }
+    }
+}
+
+@Preview
+@Composable
+private fun SelectableChipPreview() {
+    SimmerlyTheme {
+        var selected by remember { mutableStateOf("Mine") }
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier.padding(16.dp),
+        ) {
+            listOf("Mine", "Household").forEach { label ->
+                SelectableChip(
+                    label = label,
+                    selected = selected == label,
+                    onClick = { selected = label },
+                )
+            }
+        }
     }
 }

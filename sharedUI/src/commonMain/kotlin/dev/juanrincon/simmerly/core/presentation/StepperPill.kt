@@ -2,6 +2,7 @@ package dev.juanrincon.simmerly.core.presentation
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -16,6 +17,10 @@ import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -23,8 +28,10 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import dev.juanrincon.simmerly.theme.SimmerlyTheme
 
 enum class StepperPillSize(
     internal val button: Dp,
@@ -104,5 +111,44 @@ private fun StepperPillButton(
         modifier = Modifier.size(size.button)
     ) {
         Icon(icon, contentDescription = contentDescription, modifier = Modifier.size(size.icon))
+    }
+}
+
+@Preview
+@Composable
+private fun StepperPillPreview() {
+    SimmerlyTheme {
+        var servings by remember { mutableIntStateOf(4) }
+        Column(
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+            modifier = Modifier.padding(16.dp),
+        ) {
+            StepperPill(
+                label = "$servings servings",
+                canDecrease = servings > 1,
+                onDecrease = { servings-- },
+                onIncrease = { servings++ },
+                decreaseDescription = "Fewer servings",
+                increaseDescription = "More servings",
+            )
+            StepperPill(
+                label = "$servings servings",
+                canDecrease = servings > 1,
+                onDecrease = { servings-- },
+                onIncrease = { servings++ },
+                decreaseDescription = "Fewer servings",
+                increaseDescription = "More servings",
+                size = StepperPillSize.Compact,
+                labelMinWidth = 76.dp,
+            )
+            StepperPill(
+                label = "Serves 4",
+                showButtons = false,
+                onDecrease = {},
+                onIncrease = {},
+                decreaseDescription = "",
+                increaseDescription = "",
+            )
+        }
     }
 }

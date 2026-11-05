@@ -13,7 +13,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import dev.juanrincon.simmerly.theme.SimmerlyTheme
 
 /** A centred failure message with a single recovery action ("Try again", "Go back"). */
 @Composable
@@ -48,4 +50,20 @@ fun EmptyMessage(text: String, modifier: Modifier = Modifier) {
         textAlign = TextAlign.Center,
         modifier = modifier.fillMaxWidth().padding(horizontal = 32.dp, vertical = 48.dp),
     )
+}
+
+@Preview
+@Composable
+private fun ErrorMessagePreview() {
+    SimmerlyTheme {
+        ErrorMessage(message = "Couldn't load this list.", onAction = {})
+    }
+}
+
+@Preview
+@Composable
+private fun EmptyMessagePreview() {
+    SimmerlyTheme {
+        EmptyMessage(text = "Nothing on this list yet. Add your first item below.")
+    }
 }
