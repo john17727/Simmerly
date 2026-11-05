@@ -25,7 +25,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedIconButton
 import androidx.compose.material3.ProvideTextStyle
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -78,53 +77,22 @@ internal fun IngredientAndToolView(
     modifier: Modifier = Modifier,
     onAddToListClick: () -> Unit = {},
     columns: Int = 1,
-    segmentedServings: Boolean = false,
 ) {
     Column(modifier = modifier.padding(SECTION_PADDING)) {
-        if (segmentedServings) {
-            // Medium widths: the heading and a single − servings + pill share one row.
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text("Ingredients", style = MaterialTheme.typography.headlineSmall)
-                SegmentedServings(
-                    label = recipe.formattedServings,
-                    steppable = recipe.isParsed,
-                    canRemove = recipe.servings > 1,
-                    onRemoveClick = onRemoveServingButtonClick,
-                    onAddClick = onAddServingButtonClick,
-                )
-            }
-        } else {
+        // The heading and a single − servings + pill share one row.
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
             Text("Ingredients", style = MaterialTheme.typography.headlineSmall)
-            Row(
-                modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    recipe.formattedServings,
-                    style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                if (recipe.isParsed) {
-                    Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                        ServingStepperButton(
-                            icon = Icons.Default.Remove,
-                            contentDescription = "Fewer servings",
-                            onClick = onRemoveServingButtonClick,
-                            enabled = recipe.servings > 1
-                        )
-                        ServingStepperButton(
-                            icon = Icons.Default.Add,
-                            contentDescription = "More servings",
-                            onClick = onAddServingButtonClick
-                        )
-                    }
-                }
-            }
+            SegmentedServings(
+                label = recipe.formattedServings,
+                steppable = recipe.isParsed,
+                canRemove = recipe.servings > 1,
+                onRemoveClick = onRemoveServingButtonClick,
+                onAddClick = onAddServingButtonClick,
+            )
         }
         Column(modifier = Modifier.fillMaxWidth().padding(top = 16.dp)) {
             // Filled row by row, so with several columns the ingredients read left to right.
@@ -225,24 +193,6 @@ private fun SegmentedServingsButton(
         modifier = Modifier.size(40.dp)
     ) {
         Icon(icon, contentDescription = contentDescription, modifier = Modifier.size(20.dp))
-    }
-}
-
-@Composable
-private fun ServingStepperButton(
-    icon: ImageVector,
-    contentDescription: String,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-    enabled: Boolean = true
-) {
-    OutlinedIconButton(
-        onClick = onClick,
-        enabled = enabled,
-        shape = CircleShape,
-        modifier = modifier.size(32.dp)
-    ) {
-        Icon(icon, contentDescription = contentDescription, modifier = Modifier.size(18.dp))
     }
 }
 
@@ -450,7 +400,7 @@ private fun NoteEntry(note: Note, modifier: Modifier = Modifier) {
 internal fun NutritionView(
     nutrition: NutritionUi,
     modifier: Modifier = Modifier,
-    showTiles: Boolean = false,
+    tileColumns: Int = 4,
 ) {
     val entries = nutrition.entries
     Column(modifier = modifier.padding(SECTION_PADDING)) {
@@ -459,13 +409,16 @@ internal fun NutritionView(
             style = MaterialTheme.typography.titleLarge,
             modifier = Modifier.padding(bottom = 12.dp)
         )
-        if (showTiles) {
-            // Headline stats as tiles, the remainder as a two-column list.
-            val tiles = NUTRITION_TILE_LABELS.mapNotNull { (label, short) ->
-                entries.firstOrNull { it.label == label }?.let { short to it.value.abbreviateUnit() }
-            }
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                tiles.forEach { (short, value) ->
+        // Headline stats as tiles, the remainder as a two-column list.
+        val tiles = NUTRITION_TILE_LABELS.mapNotNull { (label, short) ->
+            entries.firstOrNull { it.label == label }?.let { short to it.value.abbreviateUnit() }
+        }
+        tiles.chunked(tileColumns).forEachIndexed { rowIndex, tileRow ->
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(top = if (rowIndex == 0) 0.dp else 12.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                tileRow.forEach { (short, value) ->
                     Column(
                         modifier = Modifier
                             .weight(1f)
@@ -483,19 +436,16 @@ internal fun NutritionView(
                         Text(value, style = MaterialTheme.typography.headlineMedium)
                     }
                 }
+                repeat(tileColumns - tileRow.size) { Spacer(Modifier.weight(1f)) }
             }
-            Spacer(Modifier.height(12.dp))
-            entries.filter { e -> NUTRITION_TILE_LABELS.none { it.first == e.label } }.chunked(2).forEach { row ->
-                Row(horizontalArrangement = Arrangement.spacedBy(INGREDIENT_COLUMN_GAP)) {
-                    row.forEach { entry ->
-                        NutritionEntry(entry.label, entry.value, modifier = Modifier.weight(1f))
-                    }
-                    repeat(2 - row.size) { Spacer(Modifier.weight(1f)) }
+        }
+        Spacer(Modifier.height(12.dp))
+        entries.filter { e -> NUTRITION_TILE_LABELS.none { it.first == e.label } }.chunked(2).forEach { row ->
+            Row(horizontalArrangement = Arrangement.spacedBy(INGREDIENT_COLUMN_GAP)) {
+                row.forEach { entry ->
+                    NutritionEntry(entry.label, entry.value, modifier = Modifier.weight(1f))
                 }
-            }
-        } else {
-            entries.forEachIndexed { index, entry ->
-                NutritionEntry(entry.label, entry.value, modifier = Modifier.fillMaxWidth(), index != 0)
+                repeat(2 - row.size) { Spacer(Modifier.weight(1f)) }
             }
         }
     }

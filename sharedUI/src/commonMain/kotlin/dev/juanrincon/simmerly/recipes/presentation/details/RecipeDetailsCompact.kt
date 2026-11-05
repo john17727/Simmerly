@@ -357,13 +357,9 @@ private fun CompactContent(
         }
     }
 
-    // The foldable design tints the section cards (Neutral50) instead of leaving them white.
+    // Section cards are tinted (Neutral50) on every layout.
     val cardColors = CardDefaults.outlinedCardColors(
-        containerColor = if (medium) {
-            MaterialTheme.colorScheme.surfaceContainerLow
-        } else {
-            MaterialTheme.colorScheme.surface
-        }
+        containerColor = MaterialTheme.colorScheme.surfaceContainerLow
     )
 
     LazyColumn(
@@ -461,7 +457,6 @@ private fun CompactContent(
                     onAddServingButtonClick = { onEvent(RecipeDetailsIntent.AddServing) },
                     onAddToListClick = { onEvent(RecipeDetailsIntent.OpenAddToList) },
                     columns = if (medium) MEDIUM_INGREDIENT_COLUMNS else 1,
-                    segmentedServings = medium,
                     modifier = Modifier.fillMaxWidth()
                 )
             }
@@ -517,7 +512,7 @@ private fun CompactContent(
                 ) {
                     NutritionView(
                         recipe.nutrition,
-                        showTiles = medium,
+                        tileColumns = if (medium) 4 else 2,
                         modifier = Modifier.fillMaxWidth()
                     )
                 }
