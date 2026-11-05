@@ -9,8 +9,6 @@ extension RecipeTab {
         case .instructions: return "Instructions"
         case .notes: return "Notes"
         case .nutrition: return "Nutrition"
-        case .recipe: return "Recipe"
-        case .comments: return "Comments"
         }
     }
 }
