@@ -1,5 +1,6 @@
 package dev.juanrincon.simmerly.recipes.presentation.details
 
+import dev.juanrincon.simmerly.core.presentation.ErrorMessage
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionScope
@@ -288,20 +289,12 @@ internal fun CompactRecipeDetails(
         }
     ) { paddingValues ->
         if (state.error != null) {
-            Box(
-                modifier = modifier.fillMaxSize().padding(paddingValues),
-                contentAlignment = Alignment.Center
-            ) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    Text("Couldn't load recipe. Check your connection and try again.")
-                    Button(onClick = onNavigateBack) {
-                        Text("Go back")
-                    }
-                }
-            }
+            ErrorMessage(
+                message = "Couldn't load recipe. Check your connection and try again.",
+                onAction = onNavigateBack,
+                actionLabel = "Go back",
+                modifier = modifier.padding(paddingValues),
+            )
         } else {
             CompactContent(
                 state = state,

@@ -1,5 +1,6 @@
 package dev.juanrincon.simmerly.shoppinglists.presentation.detail
 
+import dev.juanrincon.simmerly.core.presentation.OutlinedSurface
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -180,10 +181,8 @@ internal fun CheckedCard(
     onEvent: (ShoppingListDetailIntent) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Surface(
-        shape = RoundedCornerShape(12.dp),
+    OutlinedSurface(
         color = MaterialTheme.colorScheme.surfaceContainerLow,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
         modifier = modifier.fillMaxWidth(),
     ) {
         Column {
