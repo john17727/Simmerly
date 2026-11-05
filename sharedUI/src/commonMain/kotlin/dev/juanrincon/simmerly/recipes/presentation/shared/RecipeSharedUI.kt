@@ -1,5 +1,6 @@
 package dev.juanrincon.simmerly.recipes.presentation.shared
 
+import dev.juanrincon.simmerly.core.presentation.SimmerlyChip
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -26,26 +27,6 @@ import dev.juanrincon.simmerly.recipes.domain.model.Tag
 import dev.juanrincon.simmerly.recipes.presentation.details.models.IngredientUi
 
 
-@Composable
-fun TagChip(name: String, modifier: Modifier = Modifier) {
-    Box(
-        contentAlignment = Alignment.Center,
-        modifier = modifier
-            .background(
-                MaterialTheme.colorScheme.tertiaryContainer,
-                shape = MaterialTheme.shapes.small
-            )
-            .border(1.dp, MaterialTheme.colorScheme.tertiary, MaterialTheme.shapes.small)
-            .padding(vertical = 4.dp, horizontal = 8.dp)
-    ) {
-        Text(
-            text = name,
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onTertiaryContainer
-        )
-    }
-}
-
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun TagRow(tags: List<Tag>, modifier: Modifier = Modifier) {
@@ -56,7 +37,7 @@ fun TagRow(tags: List<Tag>, modifier: Modifier = Modifier) {
         modifier = modifier
     ) {
         tags.forEach { tag ->
-            TagChip(name = tag.name)
+            SimmerlyChip(label = tag.name)
         }
     }
 }
@@ -151,28 +132,10 @@ fun IngredientChipRow(ingredients: List<IngredientUi>, modifier: Modifier = Modi
 
 @Composable
 fun IngredientChip(ingredient: IngredientUi, modifier: Modifier = Modifier) {
-    Row(
-        horizontalArrangement = Arrangement.spacedBy(4.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = modifier
-            .background(
-                MaterialTheme.colorScheme.tertiaryContainer,
-                shape = MaterialTheme.shapes.small
-            )
-            .padding(vertical = 4.dp, horizontal = 8.dp)
-    ) {
-        ingredient.formattedQuantity?.let {
-            Text(
-                text = it,
-                style = MaterialTheme.typography.bodySmall,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onTertiaryContainer
-            )
-        }
-        Text(
-            text = ingredient.formattedDisplay,
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onTertiaryContainer
-        )
-    }
+    SimmerlyChip(
+        label = ingredient.formattedDisplay,
+        emphasis = ingredient.formattedQuantity,
+        bordered = false,
+        modifier = modifier,
+    )
 }

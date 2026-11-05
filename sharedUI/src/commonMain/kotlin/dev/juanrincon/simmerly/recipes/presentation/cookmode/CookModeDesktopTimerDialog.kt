@@ -1,5 +1,7 @@
 package dev.juanrincon.simmerly.recipes.presentation.cookmode
 
+import androidx.compose.ui.semantics.Role
+import dev.juanrincon.simmerly.core.presentation.SelectableChip
 import dev.juanrincon.simmerly.core.presentation.Eyebrow
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -172,9 +174,10 @@ internal fun DesktopNewTimerDialog(
                     ) {
                         presets.forEach { preset ->
                             val selected = preset.duration.inWholeSeconds.toInt() == totalSeconds
-                            PresetChip(
+                            SelectableChip(
                                 label = preset.label,
                                 selected = selected,
+                                role = Role.RadioButton,
                                 onClick = {
                                     onDraftChange(
                                         draft.copy(
@@ -342,34 +345,6 @@ private fun StepperButton(
             contentDescription = contentDescription,
             tint = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.size(18.dp)
-        )
-    }
-}
-
-@Composable
-private fun PresetChip(label: String, selected: Boolean, onClick: () -> Unit) {
-    Box(
-        modifier = Modifier
-            .clip(MaterialTheme.shapes.small)
-            .background(
-                if (selected) {
-                    MaterialTheme.colorScheme.surfaceContainerLow
-                } else {
-                    MaterialTheme.colorScheme.surface
-                }
-            )
-            .border(
-                1.dp,
-                if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant,
-                MaterialTheme.shapes.small
-            )
-            .clickable(onClick = onClick)
-            .padding(horizontal = 14.dp, vertical = 9.dp)
-    ) {
-        Text(
-            label,
-            style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
-            color = if (selected) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.onSurface
         )
     }
 }

@@ -1,5 +1,6 @@
 package dev.juanrincon.simmerly.recipes.presentation.cookmode
 
+import dev.juanrincon.simmerly.core.presentation.SimmerlyChip
 import dev.juanrincon.simmerly.core.presentation.Eyebrow
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.background
@@ -71,7 +72,6 @@ import dev.juanrincon.simmerly.recipes.presentation.cookmode.models.TimerOrigin
 import dev.juanrincon.simmerly.recipes.presentation.cookmode.orbit.CookModeIntent
 import dev.juanrincon.simmerly.recipes.presentation.cookmode.orbit.CookModeState
 import dev.juanrincon.simmerly.recipes.presentation.shared.IngredientChipRow
-import dev.juanrincon.simmerly.recipes.presentation.shared.TagChip
 import dev.juanrincon.simmerly.theme.Simmerly
 import dev.juanrincon.simmerly.theme.dmSerifDisplayFontFamily
 
@@ -306,7 +306,7 @@ private fun DesktopStepRail(
                         horizontalArrangement = Arrangement.spacedBy(6.dp),
                         verticalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
-                        recipe.tools.forEach { TagChip(name = it.name) }
+                        recipe.tools.forEach { SimmerlyChip(label = it.name) }
                     }
                 }
             }

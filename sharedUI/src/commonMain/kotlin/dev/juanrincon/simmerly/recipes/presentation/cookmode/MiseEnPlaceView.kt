@@ -1,5 +1,6 @@
 package dev.juanrincon.simmerly.recipes.presentation.cookmode
 
+import dev.juanrincon.simmerly.core.presentation.SimmerlyChip
 import dev.juanrincon.simmerly.core.presentation.StepperPillSize
 import dev.juanrincon.simmerly.core.presentation.StepperPill
 import androidx.compose.foundation.background
@@ -65,7 +66,6 @@ import dev.juanrincon.simmerly.recipes.presentation.details.models.InstructionUi
 import dev.juanrincon.simmerly.recipes.presentation.details.models.NutritionUi
 import dev.juanrincon.simmerly.recipes.presentation.details.models.RecipeDetailUi
 import dev.juanrincon.simmerly.recipes.presentation.details.models.UnitUi
-import dev.juanrincon.simmerly.recipes.presentation.shared.TagChip
 import dev.juanrincon.simmerly.theme.SimmerlyTheme
 
 /**
@@ -315,7 +315,7 @@ private fun ToolsSection(tools: List<Tool>, modifier: Modifier = Modifier) {
             modifier = Modifier.padding(bottom = 10.dp)
         )
         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            tools.forEach { tool -> TagChip(name = tool.name) }
+            tools.forEach { tool -> SimmerlyChip(label = tool.name) }
         }
     }
 }
