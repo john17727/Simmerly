@@ -87,43 +87,6 @@ internal fun itemText(quantity: String, name: String, nameIsFood: Boolean) = bui
 }
 
 
-@Composable
-internal fun QuantityStepper(
-    quantity: Int,
-    recipeName: String,
-    onDecrease: () -> Unit,
-    onIncrease: () -> Unit,
-) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier
-            .clip(CircleShape)
-            .border(1.dp, MaterialTheme.colorScheme.outlineVariant, CircleShape)
-            .background(MaterialTheme.colorScheme.surface),
-    ) {
-        IconButton(onClick = onDecrease, modifier = Modifier.size(44.dp)) {
-            Icon(
-                Icons.Rounded.Remove,
-                contentDescription = if (quantity <= 1) "Remove $recipeName from this list"
-                else "Fewer servings of $recipeName",
-                modifier = Modifier.size(20.dp),
-            )
-        }
-        Text(
-            text = quantity.toString(),
-            style = MaterialTheme.typography.bodyMedium,
-            fontWeight = FontWeight.SemiBold,
-            textAlign = TextAlign.Center,
-            modifier = Modifier
-                .widthIn(min = 20.dp)
-                .semantics { contentDescription = "Quantity $quantity" },
-        )
-        IconButton(onClick = onIncrease, modifier = Modifier.size(44.dp)) {
-            Icon(Icons.Rounded.Add, contentDescription = "More servings of $recipeName", modifier = Modifier.size(20.dp))
-        }
-    }
-}
-
 
 @Composable
 internal fun SectionsControl(

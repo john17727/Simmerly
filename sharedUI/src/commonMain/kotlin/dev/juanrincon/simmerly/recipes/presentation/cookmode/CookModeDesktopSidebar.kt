@@ -1,5 +1,8 @@
 package dev.juanrincon.simmerly.recipes.presentation.cookmode
 
+import dev.juanrincon.simmerly.core.presentation.StepperPillSize
+import dev.juanrincon.simmerly.core.presentation.StepperPill
+import dev.juanrincon.simmerly.core.presentation.Eyebrow
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -80,7 +83,7 @@ internal fun DesktopCookSidebar(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                SidebarEyebrow("Timers")
+                Eyebrow("Timers")
                 Text(
                     "Add timer",
                     style = MaterialTheme.typography.labelLarge.copy(
@@ -134,7 +137,7 @@ internal fun DesktopCookSidebar(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column {
-                SidebarEyebrow("Ingredients")
+                Eyebrow("Ingredients")
                 Text(
                     "${state.readyIngredientCount} of ${recipe.ingredients.size} ready",
                     style = MaterialTheme.typography.bodySmall,
@@ -143,30 +146,16 @@ internal fun DesktopCookSidebar(
                 )
             }
             if (recipe.isParsed) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(4.dp)
-                ) {
-                    ServingStepper(
-                        icon = Icons.Default.Remove,
-                        contentDescription = "Fewer servings",
-                        enabled = recipe.servings > 1,
-                        onClick = { onEvent(CookModeIntent.RemoveServing) }
-                    )
-                    Text(
-                        recipe.formattedServings,
-                        style = MaterialTheme.typography.labelMedium.copy(
-                            fontWeight = FontWeight.SemiBold
-                        ),
-                        modifier = Modifier.widthIn(min = 72.dp)
-                    )
-                    ServingStepper(
-                        icon = Icons.Default.Add,
-                        contentDescription = "More servings",
-                        enabled = true,
-                        onClick = { onEvent(CookModeIntent.AddServing) }
-                    )
-                }
+                StepperPill(
+                    label = recipe.formattedServings,
+                    canDecrease = recipe.servings > 1,
+                    onDecrease = { onEvent(CookModeIntent.RemoveServing) },
+                    onIncrease = { onEvent(CookModeIntent.AddServing) },
+                    decreaseDescription = "Fewer servings",
+                    increaseDescription = "More servings",
+                    size = StepperPillSize.Compact,
+                    labelMinWidth = 72.dp,
+                )
             }
         }
 
@@ -194,31 +183,6 @@ internal fun DesktopCookSidebar(
                 modifier = Modifier.align(Alignment.CenterEnd).fillMaxHeight()
             )
         }
-    }
-}
-
-@Composable
-private fun SidebarEyebrow(text: String, modifier: Modifier = Modifier) {
-    Text(
-        text.uppercase(),
-        style = MaterialTheme.typography.labelSmall.copy(
-            fontWeight = FontWeight.SemiBold,
-            letterSpacing = 0.5.sp
-        ),
-        color = Simmerly.Neutral500,
-        modifier = modifier
-    )
-}
-
-@Composable
-private fun ServingStepper(
-    icon: ImageVector,
-    contentDescription: String,
-    enabled: Boolean,
-    onClick: () -> Unit
-) {
-    OutlinedIconButton(onClick = onClick, enabled = enabled, modifier = Modifier.size(30.dp)) {
-        Icon(icon, contentDescription = contentDescription, modifier = Modifier.size(17.dp))
     }
 }
 

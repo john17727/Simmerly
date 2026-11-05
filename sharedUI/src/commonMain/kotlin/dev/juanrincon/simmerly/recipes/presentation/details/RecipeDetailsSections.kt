@@ -1,5 +1,6 @@
 package dev.juanrincon.simmerly.recipes.presentation.details
 
+import dev.juanrincon.simmerly.core.presentation.StepperPill
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -86,12 +87,14 @@ internal fun IngredientAndToolView(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text("Ingredients", style = MaterialTheme.typography.headlineSmall)
-            SegmentedServings(
+            StepperPill(
                 label = recipe.formattedServings,
-                steppable = recipe.isParsed,
-                canRemove = recipe.servings > 1,
-                onRemoveClick = onRemoveServingButtonClick,
-                onAddClick = onAddServingButtonClick,
+                showButtons = recipe.isParsed,
+                canDecrease = recipe.servings > 1,
+                onDecrease = onRemoveServingButtonClick,
+                onIncrease = onAddServingButtonClick,
+                decreaseDescription = "Fewer servings",
+                increaseDescription = "More servings",
             )
         }
         Column(modifier = Modifier.fillMaxWidth().padding(top = 16.dp)) {
@@ -136,63 +139,6 @@ internal fun IngredientAndToolView(
                 modifier = Modifier.padding(start = 8.dp)
             )
         }
-    }
-}
-
-/**
- * The wide-layout servings control: a pill track holding two 40dp round buttons around the
- * servings label, as the foldable design draws it.
- */
-@Composable
-private fun SegmentedServings(
-    label: String,
-    steppable: Boolean,
-    canRemove: Boolean,
-    onRemoveClick: () -> Unit,
-    onAddClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    Row(
-        modifier = modifier
-            .clip(CircleShape)
-            .background(MaterialTheme.colorScheme.surfaceContainer)
-            .padding(4.dp),
-        horizontalArrangement = Arrangement.spacedBy(4.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        if (steppable) {
-            SegmentedServingsButton(Icons.Default.Remove, "Fewer servings", onRemoveClick, canRemove)
-        }
-        Text(
-            label,
-            style = MaterialTheme.typography.labelLarge,
-            fontWeight = FontWeight.SemiBold,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.widthIn(min = 96.dp).padding(horizontal = if (steppable) 0.dp else 12.dp)
-        )
-        if (steppable) {
-            SegmentedServingsButton(Icons.Default.Add, "More servings", onAddClick, true)
-        }
-    }
-}
-
-@Composable
-private fun SegmentedServingsButton(
-    icon: ImageVector,
-    contentDescription: String,
-    onClick: () -> Unit,
-    enabled: Boolean,
-) {
-    FilledIconButton(
-        onClick = onClick,
-        enabled = enabled,
-        colors = IconButtonDefaults.filledIconButtonColors(
-            containerColor = MaterialTheme.colorScheme.surface,
-            contentColor = MaterialTheme.colorScheme.onSurface,
-        ),
-        modifier = Modifier.size(40.dp)
-    ) {
-        Icon(icon, contentDescription = contentDescription, modifier = Modifier.size(20.dp))
     }
 }
 

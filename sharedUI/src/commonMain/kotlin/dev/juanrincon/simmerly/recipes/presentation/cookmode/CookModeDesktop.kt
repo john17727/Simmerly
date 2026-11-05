@@ -1,5 +1,6 @@
 package dev.juanrincon.simmerly.recipes.presentation.cookmode
 
+import dev.juanrincon.simmerly.core.presentation.Eyebrow
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -224,19 +225,6 @@ private fun DesktopCookTopBar(
 }
 
 /** The design's small caps section label, used across all three panes. */
-@Composable
-private fun Eyebrow(text: String, modifier: Modifier = Modifier) {
-    Text(
-        text.uppercase(),
-        style = MaterialTheme.typography.labelSmall.copy(
-            fontWeight = FontWeight.SemiBold,
-            letterSpacing = 0.5.sp
-        ),
-        color = Simmerly.Neutral500,
-        modifier = modifier
-    )
-}
-
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun DesktopStepRail(

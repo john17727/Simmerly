@@ -1,5 +1,6 @@
 package dev.juanrincon.simmerly.recipes.presentation.cookmode
 
+import dev.juanrincon.simmerly.core.presentation.Eyebrow
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -164,7 +165,7 @@ internal fun DesktopNewTimerDialog(
                 }
 
                 if (presets.isNotEmpty()) {
-                    DialogEyebrow("From this recipe", modifier = Modifier.padding(top = 20.dp, bottom = 10.dp))
+                    Eyebrow("From this recipe", modifier = Modifier.padding(top = 20.dp, bottom = 10.dp))
                     FlowRow(
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                         verticalArrangement = Arrangement.spacedBy(8.dp)
@@ -187,7 +188,7 @@ internal fun DesktopNewTimerDialog(
                     }
                 }
 
-                DialogEyebrow("Name", modifier = Modifier.padding(top = 20.dp, bottom = 8.dp))
+                Eyebrow("Name", modifier = Modifier.padding(top = 20.dp, bottom = 8.dp))
                 OutlinedTextField(
                     value = draft.label,
                     onValueChange = { onDraftChange(draft.copy(label = it)) },
@@ -373,15 +374,3 @@ private fun PresetChip(label: String, selected: Boolean, onClick: () -> Unit) {
     }
 }
 
-@Composable
-private fun DialogEyebrow(text: String, modifier: Modifier = Modifier) {
-    Text(
-        text.uppercase(),
-        style = MaterialTheme.typography.labelSmall.copy(
-            fontWeight = FontWeight.SemiBold,
-            letterSpacing = 0.5.sp
-        ),
-        color = Simmerly.Neutral500,
-        modifier = modifier
-    )
-}

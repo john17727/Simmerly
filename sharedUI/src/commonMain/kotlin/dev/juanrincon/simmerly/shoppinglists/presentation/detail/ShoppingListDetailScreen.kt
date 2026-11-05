@@ -1,5 +1,6 @@
 package dev.juanrincon.simmerly.shoppinglists.presentation.detail
 
+import dev.juanrincon.simmerly.core.presentation.StepperPill
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.fadeIn
@@ -607,11 +608,15 @@ private fun LinkedRecipesCard(
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
-                    QuantityStepper(
-                        quantity = recipe.quantity,
-                        recipeName = recipe.name.asString(),
+                    StepperPill(
+                        label = recipe.quantity.toString(),
                         onDecrease = { onQuantityChanged(recipe.recipeId, -1) },
                         onIncrease = { onQuantityChanged(recipe.recipeId, 1) },
+                        decreaseDescription = if (recipe.quantity <= 1) "Remove ${recipe.name.asString()} from this list"
+                        else "Fewer servings of ${recipe.name.asString()}",
+                        increaseDescription = "More servings of ${recipe.name.asString()}",
+                        labelMinWidth = 24.dp,
+                        labelDescription = "Quantity ${recipe.quantity}",
                     )
                 }
             }

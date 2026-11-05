@@ -1,5 +1,7 @@
 package dev.juanrincon.simmerly.recipes.presentation.cookmode
 
+import dev.juanrincon.simmerly.core.presentation.StepperPillSize
+import dev.juanrincon.simmerly.core.presentation.StepperPill
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -127,30 +129,16 @@ internal fun MiseEnPlaceView(
                     // quantity to scale — same gate RecipeDetailsSections.kt uses for the read-only
                     // recipe screen's identical stepper.
                     if (recipe.isParsed) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(2.dp)
-                        ) {
-                            ServingStepperButton(
-                                icon = Icons.Default.Remove,
-                                contentDescription = "Remove serving",
-                                enabled = recipe.servings > 1,
-                                onClick = { onEvent(CookModeIntent.RemoveServing) }
-                            )
-                            Text(
-                                recipe.formattedServings,
-                                style = MaterialTheme.typography.labelMedium,
-                                color = MaterialTheme.colorScheme.onSurface,
-                                textAlign = TextAlign.Center,
-                                modifier = Modifier.widthIn(min = 76.dp)
-                            )
-                            ServingStepperButton(
-                                icon = Icons.Default.Add,
-                                contentDescription = "Add serving",
-                                enabled = true,
-                                onClick = { onEvent(CookModeIntent.AddServing) }
-                            )
-                        }
+                        StepperPill(
+                            label = recipe.formattedServings,
+                            canDecrease = recipe.servings > 1,
+                            onDecrease = { onEvent(CookModeIntent.RemoveServing) },
+                            onIncrease = { onEvent(CookModeIntent.AddServing) },
+                            decreaseDescription = "Remove serving",
+                            increaseDescription = "Add serving",
+                            size = StepperPillSize.Compact,
+                            labelMinWidth = 76.dp,
+                        )
                     } else {
                         Text(
                             recipe.formattedServings,
@@ -329,31 +317,6 @@ private fun ToolsSection(tools: List<Tool>, modifier: Modifier = Modifier) {
         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             tools.forEach { tool -> TagChip(name = tool.name) }
         }
-    }
-}
-
-@Composable
-private fun ServingStepperButton(
-    icon: ImageVector,
-    contentDescription: String,
-    enabled: Boolean,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Box(
-        contentAlignment = Alignment.Center,
-        modifier = modifier
-            .size(32.dp)
-            .clip(CircleShape)
-            .background(MaterialTheme.colorScheme.surfaceContainer)
-            .clickable(enabled = enabled, onClick = onClick)
-    ) {
-        Icon(
-            icon,
-            contentDescription = contentDescription,
-            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = if (enabled) 1f else 0.4f),
-            modifier = Modifier.size(18.dp)
-        )
     }
 }
 
