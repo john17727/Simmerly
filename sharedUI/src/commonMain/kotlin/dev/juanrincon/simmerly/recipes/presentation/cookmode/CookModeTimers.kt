@@ -1,5 +1,7 @@
 package dev.juanrincon.simmerly.recipes.presentation.cookmode
 
+import androidx.compose.ui.semantics.Role
+import dev.juanrincon.simmerly.core.presentation.SelectableChip
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -471,20 +473,12 @@ private fun PresetChipRow(
         modifier = modifier
     ) {
         presets.forEach { preset ->
-            Box(
-                modifier = Modifier
-                    .clip(MaterialTheme.shapes.small)
-                    .background(MaterialTheme.colorScheme.surfaceContainer)
-                    .border(1.dp, MaterialTheme.colorScheme.outlineVariant, MaterialTheme.shapes.small)
-                    .clickable { onPresetSelected(preset) }
-                    .padding(horizontal = 14.dp, vertical = 8.dp)
-            ) {
-                Text(
-                    preset.label,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-            }
+            SelectableChip(
+                label = preset.label,
+                selected = false,
+                onClick = { onPresetSelected(preset) },
+                role = Role.Button,
+            )
         }
     }
 }

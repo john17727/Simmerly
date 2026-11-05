@@ -1,5 +1,7 @@
 package dev.juanrincon.simmerly.recipes.presentation.cookmode
 
+import dev.juanrincon.simmerly.core.presentation.SimmerlyChip
+import dev.juanrincon.simmerly.core.presentation.Eyebrow
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -70,7 +72,6 @@ import dev.juanrincon.simmerly.recipes.presentation.cookmode.models.TimerOrigin
 import dev.juanrincon.simmerly.recipes.presentation.cookmode.orbit.CookModeIntent
 import dev.juanrincon.simmerly.recipes.presentation.cookmode.orbit.CookModeState
 import dev.juanrincon.simmerly.recipes.presentation.shared.IngredientChipRow
-import dev.juanrincon.simmerly.recipes.presentation.shared.TagChip
 import dev.juanrincon.simmerly.theme.Simmerly
 import dev.juanrincon.simmerly.theme.dmSerifDisplayFontFamily
 
@@ -224,19 +225,6 @@ private fun DesktopCookTopBar(
 }
 
 /** The design's small caps section label, used across all three panes. */
-@Composable
-private fun Eyebrow(text: String, modifier: Modifier = Modifier) {
-    Text(
-        text.uppercase(),
-        style = MaterialTheme.typography.labelSmall.copy(
-            fontWeight = FontWeight.SemiBold,
-            letterSpacing = 0.5.sp
-        ),
-        color = Simmerly.Neutral500,
-        modifier = modifier
-    )
-}
-
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun DesktopStepRail(
@@ -318,7 +306,7 @@ private fun DesktopStepRail(
                         horizontalArrangement = Arrangement.spacedBy(6.dp),
                         verticalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
-                        recipe.tools.forEach { TagChip(name = it.name) }
+                        recipe.tools.forEach { SimmerlyChip(label = it.name) }
                     }
                 }
             }

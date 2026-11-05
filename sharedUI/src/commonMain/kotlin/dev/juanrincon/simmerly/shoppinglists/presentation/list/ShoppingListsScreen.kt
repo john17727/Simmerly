@@ -1,5 +1,9 @@
 package dev.juanrincon.simmerly.shoppinglists.presentation.list
 
+import dev.juanrincon.simmerly.core.presentation.ChipIcon
+import dev.juanrincon.simmerly.core.presentation.ChipTone
+import dev.juanrincon.simmerly.core.presentation.SimmerlyChip
+import dev.juanrincon.simmerly.core.presentation.SelectableChip
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -317,7 +321,7 @@ private fun FilterRow(selected: ListFilter, onEvent: (ShoppingListsIntent) -> Un
 @Composable
 internal fun FilterChips(selected: ListFilter, onEvent: (ShoppingListsIntent) -> Unit) {
     ListFilter.entries.forEach { filter ->
-        ListFilterChip(
+        SelectableChip(
             label = when (filter) {
                 ListFilter.Mine -> "Mine"
                 ListFilter.Household -> "Household"
@@ -325,53 +329,6 @@ internal fun FilterChips(selected: ListFilter, onEvent: (ShoppingListsIntent) ->
             selected = filter == selected,
             onClick = { onEvent(ShoppingListsIntent.OnFilterSelected(filter)) },
         )
-    }
-}
-
-/**
- * A filter chip drawn to the design rather than with Material's `FilterChip`, whose hover state
- * layer renders on desktop as a heavy grey wash with a pale box left behind the label. Hover and
- * press only tint the chip's own background, like the design's ghost buttons.
- */
-@Composable
-private fun ListFilterChip(label: String, selected: Boolean, onClick: () -> Unit) {
-    val interactionSource = remember { MutableInteractionSource() }
-    val hovered by interactionSource.collectIsHoveredAsState()
-    val pressed by interactionSource.collectIsPressedAsState()
-    val container = when {
-        selected -> MaterialTheme.colorScheme.primaryContainer
-        pressed -> MaterialTheme.colorScheme.surfaceContainerHigh
-        hovered -> MaterialTheme.colorScheme.surfaceContainer
-        else -> Color.Transparent
-    }
-    val content = if (selected) MaterialTheme.colorScheme.onPrimaryContainer
-    else MaterialTheme.colorScheme.onSurfaceVariant
-    val shape = RoundedCornerShape(8.dp)
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-        modifier = Modifier
-            .heightIn(min = 32.dp)
-            .clip(shape)
-            .background(container, shape)
-            .then(
-                if (selected) Modifier
-                else Modifier.border(1.dp, MaterialTheme.colorScheme.outline, shape)
-            )
-            .hoverable(interactionSource)
-            .selectable(
-                selected = selected,
-                interactionSource = interactionSource,
-                indication = null,
-                role = Role.Tab,
-                onClick = onClick,
-            )
-            .padding(start = if (selected) 8.dp else 16.dp, end = 16.dp),
-    ) {
-        if (selected) {
-            Icon(Icons.Rounded.Check, contentDescription = null, tint = content, modifier = Modifier.size(18.dp))
-        }
-        Text(text = label, style = MaterialTheme.typography.labelLarge, color = content)
     }
 }
 
@@ -519,19 +476,14 @@ private fun CardFooter(footer: ListCardFooterUi) {
                 subtitle = footer.recipeNames.map { it.asString() }.joinToString(),
             )
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                SourceChip(
-                    text = "${footer.fromRecipesCount} from recipes",
-                    icon = { Icon(Icons.Rounded.Restaurant, contentDescription = null, modifier = Modifier.size(16.dp)) },
-                    container = MaterialTheme.colorScheme.tertiaryContainer,
-                    content = MaterialTheme.colorScheme.onTertiaryContainer,
-                    border = MaterialTheme.colorScheme.tertiary,
+                SimmerlyChip(
+                    label = "${footer.fromRecipesCount} from recipes",
+                    icon = { ChipIcon(Icons.Rounded.Restaurant) },
                 )
-                SourceChip(
-                    text = "${footer.byHandCount} added by hand",
-                    icon = { Icon(Icons.Rounded.EditNote, contentDescription = null, modifier = Modifier.size(16.dp)) },
-                    container = MaterialTheme.colorScheme.surface,
-                    content = MaterialTheme.colorScheme.onSurfaceVariant,
-                    border = MaterialTheme.colorScheme.surfaceContainerHighest,
+                SimmerlyChip(
+                    label = "${footer.byHandCount} added by hand",
+                    tone = ChipTone.Neutral,
+                    icon = { ChipIcon(Icons.Rounded.EditNote) },
                 )
             }
         }
@@ -614,31 +566,6 @@ private fun AvatarStack(recipes: List<RecipeThumbUi>, recipeCount: Int) {
                     fontWeight = FontWeight.SemiBold,
                 )
             }
-        }
-    }
-}
-
-@Composable
-private fun SourceChip(
-    text: String,
-    icon: @Composable () -> Unit,
-    container: Color,
-    content: Color,
-    border: Color,
-) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(6.dp),
-        modifier = Modifier
-            .height(28.dp)
-            .clip(MaterialTheme.shapes.small)
-            .background(container)
-            .border(1.dp, border, MaterialTheme.shapes.small)
-            .padding(start = 8.dp, end = 10.dp),
-    ) {
-        CompositionLocalProvider(LocalContentColor provides content) {
-            icon()
-            Text(text = text, style = MaterialTheme.typography.labelMedium, color = content)
         }
     }
 }

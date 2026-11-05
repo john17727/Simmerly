@@ -1,5 +1,8 @@
 package dev.juanrincon.simmerly.recipes.presentation.cookmode
 
+import androidx.compose.ui.semantics.Role
+import dev.juanrincon.simmerly.core.presentation.SelectableChip
+import dev.juanrincon.simmerly.core.presentation.Eyebrow
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -164,16 +167,17 @@ internal fun DesktopNewTimerDialog(
                 }
 
                 if (presets.isNotEmpty()) {
-                    DialogEyebrow("From this recipe", modifier = Modifier.padding(top = 20.dp, bottom = 10.dp))
+                    Eyebrow("From this recipe", modifier = Modifier.padding(top = 20.dp, bottom = 10.dp))
                     FlowRow(
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         presets.forEach { preset ->
                             val selected = preset.duration.inWholeSeconds.toInt() == totalSeconds
-                            PresetChip(
+                            SelectableChip(
                                 label = preset.label,
                                 selected = selected,
+                                role = Role.RadioButton,
                                 onClick = {
                                     onDraftChange(
                                         draft.copy(
@@ -187,7 +191,7 @@ internal fun DesktopNewTimerDialog(
                     }
                 }
 
-                DialogEyebrow("Name", modifier = Modifier.padding(top = 20.dp, bottom = 8.dp))
+                Eyebrow("Name", modifier = Modifier.padding(top = 20.dp, bottom = 8.dp))
                 OutlinedTextField(
                     value = draft.label,
                     onValueChange = { onDraftChange(draft.copy(label = it)) },
@@ -345,43 +349,3 @@ private fun StepperButton(
     }
 }
 
-@Composable
-private fun PresetChip(label: String, selected: Boolean, onClick: () -> Unit) {
-    Box(
-        modifier = Modifier
-            .clip(MaterialTheme.shapes.small)
-            .background(
-                if (selected) {
-                    MaterialTheme.colorScheme.surfaceContainerLow
-                } else {
-                    MaterialTheme.colorScheme.surface
-                }
-            )
-            .border(
-                1.dp,
-                if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant,
-                MaterialTheme.shapes.small
-            )
-            .clickable(onClick = onClick)
-            .padding(horizontal = 14.dp, vertical = 9.dp)
-    ) {
-        Text(
-            label,
-            style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
-            color = if (selected) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.onSurface
-        )
-    }
-}
-
-@Composable
-private fun DialogEyebrow(text: String, modifier: Modifier = Modifier) {
-    Text(
-        text.uppercase(),
-        style = MaterialTheme.typography.labelSmall.copy(
-            fontWeight = FontWeight.SemiBold,
-            letterSpacing = 0.5.sp
-        ),
-        color = Simmerly.Neutral500,
-        modifier = modifier
-    )
-}

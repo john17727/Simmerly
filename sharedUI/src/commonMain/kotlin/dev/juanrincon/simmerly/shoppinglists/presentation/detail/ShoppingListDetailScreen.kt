@@ -1,5 +1,9 @@
 package dev.juanrincon.simmerly.shoppinglists.presentation.detail
 
+import dev.juanrincon.simmerly.core.presentation.EmptyMessage
+import dev.juanrincon.simmerly.core.presentation.ErrorMessage
+import dev.juanrincon.simmerly.core.presentation.OutlinedSurface
+import dev.juanrincon.simmerly.core.presentation.StepperPill
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.fadeIn
@@ -192,22 +196,11 @@ private fun Content(
         Box(modifier = Modifier.fillMaxSize()) {
             when {
                 state.isLoading -> Unit
-                state.name == null && state.error != null -> Box(
-                    contentAlignment = Alignment.Center,
-                    modifier = Modifier.fillMaxSize().padding(padding),
-                ) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(
-                            text = state.error?.asString().orEmpty(),
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier.padding(horizontal = 32.dp),
-                        )
-                        OutlinedButton(
-                            onClick = { onEvent(ShoppingListDetailIntent.OnRefresh) },
-                            modifier = Modifier.padding(top = 16.dp),
-                        ) { Text("Try again") }
-                    }
-                }
+                state.name == null && state.error != null -> ErrorMessage(
+                    message = state.error?.asString().orEmpty(),
+                    onAction = { onEvent(ShoppingListDetailIntent.OnRefresh) },
+                    modifier = Modifier.padding(padding),
+                )
 
                 else -> ListBody(
                     state = state,
@@ -387,13 +380,7 @@ private fun ListBody(
 
             if (state.sections.isEmpty() && state.checkedItems.isEmpty()) {
                 item(key = "empty", span = FullSpan) {
-                    Text(
-                        text = "Nothing on this list yet. Add your first item below.",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.fillMaxWidth().padding(horizontal = 32.dp, vertical = 48.dp),
-                    )
+                    EmptyMessage(text = "Nothing on this list yet. Add your first item below.")
                 }
                 return@LazyVerticalGrid
             }
@@ -567,10 +554,8 @@ private fun LinkedRecipesCard(
     onQuantityChanged: (String, Int) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Surface(
-        shape = RoundedCornerShape(12.dp),
+    OutlinedSurface(
         color = MaterialTheme.colorScheme.surfaceContainerLow,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
         modifier = modifier.fillMaxWidth(),
     ) {
         Column(modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 8.dp)) {
@@ -607,11 +592,15 @@ private fun LinkedRecipesCard(
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
-                    QuantityStepper(
-                        quantity = recipe.quantity,
-                        recipeName = recipe.name.asString(),
+                    StepperPill(
+                        label = recipe.quantity.toString(),
                         onDecrease = { onQuantityChanged(recipe.recipeId, -1) },
                         onIncrease = { onQuantityChanged(recipe.recipeId, 1) },
+                        decreaseDescription = if (recipe.quantity <= 1) "Remove ${recipe.name.asString()} from this list"
+                        else "Fewer servings of ${recipe.name.asString()}",
+                        increaseDescription = "More servings of ${recipe.name.asString()}",
+                        labelMinWidth = 24.dp,
+                        labelDescription = "Quantity ${recipe.quantity}",
                     )
                 }
             }

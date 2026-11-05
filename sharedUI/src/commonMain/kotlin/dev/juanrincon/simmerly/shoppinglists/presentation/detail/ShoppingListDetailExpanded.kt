@@ -1,5 +1,9 @@
 package dev.juanrincon.simmerly.shoppinglists.presentation.detail
 
+import dev.juanrincon.simmerly.core.presentation.EmptyMessage
+import dev.juanrincon.simmerly.core.presentation.ErrorMessage
+import dev.juanrincon.simmerly.core.presentation.OutlinedSurface
+import dev.juanrincon.simmerly.core.presentation.StepperPill
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -150,20 +154,10 @@ internal fun ShoppingListDetailExpanded(
     ) {
         when {
             state.isLoading -> Unit
-            state.name == null && state.error != null -> Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier.align(Alignment.Center),
-            ) {
-                Text(
-                    text = state.error?.asString().orEmpty(),
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.padding(horizontal = 32.dp),
-                )
-                OutlinedButton(
-                    onClick = { onEvent(ShoppingListDetailIntent.OnRefresh) },
-                    modifier = Modifier.padding(top = 16.dp),
-                ) { Text("Try again") }
-            }
+            state.name == null && state.error != null -> ErrorMessage(
+                message = state.error?.asString().orEmpty(),
+                onAction = { onEvent(ShoppingListDetailIntent.OnRefresh) },
+            )
 
             else -> DetailColumn(
                 state = state,
@@ -232,13 +226,7 @@ private fun DetailColumn(
         }
         if (state.sections.isEmpty() && state.checkedItems.isEmpty()) {
             item(key = "empty") {
-                Text(
-                    text = "Nothing on this list yet. Add your first item above.",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    textAlign = TextAlign.Center,
-                    modifier = itemModifier.padding(vertical = 48.dp),
-                )
+                EmptyMessage(text = "Nothing on this list yet. Add your first item above.", modifier = itemModifier)
             }
             return@LazyColumn
         }
@@ -483,10 +471,7 @@ private fun SuggestionsDropdown(
     onAddAsWritten: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Surface(
-        shape = RoundedCornerShape(12.dp),
-        color = MaterialTheme.colorScheme.surface,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+    OutlinedSurface(
         shadowElevation = 6.dp,
         modifier = modifier,
     ) {
@@ -688,10 +673,8 @@ private fun LinkedRecipeCard(
     onEvent: (ShoppingListDetailIntent) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Surface(
-        shape = RoundedCornerShape(12.dp),
+    OutlinedSurface(
         color = MaterialTheme.colorScheme.surfaceContainerLow,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
         modifier = modifier,
     ) {
         Row(
@@ -718,11 +701,15 @@ private fun LinkedRecipeCard(
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
-            QuantityStepper(
-                quantity = recipe.quantity,
-                recipeName = recipe.name.asString(),
+            StepperPill(
+                label = recipe.quantity.toString(),
                 onDecrease = { onEvent(ShoppingListDetailIntent.OnRecipeQuantityChanged(recipe.recipeId, -1)) },
                 onIncrease = { onEvent(ShoppingListDetailIntent.OnRecipeQuantityChanged(recipe.recipeId, 1)) },
+                decreaseDescription = if (recipe.quantity <= 1) "Remove ${recipe.name.asString()} from this list"
+                else "Fewer servings of ${recipe.name.asString()}",
+                increaseDescription = "More servings of ${recipe.name.asString()}",
+                labelMinWidth = 24.dp,
+                labelDescription = "Quantity ${recipe.quantity}",
             )
         }
     }
@@ -741,10 +728,7 @@ private fun SectionCard(
         SectionKind.NoAisle -> "No aisle"
         SectionKind.AddedByHand -> "Added by hand"
     }
-    Surface(
-        shape = RoundedCornerShape(12.dp),
-        color = MaterialTheme.colorScheme.surface,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+    OutlinedSurface(
         modifier = modifier,
     ) {
         Column {

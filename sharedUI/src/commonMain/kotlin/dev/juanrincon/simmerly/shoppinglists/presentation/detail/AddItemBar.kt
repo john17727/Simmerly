@@ -1,5 +1,6 @@
 package dev.juanrincon.simmerly.shoppinglists.presentation.detail
 
+import dev.juanrincon.simmerly.core.presentation.OutlinedSurface
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -156,10 +157,7 @@ fun AddItemSuggestions(
     onPicked: (FoodOptionUi) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Surface(
-        shape = RoundedCornerShape(12.dp),
-        color = MaterialTheme.colorScheme.surface,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+    OutlinedSurface(
         shadowElevation = 6.dp,
         modifier = modifier.fillMaxWidth(),
     ) {
