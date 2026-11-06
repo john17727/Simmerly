@@ -101,10 +101,10 @@ import dev.juanrincon.simmerly.recipes.presentation.details.orbit.RecipeDetailsS
 import dev.juanrincon.simmerly.recipes.presentation.details.orbit.RecipeTab
 import dev.juanrincon.simmerly.recipes.presentation.details.orbit.label
 import dev.juanrincon.simmerly.recipes.presentation.shared.CategoriesAndTags
+import dev.juanrincon.simmerly.recipes.presentation.shared.HeroCategoryTagChips
 import dev.juanrincon.simmerly.recipes.presentation.shared.RatingInput
 import dev.juanrincon.simmerly.recipes.presentation.shared.RecipeMetaRow
 import dev.juanrincon.simmerly.recipes.presentation.shared.RecipeTimes
-import dev.juanrincon.simmerly.recipes.presentation.shared.TagRow
 import dev.juanrincon.simmerly.theme.SimmerlyTheme
 import kotlinx.coroutines.launch
 
@@ -340,6 +340,15 @@ private fun CompactContent(
 
     var programmaticScrollTargetIndex by remember { mutableStateOf<Int?>(null) }
     var showRateSheet by rememberSaveable { mutableStateOf(false) }
+    var showTagsSheet by rememberSaveable { mutableStateOf(false) }
+
+    if (showTagsSheet) {
+        CategoriesAndTagsSheet(
+            categories = recipe.categories,
+            tags = recipe.tags,
+            onDismiss = { showTagsSheet = false },
+        )
+    }
 
     if (showRateSheet) {
         RateRecipeSheet(
@@ -415,6 +424,7 @@ private fun CompactContent(
                 RecipeHero(
                     state = state,
                     sharedTransitionScope = sharedTransitionScope,
+                    onTagsClick = { showTagsSheet = true },
                     modifier = Modifier
                         .fillMaxWidth()
                         .fillParentMaxHeight(0.45f)
@@ -553,6 +563,7 @@ internal fun RecipeHero(
     modifier: Modifier = Modifier,
     sharedTransitionScope: SharedTransitionScope? = null,
     showTags: Boolean = true,
+    onTagsClick: () -> Unit = {},
 ) {
     val recipe = state.recipe
     val uriHandler = LocalUriHandler.current
@@ -584,15 +595,17 @@ internal fun RecipeHero(
                 }.clip(MaterialTheme.shapes.medium)
         )
         AnimatedVisibility(
-            showTags && !state.loading && recipe.tags.isNotEmpty() && !isNavTransitionRunning,
+            showTags && !state.loading && (recipe.tags.isNotEmpty() || recipe.categories.isNotEmpty()) &&
+                    !isNavTransitionRunning,
             modifier = Modifier.align(Alignment.BottomStart),
             enter = fadeIn(),
             exit = fadeOut(),
         ) {
-            TagRow(
+            HeroCategoryTagChips(
+                categories = recipe.categories,
                 tags = recipe.tags,
-                modifier = Modifier
-                    .padding(12.dp)
+                onClick = onTagsClick,
+                modifier = Modifier.padding(12.dp)
             )
         }
         AnimatedVisibility(
