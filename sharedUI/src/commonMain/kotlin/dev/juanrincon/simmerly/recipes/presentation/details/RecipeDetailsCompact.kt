@@ -69,6 +69,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -100,10 +101,10 @@ import dev.juanrincon.simmerly.recipes.presentation.details.orbit.RecipeDetailsS
 import dev.juanrincon.simmerly.recipes.presentation.details.orbit.RecipeTab
 import dev.juanrincon.simmerly.recipes.presentation.details.orbit.label
 import dev.juanrincon.simmerly.recipes.presentation.shared.CategoriesAndTags
+import dev.juanrincon.simmerly.recipes.presentation.shared.HeroCategoryTagChips
 import dev.juanrincon.simmerly.recipes.presentation.shared.RatingInput
 import dev.juanrincon.simmerly.recipes.presentation.shared.RecipeMetaRow
 import dev.juanrincon.simmerly.recipes.presentation.shared.RecipeTimes
-import dev.juanrincon.simmerly.recipes.presentation.shared.TagRow
 import dev.juanrincon.simmerly.theme.SimmerlyTheme
 import kotlinx.coroutines.launch
 
@@ -338,6 +339,25 @@ private fun CompactContent(
     val tabRowHeightPx = remember(density) { with(density) { TAB_ROW_HEIGHT.roundToPx() } }
 
     var programmaticScrollTargetIndex by remember { mutableStateOf<Int?>(null) }
+    var showRateSheet by rememberSaveable { mutableStateOf(false) }
+    var showTagsSheet by rememberSaveable { mutableStateOf(false) }
+
+    if (showTagsSheet) {
+        CategoriesAndTagsSheet(
+            categories = recipe.categories,
+            tags = recipe.tags,
+            onDismiss = { showTagsSheet = false },
+        )
+    }
+
+    if (showRateSheet) {
+        RateRecipeSheet(
+            recipeTitle = recipe.title.asString(),
+            currentRating = recipe.rating,
+            onSave = { onEvent(RecipeDetailsIntent.SetRating(it)) },
+            onDismiss = { showRateSheet = false },
+        )
+    }
 
     // The medium layout folds the hero and summary into one item, so everything shifts up by one.
     val contentStartIndex = if (medium) CONTENT_START_INDEX - 1 else CONTENT_START_INDEX
@@ -404,6 +424,7 @@ private fun CompactContent(
                 RecipeHero(
                     state = state,
                     sharedTransitionScope = sharedTransitionScope,
+                    onTagsClick = { showTagsSheet = true },
                     modifier = Modifier
                         .fillMaxWidth()
                         .fillParentMaxHeight(0.45f)
@@ -413,7 +434,11 @@ private fun CompactContent(
 
             // Description + meta
             item {
-                RecipeSummary(state, modifier = Modifier.padding(horizontal = 24.dp))
+                RecipeSummary(
+                    state,
+                    onRatingClick = { showRateSheet = true },
+                    modifier = Modifier.padding(horizontal = 24.dp)
+                )
             }
         }
 
@@ -538,6 +563,7 @@ internal fun RecipeHero(
     modifier: Modifier = Modifier,
     sharedTransitionScope: SharedTransitionScope? = null,
     showTags: Boolean = true,
+    onTagsClick: () -> Unit = {},
 ) {
     val recipe = state.recipe
     val uriHandler = LocalUriHandler.current
@@ -569,15 +595,17 @@ internal fun RecipeHero(
                 }.clip(MaterialTheme.shapes.medium)
         )
         AnimatedVisibility(
-            showTags && !state.loading && recipe.tags.isNotEmpty() && !isNavTransitionRunning,
+            showTags && !state.loading && (recipe.tags.isNotEmpty() || recipe.categories.isNotEmpty()) &&
+                    !isNavTransitionRunning,
             modifier = Modifier.align(Alignment.BottomStart),
             enter = fadeIn(),
             exit = fadeOut(),
         ) {
-            TagRow(
+            HeroCategoryTagChips(
+                categories = recipe.categories,
                 tags = recipe.tags,
-                modifier = Modifier
-                    .padding(12.dp)
+                onClick = onTagsClick,
+                modifier = Modifier.padding(12.dp)
             )
         }
         AnimatedVisibility(
@@ -605,6 +633,7 @@ internal fun RecipeHero(
 @Composable
 internal fun RecipeSummary(
     state: RecipeDetailsState,
+    onRatingClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val recipe = state.recipe
@@ -612,7 +641,7 @@ internal fun RecipeSummary(
     var descriptionExpanded by remember { mutableStateOf(false) }
     var descriptionOverflowing by remember { mutableStateOf(false) }
     Column(modifier = modifier) {
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(8.dp))
         if (state.loading) {
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 Box(
@@ -660,7 +689,8 @@ internal fun RecipeSummary(
                 recipe.rating,
                 recipe.totalTime,
                 recipe.prepTime,
-                recipe.performTime
+                recipe.performTime,
+                onRatingClick = onRatingClick
             )
             Spacer(modifier = Modifier.height(16.dp))
             recipe.description?.let {
