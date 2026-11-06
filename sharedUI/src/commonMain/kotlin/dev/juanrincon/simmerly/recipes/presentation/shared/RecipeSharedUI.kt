@@ -31,6 +31,11 @@ import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.semantics.Role
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.Column
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -58,62 +63,74 @@ fun TagRow(tags: List<Tag>, modifier: Modifier = Modifier) {
     }
 }
 
+/**
+ * Rating and times on one wrapping line, as the phone design draws it: the rating group first,
+ * then Total / Prep / Cook as icon + value. When [onRatingClick] is set the rating group is a
+ * button (for opening the rate sheet).
+ */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun RecipeMetaRow(
     rating: Double?,
     totalTime: String?,
     prepTime: String?,
     cookTime: String?,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onRatingClick: (() -> Unit)? = null,
 ) {
-    Row(
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = modifier
+    // The tappable rating pads 8dp each side for its touch target; pull the whole row back by
+    // that much so the stars (and wrapped times) line up with the text above and below.
+    val inset = if (onRatingClick != null) 8.dp else 0.dp
+    FlowRow(
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
+        verticalArrangement = Arrangement.Center,
+        itemVerticalAlignment = Alignment.CenterVertically,
+        modifier = modifier.offset(x = -inset)
     ) {
-        RatingStars(rating)
-        totalTime?.let {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                Icon(
-                    Icons.Outlined.Timer,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(16.dp)
-                )
-                Text(it, style = MaterialTheme.typography.bodySmall)
-            }
+        if (onRatingClick != null) {
+            RatingStars(
+                rating,
+                modifier = Modifier
+                    .heightIn(min = 48.dp)
+                    .clip(CircleShape)
+                    .clickable(
+                        onClickLabel = "Change your rating",
+                        role = Role.Button,
+                        onClick = onRatingClick
+                    )
+                    .padding(horizontal = 8.dp)
+            )
+        } else {
+            RatingStars(rating)
         }
-        prepTime?.let {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                Icon(
-                    Icons.Outlined.Restaurant,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(16.dp)
-                )
-                Text(it, style = MaterialTheme.typography.bodySmall)
-            }
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(14.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.padding(horizontal = inset)
+        ) {
+            totalTime?.let { MetaTime(Icons.Outlined.Timer, "Total time", it) }
+            prepTime?.let { MetaTime(Icons.Outlined.Restaurant, "Prep time", it) }
+            cookTime?.let { MetaTime(Icons.Outlined.LocalFireDepartment, "Cook time", it) }
         }
-        cookTime?.let {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                Icon(
-                    Icons.Outlined.LocalFireDepartment,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(16.dp)
-                )
-                Text(it, style = MaterialTheme.typography.bodySmall)
-            }
+    }
+}
+
+@Composable
+private fun MetaTime(icon: ImageVector, label: String, value: String) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
+        modifier = Modifier.semantics(mergeDescendants = true) {
+            contentDescription = "$label $value"
         }
+    ) {
+        Icon(
+            icon,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.size(18.dp)
+        )
+        Text(value, style = MaterialTheme.typography.labelLarge)
     }
 }
 

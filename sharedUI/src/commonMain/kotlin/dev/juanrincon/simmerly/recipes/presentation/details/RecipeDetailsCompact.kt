@@ -69,6 +69,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -338,6 +339,16 @@ private fun CompactContent(
     val tabRowHeightPx = remember(density) { with(density) { TAB_ROW_HEIGHT.roundToPx() } }
 
     var programmaticScrollTargetIndex by remember { mutableStateOf<Int?>(null) }
+    var showRateSheet by rememberSaveable { mutableStateOf(false) }
+
+    if (showRateSheet) {
+        RateRecipeSheet(
+            recipeTitle = recipe.title.asString(),
+            currentRating = recipe.rating,
+            onSave = { onEvent(RecipeDetailsIntent.SetRating(it)) },
+            onDismiss = { showRateSheet = false },
+        )
+    }
 
     // The medium layout folds the hero and summary into one item, so everything shifts up by one.
     val contentStartIndex = if (medium) CONTENT_START_INDEX - 1 else CONTENT_START_INDEX
@@ -413,7 +424,11 @@ private fun CompactContent(
 
             // Description + meta
             item {
-                RecipeSummary(state, modifier = Modifier.padding(horizontal = 24.dp))
+                RecipeSummary(
+                    state,
+                    onRatingClick = { showRateSheet = true },
+                    modifier = Modifier.padding(horizontal = 24.dp)
+                )
             }
         }
 
@@ -605,6 +620,7 @@ internal fun RecipeHero(
 @Composable
 internal fun RecipeSummary(
     state: RecipeDetailsState,
+    onRatingClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val recipe = state.recipe
@@ -660,7 +676,8 @@ internal fun RecipeSummary(
                 recipe.rating,
                 recipe.totalTime,
                 recipe.prepTime,
-                recipe.performTime
+                recipe.performTime,
+                onRatingClick = onRatingClick
             )
             Spacer(modifier = Modifier.height(16.dp))
             recipe.description?.let {
