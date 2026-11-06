@@ -71,6 +71,9 @@ private val EXPANDED_CONTENT_MAX_WIDTH = 1040.dp
 /** Six action icons (favorite, shopping list, comments, edit, settings, timeline) plus the overflow button, which maxItemCount counts. */
 private const val EXPANDED_TOP_BAR_MAX_ITEMS = 7
 
+/** With the comments pane open the detail pane is narrower: three icons plus the overflow button. */
+private const val EXPANDED_TOP_BAR_MAX_ITEMS_COMMENTS_OPEN = 4
+
 
 /** Trailing space so the last card/step clears the Start cooking FAB (same as the foldable). */
 private val EXPANDED_BOTTOM_PADDING = 96.dp
@@ -114,6 +117,10 @@ internal fun ExpandedView(
             index.coerceIn(0, expandedTabs.lastIndex)
         }
     }
+
+    // With the comments pane open the detail pane is about as narrow as a phone, so the sections
+    // use the phone's single-column layout and tighter gutters.
+    val contentPadding = if (commentsOpen) 16.dp else EXPANDED_HORIZONTAL_PADDING
 
     val cardColors = CardDefaults.outlinedCardColors(
         containerColor = MaterialTheme.colorScheme.surfaceContainerLow
@@ -161,8 +168,8 @@ internal fun ExpandedView(
                         state = listState,
                         modifier = Modifier.fillMaxSize(),
                         contentPadding = PaddingValues(
-                            start = EXPANDED_HORIZONTAL_PADDING,
-                            end = EXPANDED_HORIZONTAL_PADDING,
+                            start = contentPadding,
+                            end = contentPadding,
                             top = 16.dp,
                             bottom = EXPANDED_BOTTOM_PADDING
                         ),
@@ -180,7 +187,7 @@ internal fun ExpandedView(
                                     onRemoveServingButtonClick = { onEvent(RecipeDetailsIntent.RemoveServing) },
                                     onAddServingButtonClick = { onEvent(RecipeDetailsIntent.AddServing) },
                                     onAddToListClick = { onEvent(RecipeDetailsIntent.OpenAddToList) },
-                                    columns = 2,
+                                    columns = if (commentsOpen) 1 else 2,
                                     modifier = Modifier.fillMaxWidth()
                                 )
                             }
@@ -194,7 +201,7 @@ internal fun ExpandedView(
                                 InstructionView(
                                     instructions = recipe.instructions,
                                     ingredients = recipe.ingredients,
-                                    imagesOnSide = true,
+                                    imagesOnSide = !commentsOpen,
                                     modifier = Modifier.fillMaxWidth()
                                 )
                             }
@@ -202,7 +209,7 @@ internal fun ExpandedView(
                         if (recipe.notes.isNotEmpty()) {
                             item {
                                 RecipeSectionCard(colors = cardColors, modifier = cardModifier) {
-                                    NotesView(recipe.notes, columns = 2, modifier = Modifier.fillMaxWidth())
+                                    NotesView(recipe.notes, columns = if (commentsOpen) 1 else 2, modifier = Modifier.fillMaxWidth())
                                 }
                             }
                         }
@@ -285,7 +292,14 @@ private fun ExpandedHeader(
             // TopAppBar/BottomAppBar tint their action icons onSurfaceVariant; this row sits on the
             // plain surface, so set the same content color to match phone and foldable.
             CompositionLocalProvider(LocalContentColor provides MaterialTheme.colorScheme.onSurfaceVariant) {
-                AppBarRow(maxItemCount = EXPANDED_TOP_BAR_MAX_ITEMS, content = actions)
+                AppBarRow(
+                    maxItemCount = if (commentsOpen) {
+                        EXPANDED_TOP_BAR_MAX_ITEMS_COMMENTS_OPEN
+                    } else {
+                        EXPANDED_TOP_BAR_MAX_ITEMS
+                    },
+                    content = actions
+                )
             }
         }
         HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
