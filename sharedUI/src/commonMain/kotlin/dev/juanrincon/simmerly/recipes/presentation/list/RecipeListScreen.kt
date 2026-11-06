@@ -60,6 +60,7 @@ import dev.juanrincon.simmerly.core.presentation.shimmer
 import dev.juanrincon.simmerly.recipes.domain.model.RecipeSummary
 import dev.juanrincon.simmerly.recipes.presentation.list.orbit.RecipeListIntent
 import dev.juanrincon.simmerly.recipes.presentation.list.orbit.RecipeListState
+import dev.juanrincon.simmerly.recipes.presentation.shared.CategoriesAndTags
 import dev.juanrincon.simmerly.recipes.presentation.shared.RatingInput
 import dev.juanrincon.simmerly.recipes.presentation.shared.RatingStars
 import dev.juanrincon.simmerly.recipes.presentation.shared.RecipeTimes
@@ -209,6 +210,7 @@ fun RecipeCard(
                     recipe.performTime,
                     modifier = Modifier.padding(horizontal = 8.dp, vertical = 8.dp)
                 )
+                CategoriesAndTags(recipe.categories, recipe.tags)
             }
         } else {
             val interactionSource = remember { MutableInteractionSource() }

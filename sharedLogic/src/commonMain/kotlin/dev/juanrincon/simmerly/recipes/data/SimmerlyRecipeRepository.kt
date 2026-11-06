@@ -15,6 +15,7 @@ import dev.juanrincon.simmerly.recipes.data.local.recent.RecentSearchQueryEntity
 import dev.juanrincon.simmerly.recipes.data.local.recent.RecentlyViewedEntity
 import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.UserRecipePreferenceEntity
 import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.junction.InstructionIngredientCrossRef
+import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.junction.RecipeCategoryCrossRef
 import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.junction.RecipeTagCrossRef
 import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.junction.RecipeToolCrossRef
 import dev.juanrincon.simmerly.recipes.data.mappers.toDomain
@@ -54,6 +55,7 @@ class SimmerlyRecipeRepository(
     private val tagsDao = database.tagDao()
     private val recipeToolDao = database.recipeToolDao()
     private val recipeTagDao = database.recipeTagDao()
+    private val categoryDao = database.categoryDao()
     private val instructionIngredientDao = database.instructionIngredientDao()
     private val noteDao = database.noteDao()
     private val commentDao = database.commentDao()
@@ -71,6 +73,7 @@ class SimmerlyRecipeRepository(
             remoteKeyDao = remoteKeyDao,
             tagsDao = tagsDao,
             recipeTagDao = recipeTagDao,
+            categoryDao = categoryDao,
         ),
         pagingSourceFactory = {
             RecipePagingSource(
@@ -125,6 +128,10 @@ class SimmerlyRecipeRepository(
             tagsDao.upsertAll(response.items.flatMap { recipe -> recipe.tags.map { it.toEntity() } })
             recipeTagDao.insertAll(response.items.flatMap { recipe ->
                 recipe.tags.map { RecipeTagCrossRef(recipeId = recipe.id, tagId = it.id) }
+            })
+            categoryDao.upsertAll(response.items.flatMap { recipe -> recipe.recipeCategory.map { it.toEntity() } })
+            categoryDao.insertCrossRefs(response.items.flatMap { recipe ->
+                recipe.recipeCategory.map { RecipeCategoryCrossRef(recipeId = recipe.id, categoryId = it.id) }
             })
             remoteKeyDao.upsert(
                 RecipeRemoteKey(id = "RECIPE_LIST", nextKey = response.next, createdAt = Clock.System.now())

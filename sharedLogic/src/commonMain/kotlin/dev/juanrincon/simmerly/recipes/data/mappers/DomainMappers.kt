@@ -53,6 +53,7 @@ fun ListRecipeWithTags.toDomain(host: String?, isFavorite: Boolean = false): Rec
         name = recipe.name,
         image = createRecipeImageUrl(host, recipe.id),
         tags = tags.map { it.toDomain() },
+        categories = categories.map { it.toDomain() },
         rating = recipe.rating,
         totalTime = abbreviateNullableTime(recipe.totalTime),
         prepTime = abbreviateNullableTime(recipe.prepTime),
