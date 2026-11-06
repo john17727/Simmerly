@@ -74,6 +74,8 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBarState
+import androidx.compose.animation.core.animate
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -417,6 +419,7 @@ internal fun CompactRecipeDetails(
                 paddingValues = paddingValues,
                 sharedTransitionScope = sharedTransitionScope,
                 medium = medium,
+                topBarState = scrollBehavior.state,
                 modifier = modifier.fillMaxSize()
             )
         }
@@ -431,7 +434,8 @@ private fun CompactContent(
     paddingValues: PaddingValues,
     modifier: Modifier = Modifier,
     sharedTransitionScope: SharedTransitionScope? = null,
-    medium: Boolean = false
+    medium: Boolean = false,
+    topBarState: TopAppBarState? = null,
 ) {
     val recipe = state.recipe
     val tabs = state.mobileTabs
@@ -557,6 +561,16 @@ private fun CompactContent(
                         Tab(
                             selected = selectedTabIndex == index,
                             onClick = {
+                                // A section tab jumps down the page, so collapse the top bar the way
+                                // scrolling down would. Overview goes back to the top: leave it be.
+                                if (index != OVERVIEW_TAB_INDEX && topBarState != null) {
+                                    coroutineScope.launch {
+                                        animate(
+                                            initialValue = topBarState.heightOffset,
+                                            targetValue = topBarState.heightOffsetLimit,
+                                        ) { value, _ -> topBarState.heightOffset = value }
+                                    }
+                                }
                                 coroutineScope.launch {
                                     programmaticScrollTargetIndex = index
                                     try {
