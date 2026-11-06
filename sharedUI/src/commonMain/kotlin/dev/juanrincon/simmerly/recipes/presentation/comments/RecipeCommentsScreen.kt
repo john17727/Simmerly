@@ -1,6 +1,20 @@
 package dev.juanrincon.simmerly.recipes.presentation.comments
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material3.FilledIconButton
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.VerticalDivider
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.material3.IconButtonDefaults
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -49,6 +63,148 @@ fun RecipeCommentsScreen(
         onEvent = viewModel::onEvent,
         modifier = modifier
     )
+}
+
+/**
+ * Desktop comments sheet from the "Recipe detail, comments open" design: a tinted side sheet with
+ * a serif title and count, a close button, top-aligned comments with initial avatars, and a
+ * composer pinned under a rule. Shown in the list-detail scene's extra pane.
+ */
+@Composable
+fun RecipeCommentsPanel(
+    recipeId: String,
+    onClose: () -> Unit,
+    viewModel: RecipeCommentsViewModel = koinViewModel { parametersOf(recipeId) },
+    modifier: Modifier = Modifier
+) {
+    val state by viewModel.collectAsState()
+    PanelContent(
+        state = state,
+        onEvent = viewModel::onEvent,
+        onClose = onClose,
+        modifier = modifier
+    )
+}
+
+@Composable
+private fun PanelContent(
+    state: RecipeCommentsState,
+    onEvent: (RecipeCommentsIntent) -> Unit,
+    onClose: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val scheme = MaterialTheme.colorScheme
+    // Same tint as the detail cards (the design's #f9f9fa), with a rule down the left edge.
+    Row(modifier = modifier.background(scheme.surfaceContainerLow)) {
+        VerticalDivider(color = scheme.outlineVariant)
+        PanelBody(state, onEvent, onClose, modifier = Modifier.weight(1f).fillMaxHeight())
+    }
+}
+
+@Composable
+private fun PanelBody(
+    state: RecipeCommentsState,
+    onEvent: (RecipeCommentsIntent) -> Unit,
+    onClose: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val scheme = MaterialTheme.colorScheme
+    Column(modifier = modifier) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier
+                .fillMaxWidth()
+                .statusBarsPadding()
+                .heightIn(min = 72.dp)
+                .padding(start = 24.dp, end = 8.dp)
+        ) {
+            Text(
+                "Comments",
+                style = MaterialTheme.typography.headlineMedium,
+                modifier = Modifier.weight(1f)
+            )
+            IconButton(onClick = onClose) {
+                Icon(Icons.Default.Close, contentDescription = "Close comments")
+            }
+        }
+        HorizontalDivider(color = scheme.outlineVariant)
+        LazyColumn(
+            modifier = Modifier.weight(1f).fillMaxWidth(),
+            contentPadding = PaddingValues(horizontal = 24.dp, vertical = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            items(state.comments, key = { it.id }) { comment ->
+                PanelComment(comment, modifier = Modifier.animateItem())
+            }
+        }
+        HorizontalDivider(color = scheme.outlineVariant)
+        Row(
+            verticalAlignment = Alignment.Bottom,
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(scheme.surface)
+                .navigationBarsPadding()
+                .padding(start = 24.dp, end = 24.dp, top = 16.dp, bottom = 24.dp)
+        ) {
+            OutlinedTextField(
+                value = state.commentText,
+                onValueChange = { onEvent(RecipeCommentsIntent.OnCommentTextChanged(it)) },
+                placeholder = { Text("Join the conversation") },
+                minLines = 3,
+                maxLines = 6,
+                shape = RoundedCornerShape(12.dp),
+                modifier = Modifier.weight(1f)
+            )
+            FilledIconButton(
+                onClick = { onEvent(RecipeCommentsIntent.OnSendCommentClicked) },
+                enabled = state.commentText.isNotBlank(),
+                colors = IconButtonDefaults.filledIconButtonColors(
+                    containerColor = scheme.primaryContainer,
+                    contentColor = scheme.onPrimaryContainer
+                ),
+                modifier = Modifier.size(48.dp)
+            ) {
+                Icon(Icons.AutoMirrored.Default.Send, contentDescription = "Post comment")
+            }
+        }
+    }
+}
+
+@Composable
+private fun PanelComment(comment: CommentUi, modifier: Modifier = Modifier) {
+    val scheme = MaterialTheme.colorScheme
+    Row(modifier = modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = Modifier.size(36.dp).clip(CircleShape).background(scheme.tertiaryContainer)
+        ) {
+            Text(
+                text = comment.author.firstOrNull()?.uppercase().orEmpty(),
+                style = MaterialTheme.typography.labelLarge,
+                fontWeight = FontWeight.Bold,
+                color = scheme.onTertiaryContainer
+            )
+        }
+        Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Row(
+                verticalAlignment = Alignment.Bottom,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Text(
+                    comment.author,
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.SemiBold
+                )
+                Text(
+                    comment.date,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = scheme.onSurfaceVariant
+                )
+            }
+            Text(comment.text, style = MaterialTheme.typography.bodyLarge)
+        }
+    }
 }
 
 @Composable
