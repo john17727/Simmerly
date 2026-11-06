@@ -39,8 +39,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import coil3.compose.LocalPlatformContext
+import coil3.compose.SubcomposeAsyncImage
+import coil3.request.ImageRequest
 import dev.juanrincon.simmerly.core.presentation.navigation.isMediumWidthOrWider
 import dev.juanrincon.simmerly.recipes.presentation.comments.models.CommentUi
 import dev.juanrincon.simmerly.recipes.presentation.comments.orbit.RecipeCommentsIntent
@@ -174,21 +178,44 @@ private fun PanelBody(
     }
 }
 
+/** The commenter's photo, or their initial on a tinted circle while it loads or when there is none. */
 @Composable
-private fun PanelComment(comment: CommentUi, modifier: Modifier = Modifier) {
+private fun CommenterAvatar(name: String, imageUrl: String, modifier: Modifier = Modifier) {
     val scheme = MaterialTheme.colorScheme
-    Row(modifier = modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+    val initial: @Composable () -> Unit = {
         Box(
             contentAlignment = Alignment.Center,
-            modifier = Modifier.size(36.dp).clip(CircleShape).background(scheme.tertiaryContainer)
+            modifier = Modifier.fillMaxSize().background(scheme.tertiaryContainer)
         ) {
             Text(
-                text = comment.author.firstOrNull()?.uppercase().orEmpty(),
+                text = name.firstOrNull()?.uppercase().orEmpty(),
                 style = MaterialTheme.typography.labelLarge,
                 fontWeight = FontWeight.Bold,
                 color = scheme.onTertiaryContainer
             )
         }
+    }
+    Box(modifier = modifier.size(36.dp).clip(CircleShape)) {
+        if (imageUrl.isBlank()) {
+            initial()
+        } else {
+            SubcomposeAsyncImage(
+                model = ImageRequest.Builder(LocalPlatformContext.current).data(imageUrl).build(),
+                contentDescription = name,
+                contentScale = ContentScale.Crop,
+                loading = { initial() },
+                error = { initial() },
+                modifier = Modifier.fillMaxSize()
+            )
+        }
+    }
+}
+
+@Composable
+private fun PanelComment(comment: CommentUi, modifier: Modifier = Modifier) {
+    val scheme = MaterialTheme.colorScheme
+    Row(modifier = modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        CommenterAvatar(name = comment.author, imageUrl = comment.image)
         Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Row(
                 verticalAlignment = Alignment.Bottom,
@@ -212,7 +239,7 @@ private fun PanelComment(comment: CommentUi, modifier: Modifier = Modifier) {
 
 @Preview
 @Composable
-fun RecipeCommentsScreenPreview() {
+fun RecipeCommentsPanelPreview() {
     SimmerlyTheme {
         PanelContent(
             state = RecipeCommentsState(
