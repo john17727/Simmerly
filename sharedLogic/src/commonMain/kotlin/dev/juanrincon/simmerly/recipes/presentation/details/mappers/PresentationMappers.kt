@@ -35,6 +35,7 @@ fun RecipeDetail.toRecipeDetailUi(): RecipeDetailUi = RecipeDetailUi(
     favorite = isFavorite,
     link = originalUrl.nullIfEmpty(),
     tags = tags,
+    categories = categories,
     ingredients = ingredients.map { it.toIngredientUi() },
     instructions = instructions.mapIndexed { index, instruction -> instruction.toInstructionUi(index + 1) },
     nutrition = nutrition.toNutritionUi(),

@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -98,7 +99,10 @@ import dev.juanrincon.simmerly.recipes.presentation.details.orbit.RecipeDetailsI
 import dev.juanrincon.simmerly.recipes.presentation.details.orbit.RecipeDetailsState
 import dev.juanrincon.simmerly.recipes.presentation.details.orbit.RecipeTab
 import dev.juanrincon.simmerly.recipes.presentation.details.orbit.label
+import dev.juanrincon.simmerly.recipes.presentation.shared.CategoriesAndTags
+import dev.juanrincon.simmerly.recipes.presentation.shared.RatingInput
 import dev.juanrincon.simmerly.recipes.presentation.shared.RecipeMetaRow
+import dev.juanrincon.simmerly.recipes.presentation.shared.RecipeTimes
 import dev.juanrincon.simmerly.recipes.presentation.shared.TagRow
 import dev.juanrincon.simmerly.theme.SimmerlyTheme
 import kotlinx.coroutines.launch
@@ -384,9 +388,14 @@ private fun CompactContent(
                     RecipeHero(
                         state = state,
                         sharedTransitionScope = sharedTransitionScope,
-                        modifier = Modifier.weight(1f).height(MEDIUM_HERO_HEIGHT)
+                        showTags = false,
+                        modifier = Modifier.weight(1f).aspectRatio(MEDIUM_HERO_ASPECT_RATIO)
                     )
-                    RecipeSummary(state, modifier = Modifier.weight(1f))
+                    MediumRecipeSummary(
+                        state = state,
+                        onRatingChange = { onEvent(RecipeDetailsIntent.SetRating(it)) },
+                        modifier = Modifier.weight(1f)
+                    )
                 }
             }
         } else {
@@ -528,6 +537,7 @@ internal fun RecipeHero(
     state: RecipeDetailsState,
     modifier: Modifier = Modifier,
     sharedTransitionScope: SharedTransitionScope? = null,
+    showTags: Boolean = true,
 ) {
     val recipe = state.recipe
     val uriHandler = LocalUriHandler.current
@@ -559,7 +569,7 @@ internal fun RecipeHero(
                 }.clip(MaterialTheme.shapes.medium)
         )
         AnimatedVisibility(
-            !state.loading && recipe.tags.isNotEmpty() && !isNavTransitionRunning,
+            showTags && !state.loading && recipe.tags.isNotEmpty() && !isNavTransitionRunning,
             modifier = Modifier.align(Alignment.BottomStart),
             enter = fadeIn(),
             exit = fadeOut(),
@@ -681,12 +691,58 @@ internal fun RecipeSummary(
     }
 }
 
+/**
+ * The summary beside the hero on medium and foldable widths, as the Foldable design draws it:
+ * your rating (tappable, as on the desktop card), the whole description (no clamp), the times group, then categories and tags. The title
+ * lives in the top app bar, so it is not repeated here.
+ */
+@Composable
+internal fun MediumRecipeSummary(
+    state: RecipeDetailsState,
+    onRatingChange: (Double?) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val recipe = state.recipe
+    val colors = shimmerColors()
+    Column(
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+        modifier = modifier.padding(top = 4.dp)
+    ) {
+        if (state.loading) {
+            Box(
+                modifier = Modifier.width(120.dp).height(20.dp)
+                    .clip(MaterialTheme.shapes.small)
+                    .shimmer(colors, MaterialTheme.shapes.small)
+            )
+            listOf(1f, 1f, 0.9f, 0.55f).forEach { fraction ->
+                Box(
+                    modifier = Modifier.fillMaxWidth(fraction).height(16.dp)
+                        .clip(MaterialTheme.shapes.small)
+                        .shimmer(colors, MaterialTheme.shapes.small)
+                )
+            }
+            Box(
+                modifier = Modifier.fillMaxWidth().height(64.dp)
+                    .clip(MaterialTheme.shapes.medium)
+                    .shimmer(colors, MaterialTheme.shapes.medium)
+            )
+        } else {
+            RatingInput(recipe.rating, onRatingChange = onRatingChange)
+            recipe.description?.asString()?.takeIf { it.isNotBlank() }?.let {
+                Text(it, style = MaterialTheme.typography.bodyLarge)
+            }
+            RecipeTimes(recipe.totalTime, recipe.prepTime, recipe.performTime)
+            CategoriesAndTags(recipe.categories, recipe.tags)
+        }
+    }
+}
+
 // Lazy list layout: image(0), meta(1), stickyHeader(2), content sections start at 3. In the
 // medium layout the image and meta share item 0, so the sections start at 2.
 private const val CONTENT_START_INDEX = 3
 
-// Height of the hero image beside the summary; the phone's 45%-of-screen is too tall there
-private val MEDIUM_HERO_HEIGHT = 300.dp
+// Hero image shape beside the summary; the phone's 45%-of-screen is too tall there
+private const val MEDIUM_HERO_ASPECT_RATIO = 4f / 3f
 
 // Columns the ingredient list uses in the medium layout
 private const val MEDIUM_INGREDIENT_COLUMNS = 2
