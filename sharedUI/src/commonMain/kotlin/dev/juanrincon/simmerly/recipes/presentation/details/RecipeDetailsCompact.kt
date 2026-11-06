@@ -7,6 +7,21 @@ import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.material.icons.automirrored.outlined.OpenInNew
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.MenuDefaults
+import androidx.compose.material3.PlainTooltip
+import androidx.compose.material3.TooltipAnchorPosition
+import androidx.compose.material3.TooltipBox
+import androidx.compose.material3.TooltipDefaults
+import androidx.compose.material3.rememberTooltipState
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,7 +29,6 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -25,7 +39,6 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.outlined.Comment
-import androidx.compose.material.icons.automirrored.filled.OpenInNew
 import androidx.compose.material.icons.outlined.AddShoppingCart
 import androidx.compose.material.icons.outlined.ContentCopy
 import androidx.compose.material.icons.outlined.Delete
@@ -73,6 +86,8 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.Layout
+import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
@@ -111,93 +126,179 @@ import kotlinx.coroutines.launch
 /**
  * Shared by the phone bottom bar and the medium top bar. AppBarRow measures its own items and
  * moves the ones that don't fit into its overflow menu. Items drop from the end, so they are
- * ordered by how often they are likely to be used, most used first.
+ * ordered by how often they are likely to be used, most used first. The overflow rows are drawn
+ * by [actionItem] to match the design: leading icon, groups split by dividers.
  */
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 internal fun recipeActions(
     state: RecipeDetailsState,
     onEvent: (RecipeDetailsIntent) -> Unit,
     onNavigateToComments: (recipeId: String) -> Unit,
+    onOpenOriginal: (url: String) -> Unit,
 ): AppBarRowScope.() -> Unit = {
-    toggleableItem(
-        checked = state.recipe.favorite,
-        onCheckedChange = { onEvent(RecipeDetailsIntent.ToggleFavorite) },
-        icon = {
-            Icon(
-                if (state.recipe.favorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
-                contentDescription = null,
-                tint = if (state.recipe.favorite) MaterialTheme.colorScheme.secondary else LocalContentColor.current
-            )
-        },
+    val link = state.recipe.link
+    actionItem(
+        onClick = { onEvent(RecipeDetailsIntent.ToggleFavorite) },
+        icon = if (state.recipe.favorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
+        accentIcon = state.recipe.favorite,
         label = "Favorite",
         enabled = !state.loading,
     )
-    clickableItem(
+    actionItem(
         onClick = { onEvent(RecipeDetailsIntent.OpenAddToList) },
-        icon = { Icon(Icons.Outlined.AddShoppingCart, contentDescription = null) },
+        icon = Icons.Outlined.AddShoppingCart,
         label = "Add to shopping list",
         enabled = !state.loading,
+        highlighted = true,
     )
-    clickableItem(
+    actionItem(
         onClick = { onNavigateToComments(state.recipe.id) },
-        icon = { Icon(Icons.AutoMirrored.Outlined.Comment, contentDescription = null) },
+        icon = Icons.AutoMirrored.Outlined.Comment,
         label = "Comments",
         enabled = !state.loading && !state.recipe.settings.disableComments,
     )
-    clickableItem(
+    actionItem(
         onClick = { /* TODO: edit action */ },
-        icon = { Icon(Icons.Outlined.Edit, contentDescription = null) },
+        icon = Icons.Outlined.Edit,
         label = "Edit",
         enabled = !state.loading,
     )
-    clickableItem(
+    actionItem(
         onClick = { onEvent(RecipeDetailsIntent.ShowSettings) },
-        icon = { Icon(Icons.Outlined.Settings, contentDescription = null) },
+        icon = Icons.Outlined.Settings,
         label = "Settings",
         enabled = !state.loading,
     )
-    clickableItem(
+    actionItem(
         onClick = { /* TODO: timeline action */ },
-        icon = { Icon(Icons.Outlined.Article, contentDescription = null) },
+        icon = Icons.Outlined.Article,
         label = "Timeline",
         enabled = !state.loading,
     )
     // Not built yet: disabled, as in the phone menu.
-    clickableItem(
+    actionItem(
         onClick = {},
-        icon = { Icon(Icons.Outlined.EditCalendar, contentDescription = null) },
+        icon = Icons.Outlined.EditCalendar,
         label = "Add to meal plan",
         enabled = false,
     )
-    clickableItem(
+    actionItem(
         onClick = {},
-        icon = { Icon(Icons.Outlined.EventAvailable, contentDescription = null) },
+        icon = Icons.Outlined.EventAvailable,
         label = "Mark as made today",
         enabled = false,
     )
-    clickableItem(
+    if (link != null) {
+        actionItem(
+            onClick = { onOpenOriginal(link) },
+            icon = Icons.AutoMirrored.Outlined.OpenInNew,
+            label = "Open original recipe",
+            enabled = !state.loading,
+            dividerBefore = true,
+        )
+    }
+    actionItem(
         onClick = {},
-        icon = { Icon(Icons.Outlined.Share, contentDescription = null) },
+        icon = Icons.Outlined.Share,
         label = "Share",
         enabled = false,
+        dividerBefore = link == null,
     )
-    clickableItem(
+    actionItem(
         onClick = {},
-        icon = { Icon(Icons.Outlined.ContentCopy, contentDescription = null) },
+        icon = Icons.Outlined.ContentCopy,
         label = "Duplicate",
         enabled = false,
     )
-    clickableItem(
+    actionItem(
         onClick = {},
-        icon = { Icon(Icons.Outlined.Print, contentDescription = null) },
+        icon = Icons.Outlined.Print,
         label = "Print",
         enabled = false,
     )
-    clickableItem(
+    actionItem(
         onClick = {},
-        icon = { Icon(Icons.Outlined.Delete, contentDescription = null) },
+        icon = Icons.Outlined.Delete,
         label = "Delete recipe",
         enabled = false,
+        destructive = true,
+        dividerBefore = true,
+    )
+}
+
+/**
+ * One [AppBarRow] action. In the bar it is a plain icon button with a tooltip, like
+ * clickableItem; in the overflow menu it is a 48dp row with a leading icon, which clickableItem
+ * can't draw (it is text only). [dividerBefore] starts a new group in the menu, [highlighted]
+ * tints the row with the primary container and [destructive] uses the error color.
+ */
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
+private fun AppBarRowScope.actionItem(
+    onClick: () -> Unit,
+    icon: ImageVector,
+    label: String,
+    enabled: Boolean = true,
+    accentIcon: Boolean = false,
+    highlighted: Boolean = false,
+    destructive: Boolean = false,
+    dividerBefore: Boolean = false,
+) {
+    customItem(
+        appbarContent = {
+            TooltipBox(
+                positionProvider = TooltipDefaults.rememberTooltipPositionProvider(TooltipAnchorPosition.Above),
+                tooltip = { PlainTooltip { Text(label) } },
+                state = rememberTooltipState(),
+            ) {
+                IconButton(onClick = onClick, enabled = enabled) {
+                    Icon(
+                        icon,
+                        contentDescription = label,
+                        tint = if (accentIcon) MaterialTheme.colorScheme.secondary else LocalContentColor.current
+                    )
+                }
+            }
+        },
+        menuContent = { menuState ->
+            val scheme = MaterialTheme.colorScheme
+            val contentColor = when {
+                destructive -> scheme.error
+                highlighted -> scheme.onPrimaryContainer
+                else -> scheme.onSurface
+            }
+            val iconColor = when {
+                destructive -> scheme.error
+                highlighted -> scheme.onPrimaryContainer
+                accentIcon -> scheme.secondary
+                else -> scheme.onSurfaceVariant
+            }
+            if (dividerBefore) {
+                HorizontalDivider(
+                    color = scheme.outlineVariant,
+                    modifier = Modifier.padding(vertical = 8.dp)
+                )
+            }
+            DropdownMenuItem(
+                text = { Text(label, style = MaterialTheme.typography.labelLarge) },
+                leadingIcon = { Icon(icon, contentDescription = null) },
+                enabled = enabled,
+                onClick = {
+                    onClick()
+                    menuState.dismiss()
+                },
+                colors = MenuDefaults.itemColors(
+                    textColor = contentColor,
+                    leadingIconColor = iconColor,
+                    disabledTextColor = contentColor.copy(alpha = 0.38f),
+                    disabledLeadingIconColor = iconColor.copy(alpha = 0.38f),
+                ),
+                contentPadding = PaddingValues(horizontal = 16.dp),
+                modifier = Modifier
+                    .widthIn(min = 248.dp)
+                    .height(48.dp)
+                    .background(if (highlighted) scheme.primaryContainer else Color.Transparent)
+            )
+        },
     )
 }
 
@@ -218,7 +319,8 @@ internal fun CompactRecipeDetails(
 ) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     val medium = isMediumWidthOrWider()
-    val recipeActions = recipeActions(state, onEvent, onNavigateToComments)
+    val uriHandler = LocalUriHandler.current
+    val recipeActions = recipeActions(state, onEvent, onNavigateToComments, uriHandler::openUri)
     Scaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         snackbarHost = { SnackbarHost(snackbarHostState) },
@@ -401,22 +503,24 @@ private fun CompactContent(
         if (medium) {
             // Hero beside the description + meta: stacked, each would stretch across the window.
             item {
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(24.dp),
+                HeroBesideSummary(
+                    hero = {
+                        RecipeHero(
+                            state = state,
+                            sharedTransitionScope = sharedTransitionScope,
+                            showTags = false,
+                            modifier = Modifier.fillMaxSize()
+                        )
+                    },
+                    summary = {
+                        MediumRecipeSummary(
+                            state = state,
+                            onRatingChange = { onEvent(RecipeDetailsIntent.SetRating(it)) },
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    },
                     modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)
-                ) {
-                    RecipeHero(
-                        state = state,
-                        sharedTransitionScope = sharedTransitionScope,
-                        showTags = false,
-                        modifier = Modifier.weight(1f).aspectRatio(MEDIUM_HERO_ASPECT_RATIO)
-                    )
-                    MediumRecipeSummary(
-                        state = state,
-                        onRatingChange = { onEvent(RecipeDetailsIntent.SetRating(it)) },
-                        modifier = Modifier.weight(1f)
-                    )
-                }
+                )
             }
         } else {
             // Hero image
@@ -566,7 +670,6 @@ internal fun RecipeHero(
     onTagsClick: () -> Unit = {},
 ) {
     val recipe = state.recipe
-    val uriHandler = LocalUriHandler.current
     val (sharedModifier, isNavTransitionRunning) = if (sharedTransitionScope != null) {
         val animatedScope = LocalNavAnimatedContentScope.current
         val shared = with(sharedTransitionScope) {
@@ -607,25 +710,6 @@ internal fun RecipeHero(
                 onClick = onTagsClick,
                 modifier = Modifier.padding(12.dp)
             )
-        }
-        AnimatedVisibility(
-            !state.loading && recipe.link != null && !isNavTransitionRunning,
-            modifier = Modifier.align(Alignment.BottomEnd),
-            enter = fadeIn(),
-            exit = fadeOut(),
-        ) {
-            FilledIconButton(
-                onClick = { uriHandler.openUri(recipe.link!!) },
-                shape = IconButtonDefaults.extraSmallSquareShape,
-                modifier = Modifier.padding(12.dp)
-                    .size(IconButtonDefaults.extraSmallContainerSize())
-            ) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Default.OpenInNew,
-                    contentDescription = "Open original recipe",
-                    modifier = Modifier.size(IconButtonDefaults.extraSmallIconSize)
-                )
-            }
         }
     }
 }
@@ -767,12 +851,46 @@ internal fun MediumRecipeSummary(
     }
 }
 
+/**
+ * Two equal columns: the summary takes the height it needs and the hero fills that whole height
+ * (never below [MEDIUM_HERO_MIN_HEIGHT]). A Row with IntrinsicSize.Min would do this but crashes,
+ * because the summary contains subcomposing layouts that can't report intrinsics.
+ */
+@Composable
+private fun HeroBesideSummary(
+    hero: @Composable () -> Unit,
+    summary: @Composable () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Layout(
+        content = {
+            Box { hero() }
+            Box { summary() }
+        },
+        modifier = modifier,
+    ) { measurables, constraints ->
+        val gap = 24.dp.roundToPx()
+        val columnWidth = ((constraints.maxWidth - gap) / 2).coerceAtLeast(0)
+        val summaryPlaceable = measurables[1].measure(
+            Constraints(maxWidth = columnWidth, minWidth = columnWidth)
+        )
+        val height = maxOf(summaryPlaceable.height, MEDIUM_HERO_MIN_HEIGHT.roundToPx())
+        val heroPlaceable = measurables[0].measure(
+            Constraints.fixed(columnWidth, height)
+        )
+        layout(constraints.maxWidth, height) {
+            heroPlaceable.place(0, 0)
+            summaryPlaceable.place(columnWidth + gap, 0)
+        }
+    }
+}
+
 // Lazy list layout: image(0), meta(1), stickyHeader(2), content sections start at 3. In the
 // medium layout the image and meta share item 0, so the sections start at 2.
 private const val CONTENT_START_INDEX = 3
 
-// Hero image shape beside the summary; the phone's 45%-of-screen is too tall there
-private const val MEDIUM_HERO_ASPECT_RATIO = 4f / 3f
+// Shortest the hero beside the summary gets when the summary is brief; otherwise it fills the row
+private val MEDIUM_HERO_MIN_HEIGHT = 240.dp
 
 // Columns the ingredient list uses in the medium layout
 private const val MEDIUM_INGREDIENT_COLUMNS = 2

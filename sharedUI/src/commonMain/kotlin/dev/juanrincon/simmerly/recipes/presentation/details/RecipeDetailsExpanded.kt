@@ -54,6 +54,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.unit.dp
 import dev.juanrincon.simmerly.core.presentation.VerticalScrollbar
 import dev.juanrincon.simmerly.recipes.presentation.comments.RecipeCommentsScreen
@@ -308,7 +309,8 @@ private fun ExpandedHeader(
     onShowComments: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val actions = recipeActions(state, onEvent) { onShowComments() }
+    val uriHandler = LocalUriHandler.current
+    val actions = recipeActions(state, onEvent, { onShowComments() }, uriHandler::openUri)
     Column(modifier = modifier) {
         Row(
             modifier = Modifier
