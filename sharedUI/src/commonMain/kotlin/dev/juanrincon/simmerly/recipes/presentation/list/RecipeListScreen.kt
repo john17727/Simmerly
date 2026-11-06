@@ -19,8 +19,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.relocation.BringIntoViewRequester
-import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.outlined.FavoriteBorder
@@ -38,11 +36,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -147,13 +143,6 @@ fun RecipeCard(
      * expanded card only exists in the desktop list pane. `null` makes the stars display-only. */
     onRatingChange: ((Double?) -> Unit)? = null,
 ) {
-    val bringIntoViewRequester = remember { BringIntoViewRequester() }
-    LaunchedEffect(selected) {
-        if (selected) {
-            withFrameNanos { }
-            bringIntoViewRequester.bringIntoView()
-        }
-    }
     AnimatedContent(
         selected,
         transitionSpec = {
@@ -164,8 +153,7 @@ fun RecipeCard(
         if (isSelected) {
             Column(
                 verticalArrangement = Arrangement.spacedBy(8.dp),
-                modifier = Modifier.padding(vertical = 32.dp)
-                    .bringIntoViewRequester(bringIntoViewRequester),
+                modifier = Modifier.padding(vertical = 32.dp),
             ) {
                 AsyncImage(
                     model = ImageRequest.Builder(LocalPlatformContext.current)

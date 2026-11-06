@@ -14,6 +14,11 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -36,6 +41,22 @@ internal fun SelectableList(
     state: LazyListState,
     modifier: Modifier = Modifier
 ) {
+    // Scroll a newly selected card to the top of the list. Skipped for a selection that was already
+    // there when this composed (restored after a tab switch), so the list keeps its position.
+    var lastScrolledId by rememberSaveable { mutableStateOf(selected) }
+    LaunchedEffect(selected) {
+        if (selected.isEmpty()) {
+            lastScrolledId = ""
+            return@LaunchedEffect
+        }
+        if (selected == lastScrolledId) return@LaunchedEffect
+        val index = (0 until lazyPagingItems.itemCount)
+            .firstOrNull { lazyPagingItems.peek(it)?.id == selected }
+            ?: return@LaunchedEffect
+        lastScrolledId = selected
+        state.animateScrollToItem(index)
+    }
+
     Box(modifier = modifier) {
         LazyColumn(
             state = state,
