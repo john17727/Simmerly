@@ -71,7 +71,7 @@ private val EXPANDED_CONTENT_MAX_WIDTH = 1040.dp
 /** Six action icons (favorite, shopping list, comments, edit, settings, timeline) plus the overflow button, which maxItemCount counts. */
 private const val EXPANDED_TOP_BAR_MAX_ITEMS = 7
 
-/** With the comments pane open the detail pane is narrower: three icons plus the overflow button. */
+/** With the comments pane or settings sheet open the detail pane is narrower: three icons plus the overflow button. */
 private const val EXPANDED_TOP_BAR_MAX_ITEMS_COMMENTS_OPEN = 4
 
 
@@ -90,6 +90,8 @@ internal fun ExpandedView(
     onEvent: (RecipeDetailsIntent) -> Unit,
     onNavigateToComments: (recipeId: String) -> Unit,
     commentsOpen: Boolean,
+    /** Settings side sheet is docked beside the recipe: the pane is as narrow as with comments open. */
+    settingsOpen: Boolean = false,
     onStartCooking: (recipeId: String) -> Unit,
     modifier: Modifier = Modifier,
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
@@ -118,9 +120,10 @@ internal fun ExpandedView(
         }
     }
 
-    // With the comments pane open the detail pane is about as narrow as a phone, so the sections
+    // With the comments pane or settings sheet open the detail pane is about as narrow as a phone, so the sections
     // use the phone's single-column layout and tighter gutters.
-    val contentPadding = if (commentsOpen) 16.dp else EXPANDED_HORIZONTAL_PADDING
+    val narrow = commentsOpen || settingsOpen
+    val contentPadding = if (narrow) 16.dp else EXPANDED_HORIZONTAL_PADDING
 
     val cardColors = CardDefaults.outlinedCardColors(
         containerColor = MaterialTheme.colorScheme.surfaceContainerLow
@@ -148,6 +151,7 @@ internal fun ExpandedView(
                     },
                     onEvent = onEvent,
                     commentsOpen = commentsOpen,
+                    narrow = narrow,
                     onShowComments = { onNavigateToComments(recipe.id) },
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -187,7 +191,7 @@ internal fun ExpandedView(
                                     onRemoveServingButtonClick = { onEvent(RecipeDetailsIntent.RemoveServing) },
                                     onAddServingButtonClick = { onEvent(RecipeDetailsIntent.AddServing) },
                                     onAddToListClick = { onEvent(RecipeDetailsIntent.OpenAddToList) },
-                                    columns = if (commentsOpen) 1 else 2,
+                                    columns = if (narrow) 1 else 2,
                                     modifier = Modifier.fillMaxWidth()
                                 )
                             }
@@ -201,7 +205,7 @@ internal fun ExpandedView(
                                 InstructionView(
                                     instructions = recipe.instructions,
                                     ingredients = recipe.ingredients,
-                                    imagesOnSide = !commentsOpen,
+                                    imagesOnSide = !narrow,
                                     modifier = Modifier.fillMaxWidth()
                                 )
                             }
@@ -209,7 +213,7 @@ internal fun ExpandedView(
                         if (recipe.notes.isNotEmpty()) {
                             item {
                                 RecipeSectionCard(colors = cardColors, modifier = cardModifier) {
-                                    NotesView(recipe.notes, columns = if (commentsOpen) 1 else 2, modifier = Modifier.fillMaxWidth())
+                                    NotesView(recipe.notes, columns = if (narrow) 1 else 2, modifier = Modifier.fillMaxWidth())
                                 }
                             }
                         }
@@ -257,6 +261,7 @@ private fun ExpandedHeader(
     onEvent: (RecipeDetailsIntent) -> Unit,
     onShowComments: () -> Unit,
     commentsOpen: Boolean,
+    narrow: Boolean,
     modifier: Modifier = Modifier
 ) {
     val uriHandler = LocalUriHandler.current
@@ -293,7 +298,7 @@ private fun ExpandedHeader(
             // plain surface, so set the same content color to match phone and foldable.
             CompositionLocalProvider(LocalContentColor provides MaterialTheme.colorScheme.onSurfaceVariant) {
                 AppBarRow(
-                    maxItemCount = if (commentsOpen) {
+                    maxItemCount = if (narrow) {
                         EXPANDED_TOP_BAR_MAX_ITEMS_COMMENTS_OPEN
                     } else {
                         EXPANDED_TOP_BAR_MAX_ITEMS

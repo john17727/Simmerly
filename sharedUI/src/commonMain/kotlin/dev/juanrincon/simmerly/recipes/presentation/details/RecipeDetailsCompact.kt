@@ -318,6 +318,9 @@ private fun AppBarRowScope.actionItem(
     )
 }
 
+/** Top bar items while the settings sheet narrows the recipe: three icons plus the overflow button. */
+private const val PHONE_LAYOUT_TOP_BAR_MAX_ITEMS = 4
+
 /** Most items the medium top bar shows before overflowing: five icons plus the overflow button (maxItemCount counts the overflow button). */
 internal const val TOP_BAR_MAX_ITEMS = 6
 
@@ -329,12 +332,17 @@ internal fun CompactRecipeDetails(
     onNavigateBack: () -> Unit,
     onNavigateToComments: (recipeId: String) -> Unit,
     onStartCooking: (recipeId: String) -> Unit = {},
+    /** Forces the phone layout on a wide window, for when a side sheet leaves little width. */
+    phoneLayout: Boolean = false,
     sharedTransitionScope: SharedTransitionScope? = null,
     modifier: Modifier = Modifier,
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
 ) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
-    val medium = isMediumWidthOrWider()
+    val wide = isMediumWidthOrWider()
+    // phoneLayout only changes the content layout. The actions stay in the top bar on wide windows:
+    // swapping in the bottom bar's AppBarRow while the sheet animates open crashes in lookahead.
+    val medium = wide && !phoneLayout
     val uriHandler = LocalUriHandler.current
     val recipeActions = recipeActions(state, onEvent, onNavigateToComments, uriHandler::openUri)
     Scaffold(
@@ -371,8 +379,11 @@ internal fun CompactRecipeDetails(
                         }
                     },
                     actions = {
-                        if (medium) {
-                            AppBarRow(maxItemCount = TOP_BAR_MAX_ITEMS, content = recipeActions)
+                        if (wide) {
+                            AppBarRow(
+                                maxItemCount = if (phoneLayout) PHONE_LAYOUT_TOP_BAR_MAX_ITEMS else TOP_BAR_MAX_ITEMS,
+                                content = recipeActions
+                            )
                         }
                     },
                     scrollBehavior = scrollBehavior
@@ -391,7 +402,7 @@ internal fun CompactRecipeDetails(
             }
         },
         bottomBar = {
-            if (!medium) {
+            if (!wide) {
                 BottomAppBar(
                     actions = { AppBarRow(content = recipeActions) },
                     floatingActionButton = {
@@ -409,7 +420,7 @@ internal fun CompactRecipeDetails(
             }
         },
         floatingActionButton = {
-            if (medium) {
+            if (wide) {
                 // Medium and foldable widths drop the bottom bar: the actions move to the top bar
                 // and Start cooking floats on its own, as the design draws it.
                 StartCookingFab(
@@ -433,6 +444,7 @@ internal fun CompactRecipeDetails(
                 paddingValues = paddingValues,
                 sharedTransitionScope = sharedTransitionScope,
                 medium = medium,
+                floatingFab = wide,
                 topBarState = scrollBehavior.state,
                 modifier = modifier.fillMaxSize()
             )
@@ -449,6 +461,8 @@ private fun CompactContent(
     modifier: Modifier = Modifier,
     sharedTransitionScope: SharedTransitionScope? = null,
     medium: Boolean = false,
+    /** Whether Start cooking floats over the content (wide windows) rather than sitting in a bottom bar. */
+    floatingFab: Boolean = medium,
     topBarState: TopAppBarState? = null,
 ) {
     val recipe = state.recipe
@@ -514,7 +528,7 @@ private fun CompactContent(
             top = 8.dp,
             // Medium widths float the FAB over the list (56dp + 16dp margin), so leave room to
             // scroll the last item clear of it. Phones keep the FAB inside the bottom bar.
-            bottom = if (medium) 96.dp else 8.dp
+            bottom = if (floatingFab) 96.dp else 8.dp
         )
     ) {
 
