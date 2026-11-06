@@ -135,8 +135,9 @@ import kotlinx.coroutines.launch
 internal fun recipeActions(
     state: RecipeDetailsState,
     onEvent: (RecipeDetailsIntent) -> Unit,
-    onNavigateToComments: (recipeId: String) -> Unit,
+    onToggleComments: (recipeId: String) -> Unit,
     onOpenOriginal: (url: String) -> Unit,
+    commentsOpen: Boolean = false,
 ): AppBarRowScope.() -> Unit = {
     val link = state.recipe.link
     actionItem(
@@ -154,10 +155,11 @@ internal fun recipeActions(
         highlighted = true,
     )
     actionItem(
-        onClick = { onNavigateToComments(state.recipe.id) },
+        onClick = { onToggleComments(state.recipe.id) },
         icon = Icons.AutoMirrored.Outlined.Comment,
         label = "Comments",
         enabled = !state.loading && !state.recipe.settings.disableComments,
+        active = commentsOpen,
     )
     actionItem(
         onClick = { /* TODO: edit action */ },
@@ -242,6 +244,7 @@ private fun AppBarRowScope.actionItem(
     enabled: Boolean = true,
     accentIcon: Boolean = false,
     highlighted: Boolean = false,
+    active: Boolean = false,
     destructive: Boolean = false,
     dividerBefore: Boolean = false,
 ) {
@@ -252,7 +255,18 @@ private fun AppBarRowScope.actionItem(
                 tooltip = { PlainTooltip { Text(label) } },
                 state = rememberTooltipState(),
             ) {
-                IconButton(onClick = onClick, enabled = enabled) {
+                IconButton(
+                    onClick = onClick,
+                    enabled = enabled,
+                    colors = if (active) {
+                        IconButtonDefaults.iconButtonColors(
+                            containerColor = MaterialTheme.colorScheme.primaryContainer,
+                            contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                    } else {
+                        IconButtonDefaults.iconButtonColors()
+                    }
+                ) {
                     Icon(
                         icon,
                         contentDescription = label,
@@ -304,6 +318,9 @@ private fun AppBarRowScope.actionItem(
     )
 }
 
+/** Top bar items while a side panel narrows the recipe: three icons plus the overflow button. */
+private const val NARROW_TOP_BAR_MAX_ITEMS = 4
+
 /** Most items the medium top bar shows before overflowing: five icons plus the overflow button (maxItemCount counts the overflow button). */
 internal const val TOP_BAR_MAX_ITEMS = 6
 
@@ -313,16 +330,25 @@ internal fun CompactRecipeDetails(
     state: RecipeDetailsState,
     onEvent: (RecipeDetailsIntent) -> Unit,
     onNavigateBack: () -> Unit,
-    onNavigateToComments: (recipeId: String) -> Unit,
+    onToggleComments: (recipeId: String) -> Unit,
     onStartCooking: (recipeId: String) -> Unit = {},
+    /** A side panel (comments or settings) shares the window: use the phone's sections on a wide window. */
+    narrow: Boolean = false,
+    /** The comments extra pane is open beside the recipe: highlights the Comments action. */
+    commentsOpen: Boolean = false,
     sharedTransitionScope: SharedTransitionScope? = null,
     modifier: Modifier = Modifier,
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
 ) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
-    val medium = isMediumWidthOrWider()
+    val wideWindow = isMediumWidthOrWider()
+    // narrow only changes the content layout. The actions stay in the top bar on wide windows:
+    // Workaround: the bottom bar's AppBarRow appearing while a side panel animates open threw
+    // "LookaheadDelegate has not been measured yet" on desktop. Not root-caused; keeping the
+    // actions in the top bar avoids that path.
+    val medium = wideWindow && !narrow
     val uriHandler = LocalUriHandler.current
-    val recipeActions = recipeActions(state, onEvent, onNavigateToComments, uriHandler::openUri)
+    val recipeActions = recipeActions(state, onEvent, onToggleComments, uriHandler::openUri, commentsOpen)
     Scaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         snackbarHost = { SnackbarHost(snackbarHostState) },
@@ -357,8 +383,11 @@ internal fun CompactRecipeDetails(
                         }
                     },
                     actions = {
-                        if (medium) {
-                            AppBarRow(maxItemCount = TOP_BAR_MAX_ITEMS, content = recipeActions)
+                        if (wideWindow) {
+                            AppBarRow(
+                                maxItemCount = if (narrow) NARROW_TOP_BAR_MAX_ITEMS else TOP_BAR_MAX_ITEMS,
+                                content = recipeActions
+                            )
                         }
                     },
                     scrollBehavior = scrollBehavior
@@ -377,7 +406,7 @@ internal fun CompactRecipeDetails(
             }
         },
         bottomBar = {
-            if (!medium) {
+            if (!wideWindow) {
                 BottomAppBar(
                     actions = { AppBarRow(content = recipeActions) },
                     floatingActionButton = {
@@ -395,7 +424,7 @@ internal fun CompactRecipeDetails(
             }
         },
         floatingActionButton = {
-            if (medium) {
+            if (wideWindow) {
                 // Medium and foldable widths drop the bottom bar: the actions move to the top bar
                 // and Start cooking floats on its own, as the design draws it.
                 StartCookingFab(
@@ -419,6 +448,7 @@ internal fun CompactRecipeDetails(
                 paddingValues = paddingValues,
                 sharedTransitionScope = sharedTransitionScope,
                 medium = medium,
+                floatingFab = wideWindow,
                 topBarState = scrollBehavior.state,
                 modifier = modifier.fillMaxSize()
             )
@@ -435,6 +465,8 @@ private fun CompactContent(
     modifier: Modifier = Modifier,
     sharedTransitionScope: SharedTransitionScope? = null,
     medium: Boolean = false,
+    /** Whether Start cooking floats over the content (wide windows) rather than sitting in a bottom bar. */
+    floatingFab: Boolean = medium,
     topBarState: TopAppBarState? = null,
 ) {
     val recipe = state.recipe
@@ -500,7 +532,7 @@ private fun CompactContent(
             top = 8.dp,
             // Medium widths float the FAB over the list (56dp + 16dp margin), so leave room to
             // scroll the last item clear of it. Phones keep the FAB inside the bottom bar.
-            bottom = if (medium) 96.dp else 8.dp
+            bottom = if (floatingFab) 96.dp else 8.dp
         )
     ) {
 
@@ -1043,7 +1075,7 @@ private fun MediumPreview() {
             ),
             onEvent = {},
             onNavigateBack = {},
-            onNavigateToComments = {}
+            onToggleComments = {}
         )
     }
 }
@@ -1060,7 +1092,7 @@ private fun MediumDarkPreview() {
             ),
             onEvent = {},
             onNavigateBack = {},
-            onNavigateToComments = {}
+            onToggleComments = {}
         )
     }
 }
@@ -1077,7 +1109,7 @@ private fun DynamicPreview() {
             ),
             onEvent = {},
             onNavigateBack = {},
-            onNavigateToComments = {}
+            onToggleComments = {}
         )
     }
 }
@@ -1094,7 +1126,7 @@ private fun LightPreview() {
             ),
             onEvent = {},
             onNavigateBack = {},
-            onNavigateToComments = {}
+            onToggleComments = {}
         )
     }
 }
@@ -1111,7 +1143,7 @@ private fun DynamicDarkPreview() {
             ),
             onEvent = {},
             onNavigateBack = {},
-            onNavigateToComments = {}
+            onToggleComments = {}
         )
     }
 }
@@ -1128,7 +1160,7 @@ private fun DarkPreview() {
             ),
             onEvent = {},
             onNavigateBack = {},
-            onNavigateToComments = {}
+            onToggleComments = {}
         )
     }
 }
@@ -1141,7 +1173,7 @@ private fun LoadingPreview() {
             state = RecipeDetailsState(loading = true),
             onEvent = {},
             onNavigateBack = {},
-            onNavigateToComments = {}
+            onToggleComments = {}
         )
     }
 }
@@ -1158,6 +1190,8 @@ private fun ExpandedPreview() {
                 mobileTabs = previewMediumTabs
             ),
             onEvent = {},
+            onToggleComments = {},
+            commentsOpen = false,
             onStartCooking = {}
         )
     }
@@ -1174,6 +1208,8 @@ private fun ExpandedDarkPreview() {
                 mobileTabs = previewMediumTabs
             ),
             onEvent = {},
+            onToggleComments = {},
+            commentsOpen = false,
             onStartCooking = {}
         )
     }
