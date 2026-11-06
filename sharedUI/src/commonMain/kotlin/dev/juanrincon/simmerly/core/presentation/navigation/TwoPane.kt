@@ -27,8 +27,9 @@ fun isMediumWidthOrWider(): Boolean = currentWindowAdaptiveInfoV2().windowSizeCl
     .isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_MEDIUM_LOWER_BOUND)
 
 /**
- * The default [PaneScaffoldDirective], held to a single pane until [TWO_PANE_MIN_WIDTH_DP] so a
- * list-detail scene and the screens inside it always switch layout at the same width.
+ * The default [PaneScaffoldDirective] without a gutter between panes, held to a single pane until
+ * [TWO_PANE_MIN_WIDTH_DP] so a list-detail scene and the screens inside it always switch layout at
+ * the same width.
  */
 @OptIn(ExperimentalMaterial3AdaptiveApi::class)
 @Composable
@@ -36,7 +37,8 @@ fun rememberTwoPaneDirective(): PaneScaffoldDirective {
     val windowAdaptiveInfo = currentWindowAdaptiveInfoV2()
     val directive = calculatePaneScaffoldDirective(windowAdaptiveInfo)
     return if (isTwoPaneWidth()) {
-        directive
+        // No gutter between panes: the detail pane and the comments sheet draw their own edge rules.
+        directive.copy(horizontalPartitionSpacerSize = 0.dp)
     } else {
         directive.copy(maxHorizontalPartitions = 1, horizontalPartitionSpacerSize = 0.dp)
     }
