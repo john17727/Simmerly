@@ -7,6 +7,8 @@ import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.BoxScope
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
@@ -85,7 +87,8 @@ internal fun ExpandedView(
     state: RecipeDetailsState,
     onEvent: (RecipeDetailsIntent) -> Unit,
     onStartCooking: (recipeId: String) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
 ) {
     val recipe = state.recipe
     // Same sections as the mobile page, minus the overview: desktop has no hero or summary.
@@ -224,6 +227,10 @@ internal fun ExpandedView(
             visible = !state.loading && recipe.instructions.isNotEmpty(),
             onClick = { onStartCooking(recipe.id) },
             modifier = Modifier.align(Alignment.BottomEnd).padding(24.dp)
+        )
+        SnackbarHost(
+            hostState = snackbarHostState,
+            modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 24.dp)
         )
         CommentsSidePanel(
             visible = showComments,

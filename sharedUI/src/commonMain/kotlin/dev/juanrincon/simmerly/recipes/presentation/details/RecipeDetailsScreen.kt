@@ -88,12 +88,23 @@ private fun Content(
     modifier: Modifier = Modifier
 ) {
     state.addToList?.let { sheet ->
-        AddToListSheet(
-            sheet = sheet,
-            recipeTitle = state.recipe.title.asString(),
-            ingredients = state.recipe.ingredients,
-            onEvent = onEvent,
-        )
+        // Desktop gets the single-step dialog from the Simmerly Desktop design; narrower windows
+        // keep the phone's three-step sheet.
+        if (isTwoPaneWidth()) {
+            AddToListDialog(
+                sheet = sheet,
+                recipeTitle = state.recipe.title.asString(),
+                ingredients = state.recipe.ingredients,
+                onEvent = onEvent,
+            )
+        } else {
+            AddToListSheet(
+                sheet = sheet,
+                recipeTitle = state.recipe.title.asString(),
+                ingredients = state.recipe.ingredients,
+                onEvent = onEvent,
+            )
+        }
     }
 
     if (state.showSettings) {
@@ -122,7 +133,8 @@ private fun Content(
                             state = state,
                             onEvent = onEvent,
                             onStartCooking = onStartCooking,
-                            modifier = modifier
+                            modifier = modifier,
+                            snackbarHostState = snackbarHostState,
                         )
                     } else {
                         CompactRecipeDetails(

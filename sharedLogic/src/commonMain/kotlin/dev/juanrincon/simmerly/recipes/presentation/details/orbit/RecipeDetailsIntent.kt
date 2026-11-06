@@ -16,6 +16,10 @@ sealed interface RecipeDetailsIntent {
     data object AddToListBack : RecipeDetailsIntent
     data class AddToListFilterChanged(val filter: ListFilter) : RecipeDetailsIntent
     data class AddToListListChosen(val listId: String) : RecipeDetailsIntent
+    /** Desktop dialog: pick an existing list without leaving the single-step dialog. */
+    data class AddToListSelectExisting(val listId: String) : RecipeDetailsIntent
+    /** Desktop dialog: pick "New list"; the name is entered in the same dialog. */
+    data object AddToListSelectNew : RecipeDetailsIntent
     data object AddToListNewListClicked : RecipeDetailsIntent
     data class AddToListNameChanged(val name: String) : RecipeDetailsIntent
     data object AddToListNameConfirmed : RecipeDetailsIntent

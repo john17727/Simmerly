@@ -175,6 +175,17 @@ class RecipeDetailsViewModel(
                     }
                 }
             }
+            is RecipeDetailsIntent.AddToListSelectExisting -> intent {
+                val list = rawLists.firstOrNull { it.id == event.listId } ?: return@intent
+                reduce {
+                    state.updateSheet {
+                        copy(target = AddToListTarget.Existing(list.id, list.name), creatingNew = false)
+                    }
+                }
+            }
+            RecipeDetailsIntent.AddToListSelectNew -> intent {
+                reduce { state.updateSheet { copy(target = null, creatingNew = true) } }
+            }
             RecipeDetailsIntent.AddToListNewListClicked -> intent {
                 reduce { state.updateSheet { copy(step = AddToListStep.NewListName) } }
             }
@@ -267,7 +278,10 @@ class RecipeDetailsViewModel(
 
     private fun confirmAddToList() = intent {
         val sheet = state.addToList ?: return@intent
-        val target = sheet.target ?: return@intent
+        val target = when {
+            sheet.creatingNew -> sheet.newListName.trim().takeIf { it.isNotEmpty() }?.let { AddToListTarget.New(it) }
+            else -> sheet.target
+        } ?: return@intent
         if (sheet.isSubmitting || sheet.selected.isEmpty()) return@intent
         reduce { state.updateSheet { copy(isSubmitting = true) } }
 
@@ -306,6 +320,7 @@ class RecipeDetailsViewModel(
                         copy(
                             isSubmitting = false,
                             target = AddToListTarget.Existing(listId, target.name),
+                            creatingNew = false,
                             step = AddToListStep.PickIngredients,
                         )
                     }
