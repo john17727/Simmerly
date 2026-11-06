@@ -26,7 +26,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
-import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -37,38 +36,21 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import coil3.compose.LocalPlatformContext
-import coil3.compose.SubcomposeAsyncImage
-import coil3.request.ImageRequest
 import dev.juanrincon.simmerly.recipes.presentation.comments.models.CommentUi
 import dev.juanrincon.simmerly.recipes.presentation.comments.orbit.RecipeCommentsIntent
 import dev.juanrincon.simmerly.recipes.presentation.comments.orbit.RecipeCommentsState
+import dev.juanrincon.simmerly.core.presentation.navigation.isMediumWidthOrWider
 import dev.juanrincon.simmerly.theme.SimmerlyTheme
 import org.orbitmvi.orbit.compose.collectAsState
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
 
-@Composable
-fun RecipeCommentsScreen(
-    recipeId: String,
-    viewModel: RecipeCommentsViewModel = koinViewModel { parametersOf(recipeId) },
-    modifier: Modifier = Modifier
-) {
-    val state by viewModel.collectAsState()
-    Content(
-        state = state,
-        onEvent = viewModel::onEvent,
-        modifier = modifier
-    )
-}
-
 /**
- * Desktop comments sheet from the "Recipe detail, comments open" design: a tinted side sheet with
+ * Comments sheet from the "Recipe detail, comments open" design: a tinted side sheet with
  * a serif title and count, a close button, top-aligned comments with initial avatars, and a
- * composer pinned under a rule. Shown in the list-detail scene's extra pane.
+ * composer pinned under a rule. Shown in the list-detail scene's extra pane at every width.
  */
 @Composable
 fun RecipeCommentsPanel(
@@ -96,7 +78,8 @@ private fun PanelContent(
     val scheme = MaterialTheme.colorScheme
     // Same tint as the detail cards (the design's #f9f9fa), with a rule down the left edge.
     Row(modifier = modifier.background(scheme.surfaceContainerLow)) {
-        VerticalDivider(color = scheme.outlineVariant)
+        // The edge rule only means something when the sheet sits beside the recipe.
+        if (isMediumWidthOrWider()) VerticalDivider(color = scheme.outlineVariant)
         PanelBody(state, onEvent, onClose, modifier = Modifier.weight(1f).fillMaxHeight())
     }
 }
@@ -207,83 +190,11 @@ private fun PanelComment(comment: CommentUi, modifier: Modifier = Modifier) {
     }
 }
 
-@Composable
-private fun Content(
-    state: RecipeCommentsState,
-    onEvent: (RecipeCommentsIntent) -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Column(modifier = modifier.padding(16.dp)) {
-        LazyColumn(
-            modifier = Modifier.weight(1f),
-            contentPadding = PaddingValues(vertical = 16.dp),
-            verticalArrangement = Arrangement.Bottom
-        ) {
-            items(state.comments, key = { it.id }) { comment ->
-                Comment(comment, modifier = Modifier.fillParentMaxWidth().animateItem())
-            }
-        }
-        Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-            OutlinedTextField(
-                value = state.commentText,
-                onValueChange = { onEvent(RecipeCommentsIntent.OnCommentTextChanged(it)) },
-                placeholder = { Text(text = "Join the conversation") },
-                modifier = Modifier.weight(1f)
-            )
-            IconButton(onClick = { onEvent(RecipeCommentsIntent.OnSendCommentClicked) }) {
-                Icon(Icons.AutoMirrored.Default.Send, contentDescription = null)
-            }
-        }
-    }
-}
-
-@Composable
-private fun Comment(comment: CommentUi, modifier: Modifier = Modifier) {
-    Row(
-        modifier = modifier.padding(vertical = 12.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        SubcomposeAsyncImage(
-            model = ImageRequest.Builder(LocalPlatformContext.current)
-                .data(comment.image)
-                .build(),
-            contentDescription = null,
-            error = {
-                Icon(
-                    imageVector = Icons.Default.AccountCircle,
-                    contentDescription = null,
-                    modifier = Modifier.matchParentSize()
-                )
-            },
-            contentScale = ContentScale.Crop,
-            modifier = Modifier.size(24.dp).clip(MaterialTheme.shapes.medium)
-        )
-        Column(
-            modifier = Modifier.fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(4.dp)
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(text = comment.author, style = MaterialTheme.typography.bodyLarge)
-                Text(
-                    text = comment.date,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-            Text(text = comment.text, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        }
-    }
-}
-
 @Preview
 @Composable
 fun RecipeCommentsScreenPreview() {
     SimmerlyTheme {
-        Content(
+        PanelContent(
             state = RecipeCommentsState(
                 comments = listOf(
                     CommentUi(
@@ -313,6 +224,7 @@ fun RecipeCommentsScreenPreview() {
                 )
             ),
             onEvent = {},
+            onClose = {},
             modifier = Modifier.fillMaxSize()
         )
     }

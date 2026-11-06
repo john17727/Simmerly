@@ -334,6 +334,8 @@ internal fun CompactRecipeDetails(
     onStartCooking: (recipeId: String) -> Unit = {},
     /** Forces the phone layout on a wide window, for when a side sheet leaves little width. */
     phoneLayout: Boolean = false,
+    /** The comments extra pane is open beside the recipe: highlights the Comments action. */
+    commentsOpen: Boolean = false,
     sharedTransitionScope: SharedTransitionScope? = null,
     modifier: Modifier = Modifier,
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
@@ -344,7 +346,7 @@ internal fun CompactRecipeDetails(
     // swapping in the bottom bar's AppBarRow while the sheet animates open crashes in lookahead.
     val medium = wide && !phoneLayout
     val uriHandler = LocalUriHandler.current
-    val recipeActions = recipeActions(state, onEvent, onNavigateToComments, uriHandler::openUri)
+    val recipeActions = recipeActions(state, onEvent, onNavigateToComments, uriHandler::openUri, commentsOpen)
     Scaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         snackbarHost = { SnackbarHost(snackbarHostState) },
