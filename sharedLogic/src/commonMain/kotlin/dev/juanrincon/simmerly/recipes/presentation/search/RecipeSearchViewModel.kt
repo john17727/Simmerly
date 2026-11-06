@@ -37,6 +37,9 @@ class RecipeSearchViewModel(
                     repository.recordSearchQuery(event.query)
                 }
             }
+            is RecipeSearchIntent.OnFavoriteToggled -> intent {
+                repository.setFavorite(event.recipeId, event.favorite)
+            }
             is RecipeSearchIntent.OnRecipeViewed -> intent {
                 repository.recordRecipeView(event.recipeId)
             }

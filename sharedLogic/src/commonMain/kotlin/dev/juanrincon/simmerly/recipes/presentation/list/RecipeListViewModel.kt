@@ -31,6 +31,8 @@ class RecipeListViewModel(
     val stateFlow: StateFlow<RecipeListState> get() = container.stateFlow
     val sideEffectFlow: Flow<RecipeListSideEffect> get() = container.sideEffectFlow
 
+    // The repository caches the loaded pages (so they outlive this ViewModel) and merges in the
+    // user's favorites and ratings; this shares that one merged stream with the UI.
     val recipes: Flow<PagingData<RecipeSummary>> = repository.recipeList()
         .cachedIn(viewModelScope)
 
@@ -71,8 +73,11 @@ class RecipeListViewModel(
 
     fun onEvent(event: RecipeListIntent) {
         when (event) {
-            is RecipeListIntent.OnRecipeSelected -> intent {
-                reduce { state.copy(selectedRecipeId = event.recipeId) }
+            is RecipeListIntent.OnFavoriteToggled -> intent {
+                repository.setFavorite(event.recipeId, event.favorite)
+            }
+            is RecipeListIntent.OnRatingChanged -> intent {
+                repository.setRating(event.recipeId, event.rating)
             }
             is RecipeListIntent.OnSearchQueryChanged -> intent {
                 reduce { state.copy(searchQuery = event.query) }

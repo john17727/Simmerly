@@ -97,6 +97,15 @@ class FakeRecipeRepository : RecipeRepository {
         return setRatingResult
     }
 
+    // --- setFavorite ---
+    var setFavoriteResult: Either<RecipesError, Unit> = Unit.right()
+    var lastSetFavoriteCall: Pair<String, Boolean>? = null
+
+    override suspend fun setFavorite(recipeId: String, favorite: Boolean): Either<RecipesError, Unit> {
+        lastSetFavoriteCall = recipeId to favorite
+        return setFavoriteResult
+    }
+
     // --- recordRecipeMade ---
     var recordRecipeMadeResult: Either<RecipesError, Unit> = Unit.right()
     var lastRecordRecipeMadeCall: Triple<String, Instant, String?>? = null

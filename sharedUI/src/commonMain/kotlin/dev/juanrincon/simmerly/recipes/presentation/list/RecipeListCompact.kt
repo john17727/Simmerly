@@ -36,6 +36,7 @@ internal fun CompactRecipeList(
     lazyPagingItems: LazyPagingItems<RecipeSummary>,
     onSearchClicked: () -> Unit,
     onRecipeSelected: (String) -> Unit,
+    onFavoriteToggled: (recipeId: String, favorite: Boolean) -> Unit,
     lazyGridState: LazyGridState,
     modifier: Modifier = Modifier,
     sharedTransitionScope: SharedTransitionScope? = null,
@@ -59,6 +60,7 @@ internal fun CompactRecipeList(
         RecipeList(
             lazyPagingItems = lazyPagingItems,
             onRecipeSelected = onRecipeSelected,
+            onFavoriteToggled = onFavoriteToggled,
             sharedTransitionScope = sharedTransitionScope,
             lazyGridState = lazyGridState,
             modifier = modifier.padding(paddingValues)
@@ -70,6 +72,7 @@ internal fun CompactRecipeList(
 private fun RecipeList(
     lazyPagingItems: LazyPagingItems<RecipeSummary>,
     onRecipeSelected: (String) -> Unit,
+    onFavoriteToggled: (recipeId: String, favorite: Boolean) -> Unit,
     lazyGridState: LazyGridState,
     modifier: Modifier = Modifier,
     sharedTransitionScope: SharedTransitionScope? = null,
@@ -95,6 +98,7 @@ private fun RecipeList(
                 RecipeCard(
                     item,
                     onClick = { onRecipeSelected(item.id) },
+                    onFavoriteClick = { onFavoriteToggled(item.id, it) },
                     sharedTransitionScope = sharedTransitionScope,
                     modifier = Modifier.fillMaxWidth().animateItem()
                 )

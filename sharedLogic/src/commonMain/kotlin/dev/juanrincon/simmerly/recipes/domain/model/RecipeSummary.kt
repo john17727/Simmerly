@@ -5,6 +5,7 @@ data class RecipeSummary(
     val name: String,
     val image: String,
     val tags: List<Tag>,
+    val categories: List<Category> = emptyList(),
     val rating: Double?,
     val totalTime: String?,
     val prepTime: String?,

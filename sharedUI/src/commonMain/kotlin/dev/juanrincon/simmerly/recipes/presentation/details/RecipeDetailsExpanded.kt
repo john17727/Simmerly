@@ -66,8 +66,8 @@ private val EXPANDED_HORIZONTAL_PADDING = 28.dp
 /** Keeps the single-column content readable on very wide panes. */
 private val EXPANDED_CONTENT_MAX_WIDTH = 1040.dp
 
-/** The desktop pane is wide, so show more actions before overflowing (counts the overflow button). */
-private const val EXPANDED_TOP_BAR_MAX_ITEMS = 10
+/** Six action icons (favorite, shopping list, comments, edit, settings, timeline) plus the overflow button, which maxItemCount counts. */
+private const val EXPANDED_TOP_BAR_MAX_ITEMS = 7
 
 private val COMMENTS_PANEL_WIDTH = 440.dp
 

@@ -6,9 +6,11 @@ import androidx.paging.PagingState
 import androidx.paging.RemoteMediator
 import dev.juanrincon.simmerly.recipes.data.local.metadata.RecipeRemoteKey
 import dev.juanrincon.simmerly.recipes.data.local.metadata.RecipeRemoteKeyDao
+import dev.juanrincon.simmerly.recipes.data.local.recipe.CategoryDao
 import dev.juanrincon.simmerly.recipes.data.local.recipe.RecipeDao
 import dev.juanrincon.simmerly.recipes.data.local.recipe.RecipeTagDao
 import dev.juanrincon.simmerly.recipes.data.local.recipe.TagDao
+import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.junction.RecipeCategoryCrossRef
 import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.junction.RecipeTagCrossRef
 import dev.juanrincon.simmerly.recipes.data.mappers.toEntity
 import dev.juanrincon.simmerly.recipes.data.remote.RecipeNetworkClient
@@ -23,6 +25,7 @@ class RecipeRemoteMediator(
     private val remoteKeyDao: RecipeRemoteKeyDao,
     private val tagsDao: TagDao,
     private val recipeTagDao: RecipeTagDao,
+    private val categoryDao: CategoryDao,
 ) : RemoteMediator<Int, RecipeSummary>() {
 
     override suspend fun load(
@@ -55,6 +58,10 @@ class RecipeRemoteMediator(
             tagsDao.upsertAll(response.items.flatMap { recipe -> recipe.tags.map { it.toEntity() } })
             recipeTagDao.insertAll(response.items.flatMap { recipe ->
                 recipe.tags.map { RecipeTagCrossRef(recipeId = recipe.id, tagId = it.id) }
+            })
+            categoryDao.upsertAll(response.items.flatMap { recipe -> recipe.recipeCategory.map { it.toEntity() } })
+            categoryDao.insertCrossRefs(response.items.flatMap { recipe ->
+                recipe.recipeCategory.map { RecipeCategoryCrossRef(recipeId = recipe.id, categoryId = it.id) }
             })
             remoteKeyDao.upsert(
                 RecipeRemoteKey(

@@ -3,8 +3,10 @@ package dev.juanrincon.simmerly.recipes.data.local.recipe.model
 import androidx.room3.Embedded
 import androidx.room3.Junction
 import androidx.room3.Relation
+import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.CategoryEntity
 import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.RecipeEntity
 import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.TagEntity
+import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.junction.RecipeCategoryCrossRef
 import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.junction.RecipeTagCrossRef
 
 data class ListRecipeWithTags(
@@ -21,4 +23,15 @@ data class ListRecipeWithTags(
         )
     )
     val tags: List<TagEntity>,
+
+    @Relation(
+        parentColumns = ["id"],
+        entityColumns = ["id"],
+        associateBy = Junction(
+            RecipeCategoryCrossRef::class,
+            parentColumns = ["recipe_id"],
+            entityColumns = ["category_id"]
+        )
+    )
+    val categories: List<CategoryEntity> = emptyList(),
 )

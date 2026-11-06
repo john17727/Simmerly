@@ -19,23 +19,25 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.relocation.BringIntoViewRequester
-import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.rounded.Star
-import androidx.compose.material.icons.rounded.Timer
+import androidx.compose.material.icons.outlined.FavoriteBorder
+import androidx.compose.material.icons.outlined.Timer
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.hoverable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -52,25 +54,26 @@ import dev.juanrincon.simmerly.core.presentation.navigation.isTwoPaneWidth
 import dev.juanrincon.simmerly.core.presentation.shimmer
 import dev.juanrincon.simmerly.recipes.domain.model.RecipeSummary
 import dev.juanrincon.simmerly.recipes.presentation.list.orbit.RecipeListIntent
-import dev.juanrincon.simmerly.recipes.presentation.list.orbit.RecipeListState
-import dev.juanrincon.simmerly.recipes.presentation.shared.RecipeMetaRow
+import dev.juanrincon.simmerly.recipes.presentation.shared.CategoriesAndTags
+import dev.juanrincon.simmerly.recipes.presentation.shared.RatingInput
+import dev.juanrincon.simmerly.recipes.presentation.shared.RatingStars
+import dev.juanrincon.simmerly.recipes.presentation.shared.RecipeTimes
 import dev.juanrincon.simmerly.recipes.presentation.shared.TagRow
 import org.koin.compose.viewmodel.koinViewModel
-import org.orbitmvi.orbit.compose.collectAsState
 
 @Composable
 fun RecipeListScreen(
+    selectedRecipeId: String,
     onRecipeSelected: (recipeId: String) -> Unit,
     onSearchClicked: () -> Unit,
     sharedTransitionScope: SharedTransitionScope? = null,
     viewModel: RecipeListViewModel = koinViewModel(),
     modifier: Modifier = Modifier
 ) {
-    val state by viewModel.collectAsState()
     val lazyPagingItems = viewModel.recipes.collectAsLazyPagingItems()
     Content(
-        state = state,
         lazyPagingItems = lazyPagingItems,
+        selectedRecipeId = selectedRecipeId,
         onEvent = viewModel::onEvent,
         onRecipeSelected = onRecipeSelected,
         onSearchClicked = onSearchClicked,
@@ -82,8 +85,8 @@ fun RecipeListScreen(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun Content(
-    state: RecipeListState,
     lazyPagingItems: LazyPagingItems<RecipeSummary>,
+    selectedRecipeId: String,
     onEvent: (RecipeListIntent) -> Unit,
     onRecipeSelected: (recipeId: String) -> Unit,
     onSearchClicked: () -> Unit,
@@ -96,15 +99,17 @@ private fun Content(
     if (isTwoPaneWidth()) {
         SelectableList(
             lazyPagingItems = lazyPagingItems,
-            selected = state.selectedRecipeId,
+            onFavoriteToggled = { id, favorite -> onEvent(RecipeListIntent.OnFavoriteToggled(id, favorite)) },
+            onRatingChanged = { id, rating -> onEvent(RecipeListIntent.OnRatingChanged(id, rating)) },
+            selected = selectedRecipeId,
             onRecipeSelected = onRecipeSelected,
-            onSelected = { onEvent(RecipeListIntent.OnRecipeSelected(it)) },
             state = lazyListState,
             modifier = modifier
         )
     } else {
         CompactRecipeList(
             lazyPagingItems = lazyPagingItems,
+            onFavoriteToggled = { id, favorite -> onEvent(RecipeListIntent.OnFavoriteToggled(id, favorite)) },
             onSearchClicked = onSearchClicked,
             onRecipeSelected = onRecipeSelected,
             sharedTransitionScope = sharedTransitionScope,
@@ -122,14 +127,12 @@ fun RecipeCard(
     modifier: Modifier = Modifier,
     selected: Boolean = false,
     sharedTransitionScope: SharedTransitionScope? = null,
+    /** Called with the new favorite state when the heart is tapped. `null` makes it display-only. */
+    onFavoriteClick: ((Boolean) -> Unit)? = null,
+    /** Called with a whole-star rating (or `null` to clear) from the expanded card's stars. The
+     * expanded card only exists in the desktop list pane. `null` makes the stars display-only. */
+    onRatingChange: ((Double?) -> Unit)? = null,
 ) {
-    val bringIntoViewRequester = remember { BringIntoViewRequester() }
-    LaunchedEffect(selected) {
-        if (selected) {
-            withFrameNanos { }
-            bringIntoViewRequester.bringIntoView()
-        }
-    }
     AnimatedContent(
         selected,
         transitionSpec = {
@@ -140,8 +143,7 @@ fun RecipeCard(
         if (isSelected) {
             Column(
                 verticalArrangement = Arrangement.spacedBy(8.dp),
-                modifier = Modifier.padding(vertical = 32.dp)
-                    .bringIntoViewRequester(bringIntoViewRequester),
+                modifier = Modifier.padding(vertical = 32.dp),
             ) {
                 AsyncImage(
                     model = ImageRequest.Builder(LocalPlatformContext.current)
@@ -161,13 +163,15 @@ fun RecipeCard(
                     overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.padding(horizontal = 8.dp)
                 )
-                RecipeMetaRow(
-                    recipe.rating,
-                    recipe.totalTime,
-                    recipe.prepTime,
-                    recipe.performTime,
-                    modifier = Modifier.padding(horizontal = 8.dp)
-                )
+                if (onRatingChange != null) {
+                    RatingInput(
+                        recipe.rating,
+                        onRatingChange = onRatingChange,
+                        modifier = Modifier.padding(horizontal = 2.dp)
+                    )
+                } else {
+                    RatingStars(recipe.rating, modifier = Modifier.padding(horizontal = 8.dp))
+                }
                 if (recipe.description.isNotBlank()) {
                     Text(
                         recipe.description,
@@ -175,11 +179,28 @@ fun RecipeCard(
                         modifier = Modifier.padding(horizontal = 8.dp)
                     )
                 }
+                RecipeTimes(
+                    recipe.totalTime,
+                    recipe.prepTime,
+                    recipe.performTime,
+                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 8.dp)
+                )
+                CategoriesAndTags(recipe.categories, recipe.tags)
             }
         } else {
+            val interactionSource = remember { MutableInteractionSource() }
+            val hovered by interactionSource.collectIsHoveredAsState()
+            Box(modifier = modifier) {
             OutlinedCard(
-                modifier = modifier,
+                modifier = Modifier.fillMaxWidth().hoverable(interactionSource),
                 onClick = onClick,
+                interactionSource = interactionSource,
+                shape = MaterialTheme.shapes.medium,
+                colors = CardDefaults.outlinedCardColors(
+                    containerColor = if (hovered) MaterialTheme.colorScheme.surfaceContainer
+                    else MaterialTheme.colorScheme.surfaceContainerLow
+                ),
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
             ) {
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(16.dp),
@@ -206,7 +227,8 @@ fun RecipeCard(
                     )
                     Column(
                         verticalArrangement = Arrangement.spacedBy(8.dp),
-                        modifier = Modifier.fillMaxWidth()
+                        // Leaves room for the favorite indicator in the top-right corner.
+                        modifier = Modifier.fillMaxWidth().padding(end = 32.dp)
                     ) {
                         Text(
                             recipe.name,
@@ -215,13 +237,43 @@ fun RecipeCard(
                         RecipeLimitedMetaRow(
                             recipe.rating,
                             recipe.totalTime,
-                            recipe.isFavorite,
                         )
                         TagRow(recipe.tags)
                     }
                 }
             }
+            FavoriteHeart(
+                favorite = recipe.isFavorite,
+                onClick = onFavoriteClick?.let { click -> { click(!recipe.isFavorite) } },
+                modifier = Modifier.align(Alignment.TopEnd).padding(top = 4.dp, end = 4.dp)
+            )
+            }
         }
+    }
+}
+
+/** The heart in a card's top-right corner: outlined, or filled coral for a favorite. */
+@Composable
+private fun FavoriteHeart(
+    favorite: Boolean,
+    onClick: (() -> Unit)?,
+    modifier: Modifier = Modifier
+) {
+    val icon: @Composable () -> Unit = {
+        Icon(
+            if (favorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
+            contentDescription = if (onClick != null) {
+                if (favorite) "Remove from favorites" else "Add to favorites"
+            } else if (favorite) "Favorite" else null,
+            tint = if (favorite) MaterialTheme.colorScheme.secondary
+            else MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.size(22.dp)
+        )
+    }
+    if (onClick != null) {
+        IconButton(onClick = onClick, modifier = modifier.size(40.dp), content = icon)
+    } else {
+        Box(modifier = modifier.size(40.dp), contentAlignment = Alignment.Center) { icon() }
     }
 }
 
@@ -232,7 +284,10 @@ fun RecipeCardSkeleton(modifier: Modifier = Modifier) {
         MaterialTheme.colorScheme.surfaceContainerHighest,
         MaterialTheme.colorScheme.surfaceContainer,
     )
-    Card(modifier = modifier) {
+    Card(
+        modifier = modifier,
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow)
+    ) {
         Row(
             horizontalArrangement = Arrangement.spacedBy(16.dp),
             verticalAlignment = Alignment.CenterVertically,
@@ -271,7 +326,6 @@ fun RecipeCardSkeleton(modifier: Modifier = Modifier) {
 private fun RecipeLimitedMetaRow(
     rating: Double?,
     totalTime: String?,
-    isFavorite: Boolean = false,
     modifier: Modifier = Modifier
 ) {
     Row(
@@ -279,34 +333,14 @@ private fun RecipeLimitedMetaRow(
         verticalAlignment = Alignment.CenterVertically,
         modifier = modifier
     ) {
-        if (isFavorite) {
-            Icon(
-                Icons.Default.Favorite,
-                contentDescription = "Favorite",
-                tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(16.dp)
-            )
-        }
-        rating?.let {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                Icon(
-                    Icons.Rounded.Star,
-                    contentDescription = null,
-                    modifier = Modifier.size(16.dp)
-                )
-                Text(it.toString(), style = MaterialTheme.typography.bodySmall)
-            }
-        }
+        RatingStars(rating)
         totalTime?.let {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 Icon(
-                    Icons.Rounded.Timer,
+                    Icons.Outlined.Timer,
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.size(16.dp)
