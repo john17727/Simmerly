@@ -37,7 +37,9 @@ import androidx.savedstate.serialization.SavedStateConfiguration
 import dev.juanrincon.simmerly.core.presentation.navigation.AppNavRequest
 import dev.juanrincon.simmerly.core.presentation.navigation.BottomSheetSceneStrategy
 import dev.juanrincon.simmerly.core.presentation.navigation.rememberTwoPaneDirective
+import dev.juanrincon.simmerly.recipes.presentation.comments.RecipeCommentsPanel
 import dev.juanrincon.simmerly.recipes.presentation.comments.RecipeCommentsScreen
+import dev.juanrincon.simmerly.core.presentation.navigation.isTwoPaneWidth
 import dev.juanrincon.simmerly.recipes.presentation.cookmode.CookModeScreen
 import dev.juanrincon.simmerly.recipes.presentation.details.RecipeDetailsScreen
 import dev.juanrincon.simmerly.recipes.presentation.list.RecipeListScreen
@@ -104,7 +106,7 @@ fun RecipesContent(
                         sharedTransitionScope = this@SharedTransitionLayout,
                         onSearchClicked = { backStack.add(RecipeDestinations.Search) },
                         onRecipeSelected = { recipeId ->
-                            backStack.removeAll { it is RecipeDestinations.Detail }
+                            backStack.removeAll { it is RecipeDestinations.Detail || it is RecipeDestinations.Comments }
                             backStack.add(RecipeDestinations.Detail(recipeId))
                         }
                     )
@@ -112,7 +114,7 @@ fun RecipesContent(
                 entry<RecipeDestinations.Search> {
                     RecipeSearchScreen(
                         onRecipeSelected = { recipeId ->
-                            backStack.removeAll { it is RecipeDestinations.Detail }
+                            backStack.removeAll { it is RecipeDestinations.Detail || it is RecipeDestinations.Comments }
                             backStack.add(RecipeDestinations.Detail(recipeId))
                         },
                         onNavigateBack = { backStack.removeLastOrNull() },
@@ -127,7 +129,15 @@ fun RecipesContent(
                         recipeId = key.recipeId,
                         sharedTransitionScope = this@SharedTransitionLayout,
                         onNavigateBack = { backStack.removeLastOrNull() },
-                        onNavigateToComments = { backStack.add(RecipeDestinations.Comments(it)) },
+                        commentsOpen = backStack.any { it is RecipeDestinations.Comments },
+                        onNavigateToComments = { id ->
+                            // The header's Comments button toggles the extra pane on desktop.
+                            if (backStack.lastOrNull() is RecipeDestinations.Comments) {
+                                backStack.removeLastOrNull()
+                            } else {
+                                backStack.add(RecipeDestinations.Comments(id))
+                            }
+                        },
                         onStartCooking = { backStack.add(RecipeDestinations.CookMode(it)) },
                         onNavigateToShoppingList = { onNavigate(AppNavRequest.OpenShoppingList(it)) },
                         modifier = Modifier.fillMaxSize()
@@ -145,6 +155,14 @@ fun RecipesContent(
                 entry<RecipeDestinations.Comments>(
                     metadata = ListDetailSceneStrategy.extraPane()
                 ) { key ->
+                    if (isTwoPaneWidth()) {
+                        RecipeCommentsPanel(
+                            recipeId = key.recipeId,
+                            onClose = { backStack.removeLastOrNull() },
+                            modifier = Modifier.fillMaxSize()
+                        )
+                        return@entry
+                    }
                     Scaffold(
                         topBar = {
                             TopAppBar(

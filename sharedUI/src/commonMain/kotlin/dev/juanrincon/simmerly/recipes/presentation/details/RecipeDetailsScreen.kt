@@ -40,6 +40,7 @@ fun RecipeDetailsScreen(
     recipeId: String,
     onNavigateBack: () -> Unit = {},
     onNavigateToComments: (recipeId: String) -> Unit,
+    commentsOpen: Boolean = false,
     onStartCooking: (recipeId: String) -> Unit = {},
     onNavigateToShoppingList: (listId: String) -> Unit = {},
     sharedTransitionScope: SharedTransitionScope? = null,
@@ -68,6 +69,7 @@ fun RecipeDetailsScreen(
         onEvent = viewModel::onEvent,
         onNavigateBack = onNavigateBack,
         onNavigateToComments = onNavigateToComments,
+        commentsOpen = commentsOpen,
         onStartCooking = onStartCooking,
         sharedTransitionScope = sharedTransitionScope,
         snackbarHostState = snackbarHostState,
@@ -82,6 +84,7 @@ private fun Content(
     onEvent: (RecipeDetailsIntent) -> Unit,
     onNavigateBack: () -> Unit,
     onNavigateToComments: (recipeId: String) -> Unit,
+    commentsOpen: Boolean,
     onStartCooking: (recipeId: String) -> Unit,
     snackbarHostState: SnackbarHostState,
     sharedTransitionScope: SharedTransitionScope? = null,
@@ -127,11 +130,11 @@ private fun Content(
             RecipeMode.READ_ONLY -> {
                 AnimatedContent(isExpanded) { expanded ->
                     if (expanded) {
-                        // onNavigateToComments stays compact-only: the expanded pane shows
-                        // comments as one of its own tabs rather than as a separate destination.
                         ExpandedView(
                             state = state,
                             onEvent = onEvent,
+                            onNavigateToComments = onNavigateToComments,
+                            commentsOpen = commentsOpen,
                             onStartCooking = onStartCooking,
                             modifier = modifier,
                             snackbarHostState = snackbarHostState,

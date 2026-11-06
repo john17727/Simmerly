@@ -137,6 +137,7 @@ internal fun recipeActions(
     onEvent: (RecipeDetailsIntent) -> Unit,
     onNavigateToComments: (recipeId: String) -> Unit,
     onOpenOriginal: (url: String) -> Unit,
+    commentsOpen: Boolean = false,
 ): AppBarRowScope.() -> Unit = {
     val link = state.recipe.link
     actionItem(
@@ -158,6 +159,7 @@ internal fun recipeActions(
         icon = Icons.AutoMirrored.Outlined.Comment,
         label = "Comments",
         enabled = !state.loading && !state.recipe.settings.disableComments,
+        active = commentsOpen,
     )
     actionItem(
         onClick = { /* TODO: edit action */ },
@@ -242,6 +244,7 @@ private fun AppBarRowScope.actionItem(
     enabled: Boolean = true,
     accentIcon: Boolean = false,
     highlighted: Boolean = false,
+    active: Boolean = false,
     destructive: Boolean = false,
     dividerBefore: Boolean = false,
 ) {
@@ -252,7 +255,18 @@ private fun AppBarRowScope.actionItem(
                 tooltip = { PlainTooltip { Text(label) } },
                 state = rememberTooltipState(),
             ) {
-                IconButton(onClick = onClick, enabled = enabled) {
+                IconButton(
+                    onClick = onClick,
+                    enabled = enabled,
+                    colors = if (active) {
+                        IconButtonDefaults.iconButtonColors(
+                            containerColor = MaterialTheme.colorScheme.primaryContainer,
+                            contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                    } else {
+                        IconButtonDefaults.iconButtonColors()
+                    }
+                ) {
                     Icon(
                         icon,
                         contentDescription = label,
@@ -1158,6 +1172,8 @@ private fun ExpandedPreview() {
                 mobileTabs = previewMediumTabs
             ),
             onEvent = {},
+            onNavigateToComments = {},
+            commentsOpen = false,
             onStartCooking = {}
         )
     }
@@ -1174,6 +1190,8 @@ private fun ExpandedDarkPreview() {
                 mobileTabs = previewMediumTabs
             ),
             onEvent = {},
+            onNavigateToComments = {},
+            commentsOpen = false,
             onStartCooking = {}
         )
     }
