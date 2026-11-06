@@ -178,6 +178,9 @@ fun RecipeSearchScreen(
                             viewModel.onEvent(RecipeSearchIntent.OnRecipeViewed(recipe.id))
                             onRecipeSelected(recipe.id)
                         },
+                        onFavoriteClick = {
+                            viewModel.onEvent(RecipeSearchIntent.OnFavoriteToggled(recipe.id, it))
+                        },
                         sharedTransitionScope = sharedTransitionScope,
                         modifier = Modifier.fillMaxWidth()
                     )
@@ -193,6 +196,9 @@ fun RecipeSearchScreen(
                         onClick = {
                             viewModel.onEvent(RecipeSearchIntent.OnRecipeViewed(recipe.id))
                             onRecipeSelected(recipe.id)
+                        },
+                        onFavoriteClick = {
+                            viewModel.onEvent(RecipeSearchIntent.OnFavoriteToggled(recipe.id, it))
                         },
                         sharedTransitionScope = sharedTransitionScope,
                         modifier = Modifier.fillMaxWidth().animateItem()

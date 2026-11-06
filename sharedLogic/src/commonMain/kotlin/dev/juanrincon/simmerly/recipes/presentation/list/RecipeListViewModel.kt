@@ -11,7 +11,9 @@ import dev.juanrincon.simmerly.recipes.presentation.list.orbit.RecipeListSideEff
 import dev.juanrincon.simmerly.recipes.presentation.list.orbit.RecipeListState
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -37,6 +39,10 @@ class RecipeListViewModel(
     // Swift-friendly paging facade — PagingData/collectAsLazyPagingItems are Compose-only.
     private val _pagedRecipes = MutableStateFlow<List<RecipeSummary>>(emptyList())
     val pagedRecipes: StateFlow<List<RecipeSummary>> = _pagedRecipes.asStateFlow()
+
+    /** Overlaid on the paged items: the paging source doesn't re-read preferences on change. */
+    val favoriteIds: StateFlow<Set<String>> = repository.observeFavoriteIds()
+        .stateIn(viewModelScope, SharingStarted.Eagerly, emptySet())
 
     private val _isLoadingMore = MutableStateFlow(false)
     val isLoadingMore: StateFlow<Boolean> = _isLoadingMore.asStateFlow()
@@ -73,6 +79,9 @@ class RecipeListViewModel(
         when (event) {
             is RecipeListIntent.OnRecipeSelected -> intent {
                 reduce { state.copy(selectedRecipeId = event.recipeId) }
+            }
+            is RecipeListIntent.OnFavoriteToggled -> intent {
+                repository.setFavorite(event.recipeId, event.favorite)
             }
             is RecipeListIntent.OnSearchQueryChanged -> intent {
                 reduce { state.copy(searchQuery = event.query) }

@@ -39,6 +39,17 @@ interface RecipeRepository {
     suspend fun setRating(recipeId: String, rating: Double?): Either<RecipesError, Unit>
 
     /**
+     * Marks or unmarks the recipe as a favorite of the logged-in user. Applied locally first so
+     * the UI flips immediately, and rolled back if the server call fails. Reflected through
+     * [observeFavoriteIds], [observeAllRecipes] and [recipeDetails] via `user_recipe_preferences`.
+     */
+    suspend fun setFavorite(recipeId: String, favorite: Boolean): Either<RecipesError, Unit>
+
+    /** The ids of the logged-in user's favorite recipes. The paged [recipeList] doesn't re-read
+     * preferences on change, so the list overlays this on top of its items. */
+    fun observeFavoriteIds(): Flow<Set<String>>
+
+    /**
      * Records that the recipe was just cooked: updates its last-made timestamp and adds a
      * matching entry to its Mealie timeline, with [note] (if any) as the entry's message. These
      * are two Mealie API calls, but always fire together for the same reason — there is no case

@@ -271,6 +271,38 @@ class SimmerlyRecipeRepository(
         )
     }
 
+    override suspend fun setFavorite(
+        recipeId: String,
+        favorite: Boolean
+    ): Either<RecipesError, Unit> = either {
+        val slug = recipeDao.getSlug(recipeId) ?: raise(RecipesError.UpdateError)
+        val userId = userRepository.currentUserId().mapLeft { RecipesError.UpdateError }.bind()
+
+        val preferenceDao = database.userRecipePreferenceDao()
+        val previous = preferenceDao.get(recipeId)
+        preferenceDao.upsert(
+            UserRecipePreferenceEntity(
+                recipeId = recipeId,
+                rating = previous?.rating,
+                isFavorite = favorite
+            )
+        )
+
+        val result = if (favorite) networkClient.addFavorite(userId, slug)
+        else networkClient.removeFavorite(userId, slug)
+        result.onLeft {
+            preferenceDao.upsert(
+                previous ?: UserRecipePreferenceEntity(recipeId, rating = null, isFavorite = !favorite)
+            )
+        }
+        result.mapLeft { RecipesError.UpdateError }.bind()
+    }
+
+    override fun observeFavoriteIds(): Flow<Set<String>> =
+        database.userRecipePreferenceDao().observeAll()
+            .map { prefs -> prefs.filter { it.isFavorite }.mapTo(mutableSetOf()) { it.recipeId } }
+            .distinctUntilChanged()
+
     override suspend fun recordRecipeMade(
         recipeId: String,
         timestamp: Instant,

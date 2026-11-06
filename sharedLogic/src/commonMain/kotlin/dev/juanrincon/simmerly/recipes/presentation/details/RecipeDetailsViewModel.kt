@@ -61,6 +61,7 @@ class RecipeDetailsViewModel(
             RecipeDetailsIntent.RemoveServing -> updateServing(
                 container.stateFlow.value.recipe.servings - 1
             )
+            RecipeDetailsIntent.ToggleFavorite -> toggleFavorite()
             RecipeDetailsIntent.ShowSettings -> intent {
                 reduce { state.copy(showSettings = true) }
             }
@@ -113,6 +114,13 @@ class RecipeDetailsViewModel(
                     }
                 )
             }
+    }
+
+    private fun toggleFavorite() = intent {
+        val current = state.recipe
+        if (current == RecipeDetailUi.emptyRecipe) return@intent
+        // The repository flips the stored preference first, then recipeDetails re-emits it.
+        repository.setFavorite(recipeId, !current.favorite)
     }
 
     private fun updateServing(newServings: Double) = intent {

@@ -15,6 +15,7 @@ import dev.juanrincon.simmerly.recipes.data.remote.dto.outgoing.RecipePatchDto
 import dev.juanrincon.simmerly.recipes.data.remote.dto.outgoing.RecipeTimelineEventInDto
 import dev.juanrincon.simmerly.recipes.data.remote.dto.outgoing.UserRatingUpdateDto
 import io.ktor.client.HttpClient
+import io.ktor.client.request.delete
 import io.ktor.client.request.get
 import io.ktor.client.request.parameter
 import io.ktor.client.request.patch
@@ -75,6 +76,23 @@ class RecipeNetworkClient(private val client: HttpClient) {
         client.post("/api/users/$userId/ratings/$slug") {
             setBody(UserRatingUpdateDto(rating))
         }
+    }
+
+    /** `POST /api/users/{id}/favorites/{slug}`. The response body is unused, so it goes through the
+     * no-content path like [setRating]. */
+    suspend fun addFavorite(
+        userId: String,
+        slug: String
+    ): Either<DataError.NetworkError<Unit>, Unit> = arrowNetworkHandlerNoContent {
+        client.post("/api/users/$userId/favorites/$slug")
+    }
+
+    /** `DELETE /api/users/{id}/favorites/{slug}`. */
+    suspend fun removeFavorite(
+        userId: String,
+        slug: String
+    ): Either<DataError.NetworkError<Unit>, Unit> = arrowNetworkHandlerNoContent {
+        client.delete("/api/users/$userId/favorites/$slug")
     }
 
     /** Despite the spec declaring an empty response, this endpoint actually returns the full

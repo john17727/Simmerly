@@ -6,6 +6,7 @@ import dev.juanrincon.simmerly.shoppinglists.presentation.list.orbit.ListFilter
 sealed interface RecipeDetailsIntent {
     data object AddServing : RecipeDetailsIntent
     data object RemoveServing : RecipeDetailsIntent
+    data object ToggleFavorite : RecipeDetailsIntent
     data object ShowSettings : RecipeDetailsIntent
     data object DismissSettings : RecipeDetailsIntent
     data class UpdateSettings(val settings: Settings) : RecipeDetailsIntent

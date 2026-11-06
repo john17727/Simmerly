@@ -116,7 +116,7 @@ internal fun recipeActions(
 ): AppBarRowScope.() -> Unit = {
     toggleableItem(
         checked = state.recipe.favorite,
-        onCheckedChange = {},
+        onCheckedChange = { onEvent(RecipeDetailsIntent.ToggleFavorite) },
         icon = {
             Icon(
                 if (state.recipe.favorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,

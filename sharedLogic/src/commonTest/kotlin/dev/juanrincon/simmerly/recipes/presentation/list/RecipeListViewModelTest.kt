@@ -52,6 +52,22 @@ class RecipeListViewModelTest {
 
     // endregion
 
+    // region Favorites
+
+    @Test
+    fun onFavoriteToggledForwardsToRepository() = runTest(testDispatcher) {
+        viewModel.onEvent(RecipeListIntent.OnFavoriteToggled("recipe-7", true))
+        assertThat(repo.lastSetFavoriteCall).isEqualTo("recipe-7" to true)
+    }
+
+    @Test
+    fun favoriteIdsFollowsRepository() = runTest(testDispatcher) {
+        repo.favoriteIdsFlow.emit(setOf("a", "b"))
+        assertThat(viewModel.favoriteIds.value).isEqualTo(setOf("a", "b"))
+    }
+
+    // endregion
+
     // region OnRecipeSelected / OnSearchQueryChanged
 
     @Test

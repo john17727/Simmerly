@@ -33,11 +33,13 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.withFrameNanos
@@ -73,10 +75,12 @@ fun RecipeListScreen(
     modifier: Modifier = Modifier
 ) {
     val state by viewModel.collectAsState()
+    val favoriteIds by viewModel.favoriteIds.collectAsState()
     val lazyPagingItems = viewModel.recipes.collectAsLazyPagingItems()
     Content(
         state = state,
         lazyPagingItems = lazyPagingItems,
+        favoriteIds = favoriteIds,
         onEvent = viewModel::onEvent,
         onRecipeSelected = onRecipeSelected,
         onSearchClicked = onSearchClicked,
@@ -90,6 +94,7 @@ fun RecipeListScreen(
 private fun Content(
     state: RecipeListState,
     lazyPagingItems: LazyPagingItems<RecipeSummary>,
+    favoriteIds: Set<String>,
     onEvent: (RecipeListIntent) -> Unit,
     onRecipeSelected: (recipeId: String) -> Unit,
     onSearchClicked: () -> Unit,
@@ -102,6 +107,8 @@ private fun Content(
     if (isTwoPaneWidth()) {
         SelectableList(
             lazyPagingItems = lazyPagingItems,
+            favoriteIds = favoriteIds,
+            onFavoriteToggled = { id, favorite -> onEvent(RecipeListIntent.OnFavoriteToggled(id, favorite)) },
             selected = state.selectedRecipeId,
             onRecipeSelected = onRecipeSelected,
             onSelected = { onEvent(RecipeListIntent.OnRecipeSelected(it)) },
@@ -111,6 +118,8 @@ private fun Content(
     } else {
         CompactRecipeList(
             lazyPagingItems = lazyPagingItems,
+            favoriteIds = favoriteIds,
+            onFavoriteToggled = { id, favorite -> onEvent(RecipeListIntent.OnFavoriteToggled(id, favorite)) },
             onSearchClicked = onSearchClicked,
             onRecipeSelected = onRecipeSelected,
             sharedTransitionScope = sharedTransitionScope,
@@ -128,6 +137,8 @@ fun RecipeCard(
     modifier: Modifier = Modifier,
     selected: Boolean = false,
     sharedTransitionScope: SharedTransitionScope? = null,
+    /** Called with the new favorite state when the heart is tapped. `null` makes it display-only. */
+    onFavoriteClick: ((Boolean) -> Unit)? = null,
 ) {
     val bringIntoViewRequester = remember { BringIntoViewRequester() }
     LaunchedEffect(selected) {
@@ -237,15 +248,38 @@ fun RecipeCard(
                     }
                 }
             }
-            Icon(
-                if (recipe.isFavorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
-                contentDescription = if (recipe.isFavorite) "Favorite" else null,
-                tint = if (recipe.isFavorite) MaterialTheme.colorScheme.secondary
-                else MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.align(Alignment.TopEnd).padding(top = 12.dp, end = 12.dp).size(22.dp)
+            FavoriteHeart(
+                favorite = recipe.isFavorite,
+                onClick = onFavoriteClick?.let { click -> { click(!recipe.isFavorite) } },
+                modifier = Modifier.align(Alignment.TopEnd).padding(top = 4.dp, end = 4.dp)
             )
             }
         }
+    }
+}
+
+/** The heart in a card's top-right corner: outlined, or filled coral for a favorite. */
+@Composable
+private fun FavoriteHeart(
+    favorite: Boolean,
+    onClick: (() -> Unit)?,
+    modifier: Modifier = Modifier
+) {
+    val icon: @Composable () -> Unit = {
+        Icon(
+            if (favorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
+            contentDescription = if (onClick != null) {
+                if (favorite) "Remove from favorites" else "Add to favorites"
+            } else if (favorite) "Favorite" else null,
+            tint = if (favorite) MaterialTheme.colorScheme.secondary
+            else MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.size(22.dp)
+        )
+    }
+    if (onClick != null) {
+        IconButton(onClick = onClick, modifier = modifier.size(40.dp), content = icon)
+    } else {
+        Box(modifier = modifier.size(40.dp), contentAlignment = Alignment.Center) { icon() }
     }
 }
 
