@@ -214,4 +214,52 @@ class AddToListFlowTest {
             cancelAndIgnoreRemainingItems()
         }
     }
+
+    @Test
+    fun desktopDialogSelectingAnExistingListKeepsTheStep() = runTest(testDispatcher) {
+        shoppingRepo.lists.value = listOf(aShoppingList(id = "list-1", name = "Sunday brunch"))
+        val loaded = RecipeDetailsState(loading = false, recipe = aRecipeDetailUi(id = "test-recipe", ingredients = listOf(anIngredientUi())))
+        viewModel.testWithInternalState(this, initialState = loaded) {
+            viewModel.onEvent(RecipeDetailsIntent.OpenAddToList)
+            awaitStateMatching { it.addToList?.lists?.size == 1 }
+            viewModel.onEvent(RecipeDetailsIntent.AddToListSelectNew)
+            assertThat(awaitStateMatching { it.addToList?.creatingNew == true }.addToList!!.target).isEqualTo(null)
+            viewModel.onEvent(RecipeDetailsIntent.AddToListSelectExisting("list-1"))
+            val sheet = awaitStateMatching { it.addToList?.target != null }.addToList!!
+            assertThat(sheet.target).isEqualTo(AddToListTarget.Existing("list-1", "Sunday brunch"))
+            assertThat(sheet.creatingNew).isEqualTo(false)
+            assertThat(sheet.step).isEqualTo(AddToListStep.ChooseList)
+            cancelAndIgnoreRemainingItems()
+        }
+    }
+
+    @Test
+    fun desktopDialogCreatesTheNamedListOnConfirm() = runTest(testDispatcher) {
+        val state = RecipeDetailsState(
+            loading = false,
+            addToList = AddToListState(creatingNew = true, newListName = "  Weeknight dinners ", servings = 4.0, selected = setOf(0, 1)),
+        )
+        viewModel.testWithInternalState(this, initialState = state) {
+            loadRecipe()
+            viewModel.onEvent(RecipeDetailsIntent.AddToListConfirm)
+            val effect = awaitSideEffectSkippingStates() as RecipeDetailsSideEffect.ItemsAdded
+            assertThat(effect.listId).isEqualTo("new-list")
+            cancelAndIgnoreRemainingItems()
+        }
+        assertThat(shoppingRepo.createdNames).containsExactly("Weeknight dinners")
+    }
+
+    @Test
+    fun desktopDialogWithABlankNewListNameDoesNothing() = runTest(testDispatcher) {
+        val state = RecipeDetailsState(
+            loading = false,
+            addToList = AddToListState(creatingNew = true, newListName = "  ", servings = 4.0, selected = setOf(0, 1)),
+        )
+        viewModel.testWithInternalState(this, initialState = state) {
+            loadRecipe()
+            viewModel.onEvent(RecipeDetailsIntent.AddToListConfirm)
+            cancelAndIgnoreRemainingItems()
+        }
+        assertThat(shoppingRepo.createdNames).isEmpty()
+    }
 }

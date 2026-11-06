@@ -9,6 +9,8 @@ data class AddToListState(
     /** The lists passing [filter]; `null` until the first load. */
     val lists: List<AddToListRowUi>? = null,
     val newListName: String = "",
+    /** Desktop dialog only: the "New list" card is picked, so [newListName] names the list to create. */
+    val creatingNew: Boolean = false,
     val target: AddToListTarget? = null,
     /** Servings the picked amounts are scaled to. */
     val servings: Double = 1.0,
