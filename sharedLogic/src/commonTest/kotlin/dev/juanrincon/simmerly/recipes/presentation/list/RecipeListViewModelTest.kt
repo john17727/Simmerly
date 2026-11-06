@@ -13,6 +13,9 @@ import dev.juanrincon.simmerly.recipes.domain.RecipesError
 import dev.juanrincon.simmerly.recipes.presentation.list.orbit.RecipeListIntent
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeout
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
@@ -41,6 +44,11 @@ class RecipeListViewModelTest {
         Dispatchers.resetMain()
     }
 
+    /** Intents run on orbit's own dispatcher, so wait (in real time) for their effects. */
+    private suspend fun awaitUntil(condition: () -> Boolean) = withContext(Dispatchers.Default) {
+        withTimeout(3_000) { while (!condition()) delay(5) }
+    }
+
     // region Initial state
 
     @Test
@@ -57,6 +65,7 @@ class RecipeListViewModelTest {
     @Test
     fun onFavoriteToggledForwardsToRepository() = runTest(testDispatcher) {
         viewModel.onEvent(RecipeListIntent.OnFavoriteToggled("recipe-7", true))
+        awaitUntil { repo.lastSetFavoriteCall != null }
         assertThat(repo.lastSetFavoriteCall).isEqualTo("recipe-7" to true)
     }
 
@@ -64,6 +73,28 @@ class RecipeListViewModelTest {
     fun favoriteIdsFollowsRepository() = runTest(testDispatcher) {
         repo.favoriteIdsFlow.emit(setOf("a", "b"))
         assertThat(viewModel.favoriteIds.value).isEqualTo(setOf("a", "b"))
+    }
+
+    // endregion
+
+    // region Ratings
+
+    @Test
+    fun onRatingChangedSavesAndShowsRatingOverride() = runTest(testDispatcher) {
+        viewModel.onEvent(RecipeListIntent.OnRatingChanged("recipe-7", 4.0))
+        awaitUntil { repo.lastSetRatingCall != null }
+        assertThat(repo.lastSetRatingCall).isEqualTo("recipe-7" to 4.0)
+        assertThat(viewModel.ratingOverrides.value).isEqualTo(mapOf<String, Double?>("recipe-7" to 4.0))
+    }
+
+    @Test
+    fun onRatingChangedRollsBackWhenSaveFails() = runTest(testDispatcher) {
+        repo.setRatingResult = RecipesError.UpdateError.left()
+        viewModel.onEvent(RecipeListIntent.OnRatingChanged("recipe-7", 4.0))
+        awaitUntil { repo.lastSetRatingCall != null }
+        // The override is set first, then removed once the failed save is reported.
+        awaitUntil { viewModel.ratingOverrides.value.isEmpty() }
+        assertThat(viewModel.ratingOverrides.value).isEqualTo(emptyMap<String, Double?>())
     }
 
     // endregion

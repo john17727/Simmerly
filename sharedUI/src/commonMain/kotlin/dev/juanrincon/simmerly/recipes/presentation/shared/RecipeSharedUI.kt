@@ -12,10 +12,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.LocalFireDepartment
+import androidx.compose.material.icons.outlined.StarBorder
 import androidx.compose.material.icons.outlined.Restaurant
 import androidx.compose.material.icons.rounded.Star
 import androidx.compose.material.icons.outlined.Timer
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -143,6 +145,54 @@ fun IngredientChip(ingredient: IngredientUi, modifier: Modifier = Modifier) {
 }
 
 private const val MAX_STARS = 5
+
+/**
+ * The user's own rating as five tappable stars with the value and a hint. Tapping the star that
+ * matches the current rating clears it. [onRatingChange] gets a whole number of stars, or `null`.
+ */
+@Composable
+fun RatingInput(
+    rating: Double?,
+    onRatingChange: (Double?) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val filled = rating?.roundToInt()?.coerceIn(0, MAX_STARS) ?: 0
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        modifier = modifier
+    ) {
+        Row {
+            for (star in 1..MAX_STARS) {
+                val on = star <= filled
+                IconButton(
+                    onClick = { onRatingChange(if (star == filled) null else star.toDouble()) },
+                    modifier = Modifier.size(36.dp)
+                ) {
+                    Icon(
+                        if (on) Icons.Rounded.Star else Icons.Outlined.StarBorder,
+                        contentDescription = if (star == 1) "Rate 1 star" else "Rate $star stars",
+                        tint = if (on) MaterialTheme.colorScheme.secondary
+                        else MaterialTheme.colorScheme.outline,
+                        modifier = Modifier.size(26.dp)
+                    )
+                }
+            }
+        }
+        if (filled > 0) {
+            Text(
+                filled.toDouble().toString(),
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = FontWeight.SemiBold
+            )
+        }
+        Text(
+            if (filled > 0) "Your rating" else "Not rated yet",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+    }
+}
 
 /**
  * Five stars filled up to [rating] (rounded to the nearest whole star), then the value. An unrated

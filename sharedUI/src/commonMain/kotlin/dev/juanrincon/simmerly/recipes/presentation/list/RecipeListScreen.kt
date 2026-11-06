@@ -60,6 +60,7 @@ import dev.juanrincon.simmerly.core.presentation.shimmer
 import dev.juanrincon.simmerly.recipes.domain.model.RecipeSummary
 import dev.juanrincon.simmerly.recipes.presentation.list.orbit.RecipeListIntent
 import dev.juanrincon.simmerly.recipes.presentation.list.orbit.RecipeListState
+import dev.juanrincon.simmerly.recipes.presentation.shared.RatingInput
 import dev.juanrincon.simmerly.recipes.presentation.shared.RatingStars
 import dev.juanrincon.simmerly.recipes.presentation.shared.RecipeTimes
 import dev.juanrincon.simmerly.recipes.presentation.shared.TagRow
@@ -76,11 +77,13 @@ fun RecipeListScreen(
 ) {
     val state by viewModel.collectAsState()
     val favoriteIds by viewModel.favoriteIds.collectAsState()
+    val ratingOverrides by viewModel.ratingOverrides.collectAsState()
     val lazyPagingItems = viewModel.recipes.collectAsLazyPagingItems()
     Content(
         state = state,
         lazyPagingItems = lazyPagingItems,
         favoriteIds = favoriteIds,
+        ratingOverrides = ratingOverrides,
         onEvent = viewModel::onEvent,
         onRecipeSelected = onRecipeSelected,
         onSearchClicked = onSearchClicked,
@@ -95,6 +98,7 @@ private fun Content(
     state: RecipeListState,
     lazyPagingItems: LazyPagingItems<RecipeSummary>,
     favoriteIds: Set<String>,
+    ratingOverrides: Map<String, Double?>,
     onEvent: (RecipeListIntent) -> Unit,
     onRecipeSelected: (recipeId: String) -> Unit,
     onSearchClicked: () -> Unit,
@@ -109,6 +113,8 @@ private fun Content(
             lazyPagingItems = lazyPagingItems,
             favoriteIds = favoriteIds,
             onFavoriteToggled = { id, favorite -> onEvent(RecipeListIntent.OnFavoriteToggled(id, favorite)) },
+            ratingOverrides = ratingOverrides,
+            onRatingChanged = { id, rating -> onEvent(RecipeListIntent.OnRatingChanged(id, rating)) },
             selected = state.selectedRecipeId,
             onRecipeSelected = onRecipeSelected,
             onSelected = { onEvent(RecipeListIntent.OnRecipeSelected(it)) },
@@ -139,6 +145,9 @@ fun RecipeCard(
     sharedTransitionScope: SharedTransitionScope? = null,
     /** Called with the new favorite state when the heart is tapped. `null` makes it display-only. */
     onFavoriteClick: ((Boolean) -> Unit)? = null,
+    /** Called with a whole-star rating (or `null` to clear) from the expanded card's stars. The
+     * expanded card only exists in the desktop list pane. `null` makes the stars display-only. */
+    onRatingChange: ((Double?) -> Unit)? = null,
 ) {
     val bringIntoViewRequester = remember { BringIntoViewRequester() }
     LaunchedEffect(selected) {
@@ -178,7 +187,15 @@ fun RecipeCard(
                     overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.padding(horizontal = 8.dp)
                 )
-                RatingStars(recipe.rating, modifier = Modifier.padding(horizontal = 8.dp))
+                if (onRatingChange != null) {
+                    RatingInput(
+                        recipe.rating,
+                        onRatingChange = onRatingChange,
+                        modifier = Modifier.padding(horizontal = 2.dp)
+                    )
+                } else {
+                    RatingStars(recipe.rating, modifier = Modifier.padding(horizontal = 8.dp))
+                }
                 if (recipe.description.isNotBlank()) {
                     Text(
                         recipe.description,

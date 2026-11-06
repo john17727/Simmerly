@@ -44,6 +44,12 @@ class RecipeListViewModel(
     val favoriteIds: StateFlow<Set<String>> = repository.observeFavoriteIds()
         .stateIn(viewModelScope, SharingStarted.Eagerly, emptySet())
 
+    private val _ratingOverrides = MutableStateFlow<Map<String, Double?>>(emptyMap())
+
+    /** Ratings the user just set, shown over the paged items until the next list refresh. A `null`
+     * value means the rating was cleared. */
+    val ratingOverrides: StateFlow<Map<String, Double?>> = _ratingOverrides.asStateFlow()
+
     private val _isLoadingMore = MutableStateFlow(false)
     val isLoadingMore: StateFlow<Boolean> = _isLoadingMore.asStateFlow()
 
@@ -82,6 +88,17 @@ class RecipeListViewModel(
             }
             is RecipeListIntent.OnFavoriteToggled -> intent {
                 repository.setFavorite(event.recipeId, event.favorite)
+            }
+            is RecipeListIntent.OnRatingChanged -> intent {
+                val previous = _ratingOverrides.value
+                _ratingOverrides.value = previous + (event.recipeId to event.rating)
+                repository.setRating(event.recipeId, event.rating).onLeft {
+                    // Roll back to whatever was shown before the tap.
+                    _ratingOverrides.value = _ratingOverrides.value.let { current ->
+                        if (event.recipeId in previous) current + (event.recipeId to previous[event.recipeId])
+                        else current - event.recipeId
+                    }
+                }
             }
             is RecipeListIntent.OnSearchQueryChanged -> intent {
                 reduce { state.copy(searchQuery = event.query) }
