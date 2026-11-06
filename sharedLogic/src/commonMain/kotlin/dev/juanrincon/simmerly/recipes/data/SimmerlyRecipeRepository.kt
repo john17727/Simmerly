@@ -4,6 +4,7 @@ import androidx.paging.ExperimentalPagingApi
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
+import androidx.paging.cachedIn
 import arrow.core.Either
 import arrow.core.raise.either
 import arrow.core.right
@@ -32,6 +33,9 @@ import dev.juanrincon.simmerly.recipes.domain.model.Comment
 import dev.juanrincon.simmerly.recipes.domain.model.RecipeDetail
 import dev.juanrincon.simmerly.recipes.domain.model.RecipeSummary
 import dev.juanrincon.simmerly.recipes.domain.model.Settings
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.combine
@@ -64,8 +68,18 @@ class SimmerlyRecipeRepository(
     private val recentSearchQueryDao = database.recentSearchQueryDao()
     private val remoteKeyDao = database.recipeRemoteKeyDao()
 
+    /** Outlives any screen: the paged list is cached here so that leaving the Recipes tab (which
+     * clears its ViewModel) doesn't throw away the loaded pages or rerun the remote refresh. */
+    private val pagingScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+
+    private val cachedRecipeList: Flow<PagingData<RecipeSummary>> by lazy {
+        createRecipePager().cachedIn(pagingScope)
+    }
+
+    override fun recipeList(): Flow<PagingData<RecipeSummary>> = cachedRecipeList
+
     @OptIn(ExperimentalPagingApi::class)
-    override fun recipeList(): Flow<PagingData<RecipeSummary>> = Pager(
+    private fun createRecipePager(): Flow<PagingData<RecipeSummary>> = Pager(
         config = PagingConfig(pageSize = 50, enablePlaceholders = false),
         remoteMediator = RecipeRemoteMediator(
             networkClient = networkClient,

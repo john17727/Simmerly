@@ -3,7 +3,6 @@ package dev.juanrincon.simmerly.recipes.presentation.list
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.paging.PagingData
-import androidx.paging.cachedIn
 import dev.juanrincon.simmerly.recipes.domain.RecipeRepository
 import dev.juanrincon.simmerly.recipes.domain.model.RecipeSummary
 import dev.juanrincon.simmerly.recipes.presentation.list.orbit.RecipeListIntent
@@ -33,8 +32,8 @@ class RecipeListViewModel(
     val stateFlow: StateFlow<RecipeListState> get() = container.stateFlow
     val sideEffectFlow: Flow<RecipeListSideEffect> get() = container.sideEffectFlow
 
+    // Cached by the repository, which outlives this ViewModel (see SimmerlyRecipeRepository).
     val recipes: Flow<PagingData<RecipeSummary>> = repository.recipeList()
-        .cachedIn(viewModelScope)
 
     // Swift-friendly paging facade — PagingData/collectAsLazyPagingItems are Compose-only.
     private val _pagedRecipes = MutableStateFlow<List<RecipeSummary>>(emptyList())

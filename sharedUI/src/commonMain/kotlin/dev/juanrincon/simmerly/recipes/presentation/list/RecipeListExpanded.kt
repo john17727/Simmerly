@@ -16,7 +16,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -24,6 +27,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import androidx.paging.LoadState
+import kotlinx.coroutines.flow.first
 import androidx.paging.compose.LazyPagingItems
 import dev.juanrincon.simmerly.core.presentation.VerticalScrollbar
 import dev.juanrincon.simmerly.core.presentation.ifTrue
@@ -57,6 +61,32 @@ internal fun SelectableList(
         state.animateScrollToItem(index)
     }
 
+    // The ViewModel (and so the LazyPagingItems) is rebuilt when returning from another tab, and a
+    // fresh LazyPagingItems is empty on its first frame, which clamps the restored list state to
+    // the top. Remember the position ourselves and re-apply it once the items are back.
+    var savedIndex by rememberSaveable { mutableIntStateOf(0) }
+    var savedOffset by rememberSaveable { mutableIntStateOf(0) }
+    var positionRestored by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) {
+        if (savedIndex > 0) {
+            snapshotFlow { lazyPagingItems.itemCount }.first { it > 0 }
+            state.scrollToItem(
+                savedIndex.coerceAtMost(lazyPagingItems.itemCount - 1),
+                savedOffset
+            )
+        }
+        positionRestored = true
+    }
+    LaunchedEffect(state) {
+        snapshotFlow { state.firstVisibleItemIndex to state.firstVisibleItemScrollOffset }
+            .collect { (index, offset) ->
+                if (positionRestored) {
+                    savedIndex = index
+                    savedOffset = offset
+                }
+            }
+    }
+
     Box(modifier = modifier) {
         LazyColumn(
             state = state,
@@ -68,7 +98,8 @@ internal fun SelectableList(
             verticalArrangement = Arrangement.spacedBy(8.dp),
             modifier = Modifier.fillMaxSize().clip(shape = MaterialTheme.shapes.medium)
         ) {
-            if (lazyPagingItems.loadState.refresh is LoadState.Loading) {
+            // Skeletons are for the first load only; a refresh over existing items keeps them.
+            if (lazyPagingItems.loadState.refresh is LoadState.Loading && lazyPagingItems.itemCount == 0) {
                 items(6) {
                     RecipeCardSkeleton(modifier = Modifier.fillMaxWidth())
                 }
