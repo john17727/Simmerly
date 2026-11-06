@@ -628,7 +628,7 @@ internal fun RecipeSummary(
     var descriptionExpanded by remember { mutableStateOf(false) }
     var descriptionOverflowing by remember { mutableStateOf(false) }
     Column(modifier = modifier) {
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(8.dp))
         if (state.loading) {
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 Box(

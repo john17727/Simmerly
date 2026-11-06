@@ -14,7 +14,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.LocalFireDepartment
 import androidx.compose.material.icons.outlined.StarBorder
 import androidx.compose.material.icons.outlined.Restaurant
+import androidx.compose.material.icons.rounded.ChevronRight
 import androidx.compose.material.icons.rounded.Star
+import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.material.icons.outlined.Timer
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -31,8 +33,6 @@ import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.ui.semantics.Role
@@ -64,9 +64,9 @@ fun TagRow(tags: List<Tag>, modifier: Modifier = Modifier) {
 }
 
 /**
- * Rating and times on one wrapping line, as the phone design draws it: the rating group first,
- * then Total / Prep / Cook as icon + value. When [onRatingClick] is set the rating group is a
- * button (for opening the rate sheet).
+ * Rating and times on one wrapping line, as the phone design draws it: the rating first, then
+ * Total / Prep / Cook as icon + value. When [onRatingClick] is set the rating is a [RatingChip]
+ * (a tinted pill with a chevron) so it reads as something to tap.
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -78,40 +78,80 @@ fun RecipeMetaRow(
     modifier: Modifier = Modifier,
     onRatingClick: (() -> Unit)? = null,
 ) {
-    // The tappable rating pads 8dp each side for its touch target; pull the whole row back by
-    // that much so the stars (and wrapped times) line up with the text above and below.
-    val inset = if (onRatingClick != null) 8.dp else 0.dp
     FlowRow(
-        horizontalArrangement = Arrangement.spacedBy(4.dp),
-        verticalArrangement = Arrangement.Center,
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
         itemVerticalAlignment = Alignment.CenterVertically,
-        modifier = modifier.offset(x = -inset)
+        modifier = modifier
     ) {
-        if (onRatingClick != null) {
-            RatingStars(
-                rating,
-                modifier = Modifier
-                    .heightIn(min = 48.dp)
-                    .clip(CircleShape)
-                    .clickable(
-                        onClickLabel = "Change your rating",
-                        role = Role.Button,
-                        onClick = onRatingClick
-                    )
-                    .padding(horizontal = 8.dp)
-            )
-        } else {
-            RatingStars(rating)
-        }
+        if (onRatingClick != null) RatingChip(rating, onRatingClick) else RatingStars(rating)
         Row(
             horizontalArrangement = Arrangement.spacedBy(14.dp),
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(horizontal = inset)
         ) {
             totalTime?.let { MetaTime(Icons.Outlined.Timer, "Total time", it) }
             prepTime?.let { MetaTime(Icons.Outlined.Restaurant, "Prep time", it) }
             cookTime?.let { MetaTime(Icons.Outlined.LocalFireDepartment, "Cook time", it) }
         }
+    }
+}
+
+/**
+ * The tappable rating: a 36dp tinted pill holding the stars, the value (or "Rate" when unrated)
+ * and a chevron. The touch target is padded out to 48dp.
+ */
+@Composable
+fun RatingChip(
+    rating: Double?,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val filled = rating?.roundToInt()?.coerceIn(0, MAX_STARS) ?: 0
+    val accent = MaterialTheme.colorScheme.secondary
+    val description = if (rating == null) "Not rated yet. Rate this recipe"
+    else "Your rating: ${filled} out of $MAX_STARS. Change rating"
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        modifier = modifier
+            .minimumInteractiveComponentSize()
+            .height(36.dp)
+            .clip(CircleShape)
+            .background(MaterialTheme.colorScheme.surfaceContainer)
+            .clickable(role = Role.Button, onClick = onClick)
+            .semantics(mergeDescendants = true) { contentDescription = description }
+            .padding(start = 12.dp, end = 6.dp)
+    ) {
+        Row(horizontalArrangement = Arrangement.spacedBy(2.dp)) {
+            repeat(MAX_STARS) { index ->
+                Icon(
+                    Icons.Rounded.Star,
+                    contentDescription = null,
+                    tint = if (index < filled) accent else MaterialTheme.colorScheme.outline,
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+        }
+        if (rating != null) {
+            Text(
+                rating.toString(),
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = FontWeight.Medium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        } else {
+            Text(
+                "Rate",
+                style = MaterialTheme.typography.labelLarge,
+                color = accent
+            )
+        }
+        Icon(
+            Icons.Rounded.ChevronRight,
+            contentDescription = null,
+            tint = if (rating != null) MaterialTheme.colorScheme.onSurfaceVariant else accent,
+            modifier = Modifier.size(18.dp)
+        )
     }
 }
 
