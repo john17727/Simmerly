@@ -17,7 +17,6 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
@@ -27,6 +26,7 @@ import androidx.navigation3.ui.NavDisplay
 import androidx.savedstate.serialization.SavedStateConfiguration
 import dev.juanrincon.simmerly.core.presentation.navigation.AppNavRequest
 import dev.juanrincon.simmerly.core.presentation.navigation.BottomSheetSceneStrategy
+import dev.juanrincon.simmerly.core.presentation.navigation.PaneWidths
 import dev.juanrincon.simmerly.core.presentation.navigation.rememberTwoPaneDirective
 import dev.juanrincon.simmerly.recipes.presentation.comments.RecipeCommentsPanel
 import dev.juanrincon.simmerly.recipes.presentation.cookmode.CookModeScreen
@@ -146,7 +146,7 @@ fun RecipesContent(
                 // the desktop design), a full-screen replacement elsewhere. Same sheet either way.
                 entry<RecipeDestinations.Comments>(
                     metadata = ListDetailSceneStrategy.extraPane() +
-                        ListDetailSceneStrategy.preferredPaneSize(width = 400.dp)
+                        ListDetailSceneStrategy.preferredPaneSize(width = PaneWidths.Comments)
                 ) { key ->
                     RecipeCommentsPanel(
                         recipeId = key.recipeId,

@@ -38,16 +38,21 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import dev.juanrincon.simmerly.core.presentation.navigation.PaneWidths
 import dev.juanrincon.simmerly.recipes.domain.model.Settings
-
-private val SIDE_SHEET_WIDTH = 360.dp
+import dev.juanrincon.simmerly.theme.SimmerlyTheme
 
 /**
  * Standard (non-modal) side sheet for foldable and desktop windows: it docks to the right of the
@@ -69,7 +74,7 @@ internal fun StandardSettingsSideSheet(
     ) {
         Row(
             modifier = Modifier
-                .width(SIDE_SHEET_WIDTH)
+                .width(PaneWidths.SettingsDocked)
                 .fillMaxHeight()
                 .background(MaterialTheme.colorScheme.surfaceContainerLow)
         ) {
@@ -94,24 +99,40 @@ internal fun ModalSettingsSideSheet(
     onSettingChanged: (Settings) -> Unit,
     onDismiss: () -> Unit,
 ) {
+    // The dialog stays up until the slide-out finishes, then reports the dismissal.
+    var closing by remember { mutableStateOf(false) }
+    val visibleState = remember { MutableTransitionState(false) }
+    visibleState.targetState = !closing
+    LaunchedEffect(closing, visibleState.currentState) {
+        if (closing && !visibleState.currentState) onDismiss()
+    }
+    val requestClose = { closing = true }
+
     Dialog(
-        onDismissRequest = onDismiss,
+        onDismissRequest = requestClose,
         properties = DialogProperties(usePlatformDefaultWidth = false)
     ) {
-        val visibleState = remember { MutableTransitionState(false).apply { targetState = true } }
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .clickable(
-                    interactionSource = remember { MutableInteractionSource() },
-                    indication = null,
-                    onClick = onDismiss
-                )
-        ) {
+        Box(modifier = Modifier.fillMaxSize()) {
             AnimatedVisibility(
                 visibleState = visibleState,
-                enter = slideInHorizontally { it } + fadeIn(),
-                exit = slideOutHorizontally { it } + fadeOut(),
+                enter = fadeIn(),
+                exit = fadeOut(),
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.32f))
+                        .clickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = null,
+                            onClick = requestClose
+                        )
+                )
+            }
+            AnimatedVisibility(
+                visibleState = visibleState,
+                enter = slideInHorizontally { it },
+                exit = slideOutHorizontally { it },
                 modifier = Modifier.align(Alignment.CenterEnd)
             ) {
                 Surface(
@@ -120,7 +141,7 @@ internal fun ModalSettingsSideSheet(
                     // Swallows taps so they don't fall through to the scrim.
                     modifier = Modifier
                         .fillMaxHeight()
-                        .widthIn(max = 320.dp)
+                        .widthIn(max = PaneWidths.SettingsModalMax)
                         .fillMaxWidth(0.85f)
                         .clickable(
                             interactionSource = remember { MutableInteractionSource() },
@@ -131,7 +152,7 @@ internal fun ModalSettingsSideSheet(
                     SettingsSheetContent(
                         settings = settings,
                         onSettingChanged = onSettingChanged,
-                        onClose = onDismiss,
+                        onClose = requestClose,
                         modifier = Modifier.statusBarsPadding().navigationBarsPadding()
                     )
                 }
@@ -195,5 +216,42 @@ private fun SettingRow(label: String, checked: Boolean, onCheckedChange: (Boolea
     ) {
         Text(label, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
         Switch(checked = checked, onCheckedChange = null)
+    }
+}
+
+private val previewSettings = Settings(
+    public = true,
+    showNutrition = true,
+    showAssets = true,
+    landscapeView = false,
+    disableComments = false,
+    locked = false
+)
+
+@Preview
+@Composable
+private fun StandardSettingsSideSheetPreview() {
+    SimmerlyTheme {
+        StandardSettingsSideSheet(
+            visible = true,
+            settings = previewSettings,
+            onSettingChanged = {},
+            onClose = {}
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun SettingsSheetContentPreview() {
+    SimmerlyTheme(darkTheme = true) {
+        Surface(color = MaterialTheme.colorScheme.surfaceContainerLow) {
+            SettingsSheetContent(
+                settings = previewSettings,
+                onSettingChanged = {},
+                onClose = {},
+                modifier = Modifier.width(PaneWidths.SettingsModalMax)
+            )
+        }
     }
 }
