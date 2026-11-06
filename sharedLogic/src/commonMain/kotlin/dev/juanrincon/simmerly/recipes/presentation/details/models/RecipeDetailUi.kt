@@ -2,6 +2,7 @@ package dev.juanrincon.simmerly.recipes.presentation.details.models
 
 import dev.juanrincon.simmerly.core.presentation.UiText
 import dev.juanrincon.simmerly.core.utils.format
+import dev.juanrincon.simmerly.recipes.domain.model.Category
 import dev.juanrincon.simmerly.recipes.domain.model.Note
 import dev.juanrincon.simmerly.recipes.domain.model.Settings
 import dev.juanrincon.simmerly.recipes.domain.model.Tag
@@ -21,6 +22,7 @@ data class RecipeDetailUi(
     val favorite: Boolean,
     val link: String?,
     val tags: List<Tag>,
+    val categories: List<Category> = emptyList(),
     val ingredients: List<IngredientUi>,
     val instructions: List<InstructionUi>,
     val tools: List<Tool>,

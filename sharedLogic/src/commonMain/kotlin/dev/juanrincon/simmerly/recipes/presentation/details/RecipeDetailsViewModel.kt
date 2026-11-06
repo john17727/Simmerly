@@ -62,6 +62,7 @@ class RecipeDetailsViewModel(
                 container.stateFlow.value.recipe.servings - 1
             )
             RecipeDetailsIntent.ToggleFavorite -> toggleFavorite()
+            is RecipeDetailsIntent.SetRating -> setRating(event.rating)
             RecipeDetailsIntent.ShowSettings -> intent {
                 reduce { state.copy(showSettings = true) }
             }
@@ -121,6 +122,12 @@ class RecipeDetailsViewModel(
         if (current == RecipeDetailUi.emptyRecipe) return@intent
         // The repository flips the stored preference first, then recipeDetails re-emits it.
         repository.setFavorite(recipeId, !current.favorite)
+    }
+
+    private fun setRating(rating: Double?) = intent {
+        if (state.recipe == RecipeDetailUi.emptyRecipe) return@intent
+        // Like favorites: the repository stores it, then recipeDetails re-emits the new rating.
+        repository.setRating(recipeId, rating)
     }
 
     private fun updateServing(newServings: Double) = intent {

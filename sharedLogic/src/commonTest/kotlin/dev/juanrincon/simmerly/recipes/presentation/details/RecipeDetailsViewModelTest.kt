@@ -69,6 +69,25 @@ class RecipeDetailsViewModelTest {
 
     // endregion
 
+    // region Rating
+
+    @Test
+    fun setRatingSavesTheRatingForTheRecipe() = runTest(testDispatcher) {
+        viewModel.testWithInternalState(this, initialState = RecipeDetailsState(loading = false)) {
+            runOnCreate()
+            repo.recipeDetailsFlow()
+                .emit(Either.Right(LoadingResult.Loaded(aRecipeDetail(id = "test-recipe"))))
+            awaitInternalState()
+
+            viewModel.onEvent(RecipeDetailsIntent.SetRating(4.0))
+
+            assertThat(repo.lastSetRatingCall).isEqualTo("test-recipe" to 4.0)
+            cancelAndIgnoreRemainingItems()
+        }
+    }
+
+    // endregion
+
     // region Init flow
 
     @Test
