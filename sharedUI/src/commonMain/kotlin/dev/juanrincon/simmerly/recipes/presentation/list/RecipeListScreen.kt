@@ -59,30 +59,28 @@ import dev.juanrincon.simmerly.core.presentation.navigation.isTwoPaneWidth
 import dev.juanrincon.simmerly.core.presentation.shimmer
 import dev.juanrincon.simmerly.recipes.domain.model.RecipeSummary
 import dev.juanrincon.simmerly.recipes.presentation.list.orbit.RecipeListIntent
-import dev.juanrincon.simmerly.recipes.presentation.list.orbit.RecipeListState
 import dev.juanrincon.simmerly.recipes.presentation.shared.CategoriesAndTags
 import dev.juanrincon.simmerly.recipes.presentation.shared.RatingInput
 import dev.juanrincon.simmerly.recipes.presentation.shared.RatingStars
 import dev.juanrincon.simmerly.recipes.presentation.shared.RecipeTimes
 import dev.juanrincon.simmerly.recipes.presentation.shared.TagRow
 import org.koin.compose.viewmodel.koinViewModel
-import org.orbitmvi.orbit.compose.collectAsState
 
 @Composable
 fun RecipeListScreen(
+    selectedRecipeId: String,
     onRecipeSelected: (recipeId: String) -> Unit,
     onSearchClicked: () -> Unit,
     sharedTransitionScope: SharedTransitionScope? = null,
     viewModel: RecipeListViewModel = koinViewModel(),
     modifier: Modifier = Modifier
 ) {
-    val state by viewModel.collectAsState()
     val favoriteIds by viewModel.favoriteIds.collectAsState()
     val ratingOverrides by viewModel.ratingOverrides.collectAsState()
     val lazyPagingItems = viewModel.recipes.collectAsLazyPagingItems()
     Content(
-        state = state,
         lazyPagingItems = lazyPagingItems,
+        selectedRecipeId = selectedRecipeId,
         favoriteIds = favoriteIds,
         ratingOverrides = ratingOverrides,
         onEvent = viewModel::onEvent,
@@ -96,8 +94,8 @@ fun RecipeListScreen(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun Content(
-    state: RecipeListState,
     lazyPagingItems: LazyPagingItems<RecipeSummary>,
+    selectedRecipeId: String,
     favoriteIds: Set<String>,
     ratingOverrides: Map<String, Double?>,
     onEvent: (RecipeListIntent) -> Unit,
@@ -116,9 +114,8 @@ private fun Content(
             onFavoriteToggled = { id, favorite -> onEvent(RecipeListIntent.OnFavoriteToggled(id, favorite)) },
             ratingOverrides = ratingOverrides,
             onRatingChanged = { id, rating -> onEvent(RecipeListIntent.OnRatingChanged(id, rating)) },
-            selected = state.selectedRecipeId,
+            selected = selectedRecipeId,
             onRecipeSelected = onRecipeSelected,
-            onSelected = { onEvent(RecipeListIntent.OnRecipeSelected(it)) },
             state = lazyListState,
             modifier = modifier
         )

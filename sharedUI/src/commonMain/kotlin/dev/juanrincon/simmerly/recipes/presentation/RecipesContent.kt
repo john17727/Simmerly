@@ -70,6 +70,11 @@ fun RecipesContent(
     )
 
     val isAtRoot by remember { derivedStateOf { backStack.size <= 1 } }
+    // The open recipe is whatever Detail destination is on the back stack. Deriving it here, rather
+    // than keeping a copy in the list's ViewModel, keeps it in step with the detail pane: the back
+    // stack is saved across tab switches, but the ViewModel is cleared with the list entry.
+    val selectedRecipeId = backStack.filterIsInstance<RecipeDestinations.Detail>()
+        .lastOrNull()?.recipeId.orEmpty()
     LaunchedEffect(isAtRoot) { onAtRootChanged(isAtRoot) }
 
     SharedTransitionLayout {
@@ -94,6 +99,7 @@ fun RecipesContent(
                     )
                 ) {
                     RecipeListScreen(
+                        selectedRecipeId = selectedRecipeId,
                         modifier = Modifier.fillMaxSize(),
                         sharedTransitionScope = this@SharedTransitionLayout,
                         onSearchClicked = { backStack.add(RecipeDestinations.Search) },

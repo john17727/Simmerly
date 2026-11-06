@@ -52,10 +52,9 @@ class RecipeListViewModelTest {
     // region Initial state
 
     @Test
-    fun initialStateHasEmptySearchQueryAndSelectedRecipeId() {
+    fun initialStateHasEmptySearchQuery() {
         val state = viewModel.container.stateFlow.value
         assertThat(state.searchQuery).isEqualTo("")
-        assertThat(state.selectedRecipeId).isEqualTo("")
     }
 
     // endregion
@@ -99,15 +98,7 @@ class RecipeListViewModelTest {
 
     // endregion
 
-    // region OnRecipeSelected / OnSearchQueryChanged
-
-    @Test
-    fun onRecipeSelectedUpdatesSelectedRecipeId() = runTest(testDispatcher) {
-        viewModel.testWithInternalState(this) {
-            viewModel.onEvent(RecipeListIntent.OnRecipeSelected("recipe-42"))
-            assertThat(awaitInternalState().selectedRecipeId).isEqualTo("recipe-42")
-        }
-    }
+    // region OnSearchQueryChanged
 
     @Test
     fun onSearchQueryChangedUpdatesSearchQuery() = runTest(testDispatcher) {

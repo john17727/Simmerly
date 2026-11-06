@@ -83,9 +83,6 @@ class RecipeListViewModel(
 
     fun onEvent(event: RecipeListIntent) {
         when (event) {
-            is RecipeListIntent.OnRecipeSelected -> intent {
-                reduce { state.copy(selectedRecipeId = event.recipeId) }
-            }
             is RecipeListIntent.OnFavoriteToggled -> intent {
                 repository.setFavorite(event.recipeId, event.favorite)
             }

@@ -33,7 +33,6 @@ internal fun SelectableList(
     onRatingChanged: (recipeId: String, rating: Double?) -> Unit,
     selected: String,
     onRecipeSelected: (String) -> Unit,
-    onSelected: (String) -> Unit,
     state: LazyListState,
     modifier: Modifier = Modifier
 ) {
@@ -69,7 +68,6 @@ internal fun SelectableList(
                         selected = isSelected,
                         onClick = {
                             onRecipeSelected(item.id)
-                            onSelected(item.id)
                         },
                         modifier = Modifier
                             .fillMaxWidth()
