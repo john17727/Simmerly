@@ -36,7 +36,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -71,14 +70,10 @@ fun RecipeListScreen(
     viewModel: RecipeListViewModel = koinViewModel(),
     modifier: Modifier = Modifier
 ) {
-    val favoriteIds by viewModel.favoriteIds.collectAsState()
-    val ratingOverrides by viewModel.ratingOverrides.collectAsState()
     val lazyPagingItems = viewModel.recipes.collectAsLazyPagingItems()
     Content(
         lazyPagingItems = lazyPagingItems,
         selectedRecipeId = selectedRecipeId,
-        favoriteIds = favoriteIds,
-        ratingOverrides = ratingOverrides,
         onEvent = viewModel::onEvent,
         onRecipeSelected = onRecipeSelected,
         onSearchClicked = onSearchClicked,
@@ -92,8 +87,6 @@ fun RecipeListScreen(
 private fun Content(
     lazyPagingItems: LazyPagingItems<RecipeSummary>,
     selectedRecipeId: String,
-    favoriteIds: Set<String>,
-    ratingOverrides: Map<String, Double?>,
     onEvent: (RecipeListIntent) -> Unit,
     onRecipeSelected: (recipeId: String) -> Unit,
     onSearchClicked: () -> Unit,
@@ -106,9 +99,7 @@ private fun Content(
     if (isTwoPaneWidth()) {
         SelectableList(
             lazyPagingItems = lazyPagingItems,
-            favoriteIds = favoriteIds,
             onFavoriteToggled = { id, favorite -> onEvent(RecipeListIntent.OnFavoriteToggled(id, favorite)) },
-            ratingOverrides = ratingOverrides,
             onRatingChanged = { id, rating -> onEvent(RecipeListIntent.OnRatingChanged(id, rating)) },
             selected = selectedRecipeId,
             onRecipeSelected = onRecipeSelected,
@@ -118,7 +109,6 @@ private fun Content(
     } else {
         CompactRecipeList(
             lazyPagingItems = lazyPagingItems,
-            favoriteIds = favoriteIds,
             onFavoriteToggled = { id, favorite -> onEvent(RecipeListIntent.OnFavoriteToggled(id, favorite)) },
             onSearchClicked = onSearchClicked,
             onRecipeSelected = onRecipeSelected,

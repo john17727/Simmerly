@@ -32,8 +32,9 @@ interface RecipeRepository {
 
     suspend fun updateSettings(recipeId: String, settings: Settings): Either<RecipesError, Unit>
 
-    /** Sets the logged-in user's personal rating for a recipe (`null` clears it). Reflected back
-     * through [recipeDetails] via `user_recipe_preferences`, same as a favorite toggle. Kept
+    /** Sets the logged-in user's personal rating for a recipe (`null` clears it). Applied locally
+     * first and rolled back if the server call fails. Reflected back through [recipeList] and
+     * [recipeDetails] via `user_recipe_preferences`, same as a favorite toggle. Kept
      * separate from [recordRecipeMade] — unlike last-made and the timeline entry, a rating is
      * conditional (a cook may finish without rating), so it isn't part of "the recipe was made". */
     suspend fun setRating(recipeId: String, rating: Double?): Either<RecipesError, Unit>
@@ -41,13 +42,9 @@ interface RecipeRepository {
     /**
      * Marks or unmarks the recipe as a favorite of the logged-in user. Applied locally first so
      * the UI flips immediately, and rolled back if the server call fails. Reflected through
-     * [observeFavoriteIds], [observeAllRecipes] and [recipeDetails] via `user_recipe_preferences`.
+     * [recipeList], [observeAllRecipes] and [recipeDetails] via `user_recipe_preferences`.
      */
     suspend fun setFavorite(recipeId: String, favorite: Boolean): Either<RecipesError, Unit>
-
-    /** The ids of the logged-in user's favorite recipes. The paged [recipeList] doesn't re-read
-     * preferences on change, so the list overlays this on top of its items. */
-    fun observeFavoriteIds(): Flow<Set<String>>
 
     /**
      * Records that the recipe was just cooked: updates its last-made timestamp and adds a

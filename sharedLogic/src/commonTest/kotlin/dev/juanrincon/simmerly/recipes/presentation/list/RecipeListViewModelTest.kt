@@ -68,32 +68,15 @@ class RecipeListViewModelTest {
         assertThat(repo.lastSetFavoriteCall).isEqualTo("recipe-7" to true)
     }
 
-    @Test
-    fun favoriteIdsFollowsRepository() = runTest(testDispatcher) {
-        repo.favoriteIdsFlow.emit(setOf("a", "b"))
-        assertThat(viewModel.favoriteIds.value).isEqualTo(setOf("a", "b"))
-    }
-
     // endregion
 
     // region Ratings
 
     @Test
-    fun onRatingChangedSavesAndShowsRatingOverride() = runTest(testDispatcher) {
+    fun onRatingChangedForwardsToRepository() = runTest(testDispatcher) {
         viewModel.onEvent(RecipeListIntent.OnRatingChanged("recipe-7", 4.0))
         awaitUntil { repo.lastSetRatingCall != null }
         assertThat(repo.lastSetRatingCall).isEqualTo("recipe-7" to 4.0)
-        assertThat(viewModel.ratingOverrides.value).isEqualTo(mapOf<String, Double?>("recipe-7" to 4.0))
-    }
-
-    @Test
-    fun onRatingChangedRollsBackWhenSaveFails() = runTest(testDispatcher) {
-        repo.setRatingResult = RecipesError.UpdateError.left()
-        viewModel.onEvent(RecipeListIntent.OnRatingChanged("recipe-7", 4.0))
-        awaitUntil { repo.lastSetRatingCall != null }
-        // The override is set first, then removed once the failed save is reported.
-        awaitUntil { viewModel.ratingOverrides.value.isEmpty() }
-        assertThat(viewModel.ratingOverrides.value).isEqualTo(emptyMap<String, Double?>())
     }
 
     // endregion

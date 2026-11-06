@@ -5,6 +5,7 @@ import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
+import androidx.paging.map
 import arrow.core.Either
 import arrow.core.raise.either
 import arrow.core.right
@@ -76,7 +77,25 @@ class SimmerlyRecipeRepository(
         createRecipePager().cachedIn(pagingScope)
     }
 
-    override fun recipeList(): Flow<PagingData<RecipeSummary>> = cachedRecipeList
+    /**
+     * The paged list with the user's own favorite flag and rating applied to every item. The
+     * paging source only reads preferences when it loads a page, so they are merged here, which
+     * keeps the list in step with `user_recipe_preferences` without reloading any pages.
+     */
+    override fun recipeList(): Flow<PagingData<RecipeSummary>> = combine(
+        cachedRecipeList,
+        database.userRecipePreferenceDao().observeAll(),
+    ) { recipes, preferences ->
+        val preferenceById = preferences.associateBy { it.recipeId }
+        recipes.map { recipe ->
+            val preference = preferenceById[recipe.id]
+            recipe.copy(
+                isFavorite = preference?.isFavorite ?: false,
+                // Like the details screen: the user's own rating wins over the recipe's.
+                rating = preference?.rating ?: recipe.rating,
+            )
+        }
+    }
 
     @OptIn(ExperimentalPagingApi::class)
     private fun createRecipePager(): Flow<PagingData<RecipeSummary>> = Pager(
@@ -279,17 +298,26 @@ class SimmerlyRecipeRepository(
         // Unlike the timeline event's userId, this one is a required URL path segment — the
         // request literally cannot be built without it, so an unresolved id fails the whole write.
         val userId = userRepository.currentUserId().mapLeft { RecipesError.UpdateError }.bind()
-        networkClient.setRating(userId, slug, rating).mapLeft { RecipesError.UpdateError }.bind()
 
+        // Applied locally first so the list and details update at once, and rolled back if the
+        // server rejects it.
         val preferenceDao = database.userRecipePreferenceDao()
-        val existing = preferenceDao.get(recipeId)
+        val previous = preferenceDao.get(recipeId)
         preferenceDao.upsert(
             UserRecipePreferenceEntity(
                 recipeId = recipeId,
                 rating = rating,
-                isFavorite = existing?.isFavorite ?: false
+                isFavorite = previous?.isFavorite ?: false
             )
         )
+
+        val result = networkClient.setRating(userId, slug, rating)
+        result.onLeft {
+            preferenceDao.upsert(
+                previous ?: UserRecipePreferenceEntity(recipeId, rating = null, isFavorite = false)
+            )
+        }
+        result.mapLeft { RecipesError.UpdateError }.bind()
     }
 
     override suspend fun setFavorite(
@@ -318,11 +346,6 @@ class SimmerlyRecipeRepository(
         }
         result.mapLeft { RecipesError.UpdateError }.bind()
     }
-
-    override fun observeFavoriteIds(): Flow<Set<String>> =
-        database.userRecipePreferenceDao().observeAll()
-            .map { prefs -> prefs.filter { it.isFavorite }.mapTo(mutableSetOf()) { it.recipeId } }
-            .distinctUntilChanged()
 
     override suspend fun recordRecipeMade(
         recipeId: String,

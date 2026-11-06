@@ -36,7 +36,6 @@ internal fun CompactRecipeList(
     lazyPagingItems: LazyPagingItems<RecipeSummary>,
     onSearchClicked: () -> Unit,
     onRecipeSelected: (String) -> Unit,
-    favoriteIds: Set<String>,
     onFavoriteToggled: (recipeId: String, favorite: Boolean) -> Unit,
     lazyGridState: LazyGridState,
     modifier: Modifier = Modifier,
@@ -61,7 +60,6 @@ internal fun CompactRecipeList(
         RecipeList(
             lazyPagingItems = lazyPagingItems,
             onRecipeSelected = onRecipeSelected,
-            favoriteIds = favoriteIds,
             onFavoriteToggled = onFavoriteToggled,
             sharedTransitionScope = sharedTransitionScope,
             lazyGridState = lazyGridState,
@@ -74,7 +72,6 @@ internal fun CompactRecipeList(
 private fun RecipeList(
     lazyPagingItems: LazyPagingItems<RecipeSummary>,
     onRecipeSelected: (String) -> Unit,
-    favoriteIds: Set<String>,
     onFavoriteToggled: (recipeId: String, favorite: Boolean) -> Unit,
     lazyGridState: LazyGridState,
     modifier: Modifier = Modifier,
@@ -98,9 +95,8 @@ private fun RecipeList(
                 key = { index -> lazyPagingItems.peek(index)?.id ?: index }
             ) { index ->
                 val item = lazyPagingItems[index] ?: return@items
-                val recipe = item.copy(isFavorite = item.id in favoriteIds)
                 RecipeCard(
-                    recipe,
+                    item,
                     onClick = { onRecipeSelected(item.id) },
                     onFavoriteClick = { onFavoriteToggled(item.id, it) },
                     sharedTransitionScope = sharedTransitionScope,

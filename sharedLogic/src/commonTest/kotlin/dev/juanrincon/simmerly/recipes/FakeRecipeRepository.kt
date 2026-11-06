@@ -97,17 +97,14 @@ class FakeRecipeRepository : RecipeRepository {
         return setRatingResult
     }
 
-    // --- setFavorite / observeFavoriteIds ---
+    // --- setFavorite ---
     var setFavoriteResult: Either<RecipesError, Unit> = Unit.right()
     var lastSetFavoriteCall: Pair<String, Boolean>? = null
-    val favoriteIdsFlow = MutableSharedFlow<Set<String>>(replay = 1)
 
     override suspend fun setFavorite(recipeId: String, favorite: Boolean): Either<RecipesError, Unit> {
         lastSetFavoriteCall = recipeId to favorite
         return setFavoriteResult
     }
-
-    override fun observeFavoriteIds(): Flow<Set<String>> = favoriteIdsFlow
 
     // --- recordRecipeMade ---
     var recordRecipeMadeResult: Either<RecipesError, Unit> = Unit.right()

@@ -3,6 +3,7 @@ package dev.juanrincon.simmerly.recipes.presentation.list
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.paging.PagingData
+import androidx.paging.cachedIn
 import dev.juanrincon.simmerly.recipes.domain.RecipeRepository
 import dev.juanrincon.simmerly.recipes.domain.model.RecipeSummary
 import dev.juanrincon.simmerly.recipes.presentation.list.orbit.RecipeListIntent
@@ -10,9 +11,7 @@ import dev.juanrincon.simmerly.recipes.presentation.list.orbit.RecipeListSideEff
 import dev.juanrincon.simmerly.recipes.presentation.list.orbit.RecipeListState
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -32,22 +31,14 @@ class RecipeListViewModel(
     val stateFlow: StateFlow<RecipeListState> get() = container.stateFlow
     val sideEffectFlow: Flow<RecipeListSideEffect> get() = container.sideEffectFlow
 
-    // Cached by the repository, which outlives this ViewModel (see SimmerlyRecipeRepository).
+    // The repository caches the loaded pages (so they outlive this ViewModel) and merges in the
+    // user's favorites and ratings; this shares that one merged stream with the UI.
     val recipes: Flow<PagingData<RecipeSummary>> = repository.recipeList()
+        .cachedIn(viewModelScope)
 
     // Swift-friendly paging facade — PagingData/collectAsLazyPagingItems are Compose-only.
     private val _pagedRecipes = MutableStateFlow<List<RecipeSummary>>(emptyList())
     val pagedRecipes: StateFlow<List<RecipeSummary>> = _pagedRecipes.asStateFlow()
-
-    /** Overlaid on the paged items: the paging source doesn't re-read preferences on change. */
-    val favoriteIds: StateFlow<Set<String>> = repository.observeFavoriteIds()
-        .stateIn(viewModelScope, SharingStarted.Eagerly, emptySet())
-
-    private val _ratingOverrides = MutableStateFlow<Map<String, Double?>>(emptyMap())
-
-    /** Ratings the user just set, shown over the paged items until the next list refresh. A `null`
-     * value means the rating was cleared. */
-    val ratingOverrides: StateFlow<Map<String, Double?>> = _ratingOverrides.asStateFlow()
 
     private val _isLoadingMore = MutableStateFlow(false)
     val isLoadingMore: StateFlow<Boolean> = _isLoadingMore.asStateFlow()
@@ -86,15 +77,7 @@ class RecipeListViewModel(
                 repository.setFavorite(event.recipeId, event.favorite)
             }
             is RecipeListIntent.OnRatingChanged -> intent {
-                val previous = _ratingOverrides.value
-                _ratingOverrides.value = previous + (event.recipeId to event.rating)
-                repository.setRating(event.recipeId, event.rating).onLeft {
-                    // Roll back to whatever was shown before the tap.
-                    _ratingOverrides.value = _ratingOverrides.value.let { current ->
-                        if (event.recipeId in previous) current + (event.recipeId to previous[event.recipeId])
-                        else current - event.recipeId
-                    }
-                }
+                repository.setRating(event.recipeId, event.rating)
             }
             is RecipeListIntent.OnSearchQueryChanged -> intent {
                 reduce { state.copy(searchQuery = event.query) }

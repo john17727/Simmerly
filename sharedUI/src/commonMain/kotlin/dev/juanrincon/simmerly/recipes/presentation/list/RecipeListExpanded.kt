@@ -36,9 +36,7 @@ import dev.juanrincon.simmerly.recipes.domain.model.RecipeSummary
 @Composable
 internal fun SelectableList(
     lazyPagingItems: LazyPagingItems<RecipeSummary>,
-    favoriteIds: Set<String>,
     onFavoriteToggled: (recipeId: String, favorite: Boolean) -> Unit,
-    ratingOverrides: Map<String, Double?>,
     onRatingChanged: (recipeId: String, rating: Double?) -> Unit,
     selected: String,
     onRecipeSelected: (String) -> Unit,
@@ -111,10 +109,7 @@ internal fun SelectableList(
                     val item = lazyPagingItems[index] ?: return@items
                     val isSelected = item.id == selected
                     RecipeCard(
-                        item.copy(
-                            isFavorite = item.id in favoriteIds,
-                            rating = if (item.id in ratingOverrides) ratingOverrides[item.id] else item.rating,
-                        ),
+                        item,
                         onFavoriteClick = { onFavoriteToggled(item.id, it) },
                         onRatingChange = { onRatingChanged(item.id, it) },
                         selected = isSelected,
