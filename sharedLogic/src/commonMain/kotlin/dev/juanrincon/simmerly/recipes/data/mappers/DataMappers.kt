@@ -47,10 +47,10 @@ fun RecipeSummaryDto.toEntity() = RecipeEntity(
     servings = recipeServings,
     yieldQuantity = recipeYieldQuantity,
     yield = recipeYield,
-    totalTime = totalTime,
-    prepTime = prepTime,
+    totalTime = totalTime ?: formatSeconds(totalTimeSeconds),
+    prepTime = prepTime ?: formatSeconds(prepTimeSeconds),
     cookTime = cookTime,
-    performTime = performTime,
+    performTime = performTime ?: formatSeconds(performTimeSeconds),
     description = description,
     rating = rating,
     originalUrl = orgURL.orEmpty(),
@@ -88,10 +88,10 @@ fun RecipeDetailDto.toEntity() = RecipeEntity(
     servings = recipeServings,
     yieldQuantity = recipeYieldQuantity,
     yield = recipeYield,
-    totalTime = totalTime,
-    prepTime = prepTime,
+    totalTime = totalTime ?: formatSeconds(totalTimeSeconds),
+    prepTime = prepTime ?: formatSeconds(prepTimeSeconds),
     cookTime = cookTime,
-    performTime = performTime,
+    performTime = performTime ?: formatSeconds(performTimeSeconds),
     description = description,
     rating = rating,
     originalUrl = orgURL.orEmpty(),
@@ -237,3 +237,19 @@ fun UserDto.toEntity() = UserEntity(
     admin = admin,
     fullName = fullName
 )
+/**
+ * Mealie's list and detail responses often leave the human-readable time strings null and only
+ * fill the `*Seconds` fields. Renders them as "25 min" / "1 hr 30 min" (the abbreviation used by
+ * the domain mappers).
+ */
+internal fun formatSeconds(seconds: Int?): String? {
+    if (seconds == null || seconds <= 0) return null
+    val totalMinutes = (seconds + 30) / 60
+    val hours = totalMinutes / 60
+    val minutes = totalMinutes % 60
+    return when {
+        hours == 0 -> "$minutes min"
+        minutes == 0 -> "$hours hr"
+        else -> "$hours hr $minutes min"
+    }
+}

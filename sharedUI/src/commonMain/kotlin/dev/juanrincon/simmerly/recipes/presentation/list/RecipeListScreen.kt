@@ -23,9 +23,14 @@ import androidx.compose.foundation.relocation.BringIntoViewRequester
 import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.rounded.Star
-import androidx.compose.material.icons.rounded.Timer
+import androidx.compose.material.icons.outlined.FavoriteBorder
+import androidx.compose.material.icons.outlined.Timer
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.hoverable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -53,7 +58,8 @@ import dev.juanrincon.simmerly.core.presentation.shimmer
 import dev.juanrincon.simmerly.recipes.domain.model.RecipeSummary
 import dev.juanrincon.simmerly.recipes.presentation.list.orbit.RecipeListIntent
 import dev.juanrincon.simmerly.recipes.presentation.list.orbit.RecipeListState
-import dev.juanrincon.simmerly.recipes.presentation.shared.RecipeMetaRow
+import dev.juanrincon.simmerly.recipes.presentation.shared.RatingStars
+import dev.juanrincon.simmerly.recipes.presentation.shared.RecipeTimes
 import dev.juanrincon.simmerly.recipes.presentation.shared.TagRow
 import org.koin.compose.viewmodel.koinViewModel
 import org.orbitmvi.orbit.compose.collectAsState
@@ -161,13 +167,7 @@ fun RecipeCard(
                     overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.padding(horizontal = 8.dp)
                 )
-                RecipeMetaRow(
-                    recipe.rating,
-                    recipe.totalTime,
-                    recipe.prepTime,
-                    recipe.performTime,
-                    modifier = Modifier.padding(horizontal = 8.dp)
-                )
+                RatingStars(recipe.rating, modifier = Modifier.padding(horizontal = 8.dp))
                 if (recipe.description.isNotBlank()) {
                     Text(
                         recipe.description,
@@ -175,11 +175,27 @@ fun RecipeCard(
                         modifier = Modifier.padding(horizontal = 8.dp)
                     )
                 }
+                RecipeTimes(
+                    recipe.totalTime,
+                    recipe.prepTime,
+                    recipe.performTime,
+                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 8.dp)
+                )
             }
         } else {
+            val interactionSource = remember { MutableInteractionSource() }
+            val hovered by interactionSource.collectIsHoveredAsState()
+            Box(modifier = modifier) {
             OutlinedCard(
-                modifier = modifier,
+                modifier = Modifier.fillMaxWidth().hoverable(interactionSource),
                 onClick = onClick,
+                interactionSource = interactionSource,
+                shape = MaterialTheme.shapes.medium,
+                colors = CardDefaults.outlinedCardColors(
+                    containerColor = if (hovered) MaterialTheme.colorScheme.surfaceContainer
+                    else MaterialTheme.colorScheme.surfaceContainerLow
+                ),
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
             ) {
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(16.dp),
@@ -206,7 +222,8 @@ fun RecipeCard(
                     )
                     Column(
                         verticalArrangement = Arrangement.spacedBy(8.dp),
-                        modifier = Modifier.fillMaxWidth()
+                        // Leaves room for the favorite indicator in the top-right corner.
+                        modifier = Modifier.fillMaxWidth().padding(end = 32.dp)
                     ) {
                         Text(
                             recipe.name,
@@ -215,11 +232,18 @@ fun RecipeCard(
                         RecipeLimitedMetaRow(
                             recipe.rating,
                             recipe.totalTime,
-                            recipe.isFavorite,
                         )
                         TagRow(recipe.tags)
                     }
                 }
+            }
+            Icon(
+                if (recipe.isFavorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
+                contentDescription = if (recipe.isFavorite) "Favorite" else null,
+                tint = if (recipe.isFavorite) MaterialTheme.colorScheme.secondary
+                else MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.align(Alignment.TopEnd).padding(top = 12.dp, end = 12.dp).size(22.dp)
+            )
             }
         }
     }
@@ -232,7 +256,10 @@ fun RecipeCardSkeleton(modifier: Modifier = Modifier) {
         MaterialTheme.colorScheme.surfaceContainerHighest,
         MaterialTheme.colorScheme.surfaceContainer,
     )
-    Card(modifier = modifier) {
+    Card(
+        modifier = modifier,
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow)
+    ) {
         Row(
             horizontalArrangement = Arrangement.spacedBy(16.dp),
             verticalAlignment = Alignment.CenterVertically,
@@ -271,7 +298,6 @@ fun RecipeCardSkeleton(modifier: Modifier = Modifier) {
 private fun RecipeLimitedMetaRow(
     rating: Double?,
     totalTime: String?,
-    isFavorite: Boolean = false,
     modifier: Modifier = Modifier
 ) {
     Row(
@@ -279,34 +305,14 @@ private fun RecipeLimitedMetaRow(
         verticalAlignment = Alignment.CenterVertically,
         modifier = modifier
     ) {
-        if (isFavorite) {
-            Icon(
-                Icons.Default.Favorite,
-                contentDescription = "Favorite",
-                tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(16.dp)
-            )
-        }
-        rating?.let {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                Icon(
-                    Icons.Rounded.Star,
-                    contentDescription = null,
-                    modifier = Modifier.size(16.dp)
-                )
-                Text(it.toString(), style = MaterialTheme.typography.bodySmall)
-            }
-        }
+        RatingStars(rating)
         totalTime?.let {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 Icon(
-                    Icons.Rounded.Timer,
+                    Icons.Outlined.Timer,
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.size(16.dp)

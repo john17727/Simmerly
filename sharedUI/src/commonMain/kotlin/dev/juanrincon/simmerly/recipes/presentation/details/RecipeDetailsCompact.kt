@@ -23,20 +23,21 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.filled.Comment
+import androidx.compose.material.icons.automirrored.outlined.Comment
 import androidx.compose.material.icons.automirrored.filled.OpenInNew
-import androidx.compose.material.icons.filled.AddShoppingCart
-import androidx.compose.material.icons.filled.ContentCopy
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.EditCalendar
-import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.EventAvailable
-import androidx.compose.material.icons.filled.Print
-import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.outlined.AddShoppingCart
+import androidx.compose.material.icons.outlined.ContentCopy
+import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material.icons.outlined.EditCalendar
+import androidx.compose.material.icons.outlined.Edit
+import androidx.compose.material.icons.outlined.EventAvailable
+import androidx.compose.material.icons.outlined.Print
+import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.ViewTimeline
+import androidx.compose.material.icons.outlined.Settings
+import androidx.compose.material.icons.outlined.Article
 import androidx.compose.material3.AppBarRow
 import androidx.compose.material3.AppBarRowScope
 import androidx.compose.material3.BottomAppBar
@@ -50,6 +51,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MediumFlexibleTopAppBar
 import androidx.compose.material3.PrimaryScrollableTabRow
@@ -115,74 +117,80 @@ internal fun recipeActions(
     toggleableItem(
         checked = state.recipe.favorite,
         onCheckedChange = {},
-        icon = { Icon(Icons.Default.Favorite, contentDescription = null) },
+        icon = {
+            Icon(
+                if (state.recipe.favorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
+                contentDescription = null,
+                tint = if (state.recipe.favorite) MaterialTheme.colorScheme.secondary else LocalContentColor.current
+            )
+        },
         label = "Favorite",
         enabled = !state.loading,
     )
     clickableItem(
         onClick = { onEvent(RecipeDetailsIntent.OpenAddToList) },
-        icon = { Icon(Icons.Default.AddShoppingCart, contentDescription = null) },
+        icon = { Icon(Icons.Outlined.AddShoppingCart, contentDescription = null) },
         label = "Add to shopping list",
         enabled = !state.loading,
     )
     clickableItem(
         onClick = { onNavigateToComments(state.recipe.id) },
-        icon = { Icon(Icons.AutoMirrored.Default.Comment, contentDescription = null) },
+        icon = { Icon(Icons.AutoMirrored.Outlined.Comment, contentDescription = null) },
         label = "Comments",
         enabled = !state.loading && !state.recipe.settings.disableComments,
     )
     clickableItem(
         onClick = { /* TODO: edit action */ },
-        icon = { Icon(Icons.Default.Edit, contentDescription = null) },
+        icon = { Icon(Icons.Outlined.Edit, contentDescription = null) },
         label = "Edit",
         enabled = !state.loading,
     )
     clickableItem(
         onClick = { onEvent(RecipeDetailsIntent.ShowSettings) },
-        icon = { Icon(Icons.Default.Settings, contentDescription = null) },
+        icon = { Icon(Icons.Outlined.Settings, contentDescription = null) },
         label = "Settings",
         enabled = !state.loading,
     )
     clickableItem(
         onClick = { /* TODO: timeline action */ },
-        icon = { Icon(Icons.Default.ViewTimeline, contentDescription = null) },
+        icon = { Icon(Icons.Outlined.Article, contentDescription = null) },
         label = "Timeline",
         enabled = !state.loading,
     )
     // Not built yet: disabled, as in the phone menu.
     clickableItem(
         onClick = {},
-        icon = { Icon(Icons.Default.EditCalendar, contentDescription = null) },
+        icon = { Icon(Icons.Outlined.EditCalendar, contentDescription = null) },
         label = "Add to meal plan",
         enabled = false,
     )
     clickableItem(
         onClick = {},
-        icon = { Icon(Icons.Default.EventAvailable, contentDescription = null) },
+        icon = { Icon(Icons.Outlined.EventAvailable, contentDescription = null) },
         label = "Mark as made today",
         enabled = false,
     )
     clickableItem(
         onClick = {},
-        icon = { Icon(Icons.Default.Share, contentDescription = null) },
+        icon = { Icon(Icons.Outlined.Share, contentDescription = null) },
         label = "Share",
         enabled = false,
     )
     clickableItem(
         onClick = {},
-        icon = { Icon(Icons.Default.ContentCopy, contentDescription = null) },
+        icon = { Icon(Icons.Outlined.ContentCopy, contentDescription = null) },
         label = "Duplicate",
         enabled = false,
     )
     clickableItem(
         onClick = {},
-        icon = { Icon(Icons.Default.Print, contentDescription = null) },
+        icon = { Icon(Icons.Outlined.Print, contentDescription = null) },
         label = "Print",
         enabled = false,
     )
     clickableItem(
         onClick = {},
-        icon = { Icon(Icons.Default.Delete, contentDescription = null) },
+        icon = { Icon(Icons.Outlined.Delete, contentDescription = null) },
         label = "Delete recipe",
         enabled = false,
     )
