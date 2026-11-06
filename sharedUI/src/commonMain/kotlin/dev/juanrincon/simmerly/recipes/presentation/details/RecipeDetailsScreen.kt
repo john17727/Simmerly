@@ -32,7 +32,7 @@ import org.orbitmvi.orbit.compose.collectSideEffect
 fun RecipeDetailsScreen(
     recipeId: String,
     onNavigateBack: () -> Unit = {},
-    onNavigateToComments: (recipeId: String) -> Unit,
+    onToggleComments: (recipeId: String) -> Unit,
     commentsOpen: Boolean = false,
     onStartCooking: (recipeId: String) -> Unit = {},
     onNavigateToShoppingList: (listId: String) -> Unit = {},
@@ -59,9 +59,17 @@ fun RecipeDetailsScreen(
     }
     Content(
         state = state,
-        onEvent = viewModel::onEvent,
+        // The comments pane and the settings sheet both take a share of the window, so opening one
+        // closes the other.
+        onEvent = { event ->
+            if (event is RecipeDetailsIntent.ShowSettings && commentsOpen) onToggleComments(recipeId)
+            viewModel.onEvent(event)
+        },
         onNavigateBack = onNavigateBack,
-        onNavigateToComments = onNavigateToComments,
+        onToggleComments = { id ->
+            if (!commentsOpen && state.showSettings) viewModel.onEvent(RecipeDetailsIntent.DismissSettings)
+            onToggleComments(id)
+        },
         commentsOpen = commentsOpen,
         onStartCooking = onStartCooking,
         sharedTransitionScope = sharedTransitionScope,
@@ -76,7 +84,7 @@ private fun Content(
     state: RecipeDetailsState,
     onEvent: (RecipeDetailsIntent) -> Unit,
     onNavigateBack: () -> Unit,
-    onNavigateToComments: (recipeId: String) -> Unit,
+    onToggleComments: (recipeId: String) -> Unit,
     commentsOpen: Boolean,
     onStartCooking: (recipeId: String) -> Unit,
     snackbarHostState: SnackbarHostState,
@@ -115,8 +123,8 @@ private fun Content(
     }
 
     val isExpanded = isTwoPaneWidth()
-    // The docked settings sheet narrows the recipe to about phone width, so it gets the phone layout.
-    val settingsDocked = state.showSettings && sideBySide
+    // A docked settings sheet or the comments pane narrows the recipe to about phone width.
+    val narrow = (state.showSettings && sideBySide) || commentsOpen
 
     Row(modifier = Modifier.fillMaxSize()) {
         Box(modifier = Modifier.weight(1f).fillMaxHeight()) {
@@ -128,9 +136,9 @@ private fun Content(
                                 ExpandedView(
                                     state = state,
                                     onEvent = onEvent,
-                                    onNavigateToComments = onNavigateToComments,
+                                    onToggleComments = onToggleComments,
                                     commentsOpen = commentsOpen,
-                                    settingsOpen = settingsDocked,
+                                    narrow = narrow,
                                     onStartCooking = onStartCooking,
                                     modifier = modifier,
                                     snackbarHostState = snackbarHostState,
@@ -140,10 +148,10 @@ private fun Content(
                                     state = state,
                                     onEvent = onEvent,
                                     onNavigateBack = onNavigateBack,
-                                    onNavigateToComments = onNavigateToComments,
+                                    onToggleComments = onToggleComments,
                                     onStartCooking = onStartCooking,
                                     commentsOpen = commentsOpen,
-                                phoneLayout = settingsDocked || commentsOpen,
+                                narrow = narrow,
                                     sharedTransitionScope = sharedTransitionScope,
                                     modifier = modifier,
                                     snackbarHostState = snackbarHostState,

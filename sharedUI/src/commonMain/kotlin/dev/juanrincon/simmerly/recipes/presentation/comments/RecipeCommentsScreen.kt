@@ -31,17 +31,20 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import dev.juanrincon.simmerly.core.presentation.navigation.isMediumWidthOrWider
 import dev.juanrincon.simmerly.recipes.presentation.comments.models.CommentUi
 import dev.juanrincon.simmerly.recipes.presentation.comments.orbit.RecipeCommentsIntent
 import dev.juanrincon.simmerly.recipes.presentation.comments.orbit.RecipeCommentsState
-import dev.juanrincon.simmerly.core.presentation.navigation.isMediumWidthOrWider
 import dev.juanrincon.simmerly.theme.SimmerlyTheme
 import org.orbitmvi.orbit.compose.collectAsState
 import org.koin.compose.viewmodel.koinViewModel
@@ -111,13 +114,30 @@ private fun PanelBody(
             }
         }
         HorizontalDivider(color = scheme.outlineVariant)
-        LazyColumn(
-            modifier = Modifier.weight(1f).fillMaxWidth(),
-            contentPadding = PaddingValues(horizontal = 24.dp, vertical = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            items(state.comments, key = { it.id }) { comment ->
-                PanelComment(comment, modifier = Modifier.animateItem())
+        val listState = rememberLazyListState()
+        // Keep the newest comment in view: on first load and after posting one.
+        LaunchedEffect(state.comments.lastOrNull()?.id) {
+            if (state.comments.isNotEmpty()) listState.animateScrollToItem(state.comments.lastIndex)
+        }
+        Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
+            LazyColumn(
+                state = listState,
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(horizontal = 24.dp, vertical = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                items(state.comments, key = { it.id }) { comment ->
+                    PanelComment(comment, modifier = Modifier.animateItem())
+                }
+            }
+            if (state.comments.isEmpty()) {
+                Text(
+                    "No comments yet. Start the conversation.",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = scheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.align(Alignment.Center).padding(horizontal = 32.dp)
+                )
             }
         }
         HorizontalDivider(color = scheme.outlineVariant)

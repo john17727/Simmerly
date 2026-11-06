@@ -120,7 +120,7 @@ fun RecipesContent(
                         sharedTransitionScope = this@SharedTransitionLayout,
                         onNavigateBack = { backStack.removeLastOrNull() },
                         commentsOpen = commentsOpen,
-                        onNavigateToComments = { id ->
+                        onToggleComments = { id ->
                             // The header's Comments button toggles the extra pane on desktop.
                             if (backStack.lastOrNull() is RecipeDestinations.Comments) {
                                 backStack.removeLastOrNull()

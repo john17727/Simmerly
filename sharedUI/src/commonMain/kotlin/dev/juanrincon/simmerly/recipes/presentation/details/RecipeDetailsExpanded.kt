@@ -88,10 +88,10 @@ private val EXPANDED_BOTTOM_PADDING = 96.dp
 internal fun ExpandedView(
     state: RecipeDetailsState,
     onEvent: (RecipeDetailsIntent) -> Unit,
-    onNavigateToComments: (recipeId: String) -> Unit,
+    onToggleComments: (recipeId: String) -> Unit,
     commentsOpen: Boolean,
-    /** Settings side sheet is docked beside the recipe: the pane is as narrow as with comments open. */
-    settingsOpen: Boolean = false,
+    /** A side panel (comments or settings) shares the window, so the pane uses the phone's single-column sections. */
+    narrow: Boolean = false,
     onStartCooking: (recipeId: String) -> Unit,
     modifier: Modifier = Modifier,
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
@@ -122,7 +122,6 @@ internal fun ExpandedView(
 
     // With the comments pane or settings sheet open the detail pane is about as narrow as a phone, so the sections
     // use the phone's single-column layout and tighter gutters.
-    val narrow = commentsOpen || settingsOpen
     val contentPadding = if (narrow) 16.dp else EXPANDED_HORIZONTAL_PADDING
 
     val cardColors = CardDefaults.outlinedCardColors(
@@ -152,7 +151,7 @@ internal fun ExpandedView(
                     onEvent = onEvent,
                     commentsOpen = commentsOpen,
                     narrow = narrow,
-                    onShowComments = { onNavigateToComments(recipe.id) },
+                    onShowComments = { onToggleComments(recipe.id) },
                     modifier = Modifier.fillMaxWidth()
                 )
                 AnimatedVisibility(
