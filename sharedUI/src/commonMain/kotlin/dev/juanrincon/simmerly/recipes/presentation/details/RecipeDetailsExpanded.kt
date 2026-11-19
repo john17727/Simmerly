@@ -57,7 +57,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.unit.dp
 import dev.juanrincon.simmerly.core.presentation.VerticalScrollbar
-import dev.juanrincon.simmerly.recipes.presentation.comments.RecipeCommentsScreen
 import dev.juanrincon.simmerly.recipes.presentation.details.orbit.RecipeDetailsIntent
 import dev.juanrincon.simmerly.recipes.presentation.details.orbit.RecipeDetailsState
 import dev.juanrincon.simmerly.recipes.presentation.details.orbit.RecipeTab
@@ -72,7 +71,9 @@ private val EXPANDED_CONTENT_MAX_WIDTH = 1040.dp
 /** Six action icons (favorite, shopping list, comments, edit, settings, timeline) plus the overflow button, which maxItemCount counts. */
 private const val EXPANDED_TOP_BAR_MAX_ITEMS = 7
 
-private val COMMENTS_PANEL_WIDTH = 440.dp
+/** With the comments pane or settings sheet open the detail pane is narrower: three icons plus the overflow button. */
+private const val EXPANDED_TOP_BAR_MAX_ITEMS_COMMENTS_OPEN = 4
+
 
 /** Trailing space so the last card/step clears the Start cooking FAB (same as the foldable). */
 private val EXPANDED_BOTTOM_PADDING = 96.dp
@@ -80,13 +81,17 @@ private val EXPANDED_BOTTOM_PADDING = 96.dp
 /**
  * The detail pane of the list + detail layout. Mirrors the foldable design (tinted cards, two
  * column ingredients/notes, nutrition tiles, AppBarRow actions, extended FAB) minus the overview,
- * with real tabs instead of scroll-linked ones. It never navigates: comments are a tab.
+ * with real tabs instead of scroll-linked ones. Comments open in the list-detail scene's extra pane.
  */
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 internal fun ExpandedView(
     state: RecipeDetailsState,
     onEvent: (RecipeDetailsIntent) -> Unit,
+    onToggleComments: (recipeId: String) -> Unit,
+    commentsOpen: Boolean,
+    /** A side panel (comments or settings) shares the window, so the pane uses the phone's single-column sections. */
+    narrow: Boolean = false,
     onStartCooking: (recipeId: String) -> Unit,
     modifier: Modifier = Modifier,
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
@@ -97,7 +102,6 @@ internal fun ExpandedView(
 
     val listState = rememberLazyListState()
     val coroutineScope = rememberCoroutineScope()
-    var showComments by remember { mutableStateOf(false) }
     var programmaticTarget by remember { mutableStateOf<Int?>(null) }
 
     // Section i of the page is tab i: Ingredients, Instructions, then Notes and Nutrition when
@@ -115,6 +119,10 @@ internal fun ExpandedView(
             index.coerceIn(0, expandedTabs.lastIndex)
         }
     }
+
+    // With the comments pane or settings sheet open the detail pane is about as narrow as a phone, so the sections
+    // use the phone's single-column layout and tighter gutters.
+    val contentPadding = if (narrow) 16.dp else EXPANDED_HORIZONTAL_PADDING
 
     val cardColors = CardDefaults.outlinedCardColors(
         containerColor = MaterialTheme.colorScheme.surfaceContainerLow
@@ -141,7 +149,9 @@ internal fun ExpandedView(
                         }
                     },
                     onEvent = onEvent,
-                    onShowComments = { showComments = true },
+                    commentsOpen = commentsOpen,
+                    narrow = narrow,
+                    onShowComments = { onToggleComments(recipe.id) },
                     modifier = Modifier.fillMaxWidth()
                 )
                 AnimatedVisibility(
@@ -161,8 +171,8 @@ internal fun ExpandedView(
                         state = listState,
                         modifier = Modifier.fillMaxSize(),
                         contentPadding = PaddingValues(
-                            start = EXPANDED_HORIZONTAL_PADDING,
-                            end = EXPANDED_HORIZONTAL_PADDING,
+                            start = contentPadding,
+                            end = contentPadding,
                             top = 16.dp,
                             bottom = EXPANDED_BOTTOM_PADDING
                         ),
@@ -180,7 +190,7 @@ internal fun ExpandedView(
                                     onRemoveServingButtonClick = { onEvent(RecipeDetailsIntent.RemoveServing) },
                                     onAddServingButtonClick = { onEvent(RecipeDetailsIntent.AddServing) },
                                     onAddToListClick = { onEvent(RecipeDetailsIntent.OpenAddToList) },
-                                    columns = 2,
+                                    columns = if (narrow) 1 else 2,
                                     modifier = Modifier.fillMaxWidth()
                                 )
                             }
@@ -194,7 +204,7 @@ internal fun ExpandedView(
                                 InstructionView(
                                     instructions = recipe.instructions,
                                     ingredients = recipe.ingredients,
-                                    imagesOnSide = true,
+                                    imagesOnSide = !narrow,
                                     modifier = Modifier.fillMaxWidth()
                                 )
                             }
@@ -202,7 +212,7 @@ internal fun ExpandedView(
                         if (recipe.notes.isNotEmpty()) {
                             item {
                                 RecipeSectionCard(colors = cardColors, modifier = cardModifier) {
-                                    NotesView(recipe.notes, columns = 2, modifier = Modifier.fillMaxWidth())
+                                    NotesView(recipe.notes, columns = if (narrow) 1 else 2, modifier = Modifier.fillMaxWidth())
                                 }
                             }
                         }
@@ -233,70 +243,12 @@ internal fun ExpandedView(
             hostState = snackbarHostState,
             modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 24.dp)
         )
-        CommentsSidePanel(
-            visible = showComments,
-            recipeId = recipe.id,
-            onDismiss = { showComments = false }
-        )
-    }
-}
-
-/**
- * Comments are a full screen with their own list, so they can't be a section of the scrolling
- * page. On desktop they slide over the right edge of the detail pane instead of navigating away,
- * which keeps the list + detail view intact.
- */
-@Composable
-private fun BoxScope.CommentsSidePanel(
-    visible: Boolean,
-    recipeId: String,
-    onDismiss: () -> Unit
-) {
-    AnimatedVisibility(visible = visible, enter = fadeIn(), exit = fadeOut()) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.32f))
-                .clickable(onClick = onDismiss)
-        )
-    }
-    AnimatedVisibility(
-        visible = visible,
-        enter = slideInHorizontally { it },
-        exit = slideOutHorizontally { it },
-        modifier = Modifier.align(Alignment.CenterEnd)
-    ) {
-        Surface(
-            // Plain surface: tonalElevation would blend the primary color in and tint it pink.
-            color = MaterialTheme.colorScheme.surface,
-            shadowElevation = 8.dp,
-            modifier = Modifier.width(COMMENTS_PANEL_WIDTH).fillMaxHeight()
-        ) {
-            Column(modifier = Modifier.statusBarsPadding()) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.fillMaxWidth().padding(start = 20.dp, end = 4.dp)
-                ) {
-                    Text(
-                        "Comments",
-                        style = MaterialTheme.typography.titleLarge,
-                        modifier = Modifier.weight(1f)
-                    )
-                    IconButton(onClick = onDismiss) {
-                        Icon(Icons.Default.Close, contentDescription = "Close comments")
-                    }
-                }
-                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-                RecipeCommentsScreen(recipeId = recipeId, modifier = Modifier.fillMaxSize())
-            }
-        }
     }
 }
 
 /**
  * The pane's header row: the section tabs on the left, the same [recipeActions] as the foldable
- * top bar on the right. The Comments action opens the comments side panel, since desktop never
- * navigates away from the list + detail view.
+ * top bar on the right. The Comments action opens the comments extra pane.
  */
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -307,10 +259,12 @@ private fun ExpandedHeader(
     onTabSelected: (Int) -> Unit,
     onEvent: (RecipeDetailsIntent) -> Unit,
     onShowComments: () -> Unit,
+    commentsOpen: Boolean,
+    narrow: Boolean,
     modifier: Modifier = Modifier
 ) {
     val uriHandler = LocalUriHandler.current
-    val actions = recipeActions(state, onEvent, { onShowComments() }, uriHandler::openUri)
+    val actions = recipeActions(state, onEvent, { onShowComments() }, uriHandler::openUri, commentsOpen)
     Column(modifier = modifier) {
         Row(
             modifier = Modifier
@@ -342,7 +296,14 @@ private fun ExpandedHeader(
             // TopAppBar/BottomAppBar tint their action icons onSurfaceVariant; this row sits on the
             // plain surface, so set the same content color to match phone and foldable.
             CompositionLocalProvider(LocalContentColor provides MaterialTheme.colorScheme.onSurfaceVariant) {
-                AppBarRow(maxItemCount = EXPANDED_TOP_BAR_MAX_ITEMS, content = actions)
+                AppBarRow(
+                    maxItemCount = if (narrow) {
+                        EXPANDED_TOP_BAR_MAX_ITEMS_COMMENTS_OPEN
+                    } else {
+                        EXPANDED_TOP_BAR_MAX_ITEMS
+                    },
+                    content = actions
+                )
             }
         }
         HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)

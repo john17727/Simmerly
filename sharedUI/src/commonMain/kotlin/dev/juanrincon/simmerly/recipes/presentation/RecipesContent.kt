@@ -3,27 +3,17 @@ package dev.juanrincon.simmerly.recipes.presentation
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.imePadding
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
 import androidx.compose.material3.adaptive.navigation3.ListDetailSceneStrategy
 import androidx.compose.material3.adaptive.navigation3.rememberListDetailSceneStrategy
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -36,8 +26,9 @@ import androidx.navigation3.ui.NavDisplay
 import androidx.savedstate.serialization.SavedStateConfiguration
 import dev.juanrincon.simmerly.core.presentation.navigation.AppNavRequest
 import dev.juanrincon.simmerly.core.presentation.navigation.BottomSheetSceneStrategy
+import dev.juanrincon.simmerly.core.presentation.navigation.PaneWidths
 import dev.juanrincon.simmerly.core.presentation.navigation.rememberTwoPaneDirective
-import dev.juanrincon.simmerly.recipes.presentation.comments.RecipeCommentsScreen
+import dev.juanrincon.simmerly.recipes.presentation.comments.RecipeCommentsPanel
 import dev.juanrincon.simmerly.recipes.presentation.cookmode.CookModeScreen
 import dev.juanrincon.simmerly.recipes.presentation.details.RecipeDetailsScreen
 import dev.juanrincon.simmerly.recipes.presentation.list.RecipeListScreen
@@ -69,6 +60,7 @@ fun RecipesContent(
         RecipeDestinations.List
     )
 
+    val commentsOpen = backStack.any { it is RecipeDestinations.Comments }
     val isAtRoot by remember { derivedStateOf { backStack.size <= 1 } }
     // The open recipe is whatever Detail destination is on the back stack. Deriving it here, rather
     // than keeping a copy in the list's ViewModel, keeps it in step with the detail pane: the back
@@ -82,7 +74,7 @@ fun RecipesContent(
             backStack = backStack,
             // BottomSheetSceneStrategy is an overlay strategy and must run before any non-overlay
             // one (ListDetailSceneStrategy here) — see its KDoc.
-            sceneStrategies = listOf(BottomSheetSceneStrategy(), rememberListDetailSceneStrategy(directive = rememberTwoPaneDirective())),
+            sceneStrategies = listOf(BottomSheetSceneStrategy(), rememberListDetailSceneStrategy(directive = rememberTwoPaneDirective(extraPaneOpen = commentsOpen))),
             modifier = modifier.fillMaxSize(),
             entryDecorators = listOf(
                 rememberSaveableStateHolderNavEntryDecorator(),
@@ -104,7 +96,7 @@ fun RecipesContent(
                         sharedTransitionScope = this@SharedTransitionLayout,
                         onSearchClicked = { backStack.add(RecipeDestinations.Search) },
                         onRecipeSelected = { recipeId ->
-                            backStack.removeAll { it is RecipeDestinations.Detail }
+                            backStack.removeAll { it is RecipeDestinations.Detail || it is RecipeDestinations.Comments }
                             backStack.add(RecipeDestinations.Detail(recipeId))
                         }
                     )
@@ -112,7 +104,7 @@ fun RecipesContent(
                 entry<RecipeDestinations.Search> {
                     RecipeSearchScreen(
                         onRecipeSelected = { recipeId ->
-                            backStack.removeAll { it is RecipeDestinations.Detail }
+                            backStack.removeAll { it is RecipeDestinations.Detail || it is RecipeDestinations.Comments }
                             backStack.add(RecipeDestinations.Detail(recipeId))
                         },
                         onNavigateBack = { backStack.removeLastOrNull() },
@@ -127,7 +119,15 @@ fun RecipesContent(
                         recipeId = key.recipeId,
                         sharedTransitionScope = this@SharedTransitionLayout,
                         onNavigateBack = { backStack.removeLastOrNull() },
-                        onNavigateToComments = { backStack.add(RecipeDestinations.Comments(it)) },
+                        commentsOpen = commentsOpen,
+                        onToggleComments = { id ->
+                            // The header's Comments button toggles the extra pane on desktop.
+                            if (backStack.lastOrNull() is RecipeDestinations.Comments) {
+                                backStack.removeLastOrNull()
+                            } else {
+                                backStack.add(RecipeDestinations.Comments(id))
+                            }
+                        },
                         onStartCooking = { backStack.add(RecipeDestinations.CookMode(it)) },
                         onNavigateToShoppingList = { onNavigate(AppNavRequest.OpenShoppingList(it)) },
                         modifier = Modifier.fillMaxSize()
@@ -142,36 +142,19 @@ fun RecipesContent(
                         modifier = Modifier.fillMaxSize()
                     )
                 }
+                // The extra pane: beside the detail pane where the window has room (400dp, as in
+                // the desktop design), a full-screen replacement elsewhere. Same sheet either way.
                 entry<RecipeDestinations.Comments>(
-                    metadata = ListDetailSceneStrategy.extraPane()
+                    metadata = ListDetailSceneStrategy.extraPane() +
+                        ListDetailSceneStrategy.preferredPaneSize(width = PaneWidths.Comments)
                 ) { key ->
-                    Scaffold(
-                        topBar = {
-                            TopAppBar(
-                                title = { Text("Comments") },
-                                navigationIcon = {
-                                    IconButton(onClick = { backStack.removeLastOrNull() }) {
-                                        Icon(
-                                            Icons.AutoMirrored.Filled.ArrowBack,
-                                            contentDescription = "Back"
-                                        )
-                                    }
-                                },
-                                colors = TopAppBarDefaults.topAppBarColors()
-                                    .copy(containerColor = MaterialTheme.colorScheme.background)
-                            )
-                        }
-                    ) { paddingValues ->
-                        RecipeCommentsScreen(
-                            recipeId = key.recipeId,
-                            // The activity resizes for the keyboard rather than panning, so the
-                            // comment field has to lift itself above it.
-                            modifier = Modifier
-                                .padding(paddingValues)
-                                .consumeWindowInsets(paddingValues)
-                                .imePadding()
-                        )
-                    }
+                    RecipeCommentsPanel(
+                        recipeId = key.recipeId,
+                        onClose = { backStack.removeLastOrNull() },
+                        // The activity resizes for the keyboard rather than panning, so the
+                        // composer has to lift itself above it.
+                        modifier = Modifier.fillMaxSize().imePadding()
+                    )
                 }
             }
         )

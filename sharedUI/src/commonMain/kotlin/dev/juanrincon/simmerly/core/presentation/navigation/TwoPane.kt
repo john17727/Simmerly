@@ -27,17 +27,26 @@ fun isMediumWidthOrWider(): Boolean = currentWindowAdaptiveInfoV2().windowSizeCl
     .isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_MEDIUM_LOWER_BOUND)
 
 /**
- * The default [PaneScaffoldDirective], held to a single pane until [TWO_PANE_MIN_WIDTH_DP] so a
- * list-detail scene and the screens inside it always switch layout at the same width.
+ * The default [PaneScaffoldDirective] without a gutter between panes, held to a single pane until
+ * [TWO_PANE_MIN_WIDTH_DP] so a list-detail scene and the screens inside it always switch layout at
+ * the same width.
+ *
+ * [extraPaneOpen] lets an open extra pane (comments) sit beside the detail pane from the Expanded
+ * width class (840dp) up, as the Material guidance has it, instead of replacing it: there the list
+ * hides and the detail and extra panes share the window.
  */
 @OptIn(ExperimentalMaterial3AdaptiveApi::class)
 @Composable
-fun rememberTwoPaneDirective(): PaneScaffoldDirective {
+fun rememberTwoPaneDirective(extraPaneOpen: Boolean = false): PaneScaffoldDirective {
     val windowAdaptiveInfo = currentWindowAdaptiveInfoV2()
     val directive = calculatePaneScaffoldDirective(windowAdaptiveInfo)
-    return if (isTwoPaneWidth()) {
-        directive
-    } else {
-        directive.copy(maxHorizontalPartitions = 1, horizontalPartitionSpacerSize = 0.dp)
+    val expanded = windowAdaptiveInfo.windowSizeClass
+        .isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_EXPANDED_LOWER_BOUND)
+    // No gutter between panes: the detail pane and the comments sheet draw their own edge rules.
+    return when {
+        isTwoPaneWidth() -> directive.copy(horizontalPartitionSpacerSize = 0.dp)
+        extraPaneOpen && expanded ->
+            directive.copy(maxHorizontalPartitions = 2, horizontalPartitionSpacerSize = 0.dp)
+        else -> directive.copy(maxHorizontalPartitions = 1, horizontalPartitionSpacerSize = 0.dp)
     }
 }

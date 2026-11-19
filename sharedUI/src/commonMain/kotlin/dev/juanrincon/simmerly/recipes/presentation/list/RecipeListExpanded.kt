@@ -90,6 +90,7 @@ internal fun SelectableList(
             state = state,
             contentPadding = PaddingValues(
                 start = 16.dp,
+                end = 16.dp,
                 top = 16.dp + WindowInsets.statusBars.asPaddingValues().calculateTopPadding(),
                 bottom = 16.dp
             ),
