@@ -2,6 +2,7 @@ package dev.juanrincon.simmerly.core.presentation
 
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.AnimationVector1D
 import androidx.compose.animation.core.infiniteRepeatable
@@ -132,8 +133,10 @@ private class ShimmerModifierNode(
 
 /** The skeleton colors used by loading placeholders across the app. */
 @Composable
-fun shimmerColors(): List<Color> = listOf(
-    MaterialTheme.colorScheme.surfaceContainer,
-    MaterialTheme.colorScheme.surfaceContainerHighest,
-    MaterialTheme.colorScheme.surfaceContainer,
-)
+fun shimmerColors(): List<Color> {
+    val base = MaterialTheme.colorScheme.surfaceContainer
+    val highlight = MaterialTheme.colorScheme.surfaceContainerHighest
+    // Remembered so the list keeps its identity: the shimmer node compares colors by reference
+    // and would otherwise invalidate its draw on every recomposition.
+    return remember(base, highlight) { listOf(base, highlight, base) }
+}

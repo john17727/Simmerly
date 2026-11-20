@@ -99,13 +99,14 @@ internal fun SelectableList(
         ) {
             // Skeletons are for the first load only; a refresh over existing items keeps them.
             if (lazyPagingItems.loadState.refresh is LoadState.Loading && lazyPagingItems.itemCount == 0) {
-                items(6) {
+                items(6, key = { "skeleton-$it" }, contentType = { "skeleton" }) {
                     RecipeCardSkeleton(modifier = Modifier.fillMaxWidth())
                 }
             } else {
                 items(
                     count = lazyPagingItems.itemCount,
-                    key = { index -> lazyPagingItems.peek(index)?.id ?: index }
+                    key = { index -> lazyPagingItems.peek(index)?.id ?: "placeholder-$index" },
+                    contentType = { "recipe" }
                 ) { index ->
                     val item = lazyPagingItems[index] ?: return@items
                     val isSelected = item.id == selected
@@ -114,6 +115,7 @@ internal fun SelectableList(
                         onFavoriteClick = { onFavoriteToggled(item.id, it) },
                         onRatingChange = { onRatingChanged(item.id, it) },
                         selected = isSelected,
+                        animateSelection = true,
                         onClick = {
                             onRecipeSelected(item.id)
                         },
@@ -125,7 +127,7 @@ internal fun SelectableList(
                     )
                 }
                 if (lazyPagingItems.loadState.append is LoadState.Loading) {
-                    item {
+                    item(key = "append-skeleton", contentType = "skeleton") {
                         RecipeCardSkeleton(modifier = Modifier.fillMaxWidth())
                     }
                 }

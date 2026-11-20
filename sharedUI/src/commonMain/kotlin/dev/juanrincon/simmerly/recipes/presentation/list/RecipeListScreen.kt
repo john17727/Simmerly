@@ -48,10 +48,9 @@ import androidx.navigation3.ui.LocalNavAnimatedContentScope
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
 import coil3.compose.AsyncImage
-import coil3.compose.LocalPlatformContext
-import coil3.request.ImageRequest
 import dev.juanrincon.simmerly.core.presentation.navigation.isTwoPaneWidth
 import dev.juanrincon.simmerly.core.presentation.shimmer
+import dev.juanrincon.simmerly.core.presentation.shimmerColors
 import dev.juanrincon.simmerly.recipes.domain.model.RecipeSummary
 import dev.juanrincon.simmerly.recipes.presentation.list.orbit.RecipeListIntent
 import dev.juanrincon.simmerly.recipes.presentation.shared.CategoriesAndTags
@@ -132,23 +131,18 @@ fun RecipeCard(
     /** Called with a whole-star rating (or `null` to clear) from the expanded card's stars. The
      * expanded card only exists in the desktop list pane. `null` makes the stars display-only. */
     onRatingChange: ((Double?) -> Unit)? = null,
+    /** Cross-fades between the collapsed and expanded card. Only the two-pane list needs it; leaving
+     * it off avoids an `AnimatedContent` (and its transition) per card everywhere else. */
+    animateSelection: Boolean = false,
 ) {
-    AnimatedContent(
-        selected,
-        transitionSpec = {
-            fadeIn() togetherWith fadeOut() using SizeTransform(clip = false)
-        },
-        label = "RecipeCardExpand"
-    ) { isSelected ->
+    val content: @Composable (Boolean) -> Unit = { isSelected ->
         if (isSelected) {
             Column(
                 verticalArrangement = Arrangement.spacedBy(8.dp),
                 modifier = Modifier.padding(vertical = 32.dp),
             ) {
                 AsyncImage(
-                    model = ImageRequest.Builder(LocalPlatformContext.current)
-                        .data(recipe.image)
-                        .build(),
+                    model = recipe.image,
                     contentDescription = null,
                     contentScale = ContentScale.Crop,
                     modifier = Modifier
@@ -217,9 +211,7 @@ fun RecipeCard(
                         }
                     } else Modifier
                     AsyncImage(
-                        model = ImageRequest.Builder(LocalPlatformContext.current)
-                            .data(recipe.image)
-                            .build(),
+                        model = recipe.image,
                         contentDescription = null,
                         contentScale = ContentScale.Crop,
                         modifier = Modifier.size(100.dp).then(sharedModifier)
@@ -250,6 +242,18 @@ fun RecipeCard(
             }
         }
     }
+    if (animateSelection) {
+        AnimatedContent(
+            selected,
+            transitionSpec = {
+                fadeIn() togetherWith fadeOut() using SizeTransform(clip = false)
+            },
+            label = "RecipeCardExpand",
+            content = { content(it) }
+        )
+    } else {
+        content(selected)
+    }
 }
 
 /** The heart in a card's top-right corner: outlined, or filled coral for a favorite. */
@@ -279,11 +283,7 @@ private fun FavoriteHeart(
 
 @Composable
 fun RecipeCardSkeleton(modifier: Modifier = Modifier) {
-    val shimmerColors = listOf(
-        MaterialTheme.colorScheme.surfaceContainer,
-        MaterialTheme.colorScheme.surfaceContainerHighest,
-        MaterialTheme.colorScheme.surfaceContainer,
-    )
+    val shimmerColors = shimmerColors()
     Card(
         modifier = modifier,
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow)
