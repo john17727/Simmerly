@@ -73,6 +73,9 @@ class SimmerlyRecipeRepository(
      * clears its ViewModel) doesn't throw away the loaded pages or rerun the remote refresh. */
     private val pagingScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
+    @Volatile
+    private var activePagingSource: RecipePagingSource? = null
+
     private val cachedRecipeList: Flow<PagingData<RecipeSummary>> by lazy {
         createRecipePager().cachedIn(pagingScope)
     }
@@ -89,17 +92,19 @@ class SimmerlyRecipeRepository(
         val preferenceById = preferences.associateBy { it.recipeId }
         recipes.map { recipe ->
             val preference = preferenceById[recipe.id]
-            recipe.copy(
-                isFavorite = preference?.isFavorite ?: false,
-                // Like the details screen: the user's own rating wins over the recipe's.
-                rating = preference?.rating ?: recipe.rating,
-            )
+            val isFavorite = preference?.isFavorite ?: false
+            // Like the details screen: the user's own rating wins over the recipe's.
+            val rating = preference?.rating ?: recipe.rating
+            // Hand back the same instance when nothing changed, so a preference change for one
+            // recipe leaves every other card equal (and skippable) instead of rebuilding them all.
+            if (recipe.isFavorite == isFavorite && recipe.rating == rating) recipe
+            else recipe.copy(isFavorite = isFavorite, rating = rating)
         }
     }
 
     @OptIn(ExperimentalPagingApi::class)
     private fun createRecipePager(): Flow<PagingData<RecipeSummary>> = Pager(
-        config = PagingConfig(pageSize = 50, enablePlaceholders = false),
+        config = PagingConfig(pageSize = RecipePagingSource.PAGE_SIZE, enablePlaceholders = false),
         remoteMediator = RecipeRemoteMediator(
             networkClient = networkClient,
             recipeDao = recipeDao,
@@ -107,13 +112,16 @@ class SimmerlyRecipeRepository(
             tagsDao = tagsDao,
             recipeTagDao = recipeTagDao,
             categoryDao = categoryDao,
+            // The paging source reads the table once per load and isn't Room-backed, so it has to
+            // be told when the mediator has written new rows.
+            onPageWritten = { activePagingSource?.invalidate() },
         ),
         pagingSourceFactory = {
             RecipePagingSource(
                 recipeDao = recipeDao,
                 preferenceDao = database.userRecipePreferenceDao(),
                 sessionDataStore = sessionDataStore,
-            )
+            ).also { activePagingSource = it }
         }
     ).flow
 

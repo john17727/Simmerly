@@ -4,6 +4,7 @@ import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
@@ -63,7 +64,8 @@ internal fun CompactRecipeList(
             onFavoriteToggled = onFavoriteToggled,
             sharedTransitionScope = sharedTransitionScope,
             lazyGridState = lazyGridState,
-            modifier = modifier.padding(paddingValues)
+            // The caller's modifier is already on the Scaffold; applying it again doubled it up.
+            modifier = Modifier.fillMaxSize().padding(paddingValues)
         )
     }
 }
@@ -85,14 +87,17 @@ private fun RecipeList(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         modifier = modifier.clip(shape = MaterialTheme.shapes.medium)
     ) {
-        if (lazyPagingItems.loadState.refresh is LoadState.Loading) {
-            items(6) {
+        // Skeletons are for the first load only; a refresh over existing items keeps them (and the
+        // scroll position) instead of swapping the whole grid out.
+        if (lazyPagingItems.loadState.refresh is LoadState.Loading && lazyPagingItems.itemCount == 0) {
+            items(6, key = { "skeleton-$it" }, contentType = { "skeleton" }) {
                 RecipeCardSkeleton(modifier = Modifier.fillMaxWidth())
             }
         } else {
             items(
                 count = lazyPagingItems.itemCount,
-                key = { index -> lazyPagingItems.peek(index)?.id ?: index }
+                key = { index -> lazyPagingItems.peek(index)?.id ?: "placeholder-$index" },
+                contentType = { "recipe" }
             ) { index ->
                 val item = lazyPagingItems[index] ?: return@items
                 RecipeCard(
@@ -104,7 +109,7 @@ private fun RecipeList(
                 )
             }
             if (lazyPagingItems.loadState.append is LoadState.Loading) {
-                item(span = { GridItemSpan(maxLineSpan) }) {
+                item(key = "append-skeleton", span = { GridItemSpan(maxLineSpan) }, contentType = "skeleton") {
                     RecipeCardSkeleton(modifier = Modifier.fillMaxWidth())
                 }
             }

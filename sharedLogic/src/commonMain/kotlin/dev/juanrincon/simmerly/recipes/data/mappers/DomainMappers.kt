@@ -1,5 +1,6 @@
 package dev.juanrincon.simmerly.recipes.data.mappers
 
+import dev.juanrincon.simmerly.core.data.remote.RecipeImageSize
 import dev.juanrincon.simmerly.core.data.remote.recipeImageUrl
 import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.CategoryEntity
 import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.CommentEntity
@@ -38,7 +39,7 @@ import dev.juanrincon.simmerly.recipes.domain.model.User
 fun RecipeEntity.toDomain(host: String?): RecipeSummary = RecipeSummary(
     id = id,
     name = name,
-    image = createRecipeImageUrl(host, id),
+    image = createRecipeImageUrl(host, id, RecipeImageSize.Thumbnail),
     tags = listOf(),
     rating = rating,
     totalTime = abbreviateNullableTime(totalTime),
@@ -51,7 +52,7 @@ fun ListRecipeWithTags.toDomain(host: String?, isFavorite: Boolean = false): Rec
     RecipeSummary(
         id = recipe.id,
         name = recipe.name,
-        image = createRecipeImageUrl(host, recipe.id),
+        image = createRecipeImageUrl(host, recipe.id, RecipeImageSize.Thumbnail),
         tags = tags.map { it.toDomain() },
         categories = categories.map { it.toDomain() },
         rating = recipe.rating,
@@ -394,7 +395,11 @@ fun Settings.toDto(): SettingsDto = SettingsDto(
 )
 
 
-private fun createRecipeImageUrl(host: String?, id: String): String = recipeImageUrl(host, id)
+private fun createRecipeImageUrl(
+    host: String?,
+    id: String,
+    size: RecipeImageSize = RecipeImageSize.Original,
+): String = recipeImageUrl(host, id, size)
 
 private val imgTagRegex =
     Regex("""<img\b[^>]*?\bsrc\s*=\s*(["'])(.*?)\1[^>]*>""", RegexOption.IGNORE_CASE)

@@ -45,7 +45,7 @@ class DomainMappersTest {
 
         val domain = entity.toDomain(host = "https://myserver.com")
 
-        assertThat(domain.image).isEqualTo("https://myserver.com/api/media/recipes/recipe-1/images/original.webp")
+        assertThat(domain.image).isEqualTo("https://myserver.com/api/media/recipes/recipe-1/images/min-original.webp")
     }
 
     @Test

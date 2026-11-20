@@ -3,6 +3,7 @@ plugins {
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
     alias(libs.plugins.ksp)
+    alias(libs.plugins.baselineprofile)
 //    alias(libs.plugins.stability.analyzer)
 }
 
@@ -28,12 +29,27 @@ android {
     }
     buildTypes {
         getByName("release") {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro",
+            )
         }
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
+    }
+}
+
+// The variants the baselineprofile plugin builds to record a profile install as their own app, so
+// they sit beside the debug build instead of replacing it (and wiping its data/login).
+androidComponents {
+    onVariants { variant ->
+        if (variant.buildType in setOf("benchmarkRelease", "nonMinifiedRelease")) {
+            variant.applicationId.set("dev.juanrincon.simmerly.benchmark")
+        }
     }
 }
 
@@ -43,4 +59,6 @@ dependencies {
     implementation(libs.androidx.core.splashscreen)
     implementation(platform(libs.koin.bom))
     implementation(libs.koin.android)
+    implementation(libs.androidx.profileinstaller)
+    "baselineProfile"(projects.baselineprofile)
 }

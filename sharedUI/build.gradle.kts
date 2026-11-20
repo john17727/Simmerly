@@ -94,3 +94,9 @@ compose.resources {
 dependencies {
     androidRuntimeClasspath(libs.ui.tooling)
 }
+
+composeCompiler {
+    // sharedLogic has no Compose compiler, so its models (e.g. RecipeSummary with its List<Tag>)
+    // are inferred as unstable and recompose every card that holds them. They are immutable.
+    stabilityConfigurationFiles.add(layout.projectDirectory.file("compose_stability.conf"))
+}
