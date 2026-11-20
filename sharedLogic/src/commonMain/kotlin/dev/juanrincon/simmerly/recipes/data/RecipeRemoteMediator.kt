@@ -26,6 +26,8 @@ class RecipeRemoteMediator(
     private val tagsDao: TagDao,
     private val recipeTagDao: RecipeTagDao,
     private val categoryDao: CategoryDao,
+    /** Called after a page has been written, so the paging source re-reads the table. */
+    private val onPageWritten: () -> Unit = {},
 ) : RemoteMediator<Int, RecipeSummary>() {
 
     override suspend fun load(
@@ -70,6 +72,8 @@ class RecipeRemoteMediator(
                     createdAt = Clock.System.now()
                 )
             )
+
+            onPageWritten()
 
             MediatorResult.Success(endOfPaginationReached = response.next == null)
         } catch (e: Exception) {

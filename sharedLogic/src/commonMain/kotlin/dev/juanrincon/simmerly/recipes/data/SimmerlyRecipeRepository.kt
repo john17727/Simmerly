@@ -73,6 +73,9 @@ class SimmerlyRecipeRepository(
      * clears its ViewModel) doesn't throw away the loaded pages or rerun the remote refresh. */
     private val pagingScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
+    @Volatile
+    private var activePagingSource: RecipePagingSource? = null
+
     private val cachedRecipeList: Flow<PagingData<RecipeSummary>> by lazy {
         createRecipePager().cachedIn(pagingScope)
     }
@@ -101,7 +104,7 @@ class SimmerlyRecipeRepository(
 
     @OptIn(ExperimentalPagingApi::class)
     private fun createRecipePager(): Flow<PagingData<RecipeSummary>> = Pager(
-        config = PagingConfig(pageSize = 50, enablePlaceholders = false),
+        config = PagingConfig(pageSize = RecipePagingSource.PAGE_SIZE, enablePlaceholders = false),
         remoteMediator = RecipeRemoteMediator(
             networkClient = networkClient,
             recipeDao = recipeDao,
@@ -109,13 +112,16 @@ class SimmerlyRecipeRepository(
             tagsDao = tagsDao,
             recipeTagDao = recipeTagDao,
             categoryDao = categoryDao,
+            // The paging source reads the table once per load and isn't Room-backed, so it has to
+            // be told when the mediator has written new rows.
+            onPageWritten = { activePagingSource?.invalidate() },
         ),
         pagingSourceFactory = {
             RecipePagingSource(
                 recipeDao = recipeDao,
                 preferenceDao = database.userRecipePreferenceDao(),
                 sessionDataStore = sessionDataStore,
-            )
+            ).also { activePagingSource = it }
         }
     ).flow
 

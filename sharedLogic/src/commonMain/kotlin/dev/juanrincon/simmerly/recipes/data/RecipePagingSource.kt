@@ -15,10 +15,18 @@ class RecipePagingSource(
     private val sessionDataStore: SessionDataStore,
 ) : PagingSource<Int, RecipeSummary>() {
 
+    /**
+     * Keys are plain row offsets, always a multiple of [PagingConfig.pageSize], so the refresh key
+     * is just the anchor's row (backed up half a load, to keep context above it) rounded down to
+     * a page boundary. The old version derived it from a neighbouring page's key, which landed a
+     * page off for the first page.
+     */
     override fun getRefreshKey(state: PagingState<Int, RecipeSummary>): Int? =
         state.anchorPosition?.let { anchor ->
-            state.closestPageToPosition(anchor)?.prevKey?.plus(state.config.pageSize)
-                ?: state.closestPageToPosition(anchor)?.nextKey?.minus(state.config.pageSize)
+            // anchorPosition indexes the loaded items, so add the row the first loaded page starts at.
+            val firstPageStart = state.pages.firstOrNull()?.prevKey?.plus(PAGE_SIZE) ?: 0
+            val start = (firstPageStart + anchor - state.config.initialLoadSize / 2).coerceAtLeast(0)
+            start / PAGE_SIZE * PAGE_SIZE
         }
 
     override suspend fun load(params: LoadParams<Int>): LoadResult<Int, RecipeSummary> {
@@ -33,11 +41,17 @@ class RecipePagingSource(
             }
             LoadResult.Page(
                 data = mapped,
-                prevKey = if (offset == 0) null else offset - params.loadSize,
+                // Page-sized, not loadSize: a refresh loads several pages at once, and prepends are one.
+                prevKey = if (offset == 0) null else (offset - PAGE_SIZE).coerceAtLeast(0),
                 nextKey = if (items.size < params.loadSize) null else offset + params.loadSize
             )
         } catch (e: Exception) {
             LoadResult.Error(e)
         }
+    }
+
+    companion object {
+        /** Rows per page; every key is a multiple of it. Also the [PagingConfig] page size. */
+        const val PAGE_SIZE = 50
     }
 }
