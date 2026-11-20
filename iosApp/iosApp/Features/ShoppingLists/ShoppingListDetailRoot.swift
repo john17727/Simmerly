@@ -46,6 +46,12 @@ final class ShoppingListDetailModel {
     func send(_ intent: ShoppingListDetailIntent) {
         vm.onEvent(event: intent)
     }
+
+    func refresh() async {
+        // SKIE bridges a Kotlin suspend function as throwing; a failed refresh is reported by the
+        // view model itself, so there is nothing more to do here.
+        try? await vm.refreshAndAwait()
+    }
 }
 
 struct ShoppingListDetailRoot: View {
@@ -65,7 +71,8 @@ struct ShoppingListDetailRoot: View {
             state: model.state,
             addFieldFocused: accessory.isEditingAddItem,
             snackbar: $model.snackbar,
-            onEvent: model.send
+            onEvent: model.send,
+            onRefresh: { await model.refresh() }
         )
         .task { await model.activate() }
         // The add-item field sits in the tab view's bottom accessory, like Start Cooking on recipe

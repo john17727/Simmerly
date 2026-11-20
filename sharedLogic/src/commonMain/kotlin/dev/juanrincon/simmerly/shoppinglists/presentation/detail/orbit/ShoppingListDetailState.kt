@@ -11,6 +11,8 @@ import dev.juanrincon.simmerly.shoppinglists.presentation.detail.models.UnitOpti
 
 data class ShoppingListDetailState(
     val isLoading: Boolean = true,
+    /** A refresh is running over a list that is already on screen. */
+    val isRefreshing: Boolean = false,
     val error: UiText? = null,
     /** `null` until the list has loaded. */
     val name: UiText? = null,

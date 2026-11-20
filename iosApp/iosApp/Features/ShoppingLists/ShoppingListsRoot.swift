@@ -39,6 +39,12 @@ final class ShoppingListsModel {
     func send(_ intent: ShoppingListsIntent) {
         vm.onEvent(event: intent)
     }
+
+    func refresh() async {
+        // SKIE bridges a Kotlin suspend function as throwing; a failed refresh is reported by the
+        // view model itself, so there is nothing more to do here.
+        try? await vm.refreshAndAwait()
+    }
 }
 
 struct ShoppingListsRoot: View {
@@ -49,7 +55,11 @@ struct ShoppingListsRoot: View {
     @FocusState private var searchFocused: Bool
 
     var body: some View {
-        ShoppingListsView(state: model.state, onEvent: model.send)
+        ShoppingListsView(
+            state: model.state,
+            onEvent: model.send,
+            onRefresh: { await model.refresh() }
+        )
             .snackbar($model.snackbar)
             .task { await model.activate() }
             // Search and New list sit in the tab view's bottom accessory, which only the TabView can

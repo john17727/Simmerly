@@ -46,6 +46,9 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.navigation3.ui.LocalNavAnimatedContentScope
 import androidx.paging.compose.LazyPagingItems
+import androidx.paging.LoadState
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.material3.SnackbarHostState
 import androidx.paging.compose.collectAsLazyPagingItems
 import coil3.compose.AsyncImage
 import dev.juanrincon.simmerly.core.presentation.navigation.isTwoPaneWidth
@@ -81,6 +84,10 @@ fun RecipeListScreen(
     )
 }
 
+/** Whether a refresh is replacing recipes that are already on screen (not the first load). */
+internal val LazyPagingItems<*>.isRefreshingExistingItems: Boolean
+    get() = loadState.refresh is LoadState.Loading && itemCount > 0
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun Content(
@@ -95,6 +102,16 @@ private fun Content(
     val lazyListState = rememberLazyListState()
     val lazyGridState = rememberLazyGridState()
 
+    // A failed refresh keeps the cached recipes on screen, so it is reported as a message. The
+    // load state is a new object per failure, so each one shows once.
+    val snackbarHostState = remember { SnackbarHostState() }
+    val refreshState = lazyPagingItems.loadState.refresh
+    LaunchedEffect(refreshState) {
+        if (refreshState is LoadState.Error && lazyPagingItems.itemCount > 0) {
+            snackbarHostState.showSnackbar("Couldn't refresh recipes")
+        }
+    }
+
     if (isTwoPaneWidth()) {
         SelectableList(
             lazyPagingItems = lazyPagingItems,
@@ -103,6 +120,7 @@ private fun Content(
             selected = selectedRecipeId,
             onRecipeSelected = onRecipeSelected,
             state = lazyListState,
+            snackbarHostState = snackbarHostState,
             modifier = modifier
         )
     } else {
@@ -113,6 +131,7 @@ private fun Content(
             onRecipeSelected = onRecipeSelected,
             sharedTransitionScope = sharedTransitionScope,
             lazyGridState = lazyGridState,
+            snackbarHostState = snackbarHostState,
             modifier = modifier
         )
     }

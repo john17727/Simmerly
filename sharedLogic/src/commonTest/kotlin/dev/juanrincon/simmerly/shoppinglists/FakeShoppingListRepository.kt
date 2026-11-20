@@ -50,9 +50,30 @@ class FakeShoppingListRepository : ShoppingListRepository {
     override fun observeList(id: String): Flow<ShoppingList?> =
         lists.map { all -> all?.firstOrNull { it.id == id } }
 
-    override suspend fun refreshLists() = refreshListsResult
+    var refreshListsCalls = 0
+    var refreshListsIfStaleCalls = 0
 
-    override suspend fun refreshList(id: String) = refreshListResult
+    /** When set, [refreshLists] waits for it, so a test can observe the refresh while it runs. */
+    var refreshListsGate: kotlinx.coroutines.CompletableDeferred<Unit>? = null
+
+    override suspend fun refreshLists(): Either<ShoppingListError, Unit> {
+        refreshListsCalls++
+        refreshListsGate?.await()
+        return refreshListsResult
+    }
+
+    override suspend fun refreshListsIfStale(): Either<ShoppingListError, Unit> {
+        refreshListsIfStaleCalls++
+        return refreshListsResult
+    }
+
+    /** When set, [refreshList] waits for it, so a test can observe the refresh while it runs. */
+    var refreshListGate: kotlinx.coroutines.CompletableDeferred<Unit>? = null
+
+    override suspend fun refreshList(id: String): Either<ShoppingListError, Unit> {
+        refreshListGate?.await()
+        return refreshListResult
+    }
 
     override suspend fun createList(name: String): Either<ShoppingListError, ShoppingList> {
         createdNames += name

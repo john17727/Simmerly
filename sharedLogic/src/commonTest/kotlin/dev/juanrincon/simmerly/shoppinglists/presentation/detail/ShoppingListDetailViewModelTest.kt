@@ -6,6 +6,8 @@ import assertk.assertThat
 import assertk.assertions.containsExactly
 import assertk.assertions.isEqualTo
 import assertk.assertions.isInstanceOf
+import assertk.assertions.isNull
+import dev.juanrincon.simmerly.core.presentation.StringKey
 import dev.juanrincon.simmerly.core.presentation.UiText
 import dev.juanrincon.simmerly.shoppinglists.FakeShoppingListRepository
 import dev.juanrincon.simmerly.shoppinglists.aFood
@@ -21,6 +23,7 @@ import dev.juanrincon.simmerly.shoppinglists.presentation.detail.models.SectionK
 import dev.juanrincon.simmerly.shoppinglists.presentation.detail.orbit.DetailDialog
 import dev.juanrincon.simmerly.shoppinglists.presentation.detail.orbit.ShoppingListDetailIntent
 import dev.juanrincon.simmerly.shoppinglists.presentation.detail.orbit.ShoppingListDetailSideEffect
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
@@ -224,6 +227,65 @@ class ShoppingListDetailViewModelTest {
             viewModel.onEvent(ShoppingListDetailIntent.OnDeleteListConfirmed)
             assertThat(awaitSideEffectSkippingStates()).isEqualTo(ShoppingListDetailSideEffect.NavigateBack)
             assertThat(repo.deletedLists).containsExactly("list-1")
+            cancelAndIgnoreRemainingItems()
+        }
+    }
+
+    @Test
+    fun failedRefreshOfAStoredListKeepsItAndOnlyShowsAMessage() = runTest(testDispatcher) {
+        repo.refreshListResult = ShoppingListError.FetchError.left()
+        viewModel.testWithInternalState(this) {
+            runOnCreate()
+            val message = awaitSideEffectSkippingStates()
+            assertThat(message).isEqualTo(
+                ShoppingListDetailSideEffect.ShowMessage(UiText.Resource(StringKey.ShoppingListLoadFailed))
+            )
+            val state = viewModel.container.stateFlow.value
+            assertThat(state.isLoading).isEqualTo(false)
+            assertThat(state.error).isNull()
+            assertThat(state.name != null).isEqualTo(true)
+            cancelAndIgnoreRemainingItems()
+        }
+    }
+
+    @Test
+    fun failedRefreshWithNothingStoredBlocksWithAnError() = runTest(testDispatcher) {
+        repo.lists.value = null
+        repo.refreshListResult = ShoppingListError.FetchError.left()
+        viewModel.testWithInternalState(this) {
+            runOnCreate()
+            val state = awaitStateMatching { it.error != null }
+            assertThat(state.isLoading).isEqualTo(false)
+            cancelAndIgnoreRemainingItems()
+        }
+    }
+
+    @Test
+    fun refreshingAStoredListShowsTheRefreshIndicatorUntilItFinishes() = runTest(testDispatcher) {
+        val gate = CompletableDeferred<Unit>()
+        repo.refreshListGate = gate
+        viewModel.testWithInternalState(this) {
+            runOnCreate()
+            val running = awaitStateMatching { it.isRefreshing }
+            // The list is already on screen, so it is not the blocking first load.
+            assertThat(running.isLoading).isEqualTo(false)
+
+            gate.complete(Unit)
+
+            assertThat(awaitStateMatching { !it.isRefreshing }.isRefreshing).isEqualTo(false)
+            cancelAndIgnoreRemainingItems()
+        }
+    }
+
+    @Test
+    fun theFirstLoadOfAListNotStoredYetIsNotARefresh() = runTest(testDispatcher) {
+        repo.lists.value = null
+        repo.refreshListGate = CompletableDeferred()
+        viewModel.testWithInternalState(this) {
+            runOnCreate()
+            val state = viewModel.container.stateFlow.value
+            assertThat(state.isLoading).isEqualTo(true)
+            assertThat(state.isRefreshing).isEqualTo(false)
             cancelAndIgnoreRemainingItems()
         }
     }

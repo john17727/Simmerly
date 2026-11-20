@@ -1,6 +1,11 @@
 package dev.juanrincon.simmerly.core.di
 
+import dev.juanrincon.simmerly.core.data.DefaultLocalDataCleaner
+import dev.juanrincon.simmerly.core.data.Freshness
+import dev.juanrincon.simmerly.core.data.local.CacheMetadataDao
 import dev.juanrincon.simmerly.core.data.local.SimmerlyDatabase
+import dev.juanrincon.simmerly.core.domain.LocalDataCleaner
+import dev.juanrincon.simmerly.core.domain.ResettableCache
 import dev.juanrincon.simmerly.core.data.local.getRoomDatabase
 import dev.juanrincon.simmerly.recipes.data.local.recipe.CategoryDao
 import dev.juanrincon.simmerly.recipes.data.local.recipe.FoodDao
@@ -15,6 +20,9 @@ import org.koin.dsl.module
 
 val localModule = module {
     single<SimmerlyDatabase> { getRoomDatabase(get()) }
+    single<CacheMetadataDao> { get<SimmerlyDatabase>().cacheMetadataDao() }
+    single { Freshness(get()) }
+    single<LocalDataCleaner> { DefaultLocalDataCleaner(get(), getAll<ResettableCache>()) }
     single<RecipeDao> { get<SimmerlyDatabase>().recipeDao() }
     single<IngredientDao> { get<SimmerlyDatabase>().ingredientDao() }
     single<UserDao> { get<SimmerlyDatabase>().userDao() }

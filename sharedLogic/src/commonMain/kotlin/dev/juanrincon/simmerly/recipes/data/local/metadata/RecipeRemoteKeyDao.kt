@@ -12,7 +12,4 @@ interface RecipeRemoteKeyDao {
 
     @Query("SELECT * FROM recipe_remote_keys WHERE id = 'RECIPE_LIST' LIMIT 1")
     suspend fun getKey(): RecipeRemoteKey?
-
-    @Query("DELETE FROM recipe_remote_keys")
-    suspend fun clearKey()
 }

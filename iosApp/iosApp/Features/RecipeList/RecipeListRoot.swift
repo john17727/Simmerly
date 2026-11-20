@@ -35,11 +35,13 @@ final class RecipeListModel {
     }
 
     func loadNextPage() {
-        vm.loadNextPage()
+        vm.onEvent(event: RecipeListIntentOnLoadMore.shared)
     }
 
     func refresh() async {
-        vm.refresh()
+        // SKIE bridges a Kotlin suspend function as throwing; a failed refresh is reported by the
+        // view model itself, so there is nothing more to do here.
+        try? await vm.refreshAndAwait()
     }
 }
 

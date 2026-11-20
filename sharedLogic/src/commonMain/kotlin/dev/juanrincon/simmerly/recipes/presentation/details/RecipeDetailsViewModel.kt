@@ -61,6 +61,7 @@ class RecipeDetailsViewModel(
             RecipeDetailsIntent.RemoveServing -> updateServing(
                 container.stateFlow.value.recipe.servings - 1
             )
+            RecipeDetailsIntent.Refresh -> refresh()
             RecipeDetailsIntent.ToggleFavorite -> toggleFavorite()
             is RecipeDetailsIntent.SetRating -> setRating(event.rating)
             RecipeDetailsIntent.ShowSettings -> intent {
@@ -83,7 +84,11 @@ class RecipeDetailsViewModel(
                         if (state.recipe == RecipeDetailUi.emptyRecipe) {
                             reduce { state.copy(loading = false, isRefreshing = false, error = error) }
                         } else {
+                            // The cached recipe stays on screen; the failed refresh is only a message.
                             reduce { state.copy(isRefreshing = false) }
+                            postSideEffect(
+                                RecipeDetailsSideEffect.ShowMessage(UiText.Resource(StringKey.SomethingWentWrong))
+                            )
                         }
                     },
                     ifRight = { result ->
@@ -115,6 +120,26 @@ class RecipeDetailsViewModel(
                     }
                 )
             }
+    }
+
+    /**
+     * The one function exposed besides [onEvent], and only for SwiftUI: `.refreshable` keeps its
+     * spinner up until the awaited call returns, and an event is fire-and-forget so it can't
+     * report when the refresh finished. Compose sends [RecipeDetailsIntent.Refresh].
+     */
+    suspend fun refreshAndAwait() {
+        refresh().join()
+    }
+
+    private fun refresh() = intent {
+        if (state.isPullRefreshing) return@intent
+        reduce { state.copy(isPullRefreshing = true) }
+        // The new details arrive through observeRecipe; this only reports a failure, as a message
+        // because the cached recipe is still on screen.
+        repository.refreshRecipe(recipeId).onLeft {
+            postSideEffect(RecipeDetailsSideEffect.ShowMessage(UiText.Resource(StringKey.SomethingWentWrong)))
+        }
+        reduce { state.copy(isPullRefreshing = false) }
     }
 
     private fun toggleFavorite() = intent {

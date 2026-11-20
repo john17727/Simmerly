@@ -60,6 +60,18 @@ class FakeRecipeRepository : RecipeRepository {
         return flow
     }
 
+    var refreshRecipeResult: Either<RecipesError, Unit> = Either.Right(Unit)
+    val refreshedRecipeIds = mutableListOf<String>()
+
+    /** When set, [refreshRecipe] waits for it, so a test can observe the refresh while it runs. */
+    var refreshRecipeGate: kotlinx.coroutines.CompletableDeferred<Unit>? = null
+
+    override suspend fun refreshRecipe(id: String): Either<RecipesError, Unit> {
+        refreshedRecipeIds += id
+        refreshRecipeGate?.await()
+        return refreshRecipeResult
+    }
+
     fun recipeDetailsFlow(index: Int = 0) = recipeDetailsFlows[index]
 
     // --- comments ---

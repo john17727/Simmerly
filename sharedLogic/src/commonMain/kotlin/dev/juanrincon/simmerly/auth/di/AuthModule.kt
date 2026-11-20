@@ -12,7 +12,7 @@ import org.koin.dsl.module
 
 val authModule = module {
     factory<AuthNetworkClient> { AuthNetworkClient(get(qualifier = PublicClient)) }
-    factory<AuthRepository> { DefaultAuthRepository(get(), get()) }
+    factory<AuthRepository> { DefaultAuthRepository(get(), get(), get()) }
     single<SessionDataStore> { DefaultSessionDataStore(get()) }
     viewModelOf(::AuthNavigationViewModel)
 }

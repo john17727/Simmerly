@@ -8,6 +8,8 @@ struct RecipeDetailsView: View {
     let onShowSettings: () -> Void
     let onAddToList: () -> Void
     let onNavigateToComments: () -> Void
+    /// Pull-to-refresh; SwiftUI keeps its spinner up until this returns.
+    let onRefresh: () async -> Void
 
     /// Section tops, keyed by tab, measured against `scrollSpace`.
     @State private var sectionOffsets: [RecipeTab: CGFloat] = [:]
@@ -138,6 +140,7 @@ struct RecipeDetailsView: View {
                 contentInsetTop = inset
             }
             .scrollPosition($scrollPosition)
+            .refreshable { await onRefresh() }
         }
         .background(SimmerlyColor.background)
     }
@@ -345,6 +348,7 @@ private let previewRecipe = RecipeDetailUi(
 private let previewState = RecipeDetailsState(
     loading: false,
     isRefreshing: false,
+    isPullRefreshing: false,
     recipe: previewRecipe,
     error: nil,
     mobileTabs: [.overview, .ingredients, .instructions],
@@ -362,7 +366,8 @@ private let previewState = RecipeDetailsState(
             onRemoveServing: {},
             onShowSettings: {},
             onAddToList: {},
-            onNavigateToComments: {}
+            onNavigateToComments: {},
+            onRefresh: {}
         )
     }
 }
@@ -373,6 +378,7 @@ private let previewState = RecipeDetailsState(
             state: RecipeDetailsState(
                 loading: true,
                 isRefreshing: false,
+                isPullRefreshing: false,
                 recipe: RecipeDetailUi.companion.emptyRecipe,
                 error: nil,
                 mobileTabs: [],
@@ -385,7 +391,8 @@ private let previewState = RecipeDetailsState(
             onRemoveServing: {},
             onShowSettings: {},
             onAddToList: {},
-            onNavigateToComments: {}
+            onNavigateToComments: {},
+            onRefresh: {}
         )
     }
 }

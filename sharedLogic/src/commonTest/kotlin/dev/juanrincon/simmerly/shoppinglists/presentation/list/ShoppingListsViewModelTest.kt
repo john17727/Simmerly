@@ -4,6 +4,9 @@ import arrow.core.left
 import assertk.assertThat
 import assertk.assertions.containsExactly
 import assertk.assertions.isEqualTo
+import assertk.assertions.isNull
+import dev.juanrincon.simmerly.core.presentation.StringKey
+import dev.juanrincon.simmerly.core.presentation.UiText
 import dev.juanrincon.simmerly.initialload.FakeUserRepository
 import dev.juanrincon.simmerly.shoppinglists.FakeShoppingListRepository
 import dev.juanrincon.simmerly.shoppinglists.aShoppingList
@@ -14,8 +17,10 @@ import dev.juanrincon.simmerly.shoppinglists.presentation.list.orbit.ListDialog
 import dev.juanrincon.simmerly.shoppinglists.presentation.list.orbit.ListFilter
 import dev.juanrincon.simmerly.shoppinglists.presentation.list.orbit.ShoppingListsIntent
 import dev.juanrincon.simmerly.shoppinglists.presentation.list.orbit.ShoppingListsSideEffect
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.async
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
@@ -115,4 +120,65 @@ class ShoppingListsViewModelTest {
             cancelAndIgnoreRemainingItems()
         }
     }
+
+    // region freshness and offline behavior
+
+    @Test
+    fun openingTheScreenOnlyRefreshesStaleLists() = runTest(testDispatcher) {
+        viewModel.testWithInternalState(this) {
+            runOnCreate()
+            cancelAndIgnoreRemainingItems()
+        }
+        assertThat(repo.refreshListsIfStaleCalls).isEqualTo(1)
+        assertThat(repo.refreshListsCalls).isEqualTo(0)
+    }
+
+    @Test
+    fun pullToRefreshAlwaysRefreshes() = runTest(testDispatcher) {
+        viewModel.testWithInternalState(this) {
+            runOnCreate()
+            viewModel.onEvent(ShoppingListsIntent.OnRefresh)
+            cancelAndIgnoreRemainingItems()
+        }
+        assertThat(repo.refreshListsCalls).isEqualTo(1)
+    }
+
+    @Test
+    fun failedRefreshWithStoredListsKeepsThemAndOnlyShowsAMessage() = runTest(testDispatcher) {
+        repo.lists.value = listOf(aShoppingList(id = "a", name = "Costco run"))
+        repo.refreshListsResult = ShoppingListError.FetchError.left()
+        viewModel.testWithInternalState(this) {
+            runOnCreate()
+            val message = awaitSideEffectSkippingStates()
+            assertThat(message).isEqualTo(
+                ShoppingListsSideEffect.ShowMessage(UiText.Resource(StringKey.ShoppingListLoadFailed))
+            )
+            val state = viewModel.container.stateFlow.value
+            assertThat(state.isLoading).isEqualTo(false)
+            assertThat(state.error).isNull()
+            assertThat(state.lists.map { it.id }).containsExactly("a")
+            cancelAndIgnoreRemainingItems()
+        }
+    }
+
+    @Test
+    fun refreshAndAwaitForcesARefreshAndReturnsOnlyOnceItHasFinished() = runTest(testDispatcher) {
+        val gate = CompletableDeferred<Unit>()
+        repo.refreshListsGate = gate
+        val scope = this
+        viewModel.testWithInternalState(this) {
+            runOnCreate()
+
+            val awaiting = scope.async { viewModel.refreshAndAwait() }
+
+            assertThat(repo.refreshListsCalls).isEqualTo(1)
+            assertThat(awaiting.isCompleted).isEqualTo(false)
+            gate.complete(Unit)
+            awaiting.await()
+            assertThat(awaiting.isCompleted).isEqualTo(true)
+            cancelAndIgnoreRemainingItems()
+        }
+    }
+
+    // endregion
 }

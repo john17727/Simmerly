@@ -5,7 +5,10 @@ import dev.juanrincon.simmerly.recipes.presentation.details.models.RecipeDetailU
 
 data class RecipeDetailsState(
     val loading: Boolean = true,
+    /** A refresh the app started on its own (a stale copy was found); shown as a thin bar. */
     val isRefreshing: Boolean = false,
+    /** A refresh the user asked for with pull-to-refresh; shown by the pull indicator. */
+    val isPullRefreshing: Boolean = false,
     val recipe: RecipeDetailUi = RecipeDetailUi.emptyRecipe,
     val error: RecipesError? = null,
     val mobileTabs: List<RecipeTab> = emptyList(),

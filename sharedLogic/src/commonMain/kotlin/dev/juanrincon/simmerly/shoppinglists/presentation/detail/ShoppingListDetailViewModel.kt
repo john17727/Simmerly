@@ -227,15 +227,29 @@ class ShoppingListDetailViewModel(
         }
     }
 
+    /**
+     * The one function exposed besides [onEvent], and only for SwiftUI: `.refreshable` keeps its
+     * spinner up until the awaited call returns, and an event is fire-and-forget so it can't
+     * report when the refresh finished. Compose sends [ShoppingListDetailIntent.OnRefresh].
+     */
+    suspend fun refreshAndAwait() {
+        refresh().join()
+    }
+
     private fun refresh() = intent {
-        reduce { state.copy(isLoading = list == null, error = null) }
+        reduce { state.copy(isLoading = list == null, isRefreshing = list != null, error = null) }
         repository.refreshList(listId).fold(
             ifLeft = {
-                reduce {
-                    state.copy(isLoading = false, error = UiText.Resource(StringKey.ShoppingListLoadFailed))
+                val failed = UiText.Resource(StringKey.ShoppingListLoadFailed)
+                // Blocks the screen only when there is no list to show; otherwise it's a message.
+                if (list == null) {
+                    reduce { state.copy(isLoading = false, isRefreshing = false, error = failed) }
+                } else {
+                    reduce { state.copy(isLoading = false, isRefreshing = false) }
+                    postSideEffect(ShoppingListDetailSideEffect.ShowMessage(failed))
                 }
             },
-            ifRight = { reduce { state.copy(isLoading = false) } }
+            ifRight = { reduce { state.copy(isLoading = false, isRefreshing = false) } }
         )
     }
 

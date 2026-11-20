@@ -9,11 +9,13 @@ import dev.juanrincon.simmerly.auth.domain.AuthRepository
 import dev.juanrincon.simmerly.auth.domain.AuthState
 import dev.juanrincon.simmerly.auth.domain.LoginError
 import dev.juanrincon.simmerly.auth.domain.SessionDataStore
+import dev.juanrincon.simmerly.core.domain.LocalDataCleaner
 import kotlinx.coroutines.flow.Flow
 
 class DefaultAuthRepository(
     val sessionDatastore: SessionDataStore,
-    val networkClient: AuthNetworkClient
+    val networkClient: AuthNetworkClient,
+    private val localDataCleaner: LocalDataCleaner,
 ) : AuthRepository {
     override fun observeAuthState(): Flow<AuthState> = sessionDatastore.isAuthenticated()
 
@@ -38,18 +40,30 @@ class DefaultAuthRepository(
                     else -> LoginError.UnknownError
                 }
             }.bind()
-        sessionDatastore.setServerAddress(serverAddress)
-        sessionDatastore.setToken(token)
+        startSession(serverAddress, token)
     }
 
     override suspend fun login(serverAddress: String, apiKey: String): Either<LoginError, Unit> {
         // TODO: Validate API key by getting user data, potentially get auxiliary data from the server
-        sessionDatastore.setServerAddress(serverAddress)
-        sessionDatastore.setToken(apiKey)
+        startSession(serverAddress, apiKey)
         return Unit.right()
     }
 
+    /**
+     * Whatever is cached belongs to whoever was signed in before — possibly another account, or
+     * another server — and a session can end without [logout] having run (a token that could not
+     * be refreshed because the connection dropped, say). So every new session starts empty, and
+     * the data is cleared before the session is stored, so nothing signed-in ever sees it.
+     */
+    private suspend fun startSession(serverAddress: String, token: String) {
+        localDataCleaner.clearAll()
+        sessionDatastore.setServerAddress(serverAddress)
+        sessionDatastore.setToken(token)
+    }
+
     override suspend fun logout() {
-        TODO("Not yet implemented")
+        // Session first, so the UI leaves the signed-in screens before their data disappears.
+        sessionDatastore.clear()
+        localDataCleaner.clearAll()
     }
 }

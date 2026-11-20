@@ -20,6 +20,7 @@ import io.ktor.client.plugins.logging.SIMPLE
 import io.ktor.client.request.get
 import io.ktor.client.request.headers
 import io.ktor.http.ContentType
+import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import io.ktor.http.isSuccess
 import io.ktor.serialization.kotlinx.json.json
@@ -27,7 +28,9 @@ import kotlinx.serialization.json.Json
 
 fun createAuthenticatedHttpClient(
     engine: HttpClientEngine,
-    sessionDatastore: SessionDataStore
+    sessionDatastore: SessionDataStore,
+    /** Runs after the session is cleared because the server rejected the token refresh. */
+    onSessionExpired: suspend () -> Unit = {},
 ) = HttpClient(engine) {
     install(HttpTimeout) {
         requestTimeoutMillis = 10000
@@ -81,6 +84,13 @@ fun createAuthenticatedHttpClient(
                 if (!response.status.isSuccess()) {
                     // Refresh denied -> logout
                     sessionDatastore.clear()
+                    // Only an explicit rejection ends the account's cache; a server error or a
+                    // dropped connection must not wipe what makes the app usable offline.
+                    if (response.status == HttpStatusCode.Unauthorized ||
+                        response.status == HttpStatusCode.Forbidden
+                    ) {
+                        onSessionExpired()
+                    }
                     return@refreshTokens null
                 }
 

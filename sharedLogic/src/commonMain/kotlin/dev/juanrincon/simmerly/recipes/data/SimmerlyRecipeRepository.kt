@@ -10,15 +10,17 @@ import arrow.core.Either
 import arrow.core.raise.either
 import arrow.core.right
 import dev.juanrincon.simmerly.auth.domain.SessionDataStore
+import dev.juanrincon.simmerly.core.data.CacheKeys
+import dev.juanrincon.simmerly.core.data.CacheTtl
+import dev.juanrincon.simmerly.core.data.Freshness
+import dev.juanrincon.simmerly.core.data.optimistic
 import dev.juanrincon.simmerly.core.data.local.SimmerlyDatabase
+import dev.juanrincon.simmerly.core.domain.ResettableCache
 import dev.juanrincon.simmerly.initialload.domain.UserRepository
-import dev.juanrincon.simmerly.recipes.data.local.metadata.RecipeRemoteKey
 import dev.juanrincon.simmerly.recipes.data.local.recent.RecentSearchQueryEntity
 import dev.juanrincon.simmerly.recipes.data.local.recent.RecentlyViewedEntity
 import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.UserRecipePreferenceEntity
 import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.junction.InstructionIngredientCrossRef
-import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.junction.RecipeCategoryCrossRef
-import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.junction.RecipeTagCrossRef
 import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.junction.RecipeToolCrossRef
 import dev.juanrincon.simmerly.recipes.data.mappers.toDomain
 import dev.juanrincon.simmerly.recipes.data.mappers.toDto
@@ -37,6 +39,7 @@ import dev.juanrincon.simmerly.recipes.domain.model.Settings
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.combine
@@ -44,6 +47,7 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
+import kotlin.concurrent.Volatile
 import kotlin.time.Clock
 import kotlin.time.Instant
 
@@ -52,32 +56,43 @@ class SimmerlyRecipeRepository(
     private val database: SimmerlyDatabase,
     private val sessionDataStore: SessionDataStore,
     private val userRepository: UserRepository,
-) : RecipeRepository {
+    private val freshness: Freshness,
+) : RecipeRepository, ResettableCache {
     private val recipeDao = database.recipeDao()
     private val ingredientDao = database.ingredientDao()
     private val instructionsDao = database.instructionDao()
     private val toolsDao = database.toolDao()
-    private val tagsDao = database.tagDao()
     private val recipeToolDao = database.recipeToolDao()
-    private val recipeTagDao = database.recipeTagDao()
-    private val categoryDao = database.categoryDao()
     private val instructionIngredientDao = database.instructionIngredientDao()
     private val noteDao = database.noteDao()
     private val commentDao = database.commentDao()
     private val userDao = database.userDao()
     private val recentlyViewedDao = database.recentlyViewedDao()
     private val recentSearchQueryDao = database.recentSearchQueryDao()
-    private val remoteKeyDao = database.recipeRemoteKeyDao()
+    private val recipeListSyncer = RecipeListSyncer(networkClient, database, freshness)
 
     /** Outlives any screen: the paged list is cached here so that leaving the Recipes tab (which
      * clears its ViewModel) doesn't throw away the loaded pages or rerun the remote refresh. */
-    private val pagingScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+    private inner class PagingCache {
+        val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+        val list: Flow<PagingData<RecipeSummary>> by lazy { createRecipePager().cachedIn(scope) }
+    }
 
     @Volatile
     private var activePagingSource: RecipePagingSource? = null
 
-    private val cachedRecipeList: Flow<PagingData<RecipeSummary>> by lazy {
-        createRecipePager().cachedIn(pagingScope)
+    @Volatile
+    private var pagingCache = PagingCache()
+
+    private val cachedRecipeList: Flow<PagingData<RecipeSummary>>
+        get() = pagingCache.list
+
+    /** Drops the cached pages (e.g. on logout) so the next [recipeList] starts from a fresh pager. */
+    override fun reset() {
+        val old = pagingCache
+        pagingCache = PagingCache()
+        activePagingSource = null
+        old.scope.cancel()
     }
 
     /**
@@ -106,12 +121,8 @@ class SimmerlyRecipeRepository(
     private fun createRecipePager(): Flow<PagingData<RecipeSummary>> = Pager(
         config = PagingConfig(pageSize = RecipePagingSource.PAGE_SIZE, enablePlaceholders = false),
         remoteMediator = RecipeRemoteMediator(
-            networkClient = networkClient,
-            recipeDao = recipeDao,
-            remoteKeyDao = remoteKeyDao,
-            tagsDao = tagsDao,
-            recipeTagDao = recipeTagDao,
-            categoryDao = categoryDao,
+            syncer = recipeListSyncer,
+            freshness = freshness,
             // The paging source reads the table once per load and isn't Room-backed, so it has to
             // be told when the mediator has written new rows.
             onPageWritten = { activePagingSource?.invalidate() },
@@ -142,44 +153,13 @@ class SimmerlyRecipeRepository(
         }.distinctUntilChanged()
     }
 
-    override suspend fun loadNextRecipePage(): Either<RecipesError, Boolean> {
-        val key = remoteKeyDao.getKey()
-        return when {
-            key == null -> fetchRecipePage(cursor = null, isRefresh = true)
-            key.nextKey == null -> false.right()
-            else -> fetchRecipePage(cursor = key.nextKey, isRefresh = false)
-        }
+    override suspend fun loadNextRecipePage(): Either<RecipesError, Boolean> = when {
+        !recipeListSyncer.hasSynced() -> recipeListSyncer.sync(cursor = null)
+        else -> recipeListSyncer.nextCursor()?.let { recipeListSyncer.sync(it) } ?: false.right()
     }
 
     override suspend fun refreshRecipeList(): Either<RecipesError, Boolean> =
-        fetchRecipePage(cursor = null, isRefresh = true)
-
-    /** Returns whether more pages remain after this load. Mirrors [RecipeRemoteMediator]'s load logic. */
-    private suspend fun fetchRecipePage(cursor: String?, isRefresh: Boolean): Either<RecipesError, Boolean> =
-        either {
-            val response = networkClient.getRecipes(next = cursor, requireTags = true)
-                .mapLeft { RecipesError.FetchError }.bind()
-
-            if (isRefresh) {
-                recipeDao.clearAll()
-                remoteKeyDao.clearKey()
-            }
-
-            recipeDao.upsertAll(response.items.map { it.toEntity() })
-            tagsDao.upsertAll(response.items.flatMap { recipe -> recipe.tags.map { it.toEntity() } })
-            recipeTagDao.insertAll(response.items.flatMap { recipe ->
-                recipe.tags.map { RecipeTagCrossRef(recipeId = recipe.id, tagId = it.id) }
-            })
-            categoryDao.upsertAll(response.items.flatMap { recipe -> recipe.recipeCategory.map { it.toEntity() } })
-            categoryDao.insertCrossRefs(response.items.flatMap { recipe ->
-                recipe.recipeCategory.map { RecipeCategoryCrossRef(recipeId = recipe.id, categoryId = it.id) }
-            })
-            remoteKeyDao.upsert(
-                RecipeRemoteKey(id = "RECIPE_LIST", nextKey = response.next, createdAt = Clock.System.now())
-            )
-
-            response.next != null
-        }
+        recipeListSyncer.sync(cursor = null)
 
     override fun comments(recipeId: String): Flow<List<Comment>> =
         sessionDataStore.observeServerAddress()
@@ -193,22 +173,16 @@ class SimmerlyRecipeRepository(
 
             if (!hasCached) {
                 send(Either.Right(LoadingResult.Loading))
-                val fetchResult = either {
-                    val dto = networkClient.getRecipe(id).mapLeft { RecipesError.FetchError }.bind()
-                    persistRecipeData(dto)
-                }
+                val fetchResult = fetchRecipeDetails(id)
                 if (fetchResult.isLeft()) {
                     send(Either.Left((fetchResult as Either.Left).value))
                     return@channelFlow
                 }
-            } else {
+            } else if (freshness.isStale(CacheKeys.recipeDetail(id), CacheTtl.RECIPE_DETAIL)) {
+                // Only a stale copy is refetched; within the TTL the cached details are shown as is.
                 launch {
                     send(Either.Right(LoadingResult.Refreshing))
-                    either {
-                        val dto =
-                            networkClient.getRecipe(id).mapLeft { RecipesError.FetchError }.bind()
-                        persistRecipeData(dto)
-                    }.onLeft { error ->
+                    fetchRecipeDetails(id).onLeft { error ->
                         send(Either.Left(error))
                     }
                     send(Either.Right(LoadingResult.RefreshComplete))
@@ -234,6 +208,15 @@ class SimmerlyRecipeRepository(
                 .distinctUntilChanged()
                 .collect { send(it) }
         }
+
+    override suspend fun refreshRecipe(id: String): Either<RecipesError, Unit> = fetchRecipeDetails(id)
+
+    /** Fetches a recipe's details into Room and records the sync for [Freshness]. */
+    private suspend fun fetchRecipeDetails(id: String): Either<RecipesError, Unit> = either {
+        val dto = networkClient.getRecipe(id).mapLeft { RecipesError.FetchError }.bind()
+        persistRecipeData(dto)
+        freshness.markSynced(CacheKeys.recipeDetail(id))
+    }
 
     private suspend fun persistRecipeData(dto: RecipeDetailDto) {
         val data = dto.toEntityWithRelations()
@@ -311,21 +294,20 @@ class SimmerlyRecipeRepository(
         // server rejects it.
         val preferenceDao = database.userRecipePreferenceDao()
         val previous = preferenceDao.get(recipeId)
-        preferenceDao.upsert(
-            UserRecipePreferenceEntity(
-                recipeId = recipeId,
-                rating = rating,
-                isFavorite = previous?.isFavorite ?: false
-            )
-        )
-
-        val result = networkClient.setRating(userId, slug, rating)
-        result.onLeft {
-            preferenceDao.upsert(
-                previous ?: UserRecipePreferenceEntity(recipeId, rating = null, isFavorite = false)
-            )
-        }
-        result.mapLeft { RecipesError.UpdateError }.bind()
+        optimistic(
+            apply = {
+                preferenceDao.upsert(
+                    UserRecipePreferenceEntity(
+                        recipeId = recipeId,
+                        rating = rating,
+                        isFavorite = previous?.isFavorite ?: false
+                    )
+                )
+            },
+            remote = { networkClient.setRating(userId, slug, rating) },
+            rollback = { preferenceDao.upsert(previous ?: noPreference(recipeId)) },
+            mapError = { RecipesError.UpdateError },
+        ).bind()
     }
 
     override suspend fun setFavorite(
@@ -337,23 +319,28 @@ class SimmerlyRecipeRepository(
 
         val preferenceDao = database.userRecipePreferenceDao()
         val previous = preferenceDao.get(recipeId)
-        preferenceDao.upsert(
-            UserRecipePreferenceEntity(
-                recipeId = recipeId,
-                rating = previous?.rating,
-                isFavorite = favorite
-            )
-        )
-
-        val result = if (favorite) networkClient.addFavorite(userId, slug)
-        else networkClient.removeFavorite(userId, slug)
-        result.onLeft {
-            preferenceDao.upsert(
-                previous ?: UserRecipePreferenceEntity(recipeId, rating = null, isFavorite = !favorite)
-            )
-        }
-        result.mapLeft { RecipesError.UpdateError }.bind()
+        optimistic(
+            apply = {
+                preferenceDao.upsert(
+                    UserRecipePreferenceEntity(
+                        recipeId = recipeId,
+                        rating = previous?.rating,
+                        isFavorite = favorite
+                    )
+                )
+            },
+            remote = {
+                if (favorite) networkClient.addFavorite(userId, slug)
+                else networkClient.removeFavorite(userId, slug)
+            },
+            rollback = { preferenceDao.upsert(previous ?: noPreference(recipeId)) },
+            mapError = { RecipesError.UpdateError },
+        ).bind()
     }
+
+    /** What a recipe with no stored preference looks like: unrated and not a favorite. */
+    private fun noPreference(recipeId: String) =
+        UserRecipePreferenceEntity(recipeId, rating = null, isFavorite = false)
 
     override suspend fun recordRecipeMade(
         recipeId: String,

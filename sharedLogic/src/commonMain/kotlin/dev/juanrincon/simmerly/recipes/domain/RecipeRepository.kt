@@ -28,6 +28,13 @@ interface RecipeRepository {
 
     fun recipeDetails(id: String): Flow<Either<RecipesError, LoadingResult<RecipeDetail>>>
 
+    /**
+     * Refetches a recipe's details now, whatever their age — the explicit refresh behind
+     * pull-to-refresh. [recipeDetails] only refetches once the cached copy is stale. The new
+     * details reach observers of [recipeDetails] through the database.
+     */
+    suspend fun refreshRecipe(id: String): Either<RecipesError, Unit>
+
     suspend fun addComment(recipeId: String, text: String): Either<RecipesError, Unit>
 
     suspend fun updateSettings(recipeId: String, settings: Settings): Either<RecipesError, Unit>

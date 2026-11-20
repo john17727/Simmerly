@@ -2,12 +2,18 @@ package dev.juanrincon.simmerly.recipes.presentation.details
 
 import arrow.core.Either
 import assertk.assertThat
+import assertk.assertions.containsExactly
 import assertk.assertions.isEqualTo
 import assertk.assertions.isFalse
 import assertk.assertions.isNull
 import assertk.assertions.isTrue
 import dev.juanrincon.simmerly.initialload.FakeUserRepository
+import dev.juanrincon.simmerly.core.presentation.StringKey
+import dev.juanrincon.simmerly.core.presentation.UiText
 import dev.juanrincon.simmerly.recipes.FakeRecipeRepository
+import dev.juanrincon.simmerly.recipes.presentation.details.orbit.RecipeDetailsSideEffect
+import dev.juanrincon.simmerly.shoppinglists.awaitSideEffectSkippingStates
+import dev.juanrincon.simmerly.shoppinglists.awaitStateMatching
 import dev.juanrincon.simmerly.recipes.aRecipeDetail
 import dev.juanrincon.simmerly.recipes.aRecipeDetailUi
 import dev.juanrincon.simmerly.recipes.aSettings
@@ -116,6 +122,58 @@ class RecipeDetailsViewModelTest {
             val state = awaitInternalState()
             assertThat(state.error).isEqualTo(RecipesError.FetchError)
             assertThat(state.loading).isFalse()
+            cancelAndIgnoreRemainingItems()
+        }
+    }
+
+    @Test
+    fun refreshFailureWithACachedRecipeKeepsItAndOnlyShowsAMessage() = runTest(testDispatcher) {
+        viewModel.testWithInternalState(this) {
+            runOnCreate()
+            repo.recipeDetailsFlow().emit(Either.Right(LoadingResult.Loaded(aRecipeDetail(id = "cached"))))
+            awaitInternalState()
+
+            repo.recipeDetailsFlow().emit(Either.Left(RecipesError.FetchError))
+
+            val message = awaitSideEffectSkippingStates()
+            assertThat(message).isEqualTo(
+                RecipeDetailsSideEffect.ShowMessage(UiText.Resource(StringKey.SomethingWentWrong))
+            )
+            assertThat(viewModel.container.stateFlow.value.error).isNull()
+            assertThat(viewModel.container.stateFlow.value.recipe.id).isEqualTo("cached")
+            cancelAndIgnoreRemainingItems()
+        }
+    }
+
+    @Test
+    fun pullToRefreshRefetchesTheRecipeAndShowsThePullIndicatorOnlyWhileItRuns() = runTest(testDispatcher) {
+        viewModel.testWithInternalState(this) {
+            val gate = kotlinx.coroutines.CompletableDeferred<Unit>()
+            repo.refreshRecipeGate = gate
+            viewModel.onEvent(RecipeDetailsIntent.Refresh)
+
+            val running = awaitStateMatching { it.isPullRefreshing }
+            // The thin background-refresh bar is a different, automatic refresh.
+            assertThat(running.isRefreshing).isFalse()
+            gate.complete(Unit)
+            assertThat(awaitStateMatching { !it.isPullRefreshing }.isPullRefreshing).isFalse()
+            assertThat(repo.refreshedRecipeIds).containsExactly("test-recipe")
+            cancelAndIgnoreRemainingItems()
+        }
+    }
+
+    @Test
+    fun failedPullToRefreshShowsAMessageAndStopsTheIndicator() = runTest(testDispatcher) {
+        repo.refreshRecipeResult = Either.Left(RecipesError.FetchError)
+        viewModel.testWithInternalState(this) {
+            runOnCreate()
+            viewModel.onEvent(RecipeDetailsIntent.Refresh)
+
+            val message = awaitSideEffectSkippingStates()
+            assertThat(message).isEqualTo(
+                RecipeDetailsSideEffect.ShowMessage(UiText.Resource(StringKey.SomethingWentWrong))
+            )
+            assertThat(viewModel.container.stateFlow.value.isPullRefreshing).isFalse()
             cancelAndIgnoreRemainingItems()
         }
     }
