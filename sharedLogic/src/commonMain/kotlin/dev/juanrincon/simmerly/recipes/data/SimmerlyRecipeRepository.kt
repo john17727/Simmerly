@@ -89,11 +89,13 @@ class SimmerlyRecipeRepository(
         val preferenceById = preferences.associateBy { it.recipeId }
         recipes.map { recipe ->
             val preference = preferenceById[recipe.id]
-            recipe.copy(
-                isFavorite = preference?.isFavorite ?: false,
-                // Like the details screen: the user's own rating wins over the recipe's.
-                rating = preference?.rating ?: recipe.rating,
-            )
+            val isFavorite = preference?.isFavorite ?: false
+            // Like the details screen: the user's own rating wins over the recipe's.
+            val rating = preference?.rating ?: recipe.rating
+            // Hand back the same instance when nothing changed, so a preference change for one
+            // recipe leaves every other card equal (and skippable) instead of rebuilding them all.
+            if (recipe.isFavorite == isFavorite && recipe.rating == rating) recipe
+            else recipe.copy(isFavorite = isFavorite, rating = rating)
         }
     }
 

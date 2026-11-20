@@ -1,7 +1,21 @@
 package dev.juanrincon.simmerly.core.data.remote
 
-/** The URL of a recipe's original image on [host], or an empty string while the host is unknown. */
-fun recipeImageUrl(host: String?, recipeId: String): String {
+/** The image files Mealie serves for each recipe (its `ImageType` enum). */
+enum class RecipeImageSize(val fileName: String) {
+    /** The full-size image. For the detail hero. */
+    Original("original.webp"),
+
+    /** A reduced image (about 600px wide). Plenty for list/search thumbnails, and far cheaper to
+     * download, decode and cache than [Original]. */
+    Thumbnail("min-original.webp"),
+}
+
+/** The URL of a recipe's image on [host], or an empty string while the host is unknown. */
+fun recipeImageUrl(
+    host: String?,
+    recipeId: String,
+    size: RecipeImageSize = RecipeImageSize.Original,
+): String {
     if (host == null) return ""
-    return "$host/api/media/recipes/$recipeId/images/original.webp"
+    return "$host/api/media/recipes/$recipeId/images/${size.fileName}"
 }

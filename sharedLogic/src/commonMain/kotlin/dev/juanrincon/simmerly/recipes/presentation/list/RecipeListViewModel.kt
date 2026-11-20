@@ -11,10 +11,10 @@ import dev.juanrincon.simmerly.recipes.presentation.list.orbit.RecipeListSideEff
 import dev.juanrincon.simmerly.recipes.presentation.list.orbit.RecipeListState
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import org.orbitmvi.orbit.OrbitContainer
 import org.orbitmvi.orbit.OrbitContainerHost
@@ -37,20 +37,16 @@ class RecipeListViewModel(
         .cachedIn(viewModelScope)
 
     // Swift-friendly paging facade — PagingData/collectAsLazyPagingItems are Compose-only.
-    private val _pagedRecipes = MutableStateFlow<List<RecipeSummary>>(emptyList())
-    val pagedRecipes: StateFlow<List<RecipeSummary>> = _pagedRecipes.asStateFlow()
+    // Only the iOS list reads this. Collected lazily, so Android/desktop never run the extra
+    // query over every recipe (and its tag/category relations) that feeds it.
+    val pagedRecipes: StateFlow<List<RecipeSummary>> = repository.observeAllRecipes()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
     private val _isLoadingMore = MutableStateFlow(false)
     val isLoadingMore: StateFlow<Boolean> = _isLoadingMore.asStateFlow()
 
     private val _endReached = MutableStateFlow(false)
     val endReached: StateFlow<Boolean> = _endReached.asStateFlow()
-
-    init {
-        repository.observeAllRecipes()
-            .onEach { _pagedRecipes.value = it }
-            .launchIn(viewModelScope)
-    }
 
     fun loadNextPage() {
         if (_isLoadingMore.value || _endReached.value) return
