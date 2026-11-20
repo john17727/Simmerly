@@ -3,6 +3,7 @@ package dev.juanrincon.simmerly.shoppinglists.data
 import assertk.assertThat
 import assertk.assertions.containsExactly
 import assertk.assertions.isEqualTo
+import assertk.assertions.isNull
 import assertk.assertions.isTrue
 import dev.juanrincon.simmerly.auth.FakeSessionDataStore
 import dev.juanrincon.simmerly.core.buildTestDatabase
@@ -13,6 +14,8 @@ import dev.juanrincon.simmerly.shoppinglists.data.local.ShoppingListStore
 import dev.juanrincon.simmerly.shoppinglists.data.remote.ShoppingListNetworkClient
 import dev.juanrincon.simmerly.shoppinglists.data.remote.ShoppingListNetworkClientTest
 import dev.juanrincon.simmerly.shoppinglists.aFood
+import dev.juanrincon.simmerly.shoppinglists.aRecipe
+import dev.juanrincon.simmerly.shoppinglists.aShoppingList
 import dev.juanrincon.simmerly.shoppinglists.aUnit
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.mock.MockEngine
@@ -189,6 +192,92 @@ class DefaultShoppingListRepositoryTest {
 
         assertThat(paths).containsExactly("/api/units")
     }
+
+    // region optimistic writes: rename, delete list, recipe quantity
+
+    private fun seedStore() = ShoppingListStore(db, Freshness(db.cacheMetadataDao()))
+
+    @Test
+    fun renameIsKeptWhenTheServerAccepts() = runTest {
+        val repo = repository(writeBody = ShoppingListNetworkClientTest.LIST_JSON)
+        repo.refreshList("list-1")
+
+        val result = repo.renameList("list-1", "Renamed")
+
+        assertThat(result.isRight()).isTrue()
+        assertThat(repo.observeList("list-1").first()!!.name).isEqualTo("Renamed")
+    }
+
+    @Test
+    fun failedRenameRestoresTheName() = runTest {
+        val repo = repository(writeStatus = HttpStatusCode.InternalServerError, writeBody = "{}")
+        repo.refreshList("list-1")
+
+        val result = repo.renameList("list-1", "Renamed")
+
+        assertThat(result.isLeft()).isTrue()
+        assertThat(repo.observeList("list-1").first()!!.name).isEqualTo("Sunday brunch")
+    }
+
+    @Test
+    fun renamingAnUnknownListFailsWithoutCallingTheServer() = runTest {
+        val result = repository().renameList("missing", "x")
+        assertThat(result.isLeft()).isTrue()
+    }
+
+    @Test
+    fun deletedListIsGoneWhenTheServerAccepts() = runTest {
+        val repo = repository(writeStatus = HttpStatusCode.NoContent, writeBody = "")
+        repo.refreshList("list-1")
+
+        val result = repo.deleteList("list-1")
+
+        assertThat(result.isRight()).isTrue()
+        assertThat(repo.observeList("list-1").first()).isNull()
+    }
+
+    @Test
+    fun failedDeleteListRestoresTheListWithItsItems() = runTest {
+        val repo = repository(writeStatus = HttpStatusCode.InternalServerError, writeBody = "{}")
+        repo.refreshList("list-1")
+
+        val result = repo.deleteList("list-1")
+
+        assertThat(result.isLeft()).isTrue()
+        val restored = repo.observeList("list-1").first()!!
+        assertThat(restored.items.map { it.id }).containsExactly("item-1", "item-2")
+    }
+
+    @Test
+    fun failedRecipeQuantityChangeRestoresTheQuantity() = runTest {
+        seedStore().upsert(aShoppingList(id = "list-1", recipes = listOf(aRecipe("recipe-9", quantity = 2.0))))
+        val repo = repository(writeStatus = HttpStatusCode.InternalServerError, writeBody = "{}")
+
+        val result = repo.changeRecipeQuantity("list-1", "recipe-9", delta = 1)
+
+        assertThat(result.isLeft()).isTrue()
+        assertThat(repo.observeList("list-1").first()!!.recipes.single().quantity).isEqualTo(2.0)
+    }
+
+    @Test
+    fun recipeQuantityChangeTakesTheServersRecalculatedList() = runTest {
+        seedStore().upsert(aShoppingList(id = "list-1", name = "stale", recipes = listOf(aRecipe("recipe-9"))))
+        val repo = repository(writeBody = ShoppingListNetworkClientTest.LIST_JSON)
+
+        val result = repo.changeRecipeQuantity("list-1", "recipe-9", delta = 1)
+
+        assertThat(result.isRight()).isTrue()
+        val list = repo.observeList("list-1").first()!!
+        assertThat(list.name).isEqualTo("Sunday brunch")
+        assertThat(list.items.map { it.id }).containsExactly("item-1", "item-2")
+    }
+
+    @Test
+    fun recipeQuantityChangeOnAnUnknownListFails() = runTest {
+        assertThat(repository().changeRecipeQuantity("missing", "recipe-9", delta = 1).isLeft()).isTrue()
+    }
+
+    // endregion
 
     private fun repository() = newRepository(
         ShoppingListNetworkClient(HttpClient(MockEngine { req ->

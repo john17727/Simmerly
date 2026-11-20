@@ -13,6 +13,7 @@ import dev.juanrincon.simmerly.auth.domain.SessionDataStore
 import dev.juanrincon.simmerly.core.data.CacheKeys
 import dev.juanrincon.simmerly.core.data.CacheTtl
 import dev.juanrincon.simmerly.core.data.Freshness
+import dev.juanrincon.simmerly.core.data.optimistic
 import dev.juanrincon.simmerly.core.data.local.SimmerlyDatabase
 import dev.juanrincon.simmerly.core.domain.ResettableCache
 import dev.juanrincon.simmerly.initialload.domain.UserRepository
@@ -290,21 +291,20 @@ class SimmerlyRecipeRepository(
         // server rejects it.
         val preferenceDao = database.userRecipePreferenceDao()
         val previous = preferenceDao.get(recipeId)
-        preferenceDao.upsert(
-            UserRecipePreferenceEntity(
-                recipeId = recipeId,
-                rating = rating,
-                isFavorite = previous?.isFavorite ?: false
-            )
-        )
-
-        val result = networkClient.setRating(userId, slug, rating)
-        result.onLeft {
-            preferenceDao.upsert(
-                previous ?: UserRecipePreferenceEntity(recipeId, rating = null, isFavorite = false)
-            )
-        }
-        result.mapLeft { RecipesError.UpdateError }.bind()
+        optimistic(
+            apply = {
+                preferenceDao.upsert(
+                    UserRecipePreferenceEntity(
+                        recipeId = recipeId,
+                        rating = rating,
+                        isFavorite = previous?.isFavorite ?: false
+                    )
+                )
+            },
+            remote = { networkClient.setRating(userId, slug, rating) },
+            rollback = { preferenceDao.upsert(previous ?: noPreference(recipeId)) },
+            mapError = { RecipesError.UpdateError },
+        ).bind()
     }
 
     override suspend fun setFavorite(
@@ -316,23 +316,28 @@ class SimmerlyRecipeRepository(
 
         val preferenceDao = database.userRecipePreferenceDao()
         val previous = preferenceDao.get(recipeId)
-        preferenceDao.upsert(
-            UserRecipePreferenceEntity(
-                recipeId = recipeId,
-                rating = previous?.rating,
-                isFavorite = favorite
-            )
-        )
-
-        val result = if (favorite) networkClient.addFavorite(userId, slug)
-        else networkClient.removeFavorite(userId, slug)
-        result.onLeft {
-            preferenceDao.upsert(
-                previous ?: UserRecipePreferenceEntity(recipeId, rating = null, isFavorite = !favorite)
-            )
-        }
-        result.mapLeft { RecipesError.UpdateError }.bind()
+        optimistic(
+            apply = {
+                preferenceDao.upsert(
+                    UserRecipePreferenceEntity(
+                        recipeId = recipeId,
+                        rating = previous?.rating,
+                        isFavorite = favorite
+                    )
+                )
+            },
+            remote = {
+                if (favorite) networkClient.addFavorite(userId, slug)
+                else networkClient.removeFavorite(userId, slug)
+            },
+            rollback = { preferenceDao.upsert(previous ?: noPreference(recipeId)) },
+            mapError = { RecipesError.UpdateError },
+        ).bind()
     }
+
+    /** What a recipe with no stored preference looks like: unrated and not a favorite. */
+    private fun noPreference(recipeId: String) =
+        UserRecipePreferenceEntity(recipeId, rating = null, isFavorite = false)
 
     override suspend fun recordRecipeMade(
         recipeId: String,

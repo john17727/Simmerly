@@ -3,6 +3,7 @@ package dev.juanrincon.simmerly.shoppinglists.data
 import arrow.core.Either
 import arrow.core.raise.either
 import dev.juanrincon.simmerly.auth.domain.SessionDataStore
+import dev.juanrincon.simmerly.core.data.optimistic
 import dev.juanrincon.simmerly.recipes.data.local.recipe.UnitDao
 import dev.juanrincon.simmerly.recipes.domain.model.Ingredient
 import dev.juanrincon.simmerly.shoppinglists.data.local.ShoppingListStore
@@ -70,24 +71,24 @@ class DefaultShoppingListRepository(
         }
 
     override suspend fun renameList(id: String, name: String): Either<ShoppingListError, Unit> {
-        val previousName = store.update(id) { it.copy(name = name) }?.name
-            ?: return Either.Left(ShoppingListError.UnknownError)
-        return networkClient.renameList(id, name)
-            .map { }
-            .mapLeft {
-                store.update(id) { it.copy(name = previousName) }
-                ShoppingListError.UpdateError
-            }
+        val previousName = store.get(id)?.name ?: return Either.Left(ShoppingListError.UnknownError)
+        return optimistic(
+            apply = { store.update(id) { it.copy(name = name) } },
+            remote = { networkClient.renameList(id, name) },
+            rollback = { store.update(id) { it.copy(name = previousName) } },
+            mapError = { ShoppingListError.UpdateError },
+        ).map { }
     }
 
     override suspend fun deleteList(id: String): Either<ShoppingListError, Unit> {
         val removed = store.get(id)
-        store.delete(id)
-        return networkClient.deleteList(id).mapLeft {
+        return optimistic(
+            apply = { store.delete(id) },
+            remote = { networkClient.deleteList(id) },
             // Only restore the deleted list, so changes made to other lists meanwhile survive.
-            if (removed != null) store.upsert(removed)
-            ShoppingListError.UpdateError
-        }
+            rollback = { if (removed != null) store.upsert(removed) },
+            mapError = { ShoppingListError.UpdateError },
+        ).map { }
     }
 
     override suspend fun addItem(listId: String, text: String): Either<ShoppingListError, Unit> =
@@ -150,13 +151,14 @@ class DefaultShoppingListRepository(
         val targets = store.get(listId)?.items.orEmpty()
             .filter { it.id in itemIds && it.checked != checked }
         if (targets.isEmpty()) return Either.Right(Unit)
-        setCheckedLocally(listId, targets.map { it.id }.toSet(), checked)
-        return networkClient.updateItems(targets.map { it.copy(checked = checked).toUpdateDto() })
-            .map { applyChanges(listId, it) }
-            .mapLeft {
-                setCheckedLocally(listId, targets.map { it.id }.toSet(), !checked)
-                ShoppingListError.UpdateError
-            }
+        val targetIds = targets.map { it.id }.toSet()
+        return optimistic(
+            apply = { setCheckedLocally(listId, targetIds, checked) },
+            remote = { networkClient.updateItems(targets.map { it.copy(checked = checked).toUpdateDto() }) },
+            rollback = { setCheckedLocally(listId, targetIds, !checked) },
+            onSuccess = { applyChanges(listId, it) },
+            mapError = { ShoppingListError.UpdateError },
+        ).map { }
     }
 
     override suspend fun deleteItems(
@@ -165,11 +167,18 @@ class DefaultShoppingListRepository(
     ): Either<ShoppingListError, Unit> {
         val removed = store.get(listId)?.items.orEmpty().filter { it.id in itemIds }
         if (removed.isEmpty()) return Either.Right(Unit)
-        store.update(listId) { list -> list.copy(items = list.items.filterNot { it.id in itemIds }) }
-        return networkClient.deleteItems(removed.map { it.id }).mapLeft {
-            store.update(listId) { list -> list.copy(items = (list.items + removed).sortedBy { it.position }) }
-            ShoppingListError.UpdateError
-        }
+        return optimistic(
+            apply = {
+                store.update(listId) { list -> list.copy(items = list.items.filterNot { it.id in itemIds }) }
+            },
+            remote = { networkClient.deleteItems(removed.map { it.id }) },
+            rollback = {
+                store.update(listId) { list ->
+                    list.copy(items = (list.items + removed).sortedBy { it.position })
+                }
+            },
+            mapError = { ShoppingListError.UpdateError },
+        ).map { }
     }
 
     override suspend fun changeRecipeQuantity(
@@ -179,25 +188,26 @@ class DefaultShoppingListRepository(
     ): Either<ShoppingListError, Unit> {
         if (delta == 0) return Either.Right(Unit)
         val host = sessionDataStore.getServerAddress()
-        // Only the recipe's count changes up front; its items follow once the server has
-        // recalculated them.
-        val previous = store.update(listId) { list ->
-            list.copy(recipes = list.recipes.map {
-                if (it.recipeId == recipeId) it.copy(quantity = (it.quantity + delta).coerceAtLeast(0.0)) else it
-            })
-        } ?: return Either.Left(ShoppingListError.UnknownError)
+        val previous = store.get(listId) ?: return Either.Left(ShoppingListError.UnknownError)
         val amount = kotlin.math.abs(delta).toDouble()
-        val result = if (delta > 0) {
-            networkClient.addRecipe(listId, recipeId, amount)
-        } else {
-            networkClient.removeRecipe(listId, recipeId, amount)
-        }
-        return result
-            .map { store.upsert(it.toDomain(host)) }
-            .mapLeft {
-                store.update(listId) { list -> list.copy(recipes = previous.recipes) }
-                ShoppingListError.UpdateError
-            }
+        return optimistic(
+            // Only the recipe's count changes up front; its items follow once the server has
+            // recalculated them.
+            apply = {
+                store.update(listId) { list ->
+                    list.copy(recipes = list.recipes.map {
+                        if (it.recipeId == recipeId) it.copy(quantity = (it.quantity + delta).coerceAtLeast(0.0)) else it
+                    })
+                }
+            },
+            remote = {
+                if (delta > 0) networkClient.addRecipe(listId, recipeId, amount)
+                else networkClient.removeRecipe(listId, recipeId, amount)
+            },
+            rollback = { store.update(listId) { list -> list.copy(recipes = previous.recipes) } },
+            onSuccess = { store.upsert(it.toDomain(host)) },
+            mapError = { ShoppingListError.UpdateError },
+        ).map { }
     }
 
     override suspend fun addRecipe(
