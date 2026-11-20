@@ -7,6 +7,8 @@ import Shared
 struct ShoppingListsView: View {
     let state: ShoppingListsState
     let onEvent: (ShoppingListsIntent) -> Void
+    /// Pull-to-refresh; SwiftUI keeps its spinner up until this returns.
+    let onRefresh: () async -> Void
 
     /// The name being typed into the create or rename alert.
     @State private var nameDraft = ""
@@ -66,7 +68,7 @@ struct ShoppingListsView: View {
             .padding(.horizontal, 16)
             .padding(.bottom, 16)
         }
-        .refreshable { onEvent(ShoppingListsIntentOnRefresh.shared) }
+        .refreshable { await onRefresh() }
     }
 
     private var filterChips: some View {
@@ -247,18 +249,18 @@ private func previewState(lists: [ShoppingListCardUi]?) -> ShoppingListsState {
 
 #Preview("Lists") {
     NavigationStack {
-        ShoppingListsView(state: previewState(lists: previewLists), onEvent: { _ in })
+        ShoppingListsView(state: previewState(lists: previewLists), onEvent: { _ in }, onRefresh: {})
     }
 }
 
 #Preview("Empty") {
     NavigationStack {
-        ShoppingListsView(state: previewState(lists: []), onEvent: { _ in })
+        ShoppingListsView(state: previewState(lists: []), onEvent: { _ in }, onRefresh: {})
     }
 }
 
 #Preview("Loading") {
     NavigationStack {
-        ShoppingListsView(state: previewState(lists: nil), onEvent: { _ in })
+        ShoppingListsView(state: previewState(lists: nil), onEvent: { _ in }, onRefresh: {})
     }
 }

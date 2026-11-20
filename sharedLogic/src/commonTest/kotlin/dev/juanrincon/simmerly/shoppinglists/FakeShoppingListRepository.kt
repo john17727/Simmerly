@@ -53,8 +53,12 @@ class FakeShoppingListRepository : ShoppingListRepository {
     var refreshListsCalls = 0
     var refreshListsIfStaleCalls = 0
 
+    /** When set, [refreshLists] waits for it, so a test can observe the refresh while it runs. */
+    var refreshListsGate: kotlinx.coroutines.CompletableDeferred<Unit>? = null
+
     override suspend fun refreshLists(): Either<ShoppingListError, Unit> {
         refreshListsCalls++
+        refreshListsGate?.await()
         return refreshListsResult
     }
 

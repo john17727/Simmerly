@@ -17,8 +17,10 @@ import dev.juanrincon.simmerly.shoppinglists.presentation.list.orbit.ListDialog
 import dev.juanrincon.simmerly.shoppinglists.presentation.list.orbit.ListFilter
 import dev.juanrincon.simmerly.shoppinglists.presentation.list.orbit.ShoppingListsIntent
 import dev.juanrincon.simmerly.shoppinglists.presentation.list.orbit.ShoppingListsSideEffect
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.async
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
@@ -155,6 +157,25 @@ class ShoppingListsViewModelTest {
             assertThat(state.isLoading).isEqualTo(false)
             assertThat(state.error).isNull()
             assertThat(state.lists.map { it.id }).containsExactly("a")
+            cancelAndIgnoreRemainingItems()
+        }
+    }
+
+    @Test
+    fun refreshAndAwaitForcesARefreshAndReturnsOnlyOnceItHasFinished() = runTest(testDispatcher) {
+        val gate = CompletableDeferred<Unit>()
+        repo.refreshListsGate = gate
+        val scope = this
+        viewModel.testWithInternalState(this) {
+            runOnCreate()
+
+            val awaiting = scope.async { viewModel.refreshAndAwait() }
+
+            assertThat(repo.refreshListsCalls).isEqualTo(1)
+            assertThat(awaiting.isCompleted).isEqualTo(false)
+            gate.complete(Unit)
+            awaiting.await()
+            assertThat(awaiting.isCompleted).isEqualTo(true)
             cancelAndIgnoreRemainingItems()
         }
     }

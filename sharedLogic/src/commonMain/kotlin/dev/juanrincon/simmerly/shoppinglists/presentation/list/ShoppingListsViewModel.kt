@@ -96,6 +96,14 @@ class ShoppingListsViewModel(
     }
 
     /**
+     * Pull-to-refresh for Swift: SwiftUI keeps its spinner up until the awaited call returns, so
+     * this returns only once the refresh has finished. Compose sends [ShoppingListsIntent.OnRefresh].
+     */
+    suspend fun refreshAndAwait() {
+        refresh(force = true).join()
+    }
+
+    /**
      * Opening the screen only refreshes stale lists; pull-to-refresh ([force]) always does. A
      * failure blocks the screen only when there is nothing to show — otherwise the stored lists
      * stay on screen and the failure is a message.
