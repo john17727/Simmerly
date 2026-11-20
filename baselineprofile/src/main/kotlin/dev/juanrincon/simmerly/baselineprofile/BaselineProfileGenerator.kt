@@ -22,9 +22,9 @@ class BaselineProfileGenerator {
 
     @Test
     fun generate() {
-        // Passed in by the baselineprofile Gradle plugin.
-        val packageName = InstrumentationRegistry.getArguments().getString("targetAppId")
-            ?: error("targetAppId missing; run through the baselineprofile Gradle plugin")
+        // The app under test: AGP points this test APK's instrumentation at the target variant, so
+        // its package is the `.benchmark` id the generation variants are built with.
+        val packageName = InstrumentationRegistry.getInstrumentation().targetContext.packageName
 
         rule.collect(packageName, includeInStartupProfile = true) {
             pressHome()
