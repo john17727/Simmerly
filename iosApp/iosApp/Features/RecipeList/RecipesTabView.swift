@@ -35,7 +35,8 @@ private struct RecipesStackView: View {
                     RecipeDetailsRoot(
                         recipeId: recipeId,
                         onNavigateToComments: { path.append(.comments(recipeId: $0)) },
-                        onNavigateToShoppingList: onOpenShoppingList
+                        onNavigateToShoppingList: onOpenShoppingList,
+                        onDeleted: { if !path.isEmpty { path.removeLast() } }
                     )
                 case .comments(let recipeId):
                     RecipeCommentsRoot(recipeId: recipeId)
@@ -87,7 +88,11 @@ private struct RecipesSplitView: View {
                     RecipeDetailsRoot(
                         recipeId: recipeId,
                         onNavigateToComments: { detailPath.append(.comments(recipeId: $0)) },
-                        onNavigateToShoppingList: onOpenShoppingList
+                        onNavigateToShoppingList: onOpenShoppingList,
+                        onDeleted: {
+                            detailPath = []
+                            selectedRecipeId = nil
+                        }
                     )
                     .id(recipeId)
                     .navigationDestination(for: AppRoute.self) { route in
@@ -98,7 +103,8 @@ private struct RecipesSplitView: View {
                             RecipeDetailsRoot(
                                 recipeId: detailRecipeId,
                                 onNavigateToComments: { detailPath.append(.comments(recipeId: $0)) },
-                                onNavigateToShoppingList: onOpenShoppingList
+                                onNavigateToShoppingList: onOpenShoppingList,
+                                onDeleted: { if !detailPath.isEmpty { detailPath.removeLast() } }
                             )
                         case .search:
                             RecipeSearchRoot(

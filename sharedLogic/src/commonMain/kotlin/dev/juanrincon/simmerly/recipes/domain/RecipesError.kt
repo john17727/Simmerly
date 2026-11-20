@@ -6,4 +6,5 @@ sealed interface RecipesError : Error {
     data object FetchError : RecipesError
     data object UnknownError : RecipesError
     data object UpdateError : RecipesError
+    data object DeleteError : RecipesError
 }

@@ -1,6 +1,8 @@
 package dev.juanrincon.simmerly.recipes.data
 
 import androidx.paging.ExperimentalPagingApi
+import androidx.room3.immediateTransaction
+import androidx.room3.useWriterConnection
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
@@ -336,6 +338,27 @@ class SimmerlyRecipeRepository(
             rollback = { preferenceDao.upsert(previous ?: noPreference(recipeId)) },
             mapError = { RecipesError.UpdateError },
         ).bind()
+    }
+
+    override suspend fun deleteRecipe(recipeId: String): Either<RecipesError, Unit> = either {
+        val slug = recipeDao.getSlug(recipeId) ?: raise(RecipesError.DeleteError)
+        networkClient.deleteRecipe(slug).mapLeft { RecipesError.DeleteError }.bind()
+
+        // Ingredients and the tag/category/tool cross refs cascade; the rest have no FK to
+        // recipes, so they're removed explicitly in the same transaction.
+        database.useWriterConnection { transactor ->
+            transactor.immediateTransaction {
+                instructionsDao.deleteByRecipeId(recipeId)
+                noteDao.deleteByRecipeId(recipeId)
+                commentDao.deleteByRecipeId(recipeId)
+                database.userRecipePreferenceDao().deleteByRecipeId(recipeId)
+                recentlyViewedDao.deleteByRecipeId(recipeId)
+                recipeDao.deleteById(recipeId)
+            }
+        }
+        freshness.invalidate(CacheKeys.recipeDetail(recipeId))
+        // The paged list isn't Room-backed, so it only drops the row when told to reload.
+        activePagingSource?.invalidate()
     }
 
     /** What a recipe with no stored preference looks like: unrated and not a favorite. */

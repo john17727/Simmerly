@@ -6,6 +6,7 @@ import assertk.assertions.contains
 import assertk.assertions.isEqualTo
 import assertk.assertions.isInstanceOf
 import assertk.assertions.isNull
+import assertk.assertions.isTrue
 import dev.juanrincon.simmerly.recipes.data.remote.dto.outgoing.UserRatingUpdateDto
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.mock.MockEngine
@@ -15,6 +16,7 @@ import io.ktor.client.plugins.defaultRequest
 import io.ktor.client.request.HttpRequestData
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
+import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.content.TextContent
 import io.ktor.http.contentType
@@ -261,6 +263,29 @@ class RecipeNetworkClientTest {
         val result = buildClient(body = RECIPE_TIMELINE_EVENT_JSON)
             .createTimelineEvent("recipe-1", "Cooked", "Great recipe", TIMESTAMP)
         assertThat(result.getOrNull()!!.image).isEqualTo("does not have image")
+    }
+
+    // endregion
+
+    // region deleteRecipe
+
+    @Test
+    fun deleteRecipeSendsDeleteToTheRecipeSlug() = runTest {
+        val result = buildClient(body = "").deleteRecipe("pancakes")
+        assertThat(capturedRequest!!.method).isEqualTo(HttpMethod.Delete)
+        assertThat(capturedRequest!!.url.encodedPath).isEqualTo("/api/recipes/pancakes")
+        assertThat(result.isRight()).isTrue()
+    }
+
+    @Test
+    fun deleteRecipeIgnoresABodyOnSuccess() = runTest {
+        assertThat(buildClient(body = RECIPE_LIST_JSON).deleteRecipe("pancakes").isRight()).isTrue()
+    }
+
+    @Test
+    fun deleteRecipeFailsOnAServerError() = runTest {
+        val result = buildClient(statusCode = HttpStatusCode.NotFound).deleteRecipe("gone")
+        assertThat(result.isLeft()).isTrue()
     }
 
     // endregion

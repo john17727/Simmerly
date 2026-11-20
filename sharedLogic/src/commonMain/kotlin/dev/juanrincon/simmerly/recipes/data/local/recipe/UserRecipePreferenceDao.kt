@@ -23,6 +23,9 @@ interface UserRecipePreferenceDao {
     @Query("SELECT * FROM user_recipe_preferences")
     fun observeAll(): Flow<List<UserRecipePreferenceEntity>>
 
+    @Query("DELETE FROM user_recipe_preferences WHERE recipeId = :recipeId")
+    suspend fun deleteByRecipeId(recipeId: String)
+
     @Query("SELECT * FROM user_recipe_preferences")
     suspend fun getAll(): List<UserRecipePreferenceEntity>
 }

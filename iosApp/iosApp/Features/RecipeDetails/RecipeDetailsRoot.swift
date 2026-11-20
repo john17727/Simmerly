@@ -8,9 +8,15 @@ final class RecipeDetailsModel {
     private(set) var state: RecipeDetailsState
     var snackbar: SnackbarMessage?
     private let onNavigateToShoppingList: (String) -> Void
+    private let onDeleted: () -> Void
 
-    init(recipeId: String, onNavigateToShoppingList: @escaping (String) -> Void) {
+    init(
+        recipeId: String,
+        onNavigateToShoppingList: @escaping (String) -> Void,
+        onDeleted: @escaping () -> Void
+    ) {
         self.onNavigateToShoppingList = onNavigateToShoppingList
+        self.onDeleted = onDeleted
         vm = SimmerlyViewModels.shared.recipeDetails(recipeId: recipeId)
         state = vm.stateFlow.value
     }
@@ -29,6 +35,8 @@ final class RecipeDetailsModel {
                 switch onEnum(of: effect) {
                 case .showMessage(let message):
                     snackbar = SnackbarMessage(text: message.message.localized)
+                case .recipeDeleted:
+                    onDeleted()
                 case .itemsAdded(let added):
                     let listId = added.listId
                     snackbar = SnackbarMessage(
@@ -59,12 +67,14 @@ struct RecipeDetailsRoot: View {
     init(
         recipeId: String,
         onNavigateToComments: @escaping (String) -> Void,
-        onNavigateToShoppingList: @escaping (String) -> Void
+        onNavigateToShoppingList: @escaping (String) -> Void,
+        onDeleted: @escaping () -> Void
     ) {
         _model = State(
             initialValue: RecipeDetailsModel(
                 recipeId: recipeId,
-                onNavigateToShoppingList: onNavigateToShoppingList
+                onNavigateToShoppingList: onNavigateToShoppingList,
+                onDeleted: onDeleted
             )
         )
         self.onNavigateToComments = onNavigateToComments
@@ -77,10 +87,27 @@ struct RecipeDetailsRoot: View {
             onRemoveServing: { model.send(RecipeDetailsIntentRemoveServing.shared) },
             onShowSettings: { model.send(RecipeDetailsIntentShowSettings.shared) },
             onAddToList: { model.send(RecipeDetailsIntentOpenAddToList.shared) },
+            onDelete: { model.send(RecipeDetailsIntentRequestDelete.shared) },
             onNavigateToComments: { onNavigateToComments(model.state.recipe.id) },
             onRefresh: { await model.refresh() }
         )
         .snackbar($model.snackbar)
+        .confirmationDialog(
+            "Delete \(model.state.recipe.title.localized)?",
+            isPresented: Binding(
+                get: { model.state.showDeleteConfirm },
+                set: { isPresented in
+                    if !isPresented { model.send(RecipeDetailsIntentDismissDelete.shared) }
+                }
+            ),
+            titleVisibility: .visible
+        ) {
+            Button("Delete recipe", role: .destructive) {
+                model.send(RecipeDetailsIntentConfirmDelete.shared)
+            }
+        } message: {
+            Text("The recipe will be removed for everyone in your household. This can't be undone.")
+        }
         .task { await model.activate() }
         .sheet(
             isPresented: Binding(

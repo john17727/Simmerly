@@ -61,6 +61,9 @@ interface RecipeDao {
     @Delete
     suspend fun delete(recipe: RecipeEntity)
 
+    @Query("DELETE FROM recipes WHERE id = :id")
+    suspend fun deleteById(id: String)
+
     /**
      * Deletes every recipe whose id is not in [keepIds]. Used by a list refresh, inside the same
      * transaction that upserts the fresh page, so the table never passes through an empty state.

@@ -71,6 +71,13 @@ class RecipeDetailsViewModel(
                 reduce { state.copy(showSettings = false) }
             }
             is RecipeDetailsIntent.UpdateSettings -> updateSettings(event)
+            RecipeDetailsIntent.RequestDelete -> intent {
+                reduce { state.copy(showDeleteConfirm = true) }
+            }
+            RecipeDetailsIntent.DismissDelete -> intent {
+                if (!state.isDeleting) reduce { state.copy(showDeleteConfirm = false) }
+            }
+            RecipeDetailsIntent.ConfirmDelete -> deleteRecipe()
             else -> onAddToListEvent(event)
         }
     }
@@ -140,6 +147,19 @@ class RecipeDetailsViewModel(
             postSideEffect(RecipeDetailsSideEffect.ShowMessage(UiText.Resource(StringKey.SomethingWentWrong)))
         }
         reduce { state.copy(isPullRefreshing = false) }
+    }
+
+    private fun deleteRecipe() = intent {
+        if (state.isDeleting) return@intent
+        reduce { state.copy(isDeleting = true, showDeleteConfirm = false) }
+        repository.deleteRecipe(recipeId)
+            .onRight { postSideEffect(RecipeDetailsSideEffect.RecipeDeleted) }
+            .onLeft {
+                reduce { state.copy(isDeleting = false) }
+                postSideEffect(
+                    RecipeDetailsSideEffect.ShowMessage(UiText.Resource(StringKey.RecipeDeleteFailed))
+                )
+            }
     }
 
     private fun toggleFavorite() = intent {

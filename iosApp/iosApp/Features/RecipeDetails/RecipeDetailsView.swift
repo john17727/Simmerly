@@ -7,6 +7,7 @@ struct RecipeDetailsView: View {
     let onRemoveServing: () -> Void
     let onShowSettings: () -> Void
     let onAddToList: () -> Void
+    let onDelete: () -> Void
     let onNavigateToComments: () -> Void
     /// Pull-to-refresh; SwiftUI keeps its spinner up until this returns.
     let onRefresh: () async -> Void
@@ -65,6 +66,14 @@ struct RecipeDetailsView: View {
                             action: onNavigateToComments
                         )
                     }
+                    Divider()
+                    Button(
+                        "Delete recipe",
+                        systemImage: "trash",
+                        role: .destructive,
+                        action: onDelete
+                    )
+                    .disabled(state.loading || state.isDeleting || state.recipe.id.isEmpty)
                 } label: {
                     Image(systemName: "ellipsis.circle")
                 }
@@ -355,7 +364,9 @@ private let previewState = RecipeDetailsState(
     mode: .readOnly,
     showSettings: false,
     baseServings: 2.0,
-    addToList: nil
+    addToList: nil,
+    showDeleteConfirm: false,
+    isDeleting: false
 )
 
 #Preview {
@@ -366,6 +377,7 @@ private let previewState = RecipeDetailsState(
             onRemoveServing: {},
             onShowSettings: {},
             onAddToList: {},
+            onDelete: {},
             onNavigateToComments: {},
             onRefresh: {}
         )
@@ -385,12 +397,15 @@ private let previewState = RecipeDetailsState(
                 mode: .readOnly,
                 showSettings: false,
                 baseServings: 0.0,
-                addToList: nil
+                addToList: nil,
+                showDeleteConfirm: false,
+                isDeleting: false
             ),
             onAddServing: {},
             onRemoveServing: {},
             onShowSettings: {},
             onAddToList: {},
+            onDelete: {},
             onNavigateToComments: {},
             onRefresh: {}
         )

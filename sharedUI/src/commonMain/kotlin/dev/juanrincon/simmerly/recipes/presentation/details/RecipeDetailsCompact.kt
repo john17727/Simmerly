@@ -224,10 +224,10 @@ internal fun recipeActions(
         enabled = false,
     )
     actionItem(
-        onClick = {},
+        onClick = { onEvent(RecipeDetailsIntent.RequestDelete) },
         icon = Icons.Outlined.Delete,
         label = "Delete recipe",
-        enabled = false,
+        enabled = !state.loading && !state.isDeleting,
         destructive = true,
         dividerBefore = true,
     )

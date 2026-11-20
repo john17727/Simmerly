@@ -15,6 +15,10 @@ sealed interface RecipeDetailsIntent {
     data object DismissSettings : RecipeDetailsIntent
     data class UpdateSettings(val settings: Settings) : RecipeDetailsIntent
 
+    data object RequestDelete : RecipeDetailsIntent
+    data object DismissDelete : RecipeDetailsIntent
+    data object ConfirmDelete : RecipeDetailsIntent
+
     data object OpenAddToList : RecipeDetailsIntent
     data object DismissAddToList : RecipeDetailsIntent
     data object AddToListBack : RecipeDetailsIntent
