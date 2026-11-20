@@ -10,6 +10,7 @@ enum class StringKey {
     Profile,
     ShoppingListLoadFailed,
     ShoppingListUpdateFailed,
+    RecipeDeleteFailed,
     /** Args: list name. */
     ItemAddedToList,
     /** Args: item count, list name. */

@@ -610,6 +610,16 @@
         }
       }
     },
+    "recipe_delete_failed" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn't delete the recipe. Please try again."
+          }
+        }
+      }
+    },
     "shopping_list_update_failed" : {
       "localizations" : {
         "en" : {

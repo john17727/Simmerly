@@ -95,6 +95,10 @@ class RecipeNetworkClient(private val client: HttpClient) {
         client.delete("/api/users/$userId/favorites/$slug")
     }
 
+    /** `DELETE /api/recipes/{slug}`. The body, if any, is ignored. */
+    suspend fun deleteRecipe(slug: String): Either<DataError.NetworkError<Unit>, Unit> =
+        arrowNetworkHandlerNoContent { client.delete("/api/recipes/$slug") }
+
     /** Despite the spec declaring an empty response, this endpoint actually returns the full
      * recipe object — confirmed against a live instance — so it's decoded exactly like
      * [patchRecipe]/[getRecipe] rather than through the no-content path. */

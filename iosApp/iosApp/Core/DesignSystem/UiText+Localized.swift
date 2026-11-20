@@ -12,6 +12,7 @@ extension StringKey {
         case .shoppingList: return "shopping_list"
         case .profile: return "profile"
         case .shoppingListLoadFailed: return "shopping_list_load_failed"
+        case .recipeDeleteFailed: return "recipe_delete_failed"
         case .shoppingListUpdateFailed: return "shopping_list_update_failed"
         case .itemAddedToList: return "item_added_to_list"
         case .itemsAddedToList: return "items_added_to_list"

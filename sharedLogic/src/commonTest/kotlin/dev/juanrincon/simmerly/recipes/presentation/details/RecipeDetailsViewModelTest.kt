@@ -180,6 +180,47 @@ class RecipeDetailsViewModelTest {
 
     // endregion
 
+    // region Delete
+
+    @Test
+    fun requestingDeleteAsksForConfirmationAndDismissingCancelsIt() = runTest(testDispatcher) {
+        viewModel.testWithInternalState(this, initialState = RecipeDetailsState(loading = false)) {
+            viewModel.onEvent(RecipeDetailsIntent.RequestDelete)
+            awaitStateMatching { it.showDeleteConfirm }
+            viewModel.onEvent(RecipeDetailsIntent.DismissDelete)
+            awaitStateMatching { !it.showDeleteConfirm }
+            assertThat(repo.deletedRecipeIds).isEqualTo(emptyList())
+            cancelAndIgnoreRemainingItems()
+        }
+    }
+
+    @Test
+    fun confirmingDeleteDeletesTheRecipeAndPostsRecipeDeleted() = runTest(testDispatcher) {
+        viewModel.testWithInternalState(this, initialState = RecipeDetailsState(loading = false)) {
+            viewModel.onEvent(RecipeDetailsIntent.ConfirmDelete)
+
+            assertThat(awaitSideEffectSkippingStates()).isEqualTo(RecipeDetailsSideEffect.RecipeDeleted)
+            assertThat(repo.deletedRecipeIds).containsExactly("test-recipe")
+            cancelAndIgnoreRemainingItems()
+        }
+    }
+
+    @Test
+    fun aFailedDeleteShowsAMessageAndClearsIsDeleting() = runTest(testDispatcher) {
+        repo.deleteRecipeResult = Either.Left(RecipesError.DeleteError)
+        viewModel.testWithInternalState(this, initialState = RecipeDetailsState(loading = false)) {
+            viewModel.onEvent(RecipeDetailsIntent.ConfirmDelete)
+
+            assertThat(awaitSideEffectSkippingStates()).isEqualTo(
+                RecipeDetailsSideEffect.ShowMessage(UiText.Resource(StringKey.RecipeDeleteFailed))
+            )
+            assertThat(viewModel.container.stateFlow.value.isDeleting).isFalse()
+            cancelAndIgnoreRemainingItems()
+        }
+    }
+
+    // endregion
+
     // region Tabs
 
     private suspend fun loadedTabs(recipe: dev.juanrincon.simmerly.recipes.domain.model.RecipeDetail) =

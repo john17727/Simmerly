@@ -6,7 +6,11 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
@@ -46,6 +50,8 @@ fun RecipeDetailsScreen(
         when (effect) {
             is RecipeDetailsSideEffect.ShowMessage ->
                 snackbarHostState.showSnackbar(effect.message.asStringSuspend())
+
+            RecipeDetailsSideEffect.RecipeDeleted -> onNavigateBack()
 
             is RecipeDetailsSideEffect.ItemsAdded -> {
                 val result = snackbarHostState.showSnackbar(
@@ -91,6 +97,14 @@ private fun Content(
     sharedTransitionScope: SharedTransitionScope? = null,
     modifier: Modifier = Modifier
 ) {
+    if (state.showDeleteConfirm) {
+        ConfirmDeleteRecipeDialog(
+            title = state.recipe.title.asString(),
+            onConfirm = { onEvent(RecipeDetailsIntent.ConfirmDelete) },
+            onDismiss = { onEvent(RecipeDetailsIntent.DismissDelete) },
+        )
+    }
+
     state.addToList?.let { sheet ->
         // Desktop gets the single-step dialog from the Simmerly Desktop design; narrower windows
         // keep the phone's three-step sheet.
@@ -171,4 +185,23 @@ private fun Content(
             onClose = { onEvent(RecipeDetailsIntent.DismissSettings) },
         )
     }
+}
+
+@Composable
+private fun ConfirmDeleteRecipeDialog(
+    title: String,
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Delete “$title”?") },
+        text = { Text("The recipe will be removed for everyone in your household. This can't be undone.") },
+        confirmButton = {
+            TextButton(onClick = onConfirm) {
+                Text("Delete", color = MaterialTheme.colorScheme.error)
+            }
+        },
+        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } },
+    )
 }

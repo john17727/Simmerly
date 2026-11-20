@@ -54,6 +54,13 @@ interface RecipeRepository {
     suspend fun setFavorite(recipeId: String, favorite: Boolean): Either<RecipesError, Unit>
 
     /**
+     * Deletes the recipe on the server and, only once that succeeds, from the local cache. Not
+     * optimistic: a deleted recipe's relations can't be cheaply restored on rollback, so the
+     * recipe stays visible until the server confirms.
+     */
+    suspend fun deleteRecipe(recipeId: String): Either<RecipesError, Unit>
+
+    /**
      * Records that the recipe was just cooked: updates its last-made timestamp and adds a
      * matching entry to its Mealie timeline, with [note] (if any) as the entry's message. These
      * are two Mealie API calls, but always fire together for the same reason — there is no case

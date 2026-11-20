@@ -48,6 +48,19 @@ class RecipeDaoTest {
 
     // endregion
 
+    // region deleteById
+
+    @Test
+    fun deleteByIdRemovesOnlyThatRecipe() = runTest {
+        dao.upsert(aRecipeEntity(id = "recipe-1"))
+        dao.upsert(aRecipeEntity(id = "recipe-2", slug = "other"))
+        dao.deleteById("recipe-1")
+        assertThat(dao.existsById("recipe-1")).isEqualTo(0)
+        assertThat(dao.existsById("recipe-2")).isEqualTo(1)
+    }
+
+    // endregion
+
     // region getSlug
 
     @Test

@@ -118,6 +118,15 @@ class FakeRecipeRepository : RecipeRepository {
         return setFavoriteResult
     }
 
+    // --- deleteRecipe ---
+    var deleteRecipeResult: Either<RecipesError, Unit> = Unit.right()
+    val deletedRecipeIds = mutableListOf<String>()
+
+    override suspend fun deleteRecipe(recipeId: String): Either<RecipesError, Unit> {
+        deletedRecipeIds += recipeId
+        return deleteRecipeResult
+    }
+
     // --- recordRecipeMade ---
     var recordRecipeMadeResult: Either<RecipesError, Unit> = Unit.right()
     var lastRecordRecipeMadeCall: Triple<String, Instant, String?>? = null
