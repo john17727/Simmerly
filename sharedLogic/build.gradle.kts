@@ -103,6 +103,13 @@ kotlin {
             implementation(libs.ktor.client.content.negotiation)
             implementation(libs.ktor.serialization.kotlinx.json)
         }
+        jvmTest.dependencies {
+            // Migration tests run the exported schemas through a real database
+            implementation(libs.androidx.room.testing)
+            // Resolving every definition of the real Koin modules
+            implementation(project.dependencies.platform(libs.koin.bom))
+            implementation(libs.koin.test)
+        }
         jvmMain.dependencies {
             // Ktor
             implementation(libs.ktor.client.java)

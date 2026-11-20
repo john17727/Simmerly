@@ -13,28 +13,35 @@ import dev.juanrincon.simmerly.shoppinglists.presentation.di.shoppingListPresent
 import dev.juanrincon.simmerly.welcome.di.welcomeModule
 import org.koin.core.KoinApplication
 import org.koin.core.context.startKoin
+import org.koin.core.module.Module
 import org.koin.dsl.KoinAppDeclaration
 
 lateinit var simmerlyKoin: KoinApplication
 
+/**
+ * Every module the app runs with, so [initKoin] and the tests build the same graph. [platform]
+ * can be swapped for a module backed by memory instead of the device's files.
+ */
+fun appModules(platform: Module = platformModule): List<Module> = listOf(
+    appModule,
+    platform,
+    remoteModule,
+    localModule,
+    authModule,
+    welcomeModule,
+    recipeDataModule,
+    recipePresentationModule,
+    initialLoadDataModule,
+    initialLoadPresentationModule,
+    profileModule,
+    shoppingListDataModule,
+    shoppingListPresentationModule
+)
+
 fun initKoin(appDeclaration: KoinAppDeclaration = {}) {
     simmerlyKoin = startKoin {
         appDeclaration()
-        modules(
-            appModule,
-            platformModule,
-            remoteModule,
-            localModule,
-            authModule,
-            welcomeModule,
-            recipeDataModule,
-            recipePresentationModule,
-            initialLoadDataModule,
-            initialLoadPresentationModule,
-            profileModule,
-            shoppingListDataModule,
-            shoppingListPresentationModule
-        )
+        modules(appModules())
     }
 }
 
