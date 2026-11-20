@@ -52,6 +52,13 @@ class SimmerlyDatabaseMigrationTest {
             it.getLong(0) == 1L
         }
 
+    private fun SQLiteConnection.columns(table: String): List<String> =
+        prepare("PRAGMA table_info($table)").use { statement ->
+            buildList {
+                while (statement.step()) add(statement.getText(1))
+            }
+        }
+
     /** Data that exists in every schema version: the recent-search table and a user preference. */
     private fun SQLiteConnection.insertVersion5Data() {
         execSQL("INSERT INTO recent_search_queries (`query`, searchedAt) VALUES ('soup', 1700000000000)")
@@ -94,15 +101,37 @@ class SimmerlyDatabaseMigrationTest {
     }
 
     @Test
-    fun migratingStraightFrom5To7RunsBothMigrations() = runTest {
+    fun migrating7To8DropsTheUnusedCreatedAtColumnAndKeepsTheCursor() = runTest {
+        val helper = helper()
+        helper.createDatabase(7).use {
+            it.insertVersion5Data()
+            it.execSQL("INSERT INTO recipe_remote_keys (id, nextKey, createdAt) VALUES ('RECIPE_LIST', 'recipes?page=2', '2026-01-01T00:00:00Z')")
+        }
+
+        val migrated = helper.runMigrationsAndValidate(8, emptyList())
+
+        migrated.use {
+            assertThat(it.columns("recipe_remote_keys")).isEqualTo(listOf("id", "nextKey"))
+            val nextKey = it.prepare("SELECT nextKey FROM recipe_remote_keys WHERE id = 'RECIPE_LIST'").use { s ->
+                s.step()
+                s.getText(0)
+            }
+            assertThat(nextKey).isEqualTo("recipes?page=2")
+            assertThat(it.count("recent_search_queries")).isEqualTo(1L)
+        }
+    }
+
+    @Test
+    fun migratingStraightFrom5ToTheCurrentVersionRunsEveryMigration() = runTest {
         val helper = helper()
         helper.createDatabase(5).use { it.insertVersion5Data() }
 
-        val migrated = helper.runMigrationsAndValidate(7, emptyList())
+        val migrated = helper.runMigrationsAndValidate(8, emptyList())
 
         migrated.use {
             assertThat(it.tableExists("cache_metadata")).isEqualTo(true)
             assertThat(it.tableExists("shopping_lists")).isEqualTo(true)
+            assertThat(it.columns("recipe_remote_keys")).isEqualTo(listOf("id", "nextKey"))
             assertThat(it.count("user_recipe_preferences")).isEqualTo(1L)
         }
     }
@@ -121,6 +150,20 @@ class SimmerlyDatabaseMigrationTest {
             assertThat(preference?.isFavorite).isEqualTo(true)
             db.cacheMetadataDao().get("anything")
             db.shoppingListDao().get("anything")
+        } finally {
+            db.close()
+        }
+    }
+
+    @Test
+    fun theProductionBuilderConfigurationMigratesInsteadOfResetting() = runTest {
+        helper().createDatabase(5).use { it.insertVersion5Data() }
+
+        // The app's own configuration has a destructive fallback, which would silently wipe the
+        // data if the migrations were not registered correctly; surviving data proves they are.
+        val db = getRoomDatabase(Room.databaseBuilder<SimmerlyDatabase>(name = dbPath.toString()))
+        try {
+            assertThat(db.userRecipePreferenceDao().get("r1")?.rating).isEqualTo(4.5)
         } finally {
             db.close()
         }

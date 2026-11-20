@@ -67,10 +67,4 @@ interface RecipeDao {
      */
     @Query("DELETE FROM recipes WHERE id NOT IN (:keepIds)")
     suspend fun deleteAllExcept(keepIds: List<String>)
-
-    /**
-     * Deletes all recipes from the table.
-     */
-    @Query("DELETE FROM recipes")
-    suspend fun clearAll()
 }

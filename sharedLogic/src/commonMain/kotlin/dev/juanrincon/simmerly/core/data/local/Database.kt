@@ -2,10 +2,12 @@ package dev.juanrincon.simmerly.core.data.local
 
 import androidx.room3.AutoMigration
 import androidx.room3.ColumnTypeConverters
+import androidx.room3.DeleteColumn
 import androidx.room3.ConstructedBy
 import androidx.room3.Database
 import androidx.room3.RoomDatabase
 import androidx.room3.RoomDatabaseConstructor
+import androidx.room3.migration.AutoMigrationSpec
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import dev.juanrincon.simmerly.recipes.data.local.metadata.RecipeRemoteKey
 import dev.juanrincon.simmerly.recipes.data.local.metadata.RecipeRemoteKeyDao
@@ -78,9 +80,13 @@ import kotlin.time.ExperimentalTime
         ShoppingListItemEntity::class,
         ShoppingListRecipeEntity::class,
     ],
-    version = 7,
+    version = 8,
     // Older versions still fall back to a destructive migration (see getRoomDatabase).
-    autoMigrations = [AutoMigration(from = 5, to = 6), AutoMigration(from = 6, to = 7)],
+    autoMigrations = [
+        AutoMigration(from = 5, to = 6),
+        AutoMigration(from = 6, to = 7),
+        AutoMigration(from = 7, to = 8, spec = RemoteKeyCreatedAtDeleted::class),
+    ],
 )
 @ColumnTypeConverters(Converters::class)
 @OptIn(ExperimentalTime::class)
@@ -141,3 +147,7 @@ fun getRoomDatabase(
         .setQueryCoroutineContext(Dispatchers.IO)
         .build()
 }
+
+/** 7 -> 8: the cursor row's `createdAt` was written but never read, so the column is dropped. */
+@DeleteColumn(tableName = "recipe_remote_keys", columnName = "createdAt")
+class RemoteKeyCreatedAtDeleted : AutoMigrationSpec

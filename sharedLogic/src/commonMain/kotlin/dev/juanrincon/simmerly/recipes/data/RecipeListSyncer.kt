@@ -13,15 +13,12 @@ import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.junction.RecipeT
 import dev.juanrincon.simmerly.recipes.data.mappers.toEntity
 import dev.juanrincon.simmerly.recipes.data.remote.RecipeNetworkClient
 import dev.juanrincon.simmerly.recipes.domain.RecipesError
-import kotlin.time.Clock
-import kotlin.time.ExperimentalTime
 
 /**
  * The one place a page of the recipe list is fetched and written to Room. Both the Paging
  * `RemoteMediator` (Android/desktop) and the repository's manual paging (iOS) go through it, so
  * the two can't drift apart.
  */
-@OptIn(ExperimentalTime::class)
 class RecipeListSyncer(
     private val networkClient: RecipeNetworkClient,
     private val database: SimmerlyDatabase,
@@ -73,7 +70,7 @@ class RecipeListSyncer(
                 })
 
                 remoteKeyDao.upsert(
-                    RecipeRemoteKey(id = REMOTE_KEY_ID, nextKey = response.next, createdAt = Clock.System.now())
+                    RecipeRemoteKey(id = REMOTE_KEY_ID, nextKey = response.next)
                 )
             }
         }

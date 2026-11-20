@@ -128,21 +128,6 @@ class RecipeDaoTest {
 
     // endregion
 
-    // region clearAll
-
-    @Test
-    fun clearAllRemovesAllRecipes() = runTest {
-        dao.observeRecipeList().test {
-            assertThat(awaitItem()).hasSize(0)
-            dao.upsertAll(listOf(aRecipeEntity("r1"), aRecipeEntity("r2")))
-            awaitItem()
-            dao.clearAll()
-            assertThat(awaitItem()).hasSize(0)
-        }
-    }
-
-    // endregion
-
     // region delete
 
     @Test
