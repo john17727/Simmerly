@@ -279,6 +279,56 @@ class DefaultShoppingListRepositoryTest {
 
     // endregion
 
+    // region refreshListsIfStale
+
+    private fun countingClient(paths: MutableList<String>) = ShoppingListNetworkClient(HttpClient(MockEngine { req ->
+        paths += req.url.encodedPath
+        respond(
+            """{"page":1,"per_page":-1,"total":0,"total_pages":1,"items":[],"next":null,"previous":null}""",
+            HttpStatusCode.OK,
+            headersOf(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+        )
+    }) {
+        install(ContentNegotiation) { json(Json { ignoreUnknownKeys = true }) }
+        defaultRequest { contentType(ContentType.Application.Json) }
+    })
+
+    @Test
+    fun neverSyncedListsAreRefreshed() = runTest {
+        val paths = mutableListOf<String>()
+
+        newRepository(countingClient(paths)).refreshListsIfStale()
+
+        assertThat(paths).containsExactly("/api/households/shopping/lists")
+    }
+
+    @Test
+    fun freshListsAreNotRefreshedAgain() = runTest {
+        val paths = mutableListOf<String>()
+        val repo = newRepository(countingClient(paths))
+        repo.refreshLists()
+        paths.clear()
+
+        val result = repo.refreshListsIfStale()
+
+        assertThat(result.isRight()).isTrue()
+        assertThat(paths.isEmpty()).isTrue()
+    }
+
+    @Test
+    fun anExplicitRefreshIgnoresFreshness() = runTest {
+        val paths = mutableListOf<String>()
+        val repo = newRepository(countingClient(paths))
+        repo.refreshLists()
+        paths.clear()
+
+        repo.refreshLists()
+
+        assertThat(paths).containsExactly("/api/households/shopping/lists")
+    }
+
+    // endregion
+
     private fun repository() = newRepository(
         ShoppingListNetworkClient(HttpClient(MockEngine { req ->
             val body = if (req.method == HttpMethod.Get) ShoppingListNetworkClientTest.LIST_JSON

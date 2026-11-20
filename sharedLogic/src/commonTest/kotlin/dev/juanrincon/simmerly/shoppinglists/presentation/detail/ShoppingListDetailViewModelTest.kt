@@ -6,6 +6,8 @@ import assertk.assertThat
 import assertk.assertions.containsExactly
 import assertk.assertions.isEqualTo
 import assertk.assertions.isInstanceOf
+import assertk.assertions.isNull
+import dev.juanrincon.simmerly.core.presentation.StringKey
 import dev.juanrincon.simmerly.core.presentation.UiText
 import dev.juanrincon.simmerly.shoppinglists.FakeShoppingListRepository
 import dev.juanrincon.simmerly.shoppinglists.aFood
@@ -224,6 +226,35 @@ class ShoppingListDetailViewModelTest {
             viewModel.onEvent(ShoppingListDetailIntent.OnDeleteListConfirmed)
             assertThat(awaitSideEffectSkippingStates()).isEqualTo(ShoppingListDetailSideEffect.NavigateBack)
             assertThat(repo.deletedLists).containsExactly("list-1")
+            cancelAndIgnoreRemainingItems()
+        }
+    }
+
+    @Test
+    fun failedRefreshOfAStoredListKeepsItAndOnlyShowsAMessage() = runTest(testDispatcher) {
+        repo.refreshListResult = ShoppingListError.FetchError.left()
+        viewModel.testWithInternalState(this) {
+            runOnCreate()
+            val message = awaitSideEffectSkippingStates()
+            assertThat(message).isEqualTo(
+                ShoppingListDetailSideEffect.ShowMessage(UiText.Resource(StringKey.ShoppingListLoadFailed))
+            )
+            val state = viewModel.container.stateFlow.value
+            assertThat(state.isLoading).isEqualTo(false)
+            assertThat(state.error).isNull()
+            assertThat(state.name != null).isEqualTo(true)
+            cancelAndIgnoreRemainingItems()
+        }
+    }
+
+    @Test
+    fun failedRefreshWithNothingStoredBlocksWithAnError() = runTest(testDispatcher) {
+        repo.lists.value = null
+        repo.refreshListResult = ShoppingListError.FetchError.left()
+        viewModel.testWithInternalState(this) {
+            runOnCreate()
+            val state = awaitStateMatching { it.error != null }
+            assertThat(state.isLoading).isEqualTo(false)
             cancelAndIgnoreRemainingItems()
         }
     }

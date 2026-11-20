@@ -3,6 +3,7 @@ package dev.juanrincon.simmerly.shoppinglists.data.local
 import androidx.room3.immediateTransaction
 import androidx.room3.useWriterConnection
 import dev.juanrincon.simmerly.core.data.CacheKeys
+import dev.juanrincon.simmerly.core.data.CacheTtl
 import dev.juanrincon.simmerly.core.data.Freshness
 import dev.juanrincon.simmerly.core.data.local.SimmerlyDatabase
 import dev.juanrincon.simmerly.shoppinglists.data.mappers.itemEntities
@@ -38,6 +39,9 @@ class ShoppingListStore(
         observeAll(),
         database.cacheMetadataDao().observe(CacheKeys.SHOPPING_LISTS),
     ) { lists, synced -> if (lists.isEmpty() && synced == null) null else lists }
+
+    /** Whether the full set of lists was never synced or its freshness window has passed. */
+    suspend fun isStale(): Boolean = freshness.isStale(CacheKeys.SHOPPING_LISTS, CacheTtl.SHOPPING_LISTS)
 
     fun observe(id: String): Flow<ShoppingList?> = dao.observe(id).map { it?.toDomain() }
 

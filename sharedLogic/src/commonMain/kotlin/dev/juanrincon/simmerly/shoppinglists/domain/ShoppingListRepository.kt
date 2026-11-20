@@ -25,6 +25,10 @@ interface ShoppingListRepository {
      * doesn't return, so each list is fetched individually. */
     suspend fun refreshLists(): Either<ShoppingListError, Unit>
 
+    /** Like [refreshLists], but does nothing while the stored lists are still fresh — for screens
+     * that open often. An explicit refresh (pull-to-refresh) should call [refreshLists]. */
+    suspend fun refreshListsIfStale(): Either<ShoppingListError, Unit>
+
     suspend fun refreshList(id: String): Either<ShoppingListError, Unit>
 
     suspend fun createList(name: String): Either<ShoppingListError, ShoppingList>

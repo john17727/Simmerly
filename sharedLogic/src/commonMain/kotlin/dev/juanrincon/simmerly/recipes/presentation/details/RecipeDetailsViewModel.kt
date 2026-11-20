@@ -83,7 +83,11 @@ class RecipeDetailsViewModel(
                         if (state.recipe == RecipeDetailUi.emptyRecipe) {
                             reduce { state.copy(loading = false, isRefreshing = false, error = error) }
                         } else {
+                            // The cached recipe stays on screen; the failed refresh is only a message.
                             reduce { state.copy(isRefreshing = false) }
+                            postSideEffect(
+                                RecipeDetailsSideEffect.ShowMessage(UiText.Resource(StringKey.SomethingWentWrong))
+                            )
                         }
                     },
                     ifRight = { result ->

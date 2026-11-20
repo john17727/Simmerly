@@ -231,8 +231,13 @@ class ShoppingListDetailViewModel(
         reduce { state.copy(isLoading = list == null, error = null) }
         repository.refreshList(listId).fold(
             ifLeft = {
-                reduce {
-                    state.copy(isLoading = false, error = UiText.Resource(StringKey.ShoppingListLoadFailed))
+                val failed = UiText.Resource(StringKey.ShoppingListLoadFailed)
+                // Blocks the screen only when there is no list to show; otherwise it's a message.
+                if (list == null) {
+                    reduce { state.copy(isLoading = false, error = failed) }
+                } else {
+                    reduce { state.copy(isLoading = false) }
+                    postSideEffect(ShoppingListDetailSideEffect.ShowMessage(failed))
                 }
             },
             ifRight = { reduce { state.copy(isLoading = false) } }

@@ -50,7 +50,18 @@ class FakeShoppingListRepository : ShoppingListRepository {
     override fun observeList(id: String): Flow<ShoppingList?> =
         lists.map { all -> all?.firstOrNull { it.id == id } }
 
-    override suspend fun refreshLists() = refreshListsResult
+    var refreshListsCalls = 0
+    var refreshListsIfStaleCalls = 0
+
+    override suspend fun refreshLists(): Either<ShoppingListError, Unit> {
+        refreshListsCalls++
+        return refreshListsResult
+    }
+
+    override suspend fun refreshListsIfStale(): Either<ShoppingListError, Unit> {
+        refreshListsIfStaleCalls++
+        return refreshListsResult
+    }
 
     override suspend fun refreshList(id: String) = refreshListResult
 

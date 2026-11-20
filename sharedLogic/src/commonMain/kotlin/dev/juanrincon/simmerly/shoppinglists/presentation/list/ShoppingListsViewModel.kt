@@ -31,7 +31,7 @@ class ShoppingListsViewModel(
         orbitContainer(initialState = ShoppingListsState()) {
             observeLists()
             loadCurrentUser()
-            refresh()
+            refresh(force = false)
         }
 
     // Concrete, non-generic accessors for Swift — see WelcomeViewModel for why these are needed.
@@ -40,7 +40,7 @@ class ShoppingListsViewModel(
 
     fun onEvent(event: ShoppingListsIntent) {
         when (event) {
-            ShoppingListsIntent.OnRefresh -> refresh()
+            ShoppingListsIntent.OnRefresh -> refresh(force = true)
 
             is ShoppingListsIntent.OnFilterSelected -> intent {
                 reduce { state.copy(filter = event.filter).withVisibleLists() }
@@ -95,12 +95,22 @@ class ShoppingListsViewModel(
         }
     }
 
-    private fun refresh() = intent {
+    /**
+     * Opening the screen only refreshes stale lists; pull-to-refresh ([force]) always does. A
+     * failure blocks the screen only when there is nothing to show — otherwise the stored lists
+     * stay on screen and the failure is a message.
+     */
+    private fun refresh(force: Boolean) = intent {
         reduce { state.copy(isLoading = true, error = null) }
-        repository.refreshLists().fold(
+        val result = if (force) repository.refreshLists() else repository.refreshListsIfStale()
+        result.fold(
             ifLeft = {
-                reduce {
-                    state.copy(isLoading = false, error = UiText.Resource(StringKey.ShoppingListLoadFailed))
+                val failed = UiText.Resource(StringKey.ShoppingListLoadFailed)
+                if (state.allLists == null) {
+                    reduce { state.copy(isLoading = false, error = failed) }
+                } else {
+                    reduce { state.copy(isLoading = false) }
+                    postSideEffect(ShoppingListsSideEffect.ShowMessage(failed))
                 }
             },
             ifRight = { reduce { state.copy(isLoading = false) } }

@@ -54,6 +54,9 @@ class DefaultShoppingListRepository(
         store.replaceAll(detailed)
     }
 
+    override suspend fun refreshListsIfStale(): Either<ShoppingListError, Unit> =
+        if (store.isStale()) refreshLists() else Either.Right(Unit)
+
     override suspend fun refreshList(id: String): Either<ShoppingListError, Unit> = either {
         val host = sessionDataStore.getServerAddress()
         val list = networkClient.getList(id).mapLeft { ShoppingListError.FetchError }.bind()
