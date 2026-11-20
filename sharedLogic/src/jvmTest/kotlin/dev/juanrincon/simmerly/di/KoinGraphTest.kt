@@ -104,4 +104,14 @@ class KoinGraphTest {
         assertThat(database.recipeDao().existsById("r1")).isEqualTo(0)
         assertThat(session.getToken().orEmpty()).isEqualTo("")
     }
+
+    @Test
+    fun loggingInThroughTheRealGraphDropsTheDataOfTheSessionBefore() = runTest {
+        val database = app.koin.get<SimmerlyDatabase>()
+        database.recipeDao().upsert(aRecipeEntity(id = "previous-users-recipe"))
+
+        app.koin.get<AuthRepository>().login("https://other-server.example.com", "api-key")
+
+        assertThat(database.recipeDao().existsById("previous-users-recipe")).isEqualTo(0)
+    }
 }

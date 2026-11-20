@@ -69,6 +69,33 @@ class DefaultAuthRepositoryTest {
         return DefaultAuthRepository(sessionDataStore, AuthNetworkClient(httpClient), localDataCleaner)
     }
 
+    // region login clears the previous session's data
+
+    @Test
+    fun credentialsLoginClearsLocalDataBeforeStoringTheSession() = runTest {
+        val repo = buildRepository()
+        repo.login("https://myserver.com", "user", "pass")
+        assertThat(localDataCleaner.clearCount).isEqualTo(1)
+        assertThat(sessionDataStore.token).isEqualTo("test-token")
+    }
+
+    @Test
+    fun apiKeyLoginClearsLocalData() = runTest {
+        val repo = buildRepository()
+        repo.login("https://myserver.com", "my-api-key")
+        assertThat(localDataCleaner.clearCount).isEqualTo(1)
+    }
+
+    @Test
+    fun failedLoginKeepsTheCachedData() = runTest {
+        val repo = buildRepository(HttpStatusCode.Unauthorized, "")
+        repo.login("https://myserver.com", "user", "wrong-pass")
+        assertThat(localDataCleaner.clearCount).isEqualTo(0)
+        assertThat(sessionDataStore.token).isNull()
+    }
+
+    // endregion
+
     // region logout
 
     @Test
