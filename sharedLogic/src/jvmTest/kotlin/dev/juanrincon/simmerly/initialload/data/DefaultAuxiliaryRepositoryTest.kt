@@ -85,7 +85,7 @@ class DefaultAuxiliaryRepositoryTest {
         val result = repository.loadTags()
         assertThat(result.isRight()).isTrue()
         assertThat(requestCount).isEqualTo(1)
-        assertThat(freshness.isStale(CacheKeys.referenceData("tags"), CacheTtl.REFERENCE_DATA)).isFalse()
+        assertThat(freshness.isStale(CacheKeys.REFERENCE_TAGS, CacheTtl.REFERENCE_DATA)).isFalse()
     }
 
     @Test
@@ -108,7 +108,7 @@ class DefaultAuxiliaryRepositoryTest {
     fun failedLoadStaysStaleAndIsRetried() = runTest {
         status = HttpStatusCode.InternalServerError
         assertThat(repository.loadCategories().isLeft()).isTrue()
-        assertThat(freshness.isStale(CacheKeys.referenceData("categories"), CacheTtl.REFERENCE_DATA)).isTrue()
+        assertThat(freshness.isStale(CacheKeys.REFERENCE_CATEGORIES, CacheTtl.REFERENCE_DATA)).isTrue()
 
         status = HttpStatusCode.OK
         assertThat(repository.loadCategories().isRight()).isTrue()

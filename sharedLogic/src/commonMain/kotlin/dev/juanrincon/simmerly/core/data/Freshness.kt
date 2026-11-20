@@ -11,7 +11,10 @@ import kotlin.time.ExperimentalTime
 /** Identifies a cached dataset in `cache_metadata`. */
 object CacheKeys {
     const val RECIPE_LIST = "recipe_list"
-    fun referenceData(name: String) = "reference_data:$name"
+    const val REFERENCE_TAGS = "reference_data:tags"
+    const val REFERENCE_CATEGORIES = "reference_data:categories"
+    const val REFERENCE_TOOLS = "reference_data:tools"
+    const val REFERENCE_UNITS = "reference_data:units"
     const val SHOPPING_LISTS = "shopping_lists"
     fun recipeDetail(id: String) = "recipe_detail:$id"
 }

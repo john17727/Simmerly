@@ -15,7 +15,6 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.launch
 import org.orbitmvi.orbit.OrbitContainer
 import org.orbitmvi.orbit.OrbitContainerHost
 import org.orbitmvi.orbit.viewmodel.orbitContainer
@@ -48,28 +47,24 @@ class RecipeListViewModel(
     private val _endReached = MutableStateFlow(false)
     val endReached: StateFlow<Boolean> = _endReached.asStateFlow()
 
-    fun loadNextPage() {
-        if (_isLoadingMore.value || _endReached.value) return
-        viewModelScope.launch {
-            _isLoadingMore.value = true
-            repository.loadNextRecipePage().onRight { hasMore -> _endReached.value = !hasMore }
-            _isLoadingMore.value = false
-        }
-    }
-
-    fun refresh() {
-        viewModelScope.launch { refreshAndAwait() }
-    }
-
     /**
-     * Refreshes the list and returns once it is done. SwiftUI's pull-to-refresh keeps its spinner
-     * up until the awaited call returns, so Swift calls this instead of [refresh].
+     * The one function exposed besides [onEvent], and only for SwiftUI: `.refreshable` keeps its
+     * spinner up until the awaited call returns, and an event is fire-and-forget so it can't
+     * report when the refresh finished. Everything else, including Compose's refresh, goes
+     * through [onEvent].
      */
     suspend fun refreshAndAwait() {
         if (_isLoadingMore.value) return
         _isLoadingMore.value = true
         _endReached.value = false
         repository.refreshRecipeList().onRight { hasMore -> _endReached.value = !hasMore }
+        _isLoadingMore.value = false
+    }
+
+    private suspend fun loadNextPage() {
+        if (_isLoadingMore.value || _endReached.value) return
+        _isLoadingMore.value = true
+        repository.loadNextRecipePage().onRight { hasMore -> _endReached.value = !hasMore }
         _isLoadingMore.value = false
     }
 
@@ -81,6 +76,8 @@ class RecipeListViewModel(
             is RecipeListIntent.OnRatingChanged -> intent {
                 repository.setRating(event.recipeId, event.rating)
             }
+            RecipeListIntent.OnLoadMore -> intent { loadNextPage() }
+            RecipeListIntent.OnRefresh -> intent { refreshAndAwait() }
             is RecipeListIntent.OnSearchQueryChanged -> intent {
                 reduce { state.copy(searchQuery = event.query) }
             }

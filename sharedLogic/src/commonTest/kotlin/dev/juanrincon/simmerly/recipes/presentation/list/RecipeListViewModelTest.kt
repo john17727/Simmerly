@@ -108,46 +108,49 @@ class RecipeListViewModelTest {
     @Test
     fun loadNextPageSetsEndReachedFalseWhenMorePagesRemain() = runTest(testDispatcher) {
         repo.loadNextRecipePageResult = true.right()
-        viewModel.loadNextPage()
+        viewModel.onEvent(RecipeListIntent.OnLoadMore)
+        awaitUntil { repo.loadNextRecipePageCallCount == 1 && !viewModel.isLoadingMore.value }
         assertThat(viewModel.endReached.value).isFalse()
-        assertThat(viewModel.isLoadingMore.value).isFalse()
-        assertThat(repo.loadNextRecipePageCallCount).isEqualTo(1)
     }
 
     @Test
     fun loadNextPageSetsEndReachedTrueWhenNoMorePagesRemain() = runTest(testDispatcher) {
         repo.loadNextRecipePageResult = false.right()
-        viewModel.loadNextPage()
+        viewModel.onEvent(RecipeListIntent.OnLoadMore)
+        awaitUntil { viewModel.endReached.value }
         assertThat(viewModel.endReached.value).isTrue()
     }
 
     @Test
     fun loadNextPageIgnoredWhenAlreadyEndReached() = runTest(testDispatcher) {
         repo.loadNextRecipePageResult = false.right()
-        viewModel.loadNextPage()
+        viewModel.onEvent(RecipeListIntent.OnLoadMore)
+        awaitUntil { viewModel.endReached.value }
         assertThat(repo.loadNextRecipePageCallCount).isEqualTo(1)
 
-        viewModel.loadNextPage()
+        viewModel.onEvent(RecipeListIntent.OnLoadMore)
+        delay(100)
         assertThat(repo.loadNextRecipePageCallCount).isEqualTo(1)
     }
 
     @Test
     fun loadNextPageLeavesEndReachedUnchangedOnError() = runTest(testDispatcher) {
         repo.loadNextRecipePageResult = RecipesError.FetchError.left()
-        viewModel.loadNextPage()
+        viewModel.onEvent(RecipeListIntent.OnLoadMore)
+        awaitUntil { repo.loadNextRecipePageCallCount == 1 && !viewModel.isLoadingMore.value }
         assertThat(viewModel.endReached.value).isFalse()
     }
 
     @Test
     fun refreshResetsEndReachedBeforeReloading() = runTest(testDispatcher) {
         repo.loadNextRecipePageResult = false.right()
-        viewModel.loadNextPage()
-        assertThat(viewModel.endReached.value).isTrue()
+        viewModel.onEvent(RecipeListIntent.OnLoadMore)
+        awaitUntil { viewModel.endReached.value }
 
         repo.refreshRecipeListResult = true.right()
-        viewModel.refresh()
+        viewModel.onEvent(RecipeListIntent.OnRefresh)
+        awaitUntil { repo.refreshRecipeListCallCount == 1 && !viewModel.isLoadingMore.value }
         assertThat(viewModel.endReached.value).isFalse()
-        assertThat(repo.refreshRecipeListCallCount).isEqualTo(1)
     }
 
     // endregion

@@ -123,8 +123,9 @@ class RecipeDetailsViewModel(
     }
 
     /**
-     * Pull-to-refresh for Swift: SwiftUI keeps its spinner up until the awaited call returns, so
-     * this returns only once the refresh has finished. Compose sends [RecipeDetailsIntent.Refresh].
+     * The one function exposed besides [onEvent], and only for SwiftUI: `.refreshable` keeps its
+     * spinner up until the awaited call returns, and an event is fire-and-forget so it can't
+     * report when the refresh finished. Compose sends [RecipeDetailsIntent.Refresh].
      */
     suspend fun refreshAndAwait() {
         refresh().join()

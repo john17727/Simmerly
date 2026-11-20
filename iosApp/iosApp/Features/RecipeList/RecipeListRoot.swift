@@ -35,7 +35,7 @@ final class RecipeListModel {
     }
 
     func loadNextPage() {
-        vm.loadNextPage()
+        vm.onEvent(event: RecipeListIntentOnLoadMore.shared)
     }
 
     func refresh() async {

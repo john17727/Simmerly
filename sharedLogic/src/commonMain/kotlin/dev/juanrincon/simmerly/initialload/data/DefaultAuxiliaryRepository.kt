@@ -26,24 +26,24 @@ class DefaultAuxiliaryRepository(
 ) : AuxiliaryRepository {
 
     override suspend fun loadTags(): Either<DataError.NetworkError<Unit>, Unit> =
-        loadIfStale("tags") {
+        loadIfStale(CacheKeys.REFERENCE_TAGS) {
             networkClient.getTags().map { dto -> tagDao.upsertAll(dto.items.map { it.toEntity() }) }
         }
 
     override suspend fun loadCategories(): Either<DataError.NetworkError<Unit>, Unit> =
-        loadIfStale("categories") {
+        loadIfStale(CacheKeys.REFERENCE_CATEGORIES) {
             networkClient.getCategories().map { dto ->
                 categoryDao.upsertAll(dto.items.map { it.toEntity() })
             }
         }
 
     override suspend fun loadTools(): Either<DataError.NetworkError<Unit>, Unit> =
-        loadIfStale("tools") {
+        loadIfStale(CacheKeys.REFERENCE_TOOLS) {
             networkClient.getTools().map { dto -> toolDao.upsertAll(dto.items.map { it.toEntity() }) }
         }
 
     override suspend fun loadUnits(): Either<DataError.NetworkError<Unit>, Unit> =
-        loadIfStale("units") {
+        loadIfStale(CacheKeys.REFERENCE_UNITS) {
             networkClient.getUnits().map { dto -> unitDao.upsertAll(dto.items.map { it.toEntity() }) }
         }
 
@@ -52,10 +52,9 @@ class DefaultAuxiliaryRepository(
      * a failed fetch leaves it stale so the next start tries again.
      */
     private suspend fun loadIfStale(
-        name: String,
+        key: String,
         fetch: suspend () -> Either<DataError.NetworkError<Unit>, Unit>,
     ): Either<DataError.NetworkError<Unit>, Unit> {
-        val key = CacheKeys.referenceData(name)
         if (!freshness.isStale(key, CacheTtl.REFERENCE_DATA)) return Unit.right()
         return fetch().onRight { freshness.markSynced(key) }
     }
