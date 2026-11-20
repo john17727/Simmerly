@@ -4,31 +4,26 @@ import androidx.paging.ExperimentalPagingApi
 import androidx.paging.LoadType
 import androidx.paging.PagingState
 import androidx.paging.RemoteMediator
-import dev.juanrincon.simmerly.recipes.data.local.metadata.RecipeRemoteKey
-import dev.juanrincon.simmerly.recipes.data.local.metadata.RecipeRemoteKeyDao
-import dev.juanrincon.simmerly.recipes.data.local.recipe.CategoryDao
-import dev.juanrincon.simmerly.recipes.data.local.recipe.RecipeDao
-import dev.juanrincon.simmerly.recipes.data.local.recipe.RecipeTagDao
-import dev.juanrincon.simmerly.recipes.data.local.recipe.TagDao
-import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.junction.RecipeCategoryCrossRef
-import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.junction.RecipeTagCrossRef
-import dev.juanrincon.simmerly.recipes.data.mappers.toEntity
-import dev.juanrincon.simmerly.recipes.data.remote.RecipeNetworkClient
+import dev.juanrincon.simmerly.core.data.CacheKeys
+import dev.juanrincon.simmerly.core.data.CacheTtl
+import dev.juanrincon.simmerly.core.data.Freshness
 import dev.juanrincon.simmerly.recipes.domain.model.RecipeSummary
-import kotlin.time.Clock
-import kotlin.time.ExperimentalTime
 
-@OptIn(ExperimentalPagingApi::class, ExperimentalTime::class)
+@OptIn(ExperimentalPagingApi::class)
 class RecipeRemoteMediator(
-    private val networkClient: RecipeNetworkClient,
-    private val recipeDao: RecipeDao,
-    private val remoteKeyDao: RecipeRemoteKeyDao,
-    private val tagsDao: TagDao,
-    private val recipeTagDao: RecipeTagDao,
-    private val categoryDao: CategoryDao,
+    private val syncer: RecipeListSyncer,
+    private val freshness: Freshness,
     /** Called after a page has been written, so the paging source re-reads the table. */
     private val onPageWritten: () -> Unit = {},
 ) : RemoteMediator<Int, RecipeSummary>() {
+
+    /** Skips the network on open while the cached list is within its TTL. */
+    override suspend fun initialize(): InitializeAction =
+        if (freshness.isStale(CacheKeys.RECIPE_LIST, CacheTtl.RECIPE_LIST)) {
+            InitializeAction.LAUNCH_INITIAL_REFRESH
+        } else {
+            InitializeAction.SKIP_INITIAL_REFRESH
+        }
 
     override suspend fun load(
         loadType: LoadType,
@@ -37,45 +32,18 @@ class RecipeRemoteMediator(
         val cursor: String? = when (loadType) {
             LoadType.REFRESH -> null
             LoadType.PREPEND -> return MediatorResult.Success(endOfPaginationReached = true)
-            LoadType.APPEND -> {
-                val key = remoteKeyDao.getKey()
-                    ?: return MediatorResult.Success(endOfPaginationReached = true)
-                key.nextKey ?: return MediatorResult.Success(endOfPaginationReached = true)
-            }
+            LoadType.APPEND ->
+                syncer.nextCursor() ?: return MediatorResult.Success(endOfPaginationReached = true)
         }
 
         return try {
-            val response = networkClient.getRecipes(next = cursor, requireTags = true)
-                .fold(
-                    ifLeft = { return MediatorResult.Error(Exception("Network error")) },
-                    ifRight = { it }
-                )
-
-            if (loadType == LoadType.REFRESH) {
-                recipeDao.clearAll()
-                remoteKeyDao.clearKey()
-            }
-
-            recipeDao.upsertAll(response.items.map { it.toEntity() })
-            tagsDao.upsertAll(response.items.flatMap { recipe -> recipe.tags.map { it.toEntity() } })
-            recipeTagDao.insertAll(response.items.flatMap { recipe ->
-                recipe.tags.map { RecipeTagCrossRef(recipeId = recipe.id, tagId = it.id) }
-            })
-            categoryDao.upsertAll(response.items.flatMap { recipe -> recipe.recipeCategory.map { it.toEntity() } })
-            categoryDao.insertCrossRefs(response.items.flatMap { recipe ->
-                recipe.recipeCategory.map { RecipeCategoryCrossRef(recipeId = recipe.id, categoryId = it.id) }
-            })
-            remoteKeyDao.upsert(
-                RecipeRemoteKey(
-                    id = "RECIPE_LIST",
-                    nextKey = response.next,
-                    createdAt = Clock.System.now()
-                )
+            syncer.sync(cursor).fold(
+                ifLeft = { MediatorResult.Error(Exception("Network error")) },
+                ifRight = { hasMore ->
+                    onPageWritten()
+                    MediatorResult.Success(endOfPaginationReached = !hasMore)
+                }
             )
-
-            onPageWritten()
-
-            MediatorResult.Success(endOfPaginationReached = response.next == null)
         } catch (e: Exception) {
             MediatorResult.Error(e)
         }

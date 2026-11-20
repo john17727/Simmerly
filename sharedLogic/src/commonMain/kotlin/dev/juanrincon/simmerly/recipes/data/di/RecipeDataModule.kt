@@ -10,7 +10,7 @@ import org.koin.dsl.module
 
 val recipeDataModule = module {
     single<RecipeNetworkClient> { RecipeNetworkClient(get(qualifier = AuthClient)) }
-    single { SimmerlyRecipeRepository(get(), get(), get(), get()) } binds arrayOf(
+    single { SimmerlyRecipeRepository(get(), get(), get(), get(), get()) } binds arrayOf(
         RecipeRepository::class,
         ResettableCache::class,
     )

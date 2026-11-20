@@ -13,4 +13,7 @@ interface RecipeTagDao {
 
     @Query("DELETE FROM recipe_tag_cross_ref WHERE recipe_id = :recipeId")
     suspend fun clearForRecipe(recipeId: String)
+
+    @Query("DELETE FROM recipe_tag_cross_ref WHERE recipe_id IN (:recipeIds)")
+    suspend fun clearForRecipes(recipeIds: List<String>)
 }

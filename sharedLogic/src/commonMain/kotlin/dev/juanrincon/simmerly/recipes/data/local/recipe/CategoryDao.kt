@@ -3,6 +3,7 @@ package dev.juanrincon.simmerly.recipes.data.local.recipe
 import androidx.room3.Dao
 import androidx.room3.Insert
 import androidx.room3.OnConflictStrategy
+import androidx.room3.Query
 import androidx.room3.Upsert
 import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.CategoryEntity
 import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.junction.RecipeCategoryCrossRef
@@ -17,4 +18,7 @@ interface CategoryDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertCrossRefs(crossRefs: List<RecipeCategoryCrossRef>)
+
+    @Query("DELETE FROM recipe_category_cross_ref WHERE recipe_id IN (:recipeIds)")
+    suspend fun clearCrossRefsForRecipes(recipeIds: List<String>)
 }

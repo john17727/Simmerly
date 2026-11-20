@@ -10,16 +10,14 @@ import arrow.core.Either
 import arrow.core.raise.either
 import arrow.core.right
 import dev.juanrincon.simmerly.auth.domain.SessionDataStore
+import dev.juanrincon.simmerly.core.data.Freshness
 import dev.juanrincon.simmerly.core.data.local.SimmerlyDatabase
 import dev.juanrincon.simmerly.core.domain.ResettableCache
 import dev.juanrincon.simmerly.initialload.domain.UserRepository
-import dev.juanrincon.simmerly.recipes.data.local.metadata.RecipeRemoteKey
 import dev.juanrincon.simmerly.recipes.data.local.recent.RecentSearchQueryEntity
 import dev.juanrincon.simmerly.recipes.data.local.recent.RecentlyViewedEntity
 import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.UserRecipePreferenceEntity
 import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.junction.InstructionIngredientCrossRef
-import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.junction.RecipeCategoryCrossRef
-import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.junction.RecipeTagCrossRef
 import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.junction.RecipeToolCrossRef
 import dev.juanrincon.simmerly.recipes.data.mappers.toDomain
 import dev.juanrincon.simmerly.recipes.data.mappers.toDto
@@ -54,22 +52,20 @@ class SimmerlyRecipeRepository(
     private val database: SimmerlyDatabase,
     private val sessionDataStore: SessionDataStore,
     private val userRepository: UserRepository,
+    private val freshness: Freshness,
 ) : RecipeRepository, ResettableCache {
     private val recipeDao = database.recipeDao()
     private val ingredientDao = database.ingredientDao()
     private val instructionsDao = database.instructionDao()
     private val toolsDao = database.toolDao()
-    private val tagsDao = database.tagDao()
     private val recipeToolDao = database.recipeToolDao()
-    private val recipeTagDao = database.recipeTagDao()
-    private val categoryDao = database.categoryDao()
     private val instructionIngredientDao = database.instructionIngredientDao()
     private val noteDao = database.noteDao()
     private val commentDao = database.commentDao()
     private val userDao = database.userDao()
     private val recentlyViewedDao = database.recentlyViewedDao()
     private val recentSearchQueryDao = database.recentSearchQueryDao()
-    private val remoteKeyDao = database.recipeRemoteKeyDao()
+    private val recipeListSyncer = RecipeListSyncer(networkClient, database, freshness)
 
     /** Outlives any screen: the paged list is cached here so that leaving the Recipes tab (which
      * clears its ViewModel) doesn't throw away the loaded pages or rerun the remote refresh. */
@@ -121,12 +117,8 @@ class SimmerlyRecipeRepository(
     private fun createRecipePager(): Flow<PagingData<RecipeSummary>> = Pager(
         config = PagingConfig(pageSize = RecipePagingSource.PAGE_SIZE, enablePlaceholders = false),
         remoteMediator = RecipeRemoteMediator(
-            networkClient = networkClient,
-            recipeDao = recipeDao,
-            remoteKeyDao = remoteKeyDao,
-            tagsDao = tagsDao,
-            recipeTagDao = recipeTagDao,
-            categoryDao = categoryDao,
+            syncer = recipeListSyncer,
+            freshness = freshness,
             // The paging source reads the table once per load and isn't Room-backed, so it has to
             // be told when the mediator has written new rows.
             onPageWritten = { activePagingSource?.invalidate() },
@@ -157,44 +149,13 @@ class SimmerlyRecipeRepository(
         }.distinctUntilChanged()
     }
 
-    override suspend fun loadNextRecipePage(): Either<RecipesError, Boolean> {
-        val key = remoteKeyDao.getKey()
-        return when {
-            key == null -> fetchRecipePage(cursor = null, isRefresh = true)
-            key.nextKey == null -> false.right()
-            else -> fetchRecipePage(cursor = key.nextKey, isRefresh = false)
-        }
+    override suspend fun loadNextRecipePage(): Either<RecipesError, Boolean> = when {
+        !recipeListSyncer.hasSynced() -> recipeListSyncer.sync(cursor = null)
+        else -> recipeListSyncer.nextCursor()?.let { recipeListSyncer.sync(it) } ?: false.right()
     }
 
     override suspend fun refreshRecipeList(): Either<RecipesError, Boolean> =
-        fetchRecipePage(cursor = null, isRefresh = true)
-
-    /** Returns whether more pages remain after this load. Mirrors [RecipeRemoteMediator]'s load logic. */
-    private suspend fun fetchRecipePage(cursor: String?, isRefresh: Boolean): Either<RecipesError, Boolean> =
-        either {
-            val response = networkClient.getRecipes(next = cursor, requireTags = true)
-                .mapLeft { RecipesError.FetchError }.bind()
-
-            if (isRefresh) {
-                recipeDao.clearAll()
-                remoteKeyDao.clearKey()
-            }
-
-            recipeDao.upsertAll(response.items.map { it.toEntity() })
-            tagsDao.upsertAll(response.items.flatMap { recipe -> recipe.tags.map { it.toEntity() } })
-            recipeTagDao.insertAll(response.items.flatMap { recipe ->
-                recipe.tags.map { RecipeTagCrossRef(recipeId = recipe.id, tagId = it.id) }
-            })
-            categoryDao.upsertAll(response.items.flatMap { recipe -> recipe.recipeCategory.map { it.toEntity() } })
-            categoryDao.insertCrossRefs(response.items.flatMap { recipe ->
-                recipe.recipeCategory.map { RecipeCategoryCrossRef(recipeId = recipe.id, categoryId = it.id) }
-            })
-            remoteKeyDao.upsert(
-                RecipeRemoteKey(id = "RECIPE_LIST", nextKey = response.next, createdAt = Clock.System.now())
-            )
-
-            response.next != null
-        }
+        recipeListSyncer.sync(cursor = null)
 
     override fun comments(recipeId: String): Flow<List<Comment>> =
         sessionDataStore.observeServerAddress()
