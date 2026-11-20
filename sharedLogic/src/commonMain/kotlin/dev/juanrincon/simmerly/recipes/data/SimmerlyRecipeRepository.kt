@@ -10,6 +10,8 @@ import arrow.core.Either
 import arrow.core.raise.either
 import arrow.core.right
 import dev.juanrincon.simmerly.auth.domain.SessionDataStore
+import dev.juanrincon.simmerly.core.data.CacheKeys
+import dev.juanrincon.simmerly.core.data.CacheTtl
 import dev.juanrincon.simmerly.core.data.Freshness
 import dev.juanrincon.simmerly.core.data.local.SimmerlyDatabase
 import dev.juanrincon.simmerly.core.domain.ResettableCache
@@ -169,22 +171,16 @@ class SimmerlyRecipeRepository(
 
             if (!hasCached) {
                 send(Either.Right(LoadingResult.Loading))
-                val fetchResult = either {
-                    val dto = networkClient.getRecipe(id).mapLeft { RecipesError.FetchError }.bind()
-                    persistRecipeData(dto)
-                }
+                val fetchResult = fetchRecipeDetails(id)
                 if (fetchResult.isLeft()) {
                     send(Either.Left((fetchResult as Either.Left).value))
                     return@channelFlow
                 }
-            } else {
+            } else if (freshness.isStale(CacheKeys.recipeDetail(id), CacheTtl.RECIPE_DETAIL)) {
+                // Only a stale copy is refetched; within the TTL the cached details are shown as is.
                 launch {
                     send(Either.Right(LoadingResult.Refreshing))
-                    either {
-                        val dto =
-                            networkClient.getRecipe(id).mapLeft { RecipesError.FetchError }.bind()
-                        persistRecipeData(dto)
-                    }.onLeft { error ->
+                    fetchRecipeDetails(id).onLeft { error ->
                         send(Either.Left(error))
                     }
                     send(Either.Right(LoadingResult.RefreshComplete))
@@ -210,6 +206,13 @@ class SimmerlyRecipeRepository(
                 .distinctUntilChanged()
                 .collect { send(it) }
         }
+
+    /** Fetches a recipe's details into Room and records the sync for [Freshness]. */
+    private suspend fun fetchRecipeDetails(id: String): Either<RecipesError, Unit> = either {
+        val dto = networkClient.getRecipe(id).mapLeft { RecipesError.FetchError }.bind()
+        persistRecipeData(dto)
+        freshness.markSynced(CacheKeys.recipeDetail(id))
+    }
 
     private suspend fun persistRecipeData(dto: RecipeDetailDto) {
         val data = dto.toEntityWithRelations()
