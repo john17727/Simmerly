@@ -4,6 +4,7 @@ import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
@@ -63,7 +64,8 @@ internal fun CompactRecipeList(
             onFavoriteToggled = onFavoriteToggled,
             sharedTransitionScope = sharedTransitionScope,
             lazyGridState = lazyGridState,
-            modifier = modifier.padding(paddingValues)
+            // The caller's modifier is already on the Scaffold; applying it again doubled it up.
+            modifier = Modifier.fillMaxSize().padding(paddingValues)
         )
     }
 }
