@@ -13,6 +13,7 @@ import dev.juanrincon.simmerly.shoppinglists.data.mappers.toEntity
 import dev.juanrincon.simmerly.shoppinglists.domain.model.ShoppingList
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 
 /**
@@ -39,6 +40,8 @@ class ShoppingListStore(
         observeAll(),
         database.cacheMetadataDao().observe(CacheKeys.SHOPPING_LISTS),
     ) { lists, synced -> if (lists.isEmpty() && synced == null) null else lists }
+        // Writing the lists and then marking them synced would otherwise emit the same lists twice.
+        .distinctUntilChanged()
 
     /** Whether the full set of lists was never synced or its freshness window has passed. */
     suspend fun isStale(): Boolean = freshness.isStale(CacheKeys.SHOPPING_LISTS, CacheTtl.SHOPPING_LISTS)

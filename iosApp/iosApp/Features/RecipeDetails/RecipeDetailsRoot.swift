@@ -44,6 +44,12 @@ final class RecipeDetailsModel {
     func send(_ intent: RecipeDetailsIntent) {
         vm.onEvent(event: intent)
     }
+
+    func refresh() async {
+        // SKIE bridges a Kotlin suspend function as throwing; a failed refresh is reported by the
+        // view model itself, so there is nothing more to do here.
+        try? await vm.refreshAndAwait()
+    }
 }
 
 struct RecipeDetailsRoot: View {
@@ -71,7 +77,8 @@ struct RecipeDetailsRoot: View {
             onRemoveServing: { model.send(RecipeDetailsIntentRemoveServing.shared) },
             onShowSettings: { model.send(RecipeDetailsIntentShowSettings.shared) },
             onAddToList: { model.send(RecipeDetailsIntentOpenAddToList.shared) },
-            onNavigateToComments: { onNavigateToComments(model.state.recipe.id) }
+            onNavigateToComments: { onNavigateToComments(model.state.recipe.id) },
+            onRefresh: { await model.refresh() }
         )
         .snackbar($model.snackbar)
         .task { await model.activate() }

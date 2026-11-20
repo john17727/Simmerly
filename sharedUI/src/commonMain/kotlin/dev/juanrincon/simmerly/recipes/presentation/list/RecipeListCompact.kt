@@ -19,8 +19,11 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.LargeFlexibleTopAppBar
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -39,12 +42,14 @@ internal fun CompactRecipeList(
     onRecipeSelected: (String) -> Unit,
     onFavoriteToggled: (recipeId: String, favorite: Boolean) -> Unit,
     lazyGridState: LazyGridState,
+    snackbarHostState: SnackbarHostState,
     modifier: Modifier = Modifier,
     sharedTransitionScope: SharedTransitionScope? = null,
 ) {
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
 
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             LargeFlexibleTopAppBar(
                 title = { Text("Recipes") },
@@ -58,15 +63,23 @@ internal fun CompactRecipeList(
         },
         modifier = modifier.nestedScroll(scrollBehavior.nestedScrollConnection)
     ) { paddingValues ->
-        RecipeList(
-            lazyPagingItems = lazyPagingItems,
-            onRecipeSelected = onRecipeSelected,
-            onFavoriteToggled = onFavoriteToggled,
-            sharedTransitionScope = sharedTransitionScope,
-            lazyGridState = lazyGridState,
+        // Pull-to-refresh always asks the server, whatever the list's age; opening the screen only
+        // refreshes a stale list.
+        PullToRefreshBox(
+            isRefreshing = lazyPagingItems.isRefreshingExistingItems,
+            onRefresh = lazyPagingItems::refresh,
             // The caller's modifier is already on the Scaffold; applying it again doubled it up.
             modifier = Modifier.fillMaxSize().padding(paddingValues)
-        )
+        ) {
+            RecipeList(
+                lazyPagingItems = lazyPagingItems,
+                onRecipeSelected = onRecipeSelected,
+                onFavoriteToggled = onFavoriteToggled,
+                sharedTransitionScope = sharedTransitionScope,
+                lazyGridState = lazyGridState,
+                modifier = Modifier.fillMaxSize()
+            )
+        }
     }
 }
 

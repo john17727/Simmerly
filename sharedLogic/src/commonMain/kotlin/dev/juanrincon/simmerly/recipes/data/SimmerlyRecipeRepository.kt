@@ -47,6 +47,7 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
+import kotlin.concurrent.Volatile
 import kotlin.time.Clock
 import kotlin.time.Instant
 
@@ -207,6 +208,8 @@ class SimmerlyRecipeRepository(
                 .distinctUntilChanged()
                 .collect { send(it) }
         }
+
+    override suspend fun refreshRecipe(id: String): Either<RecipesError, Unit> = fetchRecipeDetails(id)
 
     /** Fetches a recipe's details into Room and records the sync for [Freshness]. */
     private suspend fun fetchRecipeDetails(id: String): Either<RecipesError, Unit> = either {

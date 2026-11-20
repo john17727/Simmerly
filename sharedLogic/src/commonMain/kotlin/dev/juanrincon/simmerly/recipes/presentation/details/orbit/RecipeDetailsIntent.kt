@@ -9,6 +9,8 @@ sealed interface RecipeDetailsIntent {
     data object ToggleFavorite : RecipeDetailsIntent
     /** [rating] is a whole number of stars, or `null` to clear the user's rating. */
     data class SetRating(val rating: Double?) : RecipeDetailsIntent
+    /** Pull-to-refresh: refetch the recipe now, even if the cached copy is still fresh. */
+    data object Refresh : RecipeDetailsIntent
     data object ShowSettings : RecipeDetailsIntent
     data object DismissSettings : RecipeDetailsIntent
     data class UpdateSettings(val settings: Settings) : RecipeDetailsIntent

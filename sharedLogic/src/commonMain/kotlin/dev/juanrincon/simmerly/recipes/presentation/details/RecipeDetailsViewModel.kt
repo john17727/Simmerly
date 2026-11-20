@@ -61,6 +61,7 @@ class RecipeDetailsViewModel(
             RecipeDetailsIntent.RemoveServing -> updateServing(
                 container.stateFlow.value.recipe.servings - 1
             )
+            RecipeDetailsIntent.Refresh -> refresh()
             RecipeDetailsIntent.ToggleFavorite -> toggleFavorite()
             is RecipeDetailsIntent.SetRating -> setRating(event.rating)
             RecipeDetailsIntent.ShowSettings -> intent {
@@ -119,6 +120,25 @@ class RecipeDetailsViewModel(
                     }
                 )
             }
+    }
+
+    /**
+     * Pull-to-refresh for Swift: SwiftUI keeps its spinner up until the awaited call returns, so
+     * this returns only once the refresh has finished. Compose sends [RecipeDetailsIntent.Refresh].
+     */
+    suspend fun refreshAndAwait() {
+        refresh().join()
+    }
+
+    private fun refresh() = intent {
+        if (state.isPullRefreshing) return@intent
+        reduce { state.copy(isPullRefreshing = true) }
+        // The new details arrive through observeRecipe; this only reports a failure, as a message
+        // because the cached recipe is still on screen.
+        repository.refreshRecipe(recipeId).onLeft {
+            postSideEffect(RecipeDetailsSideEffect.ShowMessage(UiText.Resource(StringKey.SomethingWentWrong)))
+        }
+        reduce { state.copy(isPullRefreshing = false) }
     }
 
     private fun toggleFavorite() = intent {

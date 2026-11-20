@@ -118,4 +118,29 @@ class SimmerlyRecipeRepositoryDetailsTest {
         }
         assertThat(detailRequests).isEqualTo(2)
     }
+
+    @Test
+    fun explicitRefreshRefetchesEvenWhileTheCachedCopyIsFresh() = runTest {
+        results()
+        assertThat(detailRequests).isEqualTo(1)
+
+        val result = repository.refreshRecipe("recipe-1")
+
+        assertThat(result.isRight()).isTrue()
+        assertThat(detailRequests).isEqualTo(2)
+    }
+
+    @Test
+    fun explicitRefreshMakesTheCopyFreshForTheNextOpen() = runTest {
+        // Stale first, so opening would refetch...
+        results()
+        clock.now = start + CacheTtl.RECIPE_DETAIL
+        repository.refreshRecipe("recipe-1")
+        val requestsAfterRefresh = detailRequests
+
+        // ...but the explicit refresh just synced it, so opening does not.
+        results()
+
+        assertThat(detailRequests).isEqualTo(requestsAfterRefresh)
+    }
 }

@@ -70,6 +70,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MediumFlexibleTopAppBar
 import androidx.compose.material3.PrimaryScrollableTabRow
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
+import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Tab
@@ -442,16 +445,34 @@ internal fun CompactRecipeDetails(
                 modifier = modifier.padding(paddingValues),
             )
         } else {
-            CompactContent(
-                state = state,
-                onEvent = onEvent,
-                paddingValues = paddingValues,
-                sharedTransitionScope = sharedTransitionScope,
-                medium = medium,
-                floatingFab = wideWindow,
-                topBarState = scrollBehavior.state,
+            // Pull-to-refresh refetches the recipe even while its cached copy is still fresh.
+            val pullState = rememberPullToRefreshState()
+            PullToRefreshBox(
+                isRefreshing = state.isPullRefreshing,
+                onRefresh = { onEvent(RecipeDetailsIntent.Refresh) },
+                state = pullState,
+                indicator = {
+                    PullToRefreshDefaults.Indicator(
+                        state = pullState,
+                        isRefreshing = state.isPullRefreshing,
+                        // The content scrolls under the top bar, so the indicator starts below it.
+                        modifier = Modifier.align(Alignment.TopCenter)
+                            .padding(top = paddingValues.calculateTopPadding()),
+                    )
+                },
                 modifier = modifier.fillMaxSize()
-            )
+            ) {
+                CompactContent(
+                    state = state,
+                    onEvent = onEvent,
+                    paddingValues = paddingValues,
+                    sharedTransitionScope = sharedTransitionScope,
+                    medium = medium,
+                    floatingFab = wideWindow,
+                    topBarState = scrollBehavior.state,
+                    modifier = Modifier.fillMaxSize()
+                )
+            }
         }
     }
 }

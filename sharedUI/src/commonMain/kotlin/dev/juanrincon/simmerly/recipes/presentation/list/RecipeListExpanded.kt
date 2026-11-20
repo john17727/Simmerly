@@ -29,10 +29,17 @@ import androidx.compose.ui.unit.dp
 import androidx.paging.LoadState
 import kotlinx.coroutines.flow.first
 import androidx.paging.compose.LazyPagingItems
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
+import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarHost
 import dev.juanrincon.simmerly.core.presentation.VerticalScrollbar
 import dev.juanrincon.simmerly.core.presentation.ifTrue
 import dev.juanrincon.simmerly.recipes.domain.model.RecipeSummary
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun SelectableList(
     lazyPagingItems: LazyPagingItems<RecipeSummary>,
@@ -41,6 +48,7 @@ internal fun SelectableList(
     selected: String,
     onRecipeSelected: (String) -> Unit,
     state: LazyListState,
+    snackbarHostState: SnackbarHostState,
     modifier: Modifier = Modifier
 ) {
     // Scroll a newly selected card to the top of the list. Skipped for a selection that was already
@@ -85,7 +93,21 @@ internal fun SelectableList(
             }
     }
 
-    Box(modifier = modifier) {
+    // Pull-to-refresh always asks the server, whatever the list's age.
+    PullToRefreshBox(
+        isRefreshing = lazyPagingItems.isRefreshingExistingItems,
+        onRefresh = lazyPagingItems::refresh,
+        indicator = {
+            PullToRefreshDefaults.Indicator(
+                state = rememberPullToRefreshState(),
+                isRefreshing = lazyPagingItems.isRefreshingExistingItems,
+                // The list runs under the status bar, so the indicator starts below it.
+                modifier = Modifier.align(Alignment.TopCenter)
+                    .padding(top = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()),
+            )
+        },
+        modifier = modifier
+    ) {
         LazyColumn(
             state = state,
             contentPadding = PaddingValues(
@@ -136,6 +158,10 @@ internal fun SelectableList(
         VerticalScrollbar(
             state,
             modifier = Modifier.align(Alignment.CenterEnd).fillMaxHeight()
+        )
+        SnackbarHost(
+            hostState = snackbarHostState,
+            modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 24.dp)
         )
     }
 }

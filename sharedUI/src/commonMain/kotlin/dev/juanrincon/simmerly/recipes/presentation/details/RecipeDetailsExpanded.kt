@@ -37,6 +37,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material3.AppBarRow
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -166,7 +167,12 @@ internal fun ExpandedView(
                     )
                 }
 
-                Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
+                // Pull-to-refresh refetches the recipe even while its cached copy is still fresh.
+                PullToRefreshBox(
+                    isRefreshing = state.isPullRefreshing,
+                    onRefresh = { onEvent(RecipeDetailsIntent.Refresh) },
+                    modifier = Modifier.weight(1f).fillMaxWidth()
+                ) {
                     LazyColumn(
                         state = listState,
                         modifier = Modifier.fillMaxSize(),

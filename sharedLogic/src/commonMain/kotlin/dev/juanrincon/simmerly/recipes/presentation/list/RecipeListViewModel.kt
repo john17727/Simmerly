@@ -58,13 +58,19 @@ class RecipeListViewModel(
     }
 
     fun refresh() {
+        viewModelScope.launch { refreshAndAwait() }
+    }
+
+    /**
+     * Refreshes the list and returns once it is done. SwiftUI's pull-to-refresh keeps its spinner
+     * up until the awaited call returns, so Swift calls this instead of [refresh].
+     */
+    suspend fun refreshAndAwait() {
         if (_isLoadingMore.value) return
-        viewModelScope.launch {
-            _isLoadingMore.value = true
-            _endReached.value = false
-            repository.refreshRecipeList().onRight { hasMore -> _endReached.value = !hasMore }
-            _isLoadingMore.value = false
-        }
+        _isLoadingMore.value = true
+        _endReached.value = false
+        repository.refreshRecipeList().onRight { hasMore -> _endReached.value = !hasMore }
+        _isLoadingMore.value = false
     }
 
     fun onEvent(event: RecipeListIntent) {
