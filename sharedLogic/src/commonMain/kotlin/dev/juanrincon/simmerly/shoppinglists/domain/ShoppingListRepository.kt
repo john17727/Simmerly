@@ -10,12 +10,13 @@ import dev.juanrincon.simmerly.shoppinglists.domain.model.ShoppingUnit
 import kotlinx.coroutines.flow.Flow
 
 /**
- * Shopping lists, kept in memory and refreshed from the network — there is no offline cache.
+ * Shopping lists, stored locally and refreshed from the network, so they are available offline
+ * and after a restart.
  * Writes that the user expects to see at once (checking, deleting, renaming) are applied to the
  * observed lists before the request and reverted if it fails.
  */
 interface ShoppingListRepository {
-    /** Every list loaded so far, in the server's name order; `null` until the first refresh. */
+    /** Every stored list, in name order; `null` until the first load completes. */
     fun observeLists(): Flow<List<ShoppingList>?>
 
     fun observeList(id: String): Flow<ShoppingList?>

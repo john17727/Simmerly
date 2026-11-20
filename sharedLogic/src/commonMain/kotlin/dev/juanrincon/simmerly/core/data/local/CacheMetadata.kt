@@ -5,6 +5,7 @@ import androidx.room3.Entity
 import androidx.room3.PrimaryKey
 import androidx.room3.Query
 import androidx.room3.Upsert
+import kotlinx.coroutines.flow.Flow
 import kotlin.time.Instant
 
 /** When a cached dataset was last successfully synced from the server, keyed by [CacheKeys]. */
@@ -22,6 +23,9 @@ interface CacheMetadataDao {
 
     @Query("SELECT * FROM cache_metadata WHERE `key` = :key LIMIT 1")
     suspend fun get(key: String): CacheMetadataEntity?
+
+    @Query("SELECT * FROM cache_metadata WHERE `key` = :key LIMIT 1")
+    fun observe(key: String): Flow<CacheMetadataEntity?>
 
     @Query("DELETE FROM cache_metadata WHERE `key` = :key")
     suspend fun delete(key: String)

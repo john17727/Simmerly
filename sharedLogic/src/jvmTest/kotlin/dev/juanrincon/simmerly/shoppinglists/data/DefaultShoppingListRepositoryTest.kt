@@ -5,6 +5,11 @@ import assertk.assertions.containsExactly
 import assertk.assertions.isEqualTo
 import assertk.assertions.isTrue
 import dev.juanrincon.simmerly.auth.FakeSessionDataStore
+import dev.juanrincon.simmerly.core.buildTestDatabase
+import dev.juanrincon.simmerly.core.data.Freshness
+import dev.juanrincon.simmerly.core.data.local.SimmerlyDatabase
+import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.UnitEntity
+import dev.juanrincon.simmerly.shoppinglists.data.local.ShoppingListStore
 import dev.juanrincon.simmerly.shoppinglists.data.remote.ShoppingListNetworkClient
 import dev.juanrincon.simmerly.shoppinglists.data.remote.ShoppingListNetworkClientTest
 import dev.juanrincon.simmerly.shoppinglists.aFood
@@ -27,9 +32,31 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
+import kotlin.test.AfterTest
+import kotlin.test.BeforeTest
 import kotlin.test.Test
+import kotlin.time.Instant
 
 class DefaultShoppingListRepositoryTest {
+
+    private lateinit var db: SimmerlyDatabase
+
+    @BeforeTest
+    fun setUp() {
+        db = buildTestDatabase()
+    }
+
+    @AfterTest
+    fun tearDown() {
+        db.close()
+    }
+
+    private fun newRepository(client: ShoppingListNetworkClient) = DefaultShoppingListRepository(
+        networkClient = client,
+        sessionDataStore = FakeSessionDataStore(),
+        store = ShoppingListStore(db, Freshness(db.cacheMetadataDao())),
+        unitDao = db.unitDao(),
+    )
 
     /** Serves the list for GETs; every write answers with [writeStatus] and [writeBody]. */
     private fun repository(
@@ -47,7 +74,7 @@ class DefaultShoppingListRepositoryTest {
             install(ContentNegotiation) { json(Json { ignoreUnknownKeys = true }) }
             defaultRequest { contentType(ContentType.Application.Json) }
         })
-        return DefaultShoppingListRepository(client, FakeSessionDataStore())
+        return newRepository(client)
     }
 
     @Test
@@ -86,7 +113,7 @@ class DefaultShoppingListRepositoryTest {
             install(ContentNegotiation) { json(Json { ignoreUnknownKeys = true }) }
             defaultRequest { contentType(ContentType.Application.Json) }
         })
-        val repo = DefaultShoppingListRepository(client, FakeSessionDataStore())
+        val repo = newRepository(client)
         repo.refreshList("list-1")
 
         repo.addFoodItem("list-1", aFood(id = "food-milk", labelId = "dairy"), 2.0, aUnit(id = "cup"), "oat")
@@ -118,4 +145,66 @@ class DefaultShoppingListRepositoryTest {
         assertThat(items.map { it.id }).containsExactly("item-1", "item-3")
         assertThat(items.last().note).isEqualTo("Coffee")
     }
+
+    @Test
+    fun listsSurviveANewRepositoryOverTheSameDatabase() = runTest {
+        repository().refreshList("list-1")
+
+        // A cold start: new repository, same database, and a server that can't be reached.
+        val restarted = newRepository(offlineClient())
+
+        val list = restarted.observeList("list-1").first()!!
+        assertThat(list.items.map { it.id }).containsExactly("item-1", "item-2")
+    }
+
+    @Test
+    fun unitsComeFromTheUnitsTableWithoutTheNetwork() = runTest {
+        val now = Instant.parse("2024-01-01T00:00:00Z")
+        db.unitDao().upsert(
+            UnitEntity(
+                id = "cup", name = "cup", pluralName = "cups", description = "", fraction = true,
+                abbreviation = "c", pluralAbbreviation = null, useAbbreviation = false,
+                createdAt = now, updatedAt = now,
+            )
+        )
+
+        val units = newRepository(offlineClient()).units().getOrNull()!!
+
+        assertThat(units.map { it.id }).containsExactly("cup")
+        assertThat(units.single().pluralName).isEqualTo("cups")
+    }
+
+    @Test
+    fun unitsFallBackToTheNetworkWhenTheTableIsEmpty() = runTest {
+        val paths = mutableListOf<String>()
+        val client = ShoppingListNetworkClient(HttpClient(MockEngine { req ->
+            paths += req.url.encodedPath
+            respond("{}", HttpStatusCode.ServiceUnavailable)
+        }) {
+            install(ContentNegotiation) { json(Json { ignoreUnknownKeys = true }) }
+            defaultRequest { contentType(ContentType.Application.Json) }
+        })
+
+        newRepository(client).units()
+
+        assertThat(paths).containsExactly("/api/units")
+    }
+
+    private fun repository() = newRepository(
+        ShoppingListNetworkClient(HttpClient(MockEngine { req ->
+            val body = if (req.method == HttpMethod.Get) ShoppingListNetworkClientTest.LIST_JSON
+            else ShoppingListNetworkClientTest.COLLECTION_JSON
+            respond(body, HttpStatusCode.OK, headersOf(HttpHeaders.ContentType, ContentType.Application.Json.toString()))
+        }) {
+            install(ContentNegotiation) { json(Json { ignoreUnknownKeys = true }) }
+            defaultRequest { contentType(ContentType.Application.Json) }
+        })
+    )
+
+    private fun offlineClient() = ShoppingListNetworkClient(HttpClient(MockEngine {
+        respond("{}", HttpStatusCode.ServiceUnavailable)
+    }) {
+        install(ContentNegotiation) { json(Json { ignoreUnknownKeys = true }) }
+        defaultRequest { contentType(ContentType.Application.Json) }
+    })
 }

@@ -44,6 +44,10 @@ import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.junction.Instruc
 import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.junction.RecipeCategoryCrossRef
 import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.junction.RecipeTagCrossRef
 import dev.juanrincon.simmerly.recipes.data.local.recipe.entity.junction.RecipeToolCrossRef
+import dev.juanrincon.simmerly.shoppinglists.data.local.ShoppingListDao
+import dev.juanrincon.simmerly.shoppinglists.data.local.ShoppingListEntity
+import dev.juanrincon.simmerly.shoppinglists.data.local.ShoppingListItemEntity
+import dev.juanrincon.simmerly.shoppinglists.data.local.ShoppingListRecipeEntity
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlin.time.ExperimentalTime
@@ -70,10 +74,13 @@ import kotlin.time.ExperimentalTime
         RecentSearchQueryEntity::class,
         UserRecipePreferenceEntity::class,
         CacheMetadataEntity::class,
+        ShoppingListEntity::class,
+        ShoppingListItemEntity::class,
+        ShoppingListRecipeEntity::class,
     ],
-    version = 6,
+    version = 7,
     // Older versions still fall back to a destructive migration (see getRoomDatabase).
-    autoMigrations = [AutoMigration(from = 5, to = 6)],
+    autoMigrations = [AutoMigration(from = 5, to = 6), AutoMigration(from = 6, to = 7)],
 )
 @ColumnTypeConverters(Converters::class)
 @OptIn(ExperimentalTime::class)
@@ -116,6 +123,8 @@ abstract class SimmerlyDatabase : RoomDatabase() {
     abstract fun recentSearchQueryDao(): RecentSearchQueryDao
 
     abstract fun cacheMetadataDao(): CacheMetadataDao
+
+    abstract fun shoppingListDao(): ShoppingListDao
 }
 
 @Suppress("KotlinNoActualForExpect")
