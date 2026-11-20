@@ -4,8 +4,10 @@ import app.cash.turbine.test
 import arrow.core.Either
 import assertk.assertThat
 import assertk.assertions.isEqualTo
+import assertk.assertions.isNull
 import assertk.assertions.isTrue
 import dev.juanrincon.simmerly.auth.data.DefaultAuthRepository
+import dev.juanrincon.simmerly.core.FakeLocalDataCleaner
 import dev.juanrincon.simmerly.auth.data.network.AuthNetworkClient
 import dev.juanrincon.simmerly.auth.domain.AuthState
 import dev.juanrincon.simmerly.auth.domain.LoginError
@@ -34,11 +36,13 @@ class DefaultAuthRepositoryTest {
 
     private val testDispatcher = UnconfinedTestDispatcher()
     private lateinit var sessionDataStore: FakeSessionDataStore
+    private lateinit var localDataCleaner: FakeLocalDataCleaner
 
     @BeforeTest
     fun setUp() {
         Dispatchers.setMain(testDispatcher)
         sessionDataStore = FakeSessionDataStore()
+        localDataCleaner = FakeLocalDataCleaner()
     }
 
     @AfterTest
@@ -62,8 +66,27 @@ class DefaultAuthRepositoryTest {
                 json(Json { ignoreUnknownKeys = true })
             }
         }
-        return DefaultAuthRepository(sessionDataStore, AuthNetworkClient(httpClient))
+        return DefaultAuthRepository(sessionDataStore, AuthNetworkClient(httpClient), localDataCleaner)
     }
+
+    // region logout
+
+    @Test
+    fun logoutClearsTheSession() = runTest {
+        val repo = buildRepository()
+        repo.login("https://myserver.com", "my-api-key")
+        repo.logout()
+        assertThat(sessionDataStore.token).isNull()
+    }
+
+    @Test
+    fun logoutClearsLocalData() = runTest {
+        val repo = buildRepository()
+        repo.logout()
+        assertThat(localDataCleaner.clearCount).isEqualTo(1)
+    }
+
+    // endregion
 
     // region observeAuthState
 

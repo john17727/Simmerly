@@ -9,11 +9,13 @@ import dev.juanrincon.simmerly.auth.domain.AuthRepository
 import dev.juanrincon.simmerly.auth.domain.AuthState
 import dev.juanrincon.simmerly.auth.domain.LoginError
 import dev.juanrincon.simmerly.auth.domain.SessionDataStore
+import dev.juanrincon.simmerly.core.domain.LocalDataCleaner
 import kotlinx.coroutines.flow.Flow
 
 class DefaultAuthRepository(
     val sessionDatastore: SessionDataStore,
-    val networkClient: AuthNetworkClient
+    val networkClient: AuthNetworkClient,
+    private val localDataCleaner: LocalDataCleaner,
 ) : AuthRepository {
     override fun observeAuthState(): Flow<AuthState> = sessionDatastore.isAuthenticated()
 
@@ -50,6 +52,8 @@ class DefaultAuthRepository(
     }
 
     override suspend fun logout() {
-        TODO("Not yet implemented")
+        // Session first, so the UI leaves the signed-in screens before their data disappears.
+        sessionDatastore.clear()
+        localDataCleaner.clearAll()
     }
 }

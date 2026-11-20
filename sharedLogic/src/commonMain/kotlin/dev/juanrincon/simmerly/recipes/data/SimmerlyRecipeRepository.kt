@@ -11,6 +11,7 @@ import arrow.core.raise.either
 import arrow.core.right
 import dev.juanrincon.simmerly.auth.domain.SessionDataStore
 import dev.juanrincon.simmerly.core.data.local.SimmerlyDatabase
+import dev.juanrincon.simmerly.core.domain.ResettableCache
 import dev.juanrincon.simmerly.initialload.domain.UserRepository
 import dev.juanrincon.simmerly.recipes.data.local.metadata.RecipeRemoteKey
 import dev.juanrincon.simmerly.recipes.data.local.recent.RecentSearchQueryEntity
@@ -37,6 +38,7 @@ import dev.juanrincon.simmerly.recipes.domain.model.Settings
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.combine
@@ -52,7 +54,7 @@ class SimmerlyRecipeRepository(
     private val database: SimmerlyDatabase,
     private val sessionDataStore: SessionDataStore,
     private val userRepository: UserRepository,
-) : RecipeRepository {
+) : RecipeRepository, ResettableCache {
     private val recipeDao = database.recipeDao()
     private val ingredientDao = database.ingredientDao()
     private val instructionsDao = database.instructionDao()
@@ -71,13 +73,26 @@ class SimmerlyRecipeRepository(
 
     /** Outlives any screen: the paged list is cached here so that leaving the Recipes tab (which
      * clears its ViewModel) doesn't throw away the loaded pages or rerun the remote refresh. */
-    private val pagingScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+    private inner class PagingCache {
+        val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+        val list: Flow<PagingData<RecipeSummary>> by lazy { createRecipePager().cachedIn(scope) }
+    }
 
     @Volatile
     private var activePagingSource: RecipePagingSource? = null
 
-    private val cachedRecipeList: Flow<PagingData<RecipeSummary>> by lazy {
-        createRecipePager().cachedIn(pagingScope)
+    @Volatile
+    private var pagingCache = PagingCache()
+
+    private val cachedRecipeList: Flow<PagingData<RecipeSummary>>
+        get() = pagingCache.list
+
+    /** Drops the cached pages (e.g. on logout) so the next [recipeList] starts from a fresh pager. */
+    override fun reset() {
+        val old = pagingCache
+        pagingCache = PagingCache()
+        activePagingSource = null
+        old.scope.cancel()
     }
 
     /**
