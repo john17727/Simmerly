@@ -1,5 +1,6 @@
 package dev.juanrincon.simmerly.core.data.local
 
+import androidx.room3.AutoMigration
 import androidx.room3.ColumnTypeConverters
 import androidx.room3.ConstructedBy
 import androidx.room3.Database
@@ -68,8 +69,11 @@ import kotlin.time.ExperimentalTime
         RecentlyViewedEntity::class,
         RecentSearchQueryEntity::class,
         UserRecipePreferenceEntity::class,
+        CacheMetadataEntity::class,
     ],
-    version = 5
+    version = 6,
+    // Older versions still fall back to a destructive migration (see getRoomDatabase).
+    autoMigrations = [AutoMigration(from = 5, to = 6)],
 )
 @ColumnTypeConverters(Converters::class)
 @OptIn(ExperimentalTime::class)
@@ -110,6 +114,8 @@ abstract class SimmerlyDatabase : RoomDatabase() {
     abstract fun recentlyViewedDao(): RecentlyViewedDao
 
     abstract fun recentSearchQueryDao(): RecentSearchQueryDao
+
+    abstract fun cacheMetadataDao(): CacheMetadataDao
 }
 
 @Suppress("KotlinNoActualForExpect")
