@@ -63,7 +63,13 @@ class FakeShoppingListRepository : ShoppingListRepository {
         return refreshListsResult
     }
 
-    override suspend fun refreshList(id: String) = refreshListResult
+    /** When set, [refreshList] waits for it, so a test can observe the refresh while it runs. */
+    var refreshListGate: kotlinx.coroutines.CompletableDeferred<Unit>? = null
+
+    override suspend fun refreshList(id: String): Either<ShoppingListError, Unit> {
+        refreshListGate?.await()
+        return refreshListResult
+    }
 
     override suspend fun createList(name: String): Either<ShoppingListError, ShoppingList> {
         createdNames += name

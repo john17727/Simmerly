@@ -11,6 +11,8 @@ struct ShoppingListDetailView: View {
     let addFieldFocused: Bool
     @Binding var snackbar: SnackbarMessage?
     let onEvent: (ShoppingListDetailIntent) -> Void
+    /// Pull-to-refresh; SwiftUI keeps its spinner up until this returns.
+    let onRefresh: () async -> Void
     @State private var scrollPosition = ScrollPosition(edge: .top)
     @State private var isScrolledDown = false
     @State private var renameDraft = ""
@@ -121,7 +123,7 @@ struct ShoppingListDetailView: View {
         } action: { _, scrolledDown in
             isScrolledDown = scrolledDown
         }
-        .refreshable { onEvent(ShoppingListDetailIntentOnRefresh.shared) }
+        .refreshable { await onRefresh() }
         .overlay(alignment: .bottomTrailing) {
             // Hidden while the add-item field is open, so it doesn't crowd the keyboard.
             if isScrolledDown && !addFieldFocused {
@@ -596,6 +598,7 @@ private func previewItem(
 private func previewState(collapsed: Set<String> = [], empty: Bool = false) -> ShoppingListDetailState {
     ShoppingListDetailState(
         isLoading: false,
+        isRefreshing: false,
         error: nil,
         name: text("Sunday brunch"),
         remainingCount: empty ? 0 : 12,
@@ -634,7 +637,8 @@ private func previewState(collapsed: Set<String> = [], empty: Bool = false) -> S
 #Preview("List") {
     NavigationStack {
         ShoppingListDetailView(
-            state: previewState(), addFieldFocused: false, snackbar: .constant(nil), onEvent: { _ in }
+            state: previewState(), addFieldFocused: false, snackbar: .constant(nil), onEvent: { _ in },
+            onRefresh: {}
         )
     }
 }
@@ -643,7 +647,8 @@ private func previewState(collapsed: Set<String> = [], empty: Bool = false) -> S
     NavigationStack {
         ShoppingListDetailView(
             state: previewState(collapsed: ["produce"]), addFieldFocused: false, snackbar: .constant(nil),
-            onEvent: { _ in }
+            onEvent: { _ in },
+            onRefresh: {}
         )
     }
 }
@@ -651,7 +656,8 @@ private func previewState(collapsed: Set<String> = [], empty: Bool = false) -> S
 #Preview("Empty") {
     NavigationStack {
         ShoppingListDetailView(
-            state: previewState(empty: true), addFieldFocused: false, snackbar: .constant(nil), onEvent: { _ in }
+            state: previewState(empty: true), addFieldFocused: false, snackbar: .constant(nil), onEvent: { _ in },
+            onRefresh: {}
         )
     }
 }

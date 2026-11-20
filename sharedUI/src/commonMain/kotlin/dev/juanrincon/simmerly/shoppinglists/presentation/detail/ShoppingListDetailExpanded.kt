@@ -57,6 +57,7 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
@@ -159,18 +160,24 @@ internal fun ShoppingListDetailExpanded(
                 onAction = { onEvent(ShoppingListDetailIntent.OnRefresh) },
             )
 
-            else -> DetailColumn(
-                state = state,
-                onEvent = onEvent,
-                addFieldFocus = addFieldFocus,
-                addFieldFocused = addFieldFocused,
-                onAddFieldFocusChanged = { focused ->
-                    addFieldFocused = focused
-                    // Hand focus back to the pane, or the N shortcut has nowhere to arrive once
-                    // the field (or its clear button, which then disappears) lets go of it.
-                    if (!focused) rootFocus.requestFocus()
-                },
-            )
+            else -> PullToRefreshBox(
+                isRefreshing = state.isRefreshing,
+                onRefresh = { onEvent(ShoppingListDetailIntent.OnRefresh) },
+                modifier = Modifier.fillMaxSize(),
+            ) {
+                DetailColumn(
+                    state = state,
+                    onEvent = onEvent,
+                    addFieldFocus = addFieldFocus,
+                    addFieldFocused = addFieldFocused,
+                    onAddFieldFocusChanged = { focused ->
+                        addFieldFocused = focused
+                        // Hand focus back to the pane, or the N shortcut has nowhere to arrive once
+                        // the field (or its clear button, which then disappears) lets go of it.
+                        if (!focused) rootFocus.requestFocus()
+                    },
+                )
+            }
         }
         SnackbarHost(
             hostState = snackbarHostState,

@@ -227,20 +227,28 @@ class ShoppingListDetailViewModel(
         }
     }
 
+    /**
+     * Pull-to-refresh for Swift: SwiftUI keeps its spinner up until the awaited call returns, so
+     * this returns only once the refresh has finished. Compose sends [ShoppingListDetailIntent.OnRefresh].
+     */
+    suspend fun refreshAndAwait() {
+        refresh().join()
+    }
+
     private fun refresh() = intent {
-        reduce { state.copy(isLoading = list == null, error = null) }
+        reduce { state.copy(isLoading = list == null, isRefreshing = list != null, error = null) }
         repository.refreshList(listId).fold(
             ifLeft = {
                 val failed = UiText.Resource(StringKey.ShoppingListLoadFailed)
                 // Blocks the screen only when there is no list to show; otherwise it's a message.
                 if (list == null) {
-                    reduce { state.copy(isLoading = false, error = failed) }
+                    reduce { state.copy(isLoading = false, isRefreshing = false, error = failed) }
                 } else {
-                    reduce { state.copy(isLoading = false) }
+                    reduce { state.copy(isLoading = false, isRefreshing = false) }
                     postSideEffect(ShoppingListDetailSideEffect.ShowMessage(failed))
                 }
             },
-            ifRight = { reduce { state.copy(isLoading = false) } }
+            ifRight = { reduce { state.copy(isLoading = false, isRefreshing = false) } }
         )
     }
 

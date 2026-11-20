@@ -23,6 +23,7 @@ import dev.juanrincon.simmerly.shoppinglists.presentation.detail.models.SectionK
 import dev.juanrincon.simmerly.shoppinglists.presentation.detail.orbit.DetailDialog
 import dev.juanrincon.simmerly.shoppinglists.presentation.detail.orbit.ShoppingListDetailIntent
 import dev.juanrincon.simmerly.shoppinglists.presentation.detail.orbit.ShoppingListDetailSideEffect
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
@@ -255,6 +256,36 @@ class ShoppingListDetailViewModelTest {
             runOnCreate()
             val state = awaitStateMatching { it.error != null }
             assertThat(state.isLoading).isEqualTo(false)
+            cancelAndIgnoreRemainingItems()
+        }
+    }
+
+    @Test
+    fun refreshingAStoredListShowsTheRefreshIndicatorUntilItFinishes() = runTest(testDispatcher) {
+        val gate = CompletableDeferred<Unit>()
+        repo.refreshListGate = gate
+        viewModel.testWithInternalState(this) {
+            runOnCreate()
+            val running = awaitStateMatching { it.isRefreshing }
+            // The list is already on screen, so it is not the blocking first load.
+            assertThat(running.isLoading).isEqualTo(false)
+
+            gate.complete(Unit)
+
+            assertThat(awaitStateMatching { !it.isRefreshing }.isRefreshing).isEqualTo(false)
+            cancelAndIgnoreRemainingItems()
+        }
+    }
+
+    @Test
+    fun theFirstLoadOfAListNotStoredYetIsNotARefresh() = runTest(testDispatcher) {
+        repo.lists.value = null
+        repo.refreshListGate = CompletableDeferred()
+        viewModel.testWithInternalState(this) {
+            runOnCreate()
+            val state = viewModel.container.stateFlow.value
+            assertThat(state.isLoading).isEqualTo(true)
+            assertThat(state.isRefreshing).isEqualTo(false)
             cancelAndIgnoreRemainingItems()
         }
     }

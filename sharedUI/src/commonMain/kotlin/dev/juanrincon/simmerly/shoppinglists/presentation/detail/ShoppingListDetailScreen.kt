@@ -59,6 +59,9 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
+import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Surface
@@ -202,12 +205,31 @@ private fun Content(
                     modifier = Modifier.padding(padding),
                 )
 
-                else -> ListBody(
-                    state = state,
-                    onEvent = onEvent,
-                    listState = listState,
-                    contentPadding = padding,
-                )
+                else -> {
+                    // Pull-to-refresh refetches the list; the indicator starts below the top bar.
+                    val pullState = rememberPullToRefreshState()
+                    PullToRefreshBox(
+                        isRefreshing = state.isRefreshing,
+                        onRefresh = { onEvent(ShoppingListDetailIntent.OnRefresh) },
+                        state = pullState,
+                        indicator = {
+                            PullToRefreshDefaults.Indicator(
+                                state = pullState,
+                                isRefreshing = state.isRefreshing,
+                                modifier = Modifier.align(Alignment.TopCenter)
+                                    .padding(top = padding.calculateTopPadding()),
+                            )
+                        },
+                        modifier = Modifier.fillMaxSize(),
+                    ) {
+                        ListBody(
+                            state = state,
+                            onEvent = onEvent,
+                            listState = listState,
+                            contentPadding = padding,
+                        )
+                    }
+                }
             }
             ScrollToTopButton(
                 // Hidden while the suggestions card has the space above the add bar.
