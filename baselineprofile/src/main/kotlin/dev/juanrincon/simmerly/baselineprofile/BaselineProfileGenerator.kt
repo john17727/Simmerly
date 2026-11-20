@@ -1,7 +1,6 @@
 package dev.juanrincon.simmerly.baselineprofile
 
 import androidx.benchmark.macro.junit4.BaselineProfileRule
-import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.Direction
 import androidx.test.uiautomator.UiDevice
@@ -22,11 +21,7 @@ class BaselineProfileGenerator {
 
     @Test
     fun generate() {
-        // The app under test: AGP points this test APK's instrumentation at the target variant, so
-        // its package is the `.benchmark` id the generation variants are built with.
-        val packageName = InstrumentationRegistry.getInstrumentation().targetContext.packageName
-
-        rule.collect(packageName, includeInStartupProfile = true) {
+        rule.collect(TARGET_PACKAGE, includeInStartupProfile = true) {
             pressHome()
             startActivityAndWait()
 
@@ -59,5 +54,11 @@ class BaselineProfileGenerator {
         device.waitForIdle(2_000)
         device.pressBack()
         device.waitForIdle()
+    }
+
+    private companion object {
+        /** The id androidApp gives the profile-generation variants (see its `androidComponents`).
+         * A test module's own instrumentation targets itself, so the app's id can't be read from it. */
+        const val TARGET_PACKAGE = "dev.juanrincon.simmerly.benchmark"
     }
 }
