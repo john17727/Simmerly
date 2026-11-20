@@ -4,6 +4,8 @@ plugins {
     alias(libs.plugins.kotlinAndroid) apply false
     alias(libs.plugins.androidMultiplatformLibrary) apply false
     alias(libs.plugins.androidApplication) apply false
+    alias(libs.plugins.androidTest) apply false
+    alias(libs.plugins.baselineprofile) apply false
     alias(libs.plugins.composeHotReload) apply false
     alias(libs.plugins.kotlinJvm) apply false
     alias(libs.plugins.composeMultiplatform) apply false

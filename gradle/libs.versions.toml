@@ -21,6 +21,10 @@ datastore = "1.3.0"
 koin = "4.2.2"
 kotlinx-datetime = "0.8.0"
 room = "3.0.3"
+baselineprofile = "1.5.0"
+profileinstaller = "1.4.1"
+uiautomator = "2.4.1"
+androidx-test-runner = "1.7.0"
 sqlite = "2.7.1"
 androidx-paging = "3.5.3"
 adaptive = "1.3.0"
@@ -100,6 +104,11 @@ orbit-compose = { module = "org.orbit-mvi:orbit-compose", version.ref = "orbit-m
 orbit-test = { module = "org.orbit-mvi:orbit-test", version.ref = "orbit-mvi"}
 ktor-client-mock = { module = "io.ktor:ktor-client-mock", version.ref = "ktor" }
 
+androidx-profileinstaller = { module = "androidx.profileinstaller:profileinstaller", version.ref = "profileinstaller" }
+androidx-benchmark-macro-junit4 = { module = "androidx.benchmark:benchmark-macro-junit4", version.ref = "baselineprofile" }
+androidx-test-runner = { module = "androidx.test:runner", version.ref = "androidx-test-runner" }
+androidx-uiautomator = { module = "androidx.test.uiautomator:uiautomator", version.ref = "uiautomator" }
+
 [plugins]
 androidMultiplatformLibrary = { id = "com.android.kotlin.multiplatform.library", version.ref = "agp" }
 kotlinAndroid = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
@@ -113,6 +122,8 @@ kotlinSerialization = { id = "org.jetbrains.kotlin.plugin.serialization", versio
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 room = { id = "androidx.room3", version.ref = "room" }
 skie = { id = "co.touchlab.skie", version.ref = "skie" }
+androidTest = { id = "com.android.test", version.ref = "agp" }
+baselineprofile = { id = "androidx.baselineprofile", version.ref = "baselineprofile" }
 
 [bundles]
 ktor = [
