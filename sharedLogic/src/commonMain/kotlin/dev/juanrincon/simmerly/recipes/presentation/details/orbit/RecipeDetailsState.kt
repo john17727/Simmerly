@@ -17,6 +17,8 @@ data class RecipeDetailsState(
     /** The recipe's own servings as loaded, before the reader scaled them. */
     val baseServings: Double = 0.0,
     val addToList: AddToListState? = null,
+    val showDeleteConfirm: Boolean = false,
+    val isDeleting: Boolean = false,
 )
 
 enum class RecipeMode {

@@ -15,6 +15,7 @@ import simmerly.shared.generated.resources.profile
 import simmerly.shared.generated.resources.recipes
 import simmerly.shared.generated.resources.shopping_list
 import simmerly.shared.generated.resources.shopping_list_load_failed
+import simmerly.shared.generated.resources.recipe_delete_failed
 import simmerly.shared.generated.resources.shopping_list_update_failed
 import simmerly.shared.generated.resources.something_went_wrong
 import simmerly.shared.generated.resources.unreachable_server_address
@@ -39,6 +40,7 @@ private fun StringKey.toStringResource(): StringResource = when (this) {
     StringKey.ShoppingList -> Res.string.shopping_list
     StringKey.Profile -> Res.string.profile
     StringKey.ShoppingListLoadFailed -> Res.string.shopping_list_load_failed
+    StringKey.RecipeDeleteFailed -> Res.string.recipe_delete_failed
     StringKey.ShoppingListUpdateFailed -> Res.string.shopping_list_update_failed
     StringKey.ItemAddedToList -> Res.string.item_added_to_list
     StringKey.ItemsAddedToList -> Res.string.items_added_to_list

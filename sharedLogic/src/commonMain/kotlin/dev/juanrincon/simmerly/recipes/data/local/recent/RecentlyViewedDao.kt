@@ -12,6 +12,9 @@ interface RecentlyViewedDao {
     @Upsert
     suspend fun upsert(entity: RecentlyViewedEntity)
 
+    @Query("DELETE FROM recently_viewed WHERE recipeId = :recipeId")
+    suspend fun deleteByRecipeId(recipeId: String)
+
     @Transaction
     @Query(
         """
