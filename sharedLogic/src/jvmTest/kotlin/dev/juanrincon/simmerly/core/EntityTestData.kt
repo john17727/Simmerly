@@ -30,7 +30,6 @@ fun aRecipeEntity(
     yield = "",
     totalTime = "30 minutes",
     prepTime = null,
-    cookTime = null,
     performTime = null,
     description = "",
     rating = null,

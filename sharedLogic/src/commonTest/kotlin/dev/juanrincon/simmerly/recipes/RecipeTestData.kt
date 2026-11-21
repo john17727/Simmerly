@@ -113,7 +113,6 @@ fun aRecipeDetail(
     recipeYield = "",
     totalTime = "",
     prepTime = null,
-    cookTime = null,
     performTime = null,
     description = "",
     categories = emptyList(),

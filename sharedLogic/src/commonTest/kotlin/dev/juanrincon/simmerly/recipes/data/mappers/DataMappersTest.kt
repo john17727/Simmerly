@@ -247,7 +247,6 @@ class DataMappersTest {
         recipeYield = "",
         totalTime = "45 minutes",
         prepTime = prepTime,
-        cookTime = null,
         performTime = null,
         description = "A test recipe",
         recipeCategory = emptyList(),

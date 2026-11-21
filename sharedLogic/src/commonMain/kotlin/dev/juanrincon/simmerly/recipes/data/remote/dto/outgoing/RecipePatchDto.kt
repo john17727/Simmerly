@@ -26,7 +26,6 @@ data class RecipePatchDto(
     val recipeYield: String? = null,
     val totalTime: String? = null,
     val prepTime: String? = null,
-    val cookTime: String? = null,
     val performTime: String? = null,
     val description: String? = null,
     val recipeCategory: List<CategoryDto>? = null,
