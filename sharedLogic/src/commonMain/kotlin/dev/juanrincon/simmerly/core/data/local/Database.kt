@@ -80,12 +80,13 @@ import kotlin.time.ExperimentalTime
         ShoppingListItemEntity::class,
         ShoppingListRecipeEntity::class,
     ],
-    version = 8,
+    version = 9,
     // Older versions still fall back to a destructive migration (see getRoomDatabase).
     autoMigrations = [
         AutoMigration(from = 5, to = 6),
         AutoMigration(from = 6, to = 7),
         AutoMigration(from = 7, to = 8, spec = RemoteKeyCreatedAtDeleted::class),
+        AutoMigration(from = 8, to = 9, spec = RecipeCookTimeDeleted::class),
     ],
 )
 @ColumnTypeConverters(Converters::class)
@@ -151,3 +152,7 @@ fun getRoomDatabase(
 /** 7 -> 8: the cursor row's `createdAt` was written but never read, so the column is dropped. */
 @DeleteColumn(tableName = "recipe_remote_keys", columnName = "createdAt")
 class RemoteKeyCreatedAtDeleted : AutoMigrationSpec
+
+/** 8 -> 9: Mealie 3.31 dropped `cookTime` from the recipe API (values moved to `performTime`). */
+@DeleteColumn(tableName = "recipes", columnName = "cook_time")
+class RecipeCookTimeDeleted : AutoMigrationSpec

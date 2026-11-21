@@ -16,7 +16,6 @@ data class RecipeDetailDto(
     val recipeYield: String,
     val totalTime: String? = null,
     val prepTime: String? = null,
-    val cookTime: String? = null,
     val performTime: String? = null,
     val totalTimeSeconds: Int? = null,
     val prepTimeSeconds: Int? = null,

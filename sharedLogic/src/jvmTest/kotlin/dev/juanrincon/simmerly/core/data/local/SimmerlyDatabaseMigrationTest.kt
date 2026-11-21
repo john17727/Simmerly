@@ -122,16 +122,44 @@ class SimmerlyDatabaseMigrationTest {
     }
 
     @Test
+    fun migrating8To9DropsTheCookTimeColumnAndKeepsTheRecipe() = runTest {
+        val helper = helper()
+        helper.createDatabase(8).use {
+            it.insertVersion5Data()
+            it.execSQL(
+                "INSERT INTO recipes (id, user_id, household_id, group_id, name, slug, image, servings, " +
+                    "yield_quantity, yield, prep_time, cook_time, perform_time, description, original_url, " +
+                    "date_added, date_updated, created_at, updated_at) VALUES ('r1', 'u1', 'h1', 'g1', " +
+                    "'Pancakes', 'pancakes', '', 2.0, 0.0, '', '10 min', '15 min', '20 min', '', '', " +
+                    "'2026-01-01', '2026-01-01', '2026-01-01', '2026-01-01')"
+            )
+        }
+
+        val migrated = helper.runMigrationsAndValidate(9, emptyList())
+
+        migrated.use {
+            assertThat(it.columns("recipes").contains("cook_time")).isEqualTo(false)
+            val times = it.prepare("SELECT prep_time, perform_time FROM recipes WHERE id = 'r1'").use { s ->
+                s.step()
+                s.getText(0) to s.getText(1)
+            }
+            assertThat(times).isEqualTo("10 min" to "20 min")
+            assertThat(it.count("user_recipe_preferences")).isEqualTo(1L)
+        }
+    }
+
+    @Test
     fun migratingStraightFrom5ToTheCurrentVersionRunsEveryMigration() = runTest {
         val helper = helper()
         helper.createDatabase(5).use { it.insertVersion5Data() }
 
-        val migrated = helper.runMigrationsAndValidate(8, emptyList())
+        val migrated = helper.runMigrationsAndValidate(9, emptyList())
 
         migrated.use {
             assertThat(it.tableExists("cache_metadata")).isEqualTo(true)
             assertThat(it.tableExists("shopping_lists")).isEqualTo(true)
             assertThat(it.columns("recipe_remote_keys")).isEqualTo(listOf("id", "nextKey"))
+            assertThat(it.columns("recipes").contains("cook_time")).isEqualTo(false)
             assertThat(it.count("user_recipe_preferences")).isEqualTo(1L)
         }
     }

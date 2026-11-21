@@ -420,7 +420,6 @@ class DomainMappersTest {
         yield = "",
         totalTime = totalTime,
         prepTime = prepTime,
-        cookTime = null,
         performTime = null,
         description = "A delicious test recipe",
         rating = rating,

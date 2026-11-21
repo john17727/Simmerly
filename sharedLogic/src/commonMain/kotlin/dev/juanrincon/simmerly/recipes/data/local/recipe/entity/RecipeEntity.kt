@@ -22,7 +22,6 @@ data class RecipeEntity(
     val yield: String,
     @ColumnInfo(name = "total_time") val totalTime: String?,
     @ColumnInfo(name = "prep_time") val prepTime: String?,
-    @ColumnInfo(name = "cook_time") val cookTime: String?,
     @ColumnInfo(name = "perform_time") val performTime: String?,
     val description: String,
     val rating: Double?,
