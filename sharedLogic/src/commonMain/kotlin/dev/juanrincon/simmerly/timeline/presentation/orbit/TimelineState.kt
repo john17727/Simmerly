@@ -5,6 +5,7 @@ import dev.juanrincon.simmerly.timeline.presentation.models.TimelineEventUi
 
 data class TimelineState(
     val recipeName: String = "",
+    val recipeImage: String = "",
     /** Pre-formatted date, or null when the recipe was never made. */
     val lastMade: String? = null,
     val events: List<TimelineEventUi> = emptyList(),

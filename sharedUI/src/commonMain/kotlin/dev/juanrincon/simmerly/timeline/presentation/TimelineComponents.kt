@@ -104,6 +104,7 @@ internal fun TimelineEntryCard(
     message: String?,
     modifier: Modifier = Modifier,
     highlighted: Boolean = false,
+    imageHeight: androidx.compose.ui.unit.Dp = 180.dp,
     trailing: @Composable () -> Unit = {},
 ) {
     val scheme = MaterialTheme.colorScheme
@@ -133,7 +134,7 @@ internal fun TimelineEntryCard(
                 model = ImageRequest.Builder(LocalPlatformContext.current).data(photo).build(),
                 contentDescription = "Photo of the dish from $date",
                 contentScale = ContentScale.Crop,
-                modifier = Modifier.fillMaxWidth().height(180.dp).clip(RoundedCornerShape(8.dp))
+                modifier = Modifier.fillMaxWidth().height(imageHeight).clip(RoundedCornerShape(8.dp))
                     .background(scheme.surfaceContainerHigh)
             )
         }

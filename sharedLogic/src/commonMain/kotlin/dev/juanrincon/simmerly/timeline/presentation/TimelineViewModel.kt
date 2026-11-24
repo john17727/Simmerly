@@ -64,6 +64,7 @@ class TimelineViewModel(
                     reduce {
                         state.copy(
                             recipeName = loading.data.name,
+                            recipeImage = loading.data.image,
                             lastMade = loading.data.lastMade?.let { formatShortDate(it) },
                         )
                     }

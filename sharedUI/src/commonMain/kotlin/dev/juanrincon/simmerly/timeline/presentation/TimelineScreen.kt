@@ -58,6 +58,7 @@ import androidx.compose.ui.unit.dp
 import dev.juanrincon.simmerly.core.presentation.EmptyMessage
 import dev.juanrincon.simmerly.core.presentation.ErrorMessage
 import dev.juanrincon.simmerly.core.presentation.asStringSuspend
+import dev.juanrincon.simmerly.core.presentation.navigation.isTwoPaneWidth
 import dev.juanrincon.simmerly.timeline.domain.TimelineEventType
 import dev.juanrincon.simmerly.timeline.presentation.models.TimelineEventUi
 import dev.juanrincon.simmerly.timeline.presentation.orbit.TimelineIntent
@@ -126,6 +127,7 @@ internal fun TimelineContent(
                     }
                 }
             }
+            if (isTwoPaneWidth()) androidx.compose.material3.HorizontalDivider(color = scheme.outlineVariant)
             if (state.isRefreshing) LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
 
             when {
@@ -143,7 +145,8 @@ internal fun TimelineContent(
                     onRefresh = { onEvent(TimelineIntent.Refresh) },
                     modifier = Modifier.fillMaxSize(),
                 ) {
-                    TimelineList(state, onEvent, onEditEvent)
+                    if (isTwoPaneWidth()) TimelineDesktopBody(state, onEvent, onEditEvent)
+                    else TimelineList(state, onEvent, onEditEvent)
                 }
             }
         }
@@ -200,44 +203,13 @@ private fun TimelineList(
                 }
             }
             item {
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                TypeFilters(
+                    state, onEvent,
                     modifier = Modifier.horizontalScroll(rememberScrollState())
                         .padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 8.dp)
-                ) {
-                    TimelineEventType.entries.forEach { type ->
-                        FilterChip(
-                            selected = type in state.visibleTypes,
-                            onClick = { onEvent(TimelineIntent.ToggleType(type)) },
-                            label = { Text(type.label()) },
-                        )
-                    }
-                }
+                )
             }
-            item {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 8.dp)
-                ) {
-                    Text(
-                        if (events.size == 1) "1 event" else "${events.size} events",
-                        style = MaterialTheme.typography.labelMedium,
-                        color = scheme.onSurfaceVariant,
-                        modifier = Modifier.weight(1f),
-                    )
-                    TextButton(onClick = { onEvent(TimelineIntent.ToggleSort) }) {
-                        Icon(
-                            if (state.newestFirst) Icons.Default.ArrowDownward else Icons.Default.ArrowUpward,
-                            contentDescription = null,
-                            modifier = Modifier.width(20.dp),
-                        )
-                        Text(
-                            if (state.newestFirst) "Newest first" else "Oldest first",
-                            modifier = Modifier.padding(start = 6.dp),
-                        )
-                    }
-                }
-            }
+            item { CountAndSort(events.size, state.newestFirst, onEvent, Modifier.padding(start = 16.dp, end = 8.dp)) }
             if (events.isEmpty()) {
                 item {
                     EmptyMessage(
@@ -268,7 +240,7 @@ private fun TimelineList(
 
 /** Asks for the next page once the last few rows come into view. */
 @Composable
-private fun LoadMoreEffect(listState: LazyListState, itemCount: Int, onLoadMore: () -> Unit) {
+internal fun LoadMoreEffect(listState: LazyListState, itemCount: Int, onLoadMore: () -> Unit) {
     LaunchedEffect(listState, itemCount) {
         snapshotFlow {
             val info = listState.layoutInfo
@@ -321,7 +293,7 @@ private fun TimelineRow(
 }
 
 @Composable
-private fun EntryMenu(onEdit: () -> Unit, onDelete: () -> Unit) {
+internal fun EntryMenu(onEdit: () -> Unit, onDelete: () -> Unit) {
     var expanded by remember { mutableStateOf(false) }
     Box {
         IconButton(onClick = { expanded = true }) {
@@ -340,6 +312,44 @@ private fun EntryMenu(onEdit: () -> Unit, onDelete: () -> Unit) {
                 },
                 onClick = { expanded = false; onDelete() },
             )
+        }
+    }
+}
+
+@Composable
+internal fun TypeFilters(state: TimelineState, onEvent: (TimelineIntent) -> Unit, modifier: Modifier = Modifier) {
+    Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = modifier) {
+        TimelineEventType.entries.forEach { type ->
+            FilterChip(
+                selected = type in state.visibleTypes,
+                onClick = { onEvent(TimelineIntent.ToggleType(type)) },
+                label = { Text(type.label()) },
+            )
+        }
+    }
+}
+
+@Composable
+internal fun CountAndSort(
+    count: Int,
+    newestFirst: Boolean,
+    onEvent: (TimelineIntent) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Row(verticalAlignment = Alignment.CenterVertically, modifier = modifier.fillMaxWidth()) {
+        Text(
+            if (count == 1) "1 event" else "$count events",
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.weight(1f),
+        )
+        TextButton(onClick = { onEvent(TimelineIntent.ToggleSort) }) {
+            Icon(
+                if (newestFirst) Icons.Default.ArrowDownward else Icons.Default.ArrowUpward,
+                contentDescription = null,
+                modifier = Modifier.width(20.dp),
+            )
+            Text(if (newestFirst) "Newest first" else "Oldest first", modifier = Modifier.padding(start = 6.dp))
         }
     }
 }

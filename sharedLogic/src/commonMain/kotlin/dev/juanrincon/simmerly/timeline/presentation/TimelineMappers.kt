@@ -11,6 +11,7 @@ fun TimelineEvent.toUi(): TimelineEventUi = TimelineEventUi(
     subject = subject,
     message = message?.takeIf { it.isNotBlank() },
     date = formatTimelineDate(timestamp),
+    shortDate = formatMonthDay(timestamp),
     authorName = authorName,
     authorInitials = authorName.split(" ").filter { it.isNotBlank() }.take(2)
         .joinToString("") { it.first().uppercase() },
