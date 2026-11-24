@@ -129,7 +129,9 @@ val SimmerlyDarkColorScheme = darkColorScheme(
     surfaceContainerHigh = Simmerly.Neutral600,
     surfaceContainerHighest = Simmerly.Neutral500,
 
-    outline = Simmerly.Neutral500,
+    // Must differ from surfaceContainerHighest (Neutral500): M3 Switch uses outline for the
+    // unchecked thumb and surfaceContainerHighest for its track.
+    outline = Simmerly.Neutral400,
     outlineVariant = Simmerly.Neutral700,
 
     inverseSurface = Simmerly.Neutral100,
