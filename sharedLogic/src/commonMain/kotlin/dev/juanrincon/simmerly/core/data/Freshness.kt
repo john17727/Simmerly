@@ -17,6 +17,7 @@ object CacheKeys {
     const val REFERENCE_UNITS = "reference_data:units"
     const val SHOPPING_LISTS = "shopping_lists"
     fun recipeDetail(id: String) = "recipe_detail:$id"
+    fun recipeTimeline(id: String) = "recipe_timeline:$id"
 }
 
 /** How long a synced dataset counts as fresh. Tuned here, in one place. */
@@ -25,6 +26,7 @@ object CacheTtl {
     val REFERENCE_DATA = 24.hours
     val RECIPE_DETAIL = 5.minutes
     val SHOPPING_LISTS = 1.minutes
+    val RECIPE_TIMELINE = 5.minutes
 }
 
 /**

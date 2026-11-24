@@ -141,6 +141,7 @@ internal fun recipeActions(
     onToggleComments: (recipeId: String) -> Unit,
     onOpenOriginal: (url: String) -> Unit,
     commentsOpen: Boolean = false,
+    onOpenTimeline: (recipeId: String) -> Unit = {},
 ): AppBarRowScope.() -> Unit = {
     val link = state.recipe.link
     actionItem(
@@ -177,7 +178,7 @@ internal fun recipeActions(
         enabled = !state.loading,
     )
     actionItem(
-        onClick = { /* TODO: timeline action */ },
+        onClick = { onOpenTimeline(state.recipe.id) },
         icon = Icons.Outlined.Article,
         label = "Timeline",
         enabled = !state.loading,
@@ -335,6 +336,7 @@ internal fun CompactRecipeDetails(
     onNavigateBack: () -> Unit,
     onToggleComments: (recipeId: String) -> Unit,
     onStartCooking: (recipeId: String) -> Unit = {},
+    onOpenTimeline: (recipeId: String) -> Unit = {},
     /** A side panel (comments or settings) shares the window: use the phone's sections on a wide window. */
     narrow: Boolean = false,
     /** The comments extra pane is open beside the recipe: highlights the Comments action. */
@@ -351,7 +353,7 @@ internal fun CompactRecipeDetails(
     // actions in the top bar avoids that path.
     val medium = wideWindow && !narrow
     val uriHandler = LocalUriHandler.current
-    val recipeActions = recipeActions(state, onEvent, onToggleComments, uriHandler::openUri, commentsOpen)
+    val recipeActions = recipeActions(state, onEvent, onToggleComments, uriHandler::openUri, commentsOpen, onOpenTimeline)
     Scaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         snackbarHost = { SnackbarHost(snackbarHostState) },

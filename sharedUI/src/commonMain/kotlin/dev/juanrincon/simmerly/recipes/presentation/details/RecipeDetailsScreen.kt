@@ -40,6 +40,7 @@ fun RecipeDetailsScreen(
     commentsOpen: Boolean = false,
     onStartCooking: (recipeId: String) -> Unit = {},
     onNavigateToShoppingList: (listId: String) -> Unit = {},
+    onOpenTimeline: (recipeId: String) -> Unit = {},
     sharedTransitionScope: SharedTransitionScope? = null,
     viewModel: RecipeDetailsViewModel = koinViewModel { parametersOf(recipeId) },
     modifier: Modifier = Modifier
@@ -78,6 +79,7 @@ fun RecipeDetailsScreen(
         },
         commentsOpen = commentsOpen,
         onStartCooking = onStartCooking,
+        onOpenTimeline = onOpenTimeline,
         sharedTransitionScope = sharedTransitionScope,
         snackbarHostState = snackbarHostState,
         modifier = modifier
@@ -93,6 +95,7 @@ private fun Content(
     onToggleComments: (recipeId: String) -> Unit,
     commentsOpen: Boolean,
     onStartCooking: (recipeId: String) -> Unit,
+    onOpenTimeline: (recipeId: String) -> Unit,
     snackbarHostState: SnackbarHostState,
     sharedTransitionScope: SharedTransitionScope? = null,
     modifier: Modifier = Modifier
@@ -154,6 +157,7 @@ private fun Content(
                                     commentsOpen = commentsOpen,
                                     narrow = narrow,
                                     onStartCooking = onStartCooking,
+                                    onOpenTimeline = onOpenTimeline,
                                     modifier = modifier,
                                     snackbarHostState = snackbarHostState,
                                 )
@@ -164,6 +168,7 @@ private fun Content(
                                     onNavigateBack = onNavigateBack,
                                     onToggleComments = onToggleComments,
                                     onStartCooking = onStartCooking,
+                                    onOpenTimeline = onOpenTimeline,
                                     commentsOpen = commentsOpen,
                                 narrow = narrow,
                                     sharedTransitionScope = sharedTransitionScope,

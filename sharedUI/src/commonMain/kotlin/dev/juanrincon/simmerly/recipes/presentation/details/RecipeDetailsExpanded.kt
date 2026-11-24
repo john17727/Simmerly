@@ -94,6 +94,7 @@ internal fun ExpandedView(
     /** A side panel (comments or settings) shares the window, so the pane uses the phone's single-column sections. */
     narrow: Boolean = false,
     onStartCooking: (recipeId: String) -> Unit,
+    onOpenTimeline: (recipeId: String) -> Unit = {},
     modifier: Modifier = Modifier,
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
 ) {
@@ -153,6 +154,7 @@ internal fun ExpandedView(
                     commentsOpen = commentsOpen,
                     narrow = narrow,
                     onShowComments = { onToggleComments(recipe.id) },
+                    onOpenTimeline = { onOpenTimeline(recipe.id) },
                     modifier = Modifier.fillMaxWidth()
                 )
                 AnimatedVisibility(
@@ -265,12 +267,13 @@ private fun ExpandedHeader(
     onTabSelected: (Int) -> Unit,
     onEvent: (RecipeDetailsIntent) -> Unit,
     onShowComments: () -> Unit,
+    onOpenTimeline: () -> Unit,
     commentsOpen: Boolean,
     narrow: Boolean,
     modifier: Modifier = Modifier
 ) {
     val uriHandler = LocalUriHandler.current
-    val actions = recipeActions(state, onEvent, { onShowComments() }, uriHandler::openUri, commentsOpen)
+    val actions = recipeActions(state, onEvent, { onShowComments() }, uriHandler::openUri, commentsOpen) { onOpenTimeline() }
     Column(modifier = modifier) {
         Row(
             modifier = Modifier

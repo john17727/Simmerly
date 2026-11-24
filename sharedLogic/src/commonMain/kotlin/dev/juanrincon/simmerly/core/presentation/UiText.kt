@@ -11,6 +11,9 @@ enum class StringKey {
     ShoppingListLoadFailed,
     ShoppingListUpdateFailed,
     RecipeDeleteFailed,
+    TimelineLoadFailed,
+    TimelineSaveFailed,
+    TimelineDeleteFailed,
     /** Args: list name. */
     ItemAddedToList,
     /** Args: item count, list name. */

@@ -34,6 +34,8 @@ import dev.juanrincon.simmerly.recipes.presentation.details.RecipeDetailsScreen
 import dev.juanrincon.simmerly.recipes.presentation.list.RecipeListScreen
 import dev.juanrincon.simmerly.recipes.presentation.navigation.RecipeDestinations
 import dev.juanrincon.simmerly.recipes.presentation.search.RecipeSearchScreen
+import dev.juanrincon.simmerly.timeline.presentation.TimelineEditScreen
+import dev.juanrincon.simmerly.timeline.presentation.TimelineScreen
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
@@ -129,7 +131,25 @@ fun RecipesContent(
                             }
                         },
                         onStartCooking = { backStack.add(RecipeDestinations.CookMode(it)) },
+                        onOpenTimeline = { backStack.add(RecipeDestinations.Timeline(it)) },
                         onNavigateToShoppingList = { onNavigate(AppNavRequest.OpenShoppingList(it)) },
+                        modifier = Modifier.fillMaxSize()
+                    )
+                }
+                // Full screen at every width: it replaces the recipe rather than sitting beside it.
+                entry<RecipeDestinations.Timeline> { key ->
+                    TimelineScreen(
+                        recipeId = key.recipeId,
+                        onNavigateBack = { backStack.removeLastOrNull() },
+                        onEditEvent = { backStack.add(RecipeDestinations.TimelineEdit(key.recipeId, it)) },
+                        modifier = Modifier.fillMaxSize()
+                    )
+                }
+                entry<RecipeDestinations.TimelineEdit> { key ->
+                    TimelineEditScreen(
+                        recipeId = key.recipeId,
+                        eventId = key.eventId,
+                        onClose = { backStack.removeLastOrNull() },
                         modifier = Modifier.fillMaxSize()
                     )
                 }

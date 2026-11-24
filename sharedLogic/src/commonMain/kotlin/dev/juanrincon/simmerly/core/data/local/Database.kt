@@ -50,6 +50,8 @@ import dev.juanrincon.simmerly.shoppinglists.data.local.ShoppingListDao
 import dev.juanrincon.simmerly.shoppinglists.data.local.ShoppingListEntity
 import dev.juanrincon.simmerly.shoppinglists.data.local.ShoppingListItemEntity
 import dev.juanrincon.simmerly.shoppinglists.data.local.ShoppingListRecipeEntity
+import dev.juanrincon.simmerly.timeline.data.local.TimelineEventDao
+import dev.juanrincon.simmerly.timeline.data.local.TimelineEventEntity
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlin.time.ExperimentalTime
@@ -79,14 +81,16 @@ import kotlin.time.ExperimentalTime
         ShoppingListEntity::class,
         ShoppingListItemEntity::class,
         ShoppingListRecipeEntity::class,
+        TimelineEventEntity::class,
     ],
-    version = 9,
+    version = 10,
     // Older versions still fall back to a destructive migration (see getRoomDatabase).
     autoMigrations = [
         AutoMigration(from = 5, to = 6),
         AutoMigration(from = 6, to = 7),
         AutoMigration(from = 7, to = 8, spec = RemoteKeyCreatedAtDeleted::class),
         AutoMigration(from = 8, to = 9, spec = RecipeCookTimeDeleted::class),
+        AutoMigration(from = 9, to = 10),
     ],
 )
 @ColumnTypeConverters(Converters::class)
@@ -132,6 +136,8 @@ abstract class SimmerlyDatabase : RoomDatabase() {
     abstract fun cacheMetadataDao(): CacheMetadataDao
 
     abstract fun shoppingListDao(): ShoppingListDao
+
+    abstract fun timelineEventDao(): TimelineEventDao
 }
 
 @Suppress("KotlinNoActualForExpect")

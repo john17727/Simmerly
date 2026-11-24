@@ -4,4 +4,23 @@ GET {{baseUrl}}/recipes/timeline/events?page=1&perPage=32&orderBy=timestamp&orde
 accept: application/json
 Authorization: {{token}}
 
+###### Update (subject required; eventMessage, image optional)
+PUT {{baseUrl}}/recipes/timeline/events/{{eventId}}
+Content-Type: application/json
+Authorization: {{token}}
+
+{ "subject": "Juan made this", "eventMessage": "Cook a little longer." }
+
+### Upload photo (multipart: extension + image)
+PUT {{baseUrl}}/recipes/timeline/events/{{eventId}}/image
+Authorization: {{token}}
+
+### Delete
+DELETE {{baseUrl}}/recipes/timeline/events/{{eventId}}
+Authorization: {{token}}
+
+### Members (author names)
+GET {{baseUrl}}/households/members?page=1&perPage=-1
+Authorization: {{token}}
+
 ###

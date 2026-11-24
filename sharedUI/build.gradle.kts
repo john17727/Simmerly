@@ -77,6 +77,9 @@ kotlin {
             implementation(libs.androidx.navigation3.material3.adaptive)
             implementation(libs.androidx.lifecycle.viewmodel.navigation3)
 
+            // Photo picker / camera for timeline entries
+            implementation(libs.filekit.dialogs.compose)
+
             // Orbit Compose
             implementation(libs.orbit.compose)
         }

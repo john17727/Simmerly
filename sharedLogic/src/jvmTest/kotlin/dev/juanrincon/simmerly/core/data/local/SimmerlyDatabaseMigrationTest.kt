@@ -135,7 +135,7 @@ class SimmerlyDatabaseMigrationTest {
             )
         }
 
-        val migrated = helper.runMigrationsAndValidate(9, emptyList())
+        val migrated = helper.runMigrationsAndValidate(10, emptyList())
 
         migrated.use {
             assertThat(it.columns("recipes").contains("cook_time")).isEqualTo(false)
@@ -153,11 +153,12 @@ class SimmerlyDatabaseMigrationTest {
         val helper = helper()
         helper.createDatabase(5).use { it.insertVersion5Data() }
 
-        val migrated = helper.runMigrationsAndValidate(9, emptyList())
+        val migrated = helper.runMigrationsAndValidate(10, emptyList())
 
         migrated.use {
             assertThat(it.tableExists("cache_metadata")).isEqualTo(true)
             assertThat(it.tableExists("shopping_lists")).isEqualTo(true)
+            assertThat(it.tableExists("timeline_events")).isEqualTo(true)
             assertThat(it.columns("recipe_remote_keys")).isEqualTo(listOf("id", "nextKey"))
             assertThat(it.columns("recipes").contains("cook_time")).isEqualTo(false)
             assertThat(it.count("user_recipe_preferences")).isEqualTo(1L)
