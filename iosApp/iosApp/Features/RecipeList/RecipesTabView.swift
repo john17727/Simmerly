@@ -35,11 +35,19 @@ private struct RecipesStackView: View {
                     RecipeDetailsRoot(
                         recipeId: recipeId,
                         onNavigateToComments: { path.append(.comments(recipeId: $0)) },
+                        onNavigateToTimeline: { path.append(.timeline(recipeId: $0)) },
                         onNavigateToShoppingList: onOpenShoppingList,
                         onDeleted: { if !path.isEmpty { path.removeLast() } }
                     )
                 case .comments(let recipeId):
                     RecipeCommentsRoot(recipeId: recipeId)
+                case .timeline(let recipeId):
+                    TimelineRoot(
+                        recipeId: recipeId,
+                        onEdit: { path.append(.timelineEdit(recipeId: recipeId, eventId: $0)) }
+                    )
+                case .timelineEdit(let recipeId, let eventId):
+                    TimelineEditRoot(recipeId: recipeId, eventId: eventId, onFinished: { if !path.isEmpty { path.removeLast() } })
                 case .search:
                     RecipeSearchRoot(
                         onRecipeTapped: { path.append(.detail(recipeId: $0)) }
@@ -88,6 +96,7 @@ private struct RecipesSplitView: View {
                     RecipeDetailsRoot(
                         recipeId: recipeId,
                         onNavigateToComments: { detailPath.append(.comments(recipeId: $0)) },
+                        onNavigateToTimeline: { detailPath.append(.timeline(recipeId: $0)) },
                         onNavigateToShoppingList: onOpenShoppingList,
                         onDeleted: {
                             detailPath = []
@@ -99,10 +108,18 @@ private struct RecipesSplitView: View {
                         switch route {
                         case .comments(let commentsRecipeId):
                             RecipeCommentsRoot(recipeId: commentsRecipeId)
+                        case .timeline(let timelineRecipeId):
+                            TimelineRoot(
+                                recipeId: timelineRecipeId,
+                                onEdit: { detailPath.append(.timelineEdit(recipeId: timelineRecipeId, eventId: $0)) }
+                            )
+                        case .timelineEdit(let editRecipeId, let eventId):
+                            TimelineEditRoot(recipeId: editRecipeId, eventId: eventId, onFinished: { if !detailPath.isEmpty { detailPath.removeLast() } })
                         case .detail(let detailRecipeId):
                             RecipeDetailsRoot(
                                 recipeId: detailRecipeId,
                                 onNavigateToComments: { detailPath.append(.comments(recipeId: $0)) },
+                                onNavigateToTimeline: { detailPath.append(.timeline(recipeId: $0)) },
                                 onNavigateToShoppingList: onOpenShoppingList,
                                 onDeleted: { if !detailPath.isEmpty { detailPath.removeLast() } }
                             )

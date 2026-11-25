@@ -18,6 +18,9 @@ extension StringKey {
         case .itemsAddedToList: return "items_added_to_list"
         case .listCreatedWithItem: return "list_created_with_item"
         case .listCreatedWithItems: return "list_created_with_items"
+        case .timelineLoadFailed: return "timeline_load_failed"
+        case .timelineSaveFailed: return "timeline_save_failed"
+        case .timelineDeleteFailed: return "timeline_delete_failed"
         }
     }
 }

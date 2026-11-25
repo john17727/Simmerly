@@ -9,6 +9,7 @@ struct RecipeDetailsView: View {
     let onAddToList: () -> Void
     let onDelete: () -> Void
     let onNavigateToComments: () -> Void
+    let onNavigateToTimeline: () -> Void
     /// Pull-to-refresh; SwiftUI keeps its spinner up until this returns.
     let onRefresh: () async -> Void
 
@@ -66,6 +67,11 @@ struct RecipeDetailsView: View {
                             action: onNavigateToComments
                         )
                     }
+                    Button(
+                        "Timeline",
+                        systemImage: "clock.arrow.circlepath",
+                        action: onNavigateToTimeline
+                    )
                     Divider()
                     Button(
                         "Delete recipe",
@@ -379,6 +385,7 @@ private let previewState = RecipeDetailsState(
             onAddToList: {},
             onDelete: {},
             onNavigateToComments: {},
+            onNavigateToTimeline: {},
             onRefresh: {}
         )
     }
@@ -407,6 +414,7 @@ private let previewState = RecipeDetailsState(
             onAddToList: {},
             onDelete: {},
             onNavigateToComments: {},
+            onNavigateToTimeline: {},
             onRefresh: {}
         )
     }
