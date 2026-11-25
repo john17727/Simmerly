@@ -10,6 +10,8 @@ import dev.juanrincon.simmerly.recipes.data.di.recipeDataModule
 import dev.juanrincon.simmerly.recipes.presentation.di.recipePresentationModule
 import dev.juanrincon.simmerly.shoppinglists.data.di.shoppingListDataModule
 import dev.juanrincon.simmerly.shoppinglists.presentation.di.shoppingListPresentationModule
+import dev.juanrincon.simmerly.timeline.data.di.timelineDataModule
+import dev.juanrincon.simmerly.timeline.presentation.di.timelinePresentationModule
 import dev.juanrincon.simmerly.welcome.di.welcomeModule
 import org.koin.core.KoinApplication
 import org.koin.core.context.startKoin
@@ -35,7 +37,9 @@ fun appModules(platform: Module = platformModule): List<Module> = listOf(
     initialLoadPresentationModule,
     profileModule,
     shoppingListDataModule,
-    shoppingListPresentationModule
+    shoppingListPresentationModule,
+    timelineDataModule,
+    timelinePresentationModule,
 )
 
 fun initKoin(appDeclaration: KoinAppDeclaration = {}) {

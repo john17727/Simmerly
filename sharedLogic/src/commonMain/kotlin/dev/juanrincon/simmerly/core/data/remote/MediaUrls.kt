@@ -19,3 +19,20 @@ fun recipeImageUrl(
     if (host == null) return ""
     return "$host/api/media/recipes/$recipeId/images/${size.fileName}"
 }
+
+/** The image files Mealie serves for a timeline event photo. */
+enum class TimelineImageSize(val fileName: String) {
+    Original("original.webp"),
+    Thumbnail("min-original.webp"),
+}
+
+/** The URL of a timeline event's photo on [host], or an empty string while the host is unknown. */
+fun timelineImageUrl(
+    host: String?,
+    recipeId: String,
+    eventId: String,
+    size: TimelineImageSize = TimelineImageSize.Original,
+): String {
+    if (host == null) return ""
+    return "$host/api/media/recipes/$recipeId/images/timeline/$eventId/${size.fileName}"
+}

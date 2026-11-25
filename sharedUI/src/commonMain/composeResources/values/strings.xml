@@ -7,6 +7,9 @@
     <string name="shopping_list">Shopping List</string>
     <string name="profile">Profile</string>
     <string name="shopping_list_load_failed">Couldn't load your shopping lists. Check your connection and try again.</string>
+    <string name="timeline_load_failed">Couldn't load the timeline. Check your connection and try again.</string>
+    <string name="timeline_save_failed">Couldn't save the entry. Please try again.</string>
+    <string name="timeline_delete_failed">Couldn't delete the entry. Please try again.</string>
     <string name="recipe_delete_failed">Couldn't delete the recipe. Please try again.</string>
     <string name="shopping_list_update_failed">Couldn't save that change. Please try again.</string>
     <string name="item_added_to_list">1 item added to %1$s</string>
