@@ -12,6 +12,8 @@ import dev.juanrincon.simmerly.recipes.presentation.list.RecipeListViewModel
 import dev.juanrincon.simmerly.recipes.presentation.search.RecipeSearchViewModel
 import dev.juanrincon.simmerly.shoppinglists.presentation.detail.ShoppingListDetailViewModel
 import dev.juanrincon.simmerly.shoppinglists.presentation.list.ShoppingListsViewModel
+import dev.juanrincon.simmerly.timeline.presentation.TimelineEditViewModel
+import dev.juanrincon.simmerly.timeline.presentation.TimelineViewModel
 import dev.juanrincon.simmerly.welcome.presentation.WelcomeViewModel
 import org.koin.core.parameter.parametersOf
 
@@ -58,4 +60,10 @@ object SimmerlyViewModels {
 
     fun shoppingListDetail(listId: String): ShoppingListDetailViewModel =
         track(simmerlyKoin.koin.get { parametersOf(listId) })
+
+    fun timeline(recipeId: String): TimelineViewModel =
+        track(simmerlyKoin.koin.get { parametersOf(recipeId) })
+
+    fun timelineEdit(recipeId: String, eventId: String): TimelineEditViewModel =
+        track(simmerlyKoin.koin.get { parametersOf(recipeId, eventId) })
 }

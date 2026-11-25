@@ -63,10 +63,12 @@ final class RecipeDetailsModel {
 struct RecipeDetailsRoot: View {
     @State private var model: RecipeDetailsModel
     let onNavigateToComments: (String) -> Void
+    let onNavigateToTimeline: (String) -> Void
 
     init(
         recipeId: String,
         onNavigateToComments: @escaping (String) -> Void,
+        onNavigateToTimeline: @escaping (String) -> Void,
         onNavigateToShoppingList: @escaping (String) -> Void,
         onDeleted: @escaping () -> Void
     ) {
@@ -78,6 +80,7 @@ struct RecipeDetailsRoot: View {
             )
         )
         self.onNavigateToComments = onNavigateToComments
+        self.onNavigateToTimeline = onNavigateToTimeline
     }
 
     var body: some View {
@@ -89,6 +92,7 @@ struct RecipeDetailsRoot: View {
             onAddToList: { model.send(RecipeDetailsIntentOpenAddToList.shared) },
             onDelete: { model.send(RecipeDetailsIntentRequestDelete.shared) },
             onNavigateToComments: { onNavigateToComments(model.state.recipe.id) },
+            onNavigateToTimeline: { onNavigateToTimeline(model.state.recipe.id) },
             onRefresh: { await model.refresh() }
         )
         .snackbar($model.snackbar)

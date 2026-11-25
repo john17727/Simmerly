@@ -5,5 +5,7 @@ import Foundation
 enum AppRoute: Hashable {
     case detail(recipeId: String)
     case comments(recipeId: String)
+    case timeline(recipeId: String)
+    case timelineEdit(recipeId: String, eventId: String)
     case search
 }
