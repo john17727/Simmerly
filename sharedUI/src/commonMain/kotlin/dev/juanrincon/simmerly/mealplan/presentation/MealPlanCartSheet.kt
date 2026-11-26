@@ -14,6 +14,11 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.material3.Surface
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
+import dev.juanrincon.simmerly.core.presentation.navigation.isMediumWidthOrWider
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -94,12 +99,24 @@ fun MealPlanCartSheet(
             is MealPlanCartSideEffect.Added -> onAdded(effect.message, effect.listId)
         }
     }
-    ModalBottomSheet(
-        onDismissRequest = onDismiss,
-        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
-        modifier = modifier,
-    ) {
-        MealPlanCartContent(state, viewModel::onEvent, showScopes = args.entryId == null, onDismiss = onDismiss)
+    if (isMediumWidthOrWider()) {
+        Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false)) {
+            Surface(
+                shape = RoundedCornerShape(28.dp),
+                color = MaterialTheme.colorScheme.surface,
+                modifier = Modifier.width(720.dp).heightIn(max = 760.dp).padding(vertical = 16.dp),
+            ) {
+                MealPlanCartContent(state, viewModel::onEvent, showScopes = args.entryId == null, onDismiss = onDismiss, tall = false)
+            }
+        }
+    } else {
+        ModalBottomSheet(
+            onDismissRequest = onDismiss,
+            sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+            modifier = modifier,
+        ) {
+            MealPlanCartContent(state, viewModel::onEvent, showScopes = args.entryId == null, onDismiss = onDismiss)
+        }
     }
 }
 
@@ -110,18 +127,19 @@ internal fun MealPlanCartContent(
     onEvent: (MealPlanCartIntent) -> Unit,
     showScopes: Boolean,
     onDismiss: () -> Unit,
+    tall: Boolean = true,
 ) {
     val scheme = MaterialTheme.colorScheme
-    Column(Modifier.fillMaxWidth().fillMaxHeight(0.94f)) {
+    Column(Modifier.fillMaxWidth().then(if (tall) Modifier.fillMaxHeight(0.94f) else Modifier)) {
         Text(
             "Add meal plan to shopping list",
             style = MaterialTheme.typography.headlineSmall,
-            modifier = Modifier.padding(horizontal = 24.dp),
+            modifier = Modifier.padding(start = 24.dp, end = 24.dp, top = if (tall) 0.dp else 24.dp),
         )
         LazyColumn(
             contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 16.dp, vertical = 12.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
-            modifier = Modifier.weight(1f),
+            modifier = Modifier.weight(1f, fill = tall),
         ) {
             if (showScopes) {
                 item(key = "scopes") {

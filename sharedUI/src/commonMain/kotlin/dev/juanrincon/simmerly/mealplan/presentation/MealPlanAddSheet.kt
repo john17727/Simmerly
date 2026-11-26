@@ -15,6 +15,12 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.material3.Surface
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
+import dev.juanrincon.simmerly.core.presentation.navigation.isMediumWidthOrWider
+import dev.juanrincon.simmerly.core.presentation.navigation.isTwoPaneWidth
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -102,14 +108,44 @@ fun MealPlanAddSheet(
             is MealPlanAddSideEffect.Saved -> onSaved(effect.entry)
         }
     }
-    ModalBottomSheet(
-        onDismissRequest = onDismiss,
-        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
-        modifier = modifier,
-    ) {
-        Box(Modifier.fillMaxHeight(0.94f)) {
-            MealPlanAddContent(state, viewModel::onEvent, plannedDays, onDismiss)
-            SnackbarHost(snackbarHostState, modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 80.dp))
+    when {
+        // Desktop: a centred two-column dialog.
+        isTwoPaneWidth() -> Dialog(
+            onDismissRequest = onDismiss,
+            properties = DialogProperties(usePlatformDefaultWidth = false),
+        ) {
+            Surface(
+                shape = RoundedCornerShape(28.dp),
+                color = MaterialTheme.colorScheme.surface,
+                modifier = Modifier.width(880.dp).heightIn(max = 720.dp),
+            ) {
+                Box {
+                    MealPlanAddWide(state, viewModel::onEvent, plannedDays, onDismiss)
+                    SnackbarHost(snackbarHostState, modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 80.dp))
+                }
+            }
+        }
+        // Unfolded foldable: a wide bottom sheet with the same two columns.
+        isMediumWidthOrWider() -> ModalBottomSheet(
+            onDismissRequest = onDismiss,
+            sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+            sheetMaxWidth = 880.dp,
+            modifier = modifier,
+        ) {
+            Box(Modifier.fillMaxHeight(0.94f)) {
+                MealPlanAddWide(state, viewModel::onEvent, plannedDays, onDismiss)
+                SnackbarHost(snackbarHostState, modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 80.dp))
+            }
+        }
+        else -> ModalBottomSheet(
+            onDismissRequest = onDismiss,
+            sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+            modifier = modifier,
+        ) {
+            Box(Modifier.fillMaxHeight(0.94f)) {
+                MealPlanAddContent(state, viewModel::onEvent, plannedDays, onDismiss)
+                SnackbarHost(snackbarHostState, modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 80.dp))
+            }
         }
     }
 }
@@ -252,7 +288,7 @@ private fun PickerRow(
 }
 
 @Composable
-private fun RecipePicker(state: MealPlanAddState, onEvent: (MealPlanAddIntent) -> Unit) {
+internal fun RecipePicker(state: MealPlanAddState, onEvent: (MealPlanAddIntent) -> Unit) {
     val scheme = MaterialTheme.colorScheme
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         OutlinedTextField(
@@ -375,7 +411,7 @@ private fun FilterDropdownChip(
 }
 
 @Composable
-private fun LockedRecipe(state: MealPlanAddState) {
+internal fun LockedRecipe(state: MealPlanAddState) {
     val recipe = state.allRecipes.firstOrNull { it.id == state.selectedRecipeId } ?: return
     Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -393,7 +429,7 @@ private fun LockedRecipe(state: MealPlanAddState) {
 }
 
 @Composable
-private fun RecipeExtras(state: MealPlanAddState, onEvent: (MealPlanAddIntent) -> Unit) {
+internal fun RecipeExtras(state: MealPlanAddState, onEvent: (MealPlanAddIntent) -> Unit) {
     val scheme = MaterialTheme.colorScheme
     val servings = state.servings
     if (state.selectedRecipeId != null && servings != null) {
@@ -428,7 +464,7 @@ private fun RecipeExtras(state: MealPlanAddState, onEvent: (MealPlanAddIntent) -
 }
 
 @Composable
-private fun NoteFields(state: MealPlanAddState, onEvent: (MealPlanAddIntent) -> Unit) {
+internal fun NoteFields(state: MealPlanAddState, onEvent: (MealPlanAddIntent) -> Unit) {
     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
         OutlinedTextField(
             value = state.noteTitle,

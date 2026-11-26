@@ -51,6 +51,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import dev.juanrincon.simmerly.core.presentation.asStringSuspend
+import dev.juanrincon.simmerly.core.presentation.navigation.isMediumWidthOrWider
+import dev.juanrincon.simmerly.core.presentation.navigation.isTwoPaneWidth
 import dev.juanrincon.simmerly.mealplan.domain.MealPlanEntry
 import dev.juanrincon.simmerly.mealplan.domain.MealType
 import dev.juanrincon.simmerly.mealplan.presentation.orbit.CartScope
@@ -94,19 +96,20 @@ fun MealPlanScreen(
         }
     }
 
-    MealPlanContent(
-        state = state,
+    val actions = PlanActions(
         onEvent = viewModel::onEvent,
-        snackbarHostState = snackbarHostState,
         onOpenRecipe = onOpenRecipe,
-        onPlan = { type -> addArgs = MealPlanAddArgs(date = state.selectedDate, type = type) },
+        onPlan = { type, date -> addArgs = MealPlanAddArgs(date = date, type = type) },
         onEdit = { entry ->
             addArgs = MealPlanAddArgs(date = state.selectedDate, type = entry.type, entryId = entry.id)
         },
-        onOpenCalendar = { showCalendar = true },
         onAddToList = { scope, entryId -> cartRequest = MealPlanCartRequest(state.selectedDate, scope, entryId) },
-        modifier = modifier,
     )
+    when {
+        isTwoPaneWidth() -> MealPlanDesktop(state, actions, snackbarHostState, modifier)
+        isMediumWidthOrWider() -> MealPlanFoldable(state, actions, snackbarHostState, modifier)
+        else -> MealPlanPhone(state, actions, snackbarHostState, onOpenCalendar = { showCalendar = true }, modifier = modifier)
+    }
 
     if (showCalendar) {
         MealPlanCalendarSheet(
@@ -164,17 +167,14 @@ enum class CartRequestScope { Day, Week, Entry }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-internal fun MealPlanContent(
+internal fun MealPlanPhone(
     state: MealPlanState,
-    onEvent: (MealPlanIntent) -> Unit,
+    actions: PlanActions,
     snackbarHostState: SnackbarHostState,
-    onOpenRecipe: (String) -> Unit,
-    onPlan: (MealType) -> Unit,
-    onEdit: (MealPlanEntry) -> Unit,
     onOpenCalendar: () -> Unit,
-    onAddToList: (CartRequestScope, Int?) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val onEvent = actions.onEvent
     val scheme = MaterialTheme.colorScheme
     Box(modifier = modifier.fillMaxSize().background(scheme.surface)) {
         Column(Modifier.fillMaxSize().statusBarsPadding()) {
@@ -226,7 +226,7 @@ internal fun MealPlanContent(
                     onRefresh = { onEvent(MealPlanIntent.Refresh) },
                     modifier = Modifier.fillMaxSize(),
                 ) {
-                    PlanList(state, onEvent, onOpenRecipe, onPlan, onEdit, onAddToList)
+                    PlanList(state, actions)
                 }
             }
         }
@@ -238,203 +238,29 @@ internal fun MealPlanContent(
 }
 
 @Composable
-private fun PlanList(
-    state: MealPlanState,
-    onEvent: (MealPlanIntent) -> Unit,
-    onOpenRecipe: (String) -> Unit,
-    onPlan: (MealType) -> Unit,
-    onEdit: (MealPlanEntry) -> Unit,
-    onAddToList: (CartRequestScope, Int?) -> Unit,
-) {
-    val scheme = MaterialTheme.colorScheme
-    val day = state.selectedDate
-    val cookLabel = if (day == state.today) "Cook today" else "Cook ${day.dayOfWeek.displayName()}"
+private fun PlanList(state: MealPlanState, actions: PlanActions) {
     LazyColumn(
         contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 96.dp),
         verticalArrangement = Arrangement.spacedBy(20.dp),
         modifier = Modifier.fillMaxSize(),
     ) {
         if (state.isOffline) {
-            item(key = "offline") { OfflineBanner(onRetry = { onEvent(MealPlanIntent.Refresh) }) }
+            item(key = "offline") { OfflineBanner(onRetry = { actions.onEvent(MealPlanIntent.Refresh) }) }
         }
         if (!state.isLoading && state.isEmptyWeek) {
-            item(key = "empty") {
-                EmptyWeek(
-                    showBackToWeek = state.weekDays.none { it == state.today },
-                    canEdit = state.canEdit,
-                    onPlan = { onPlan(MealType.Dinner) },
-                    onBack = { onEvent(MealPlanIntent.GoToToday) },
-                )
-            }
+            item(key = "empty") { EmptyWeek(state, actions) }
             return@LazyColumn
         }
-        if (state.anyDayEntries.isNotEmpty()) {
-            item(key = "week") {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Icon(Icons.Rounded.DateRange, null, tint = scheme.primary, modifier = Modifier.size(18.dp))
-                        Text(
-                            "This week",
-                            style = MaterialTheme.typography.labelLarge,
-                            fontWeight = FontWeight.SemiBold,
-                            color = scheme.onSurfaceVariant,
-                            modifier = Modifier.weight(1f),
-                        )
-                        Text(
-                            weekRangeLabel(state.weekDays.first(), state.weekDays.last()),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = scheme.onSurfaceVariant,
-                        )
-                        if (state.canEdit && state.weekRecipeEntries.isNotEmpty()) {
-                            IconButton(onClick = { onAddToList(CartRequestScope.Week, null) }) {
-                                Icon(Icons.Rounded.AddShoppingCart, contentDescription = "Add this week's recipes to a shopping list")
-                            }
-                        }
-                    }
-                    state.anyDayEntries.forEach { entry ->
-                        PlanEntryCard(
-                            entry = entry,
-                            canEdit = state.canEdit,
-                            cookLabel = cookLabel,
-                            onCook = { onEvent(MealPlanIntent.CookOnSelectedDay(entry.id)) },
-                            onOpenRecipe = { entry.recipe?.let { onOpenRecipe(it.id) } },
-                            onServings = { onEvent(MealPlanIntent.ChangeServings(entry.id, it)) },
-                            onEdit = { onEdit(entry) },
-                            onAddToList = { onAddToList(CartRequestScope.Entry, entry.id) },
-                            onRemove = { onEvent(MealPlanIntent.Remove(entry.id)) },
-                        )
-                    }
-                    androidx.compose.material3.HorizontalDivider(
-                        color = scheme.outlineVariant,
-                        modifier = Modifier.padding(top = 12.dp),
-                    )
-                }
-            }
-        }
+        anyDayItems(state, actions, title = "This week")
         item(key = "dayTitle") {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text(day.dayTitle(), style = MaterialTheme.typography.headlineSmall)
-                if (day == state.today) TodayBadge()
+                Text(state.selectedDate.dayTitle(), style = MaterialTheme.typography.headlineSmall)
+                if (state.selectedDate == state.today) TodayBadge()
                 Spacer(Modifier.weight(1f))
-                if (state.canEdit && state.dayRecipeEntries.isNotEmpty()) {
-                    IconButton(onClick = { onAddToList(CartRequestScope.Day, null) }) {
-                        Icon(Icons.Rounded.AddShoppingCart, contentDescription = "Add this day's recipes to a shopping list")
-                    }
-                }
+                DayCartButton(state, actions)
             }
         }
-        items(state.daySections.filter { it.type.isMainMeal || it.entries.isNotEmpty() }, key = { it.type }) { section ->
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
-                    Icon(section.type.icon(), null, tint = scheme.primary, modifier = Modifier.size(18.dp))
-                    Spacer(Modifier.size(8.dp))
-                    Text(
-                        section.type.label(),
-                        style = MaterialTheme.typography.labelLarge,
-                        fontWeight = FontWeight.SemiBold,
-                        color = scheme.onSurfaceVariant,
-                        modifier = Modifier.weight(1f),
-                    )
-                    if (state.canEdit && section.entries.isNotEmpty()) {
-                        IconButton(onClick = { onPlan(section.type) }) {
-                            Icon(Icons.Rounded.Add, contentDescription = "Add to ${section.type.label()}")
-                        }
-                    }
-                }
-                section.entries.forEach { entry ->
-                    PlanEntryCard(
-                        entry = entry,
-                        canEdit = state.canEdit,
-                        onOpenRecipe = { entry.recipe?.let { onOpenRecipe(it.id) } },
-                        onServings = { onEvent(MealPlanIntent.ChangeServings(entry.id, it)) },
-                        onEdit = { onEdit(entry) },
-                        onAddToList = { onAddToList(CartRequestScope.Entry, entry.id) },
-                        onRemove = { onEvent(MealPlanIntent.Remove(entry.id)) },
-                    )
-                }
-                if (section.entries.isEmpty()) {
-                    if (state.canEdit) {
-                        PlanSlot("Plan ${section.type.label().lowercase()}", onClick = { onPlan(section.type) })
-                    } else {
-                        Text("Nothing planned", style = MaterialTheme.typography.bodySmall, color = scheme.onSurfaceVariant)
-                    }
-                }
-            }
-        }
-        if (state.canEdit) {
-            item(key = "others") {
-                OutlinedButton(onClick = { onPlan(MealType.Side) }) {
-                    Icon(Icons.Rounded.Add, null, modifier = Modifier.size(18.dp))
-                    Spacer(Modifier.size(8.dp))
-                    Text("Side, snack, drink or dessert")
-                }
-            }
-        }
+        daySectionItems(state, actions)
     }
 }
 
-@Composable
-private fun EmptyWeek(
-    showBackToWeek: Boolean,
-    canEdit: Boolean,
-    onPlan: () -> Unit,
-    onBack: () -> Unit,
-) {
-    val scheme = MaterialTheme.colorScheme
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(16.dp),
-        modifier = Modifier.fillMaxWidth().padding(vertical = 48.dp, horizontal = 8.dp),
-    ) {
-        Box(
-            contentAlignment = Alignment.Center,
-            modifier = Modifier.size(88.dp).clip(CircleShape).background(scheme.primaryContainer.copy(alpha = 0.5f)),
-        ) {
-            Icon(Icons.Outlined.CalendarMonth, null, tint = scheme.primary, modifier = Modifier.size(44.dp))
-        }
-        Text("Nothing planned this week", style = MaterialTheme.typography.headlineSmall, textAlign = TextAlign.Center)
-        Text(
-            if (canEdit) "Plan a recipe or a note and it will show up here." else "Reconnect to plan meals.",
-            style = MaterialTheme.typography.bodyMedium,
-            color = scheme.onSurfaceVariant,
-            textAlign = TextAlign.Center,
-        )
-        if (canEdit) {
-            Button(onClick = onPlan) {
-                Icon(Icons.Rounded.Add, null, modifier = Modifier.size(18.dp))
-                Spacer(Modifier.size(8.dp))
-                Text("Plan a meal")
-            }
-        }
-        if (showBackToWeek) TextButton(onClick = onBack) { Text("Back to this week") }
-    }
-}
-
-@Composable
-private fun ErrorState(onRetry: () -> Unit) {
-    val scheme = MaterialTheme.colorScheme
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterVertically),
-        modifier = Modifier.fillMaxSize().padding(32.dp),
-    ) {
-        Box(
-            contentAlignment = Alignment.Center,
-            modifier = Modifier.size(72.dp).clip(CircleShape).background(scheme.errorContainer),
-        ) {
-            Icon(Icons.Rounded.Error, null, tint = scheme.onErrorContainer, modifier = Modifier.size(36.dp))
-        }
-        Text("Couldn't load this week", style = MaterialTheme.typography.headlineSmall, textAlign = TextAlign.Center)
-        Text(
-            "Your Mealie server didn't respond. Check that it's running and reachable, then try again.",
-            style = MaterialTheme.typography.bodyMedium,
-            color = scheme.onSurfaceVariant,
-            textAlign = TextAlign.Center,
-        )
-        Button(onClick = onRetry) {
-            Icon(Icons.Rounded.Refresh, null, modifier = Modifier.size(18.dp))
-            Spacer(Modifier.size(8.dp))
-            Text("Try again")
-        }
-    }
-}
