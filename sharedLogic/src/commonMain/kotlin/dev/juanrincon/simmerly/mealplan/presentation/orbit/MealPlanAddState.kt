@@ -28,7 +28,7 @@ sealed interface PlannedMeta {
 
 data class PickerRecipe(val recipe: RecipeSummary, val meta: PlannedMeta)
 
-data class FilterChipUi(val id: String, val name: String)
+data class FilterChipUi(val id: String, val name: String, val isTag: Boolean)
 
 data class MealPlanAddState(
     val today: LocalDate = LocalDate(1970, 1, 1),

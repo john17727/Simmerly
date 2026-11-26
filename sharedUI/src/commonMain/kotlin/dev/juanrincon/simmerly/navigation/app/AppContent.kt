@@ -26,6 +26,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import coil3.compose.SubcomposeAsyncImage
 import dev.juanrincon.simmerly.core.presentation.navigation.AppNavRequest
+import dev.juanrincon.simmerly.mealplan.presentation.MealPlanTab
 import dev.juanrincon.simmerly.core.presentation.asString
 import dev.juanrincon.simmerly.profile.presentation.ProfileViewModel
 import dev.juanrincon.simmerly.recipes.presentation.RecipesContent
@@ -110,14 +111,24 @@ fun AppContent(
                         pendingRequest = request
                         currentDestination = when (request) {
                             is AppNavRequest.OpenShoppingList -> AppDestinations.SHOPPING_LIST
+                            is AppNavRequest.OpenRecipe -> AppDestinations.RECIPES
+                        }
+                    },
+                    request = pendingRequest as? AppNavRequest.OpenRecipe,
+                    onRequestHandled = { pendingRequest = null },
+                    modifier = Modifier.fillMaxSize()
+                )
+
+                AppDestinations.MEAL_PLAN -> MealPlanTab(
+                    onNavigate = { request ->
+                        pendingRequest = request
+                        currentDestination = when (request) {
+                            is AppNavRequest.OpenShoppingList -> AppDestinations.SHOPPING_LIST
+                            is AppNavRequest.OpenRecipe -> AppDestinations.RECIPES
                         }
                     },
                     modifier = Modifier.fillMaxSize()
                 )
-
-                AppDestinations.MEAL_PLAN -> {
-                    Text(destination.label.asString())
-                }
 
                 AppDestinations.SHOPPING_LIST -> ShoppingListsContent(
                     onAtRootChanged = { isAtShoppingListsRoot = it },

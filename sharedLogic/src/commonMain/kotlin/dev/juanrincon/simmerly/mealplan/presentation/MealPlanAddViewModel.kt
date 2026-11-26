@@ -125,8 +125,8 @@ class MealPlanAddViewModel(
 
     private fun observeRecipes() = intent {
         recipeRepository.observeAllRecipes().collect { recipes ->
-            val tags = recipes.flatMap { r -> r.tags.map { FilterChipUi(it.id, it.name) } }
-            val categories = recipes.flatMap { r -> r.categories.map { FilterChipUi(it.id, it.name) } }
+            val tags = recipes.flatMap { r -> r.tags.map { FilterChipUi(it.id, it.name, isTag = true) } }
+            val categories = recipes.flatMap { r -> r.categories.map { FilterChipUi(it.id, it.name, isTag = false) } }
             reduce {
                 state.copy(allRecipes = recipes, filters = (categories + tags).distinctBy { it.id }.sortedBy { it.name })
             }

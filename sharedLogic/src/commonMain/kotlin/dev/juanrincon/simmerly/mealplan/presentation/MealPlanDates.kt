@@ -29,3 +29,31 @@ const val MONTH_GRID_DAYS = 42
 private val dayNames = listOf("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday")
 
 fun DayOfWeek.displayName(): String = dayNames[ordinal]
+
+fun DayOfWeek.shortName(): String = dayNames[ordinal].take(3)
+
+private val monthNames = listOf(
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December",
+)
+
+fun LocalDate.monthName(): String = monthNames[month.ordinal]
+
+fun LocalDate.monthShortName(): String = monthNames[month.ordinal].take(3)
+
+/** "November 2026" */
+fun LocalDate.monthYearLabel(): String = "${monthName()} $year"
+
+/** "Nov 26" */
+fun LocalDate.monthDayLabel(): String = "${monthShortName()} $day"
+
+/** "Thursday, Nov 26" */
+fun LocalDate.dayTitle(): String = "${dayOfWeek.displayName()}, ${monthDayLabel()}"
+
+/** "Thu, Nov 26" */
+fun LocalDate.shortDayLabel(): String = "${dayOfWeek.shortName()}, ${monthDayLabel()}"
+
+/** "Nov 23 – 29", or "Nov 30 – Dec 6" across months. */
+fun weekRangeLabel(start: LocalDate, end: LocalDate): String =
+    if (start.month == end.month) "${start.monthDayLabel()} – ${end.day}"
+    else "${start.monthDayLabel()} – ${end.monthDayLabel()}"
