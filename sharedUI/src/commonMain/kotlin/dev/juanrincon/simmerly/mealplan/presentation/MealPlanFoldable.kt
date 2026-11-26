@@ -63,11 +63,17 @@ internal fun MealPlanFoldable(
     // The shown month follows the selection when it moves to another month; chevrons move it freely.
     var month by remember(day.year, day.month) { mutableStateOf(day) }
     Box(modifier.fillMaxSize().background(scheme.surface)) {
-        Row(Modifier.fillMaxSize().statusBarsPadding().padding(start = 8.dp, end = 24.dp, top = 16.dp)) {
+        // The design's 424dp calendar pane assumes a very wide window; on a real foldable it would
+        // leave the day pane too narrow, so the split follows the width.
+        androidx.compose.foundation.layout.BoxWithConstraints(Modifier.fillMaxSize().statusBarsPadding().padding(start = 8.dp, end = 24.dp, top = 16.dp)) {
+        val leftWidth = (maxWidth * 0.46f).coerceIn(300.dp, 424.dp)
+        val gap = if (maxWidth < 900.dp) 24.dp else 48.dp
+        val rightWidth = maxWidth - leftWidth - gap
+        Row(Modifier.fillMaxSize()) {
             LazyColumn(
                 contentPadding = PaddingValues(bottom = 96.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp),
-                modifier = Modifier.width(424.dp).fillMaxHeight(),
+                modifier = Modifier.width(leftWidth).fillMaxHeight(),
             ) {
                 item {
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -133,9 +139,9 @@ internal fun MealPlanFoldable(
                 }
                 anyDayItems(state, actions, title = "This week, any day", showCart = false)
             }
-            Spacer(Modifier.width(48.dp))
+            Spacer(Modifier.width(gap))
             Column(Modifier.weight(1f).fillMaxHeight()) {
-                DayHeader(state, actions)
+                DayHeader(state, actions, stacked = rightWidth < 520.dp)
                 if (state.isLoading || state.isRefreshing) LinearProgressIndicator(Modifier.fillMaxWidth())
                 when {
                     state.hasError -> ErrorState(onRetry = { actions.onEvent(dev.juanrincon.simmerly.mealplan.presentation.orbit.MealPlanIntent.Refresh) })
@@ -162,6 +168,7 @@ internal fun MealPlanFoldable(
                 }
             }
         }
+        }
         SnackbarHost(snackbarHostState, modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 8.dp))
     }
 }
@@ -174,18 +181,20 @@ private fun LegendDot(color: androidx.compose.ui.graphics.Color, label: String) 
     }
 }
 
-/** Day title with Today badge, the day's cart and "Plan a meal". */
+/** Day title with Today badge, the day's cart and "Plan a meal"; the actions drop below the title when stacked. */
 @Composable
-private fun DayHeader(state: MealPlanState, actions: PlanActions) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-        modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
-    ) {
-        Row(Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            Text(state.selectedDate.dayTitle(), style = MaterialTheme.typography.headlineMedium)
+private fun DayHeader(state: MealPlanState, actions: PlanActions, stacked: Boolean) {
+    val title: @Composable (Modifier) -> Unit = { modifier ->
+        Row(modifier, verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            Text(
+                state.selectedDate.dayTitle(),
+                style = if (stacked) MaterialTheme.typography.headlineSmall else MaterialTheme.typography.headlineMedium,
+                modifier = Modifier.weight(1f, fill = false),
+            )
             if (state.selectedDate == state.today) TodayBadge()
         }
+    }
+    val buttons: @Composable () -> Unit = {
         DayCartButton(state, actions)
         if (state.canEdit) {
             Button(onClick = { actions.onPlan(dev.juanrincon.simmerly.mealplan.domain.MealType.Dinner, state.selectedDate) }) {
@@ -193,6 +202,23 @@ private fun DayHeader(state: MealPlanState, actions: PlanActions) {
                 Spacer(Modifier.size(8.dp))
                 Text("Plan a meal")
             }
+        }
+    }
+    if (stacked) {
+        Column(Modifier.fillMaxWidth().padding(bottom = 8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            title(Modifier.fillMaxWidth())
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End), verticalAlignment = Alignment.CenterVertically) {
+                buttons()
+            }
+        }
+    } else {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
+        ) {
+            title(Modifier.weight(1f))
+            buttons()
         }
     }
 }
