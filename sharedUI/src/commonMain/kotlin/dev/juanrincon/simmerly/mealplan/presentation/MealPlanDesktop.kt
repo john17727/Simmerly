@@ -262,7 +262,9 @@ private fun AnyDayStrip(state: MealPlanState, actions: PlanActions) {
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                     modifier = Modifier.width(400.dp).clip(shape).background(scheme.surfaceContainerLow)
-                        .border(1.dp, scheme.outlineVariant, shape).padding(start = 8.dp, top = 8.dp, bottom = 8.dp, end = 4.dp),
+                        .border(1.dp, scheme.outlineVariant, shape)
+                        .then(if (recipe != null) Modifier.clickable { actions.onOpenRecipe(recipe.id) } else Modifier)
+                        .padding(start = 8.dp, top = 8.dp, bottom = 8.dp, end = 4.dp),
                 ) {
                     Thumb(recipe?.image, 56)
                     Column(Modifier.weight(1f)) {
@@ -273,7 +275,6 @@ private fun AnyDayStrip(state: MealPlanState, actions: PlanActions) {
                             fontWeight = FontWeight.Medium,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
-                            modifier = if (recipe != null) Modifier.clickable { actions.onOpenRecipe(recipe.id) } else Modifier,
                         )
                     }
                     if (state.canEdit) {
@@ -471,7 +472,11 @@ private fun BoardCard(entry: MealPlanEntry, showType: Boolean, canEdit: Boolean,
     val scheme = MaterialTheme.colorScheme
     val recipe = entry.recipe
     val shape = RoundedCornerShape(12.dp)
-    Box(Modifier.fillMaxWidth().clip(shape).background(scheme.surface).border(1.dp, scheme.outlineVariant, shape)) {
+    Box(
+        Modifier.fillMaxWidth().clip(shape).background(scheme.surface).border(1.dp, scheme.outlineVariant, shape)
+            // The whole card opens the recipe; notes aren't clickable. The ⋮ button handles its own taps.
+            .then(if (recipe != null) Modifier.clickable { actions.onOpenRecipe(recipe.id) } else Modifier),
+    ) {
         Column {
             if (recipe != null) {
                 SubcomposeAsyncImage(
@@ -494,7 +499,6 @@ private fun BoardCard(entry: MealPlanEntry, showType: Boolean, canEdit: Boolean,
                     fontWeight = FontWeight.Medium,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
-                    modifier = if (recipe != null) Modifier.clickable { actions.onOpenRecipe(recipe.id) } else Modifier,
                 )
                 val meta = entry.servings?.let { servingsLabel(it) } ?: entry.text.takeIf { it.isNotBlank() }
                 if (meta != null) {
