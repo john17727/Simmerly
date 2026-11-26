@@ -26,6 +26,11 @@ import org.koin.test.check.checkModules
 import java.nio.file.Files
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
+import dev.juanrincon.simmerly.mealplan.presentation.orbit.MealPlanAddArgs
+import dev.juanrincon.simmerly.mealplan.presentation.MealPlanAddViewModel
+import dev.juanrincon.simmerly.mealplan.presentation.MealPlanCartViewModel
+import dev.juanrincon.simmerly.mealplan.presentation.orbit.MealPlanCartArgs
+import kotlinx.datetime.LocalDate
 import kotlin.test.Test
 
 /**
@@ -64,6 +69,8 @@ class KoinGraphTest {
         // that take parameters (a recipe id, a list id) are given a placeholder.
         koinApplication { modules(appModules(testPlatformModule)) }.checkModules {
             withParameter<String> { "id" }
+            withParameter<MealPlanCartViewModel> { MealPlanCartArgs(date = LocalDate(2026, 1, 1)) }
+            withParameter<MealPlanAddViewModel> { MealPlanAddArgs(date = LocalDate(2026, 1, 1)) }
         }
     }
 

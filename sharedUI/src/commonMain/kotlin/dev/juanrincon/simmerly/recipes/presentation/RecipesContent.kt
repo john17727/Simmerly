@@ -49,6 +49,9 @@ import kotlinx.serialization.modules.polymorphic
 fun RecipesContent(
     onAtRootChanged: (Boolean) -> Unit = {},
     onNavigate: (AppNavRequest) -> Unit = {},
+    /** A recipe to open on top of the list, e.g. from a meal plan card. */
+    request: AppNavRequest.OpenRecipe? = null,
+    onRequestHandled: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val backStack = rememberNavBackStack(
@@ -70,6 +73,13 @@ fun RecipesContent(
     val selectedRecipeId = backStack.filterIsInstance<RecipeDestinations.Detail>()
         .lastOrNull()?.recipeId.orEmpty()
     LaunchedEffect(isAtRoot) { onAtRootChanged(isAtRoot) }
+    LaunchedEffect(request) {
+        if (request != null) {
+            backStack.removeAll { it !is RecipeDestinations.List }
+            backStack.add(RecipeDestinations.Detail(request.recipeId))
+            onRequestHandled()
+        }
+    }
 
     SharedTransitionLayout {
         NavDisplay(
@@ -133,6 +143,7 @@ fun RecipesContent(
                         onStartCooking = { backStack.add(RecipeDestinations.CookMode(it)) },
                         onOpenTimeline = { backStack.add(RecipeDestinations.Timeline(it)) },
                         onNavigateToShoppingList = { onNavigate(AppNavRequest.OpenShoppingList(it)) },
+                        onOpenMealPlan = { onNavigate(AppNavRequest.OpenMealPlan(it)) },
                         modifier = Modifier.fillMaxSize()
                     )
                 }

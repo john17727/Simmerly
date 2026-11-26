@@ -8,4 +8,10 @@ package dev.juanrincon.simmerly.core.presentation.navigation
 sealed interface AppNavRequest {
     /** Open a shopping list's items in the Shopping List tab. */
     data class OpenShoppingList(val listId: String) : AppNavRequest
+
+    /** Open a recipe's details in the Recipes tab, e.g. from a meal plan card. */
+    data class OpenRecipe(val recipeId: String) : AppNavRequest
+
+    /** Open the Meal plan tab on [date], e.g. from "View plan" after adding a recipe. */
+    data class OpenMealPlan(val date: kotlinx.datetime.LocalDate) : AppNavRequest
 }

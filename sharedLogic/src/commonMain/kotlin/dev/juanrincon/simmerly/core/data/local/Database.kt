@@ -9,6 +9,8 @@ import androidx.room3.RoomDatabase
 import androidx.room3.RoomDatabaseConstructor
 import androidx.room3.migration.AutoMigrationSpec
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
+import dev.juanrincon.simmerly.mealplan.data.local.MealPlanEntryDao
+import dev.juanrincon.simmerly.mealplan.data.local.MealPlanEntryEntity
 import dev.juanrincon.simmerly.recipes.data.local.metadata.RecipeRemoteKey
 import dev.juanrincon.simmerly.recipes.data.local.metadata.RecipeRemoteKeyDao
 import dev.juanrincon.simmerly.recipes.data.local.recent.RecentSearchQueryDao
@@ -82,8 +84,9 @@ import kotlin.time.ExperimentalTime
         ShoppingListItemEntity::class,
         ShoppingListRecipeEntity::class,
         TimelineEventEntity::class,
+        MealPlanEntryEntity::class,
     ],
-    version = 10,
+    version = 11,
     // Older versions still fall back to a destructive migration (see getRoomDatabase).
     autoMigrations = [
         AutoMigration(from = 5, to = 6),
@@ -91,6 +94,7 @@ import kotlin.time.ExperimentalTime
         AutoMigration(from = 7, to = 8, spec = RemoteKeyCreatedAtDeleted::class),
         AutoMigration(from = 8, to = 9, spec = RecipeCookTimeDeleted::class),
         AutoMigration(from = 9, to = 10),
+        AutoMigration(from = 10, to = 11),
     ],
 )
 @ColumnTypeConverters(Converters::class)
@@ -138,6 +142,8 @@ abstract class SimmerlyDatabase : RoomDatabase() {
     abstract fun shoppingListDao(): ShoppingListDao
 
     abstract fun timelineEventDao(): TimelineEventDao
+
+    abstract fun mealPlanEntryDao(): MealPlanEntryDao
 }
 
 @Suppress("KotlinNoActualForExpect")
