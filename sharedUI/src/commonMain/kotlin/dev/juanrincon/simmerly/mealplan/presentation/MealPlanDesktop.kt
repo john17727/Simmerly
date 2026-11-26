@@ -402,7 +402,7 @@ private fun WeekBoard(state: MealPlanState, actions: PlanActions) {
                     }
                 }
             }
-            BoardRows.forEach { (label, types) ->
+            BoardRows.forEachIndexed { rowIndex, (label, types) ->
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     modifier = Modifier.fillMaxWidth().height(androidx.compose.foundation.layout.IntrinsicSize.Min),
@@ -421,6 +421,7 @@ private fun WeekBoard(state: MealPlanState, actions: PlanActions) {
                             selected = day == state.selectedDate,
                             canEdit = state.canEdit,
                             showTypes = types.size > 1,
+                            isLastRow = rowIndex == BoardRows.lastIndex,
                             // "Sides and more" has no single meal; Plan there preselects dinner.
                             onPlan = { actions.onPlan(if (types.size > 1) MealType.Dinner else types.first(), day) },
                             actions = actions,
@@ -440,6 +441,7 @@ private fun BoardCell(
     selected: Boolean,
     canEdit: Boolean,
     showTypes: Boolean,
+    isLastRow: Boolean,
     onPlan: () -> Unit,
     actions: PlanActions,
     modifier: Modifier = Modifier,
@@ -450,7 +452,11 @@ private fun BoardCell(
     Column(
         verticalArrangement = Arrangement.spacedBy(8.dp),
         modifier = modifier.heightIn(min = 120.dp).fillMaxHeight()
-            .background(if (selected) scheme.primaryContainer.copy(alpha = 0.35f) else Color.Transparent)
+            // The last row closes the selected column with rounded bottom corners, like the header's top.
+            .background(
+                if (selected) scheme.primaryContainer.copy(alpha = 0.35f) else Color.Transparent,
+                if (isLastRow) RoundedCornerShape(bottomStart = 12.dp, bottomEnd = 12.dp) else RoundedCornerShape(0.dp),
+            )
             .hoverable(interaction)
             .padding(start = 4.dp, end = 4.dp, top = 8.dp, bottom = 12.dp),
     ) {
