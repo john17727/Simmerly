@@ -1,0 +1,32 @@
+### List a range (include_week_entries returns whole-week entries too; verify how)
+GET {{baseUrl}}/households/mealplans?start_date=2026-11-23&end_date=2026-11-29&include_week_entries=true&perPage=-1&orderBy=date&orderDirection=asc
+accept: application/json
+Authorization: {{token}}
+
+### Create (recipe entry; endDate set = whole-week entry, entryType required for the section)
+POST {{baseUrl}}/households/mealplans
+Content-Type: application/json
+Authorization: {{token}}
+
+{ "date": "2026-11-26", "endDate": null, "entryType": "dinner", "title": "", "text": "", "recipeId": "{{recipeId}}", "recipeScale": 1 }
+
+### Update (PUT needs the full body incl. id, groupId, userId)
+PUT {{baseUrl}}/households/mealplans/{{entryId}}
+Content-Type: application/json
+Authorization: {{token}}
+
+{ "id": 1, "groupId": "{{groupId}}", "userId": "{{userId}}", "date": "2026-11-27", "endDate": null, "entryType": "dinner", "title": "", "text": "", "recipeId": "{{recipeId}}", "recipeScale": 2 }
+
+### Delete
+DELETE {{baseUrl}}/households/mealplans/{{entryId}}
+Authorization: {{token}}
+
+### Planner rules (day: monday..sunday|unset, entryType, queryFilterString)
+GET {{baseUrl}}/households/mealplans/rules?perPage=-1
+Authorization: {{token}}
+
+### Household preferences (firstDayOfWeek)
+GET {{baseUrl}}/households/preferences
+Authorization: {{token}}
+
+###

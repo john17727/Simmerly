@@ -14,6 +14,12 @@ enum class StringKey {
     TimelineLoadFailed,
     TimelineSaveFailed,
     TimelineDeleteFailed,
+    MealPlanLoadFailed,
+    MealPlanSaveFailed,
+    /** Args: entry title. */
+    MealPlanRemoved,
+    /** Args: meal ("dinner"), day ("today" or a weekday). */
+    MealPlanMoved,
     /** Args: list name. */
     ItemAddedToList,
     /** Args: item count, list name. */

@@ -10,6 +10,8 @@ import dev.juanrincon.simmerly.recipes.data.di.recipeDataModule
 import dev.juanrincon.simmerly.recipes.presentation.di.recipePresentationModule
 import dev.juanrincon.simmerly.shoppinglists.data.di.shoppingListDataModule
 import dev.juanrincon.simmerly.shoppinglists.presentation.di.shoppingListPresentationModule
+import dev.juanrincon.simmerly.mealplan.data.di.mealPlanDataModule
+import dev.juanrincon.simmerly.mealplan.presentation.di.mealPlanPresentationModule
 import dev.juanrincon.simmerly.timeline.data.di.timelineDataModule
 import dev.juanrincon.simmerly.timeline.presentation.di.timelinePresentationModule
 import dev.juanrincon.simmerly.welcome.di.welcomeModule
@@ -39,6 +41,8 @@ fun appModules(platform: Module = platformModule): List<Module> = listOf(
     shoppingListDataModule,
     shoppingListPresentationModule,
     timelineDataModule,
+    mealPlanDataModule,
+    mealPlanPresentationModule,
     timelinePresentationModule,
 )
 

@@ -11,6 +11,10 @@ import simmerly.shared.generated.resources.list_created_with_item
 import simmerly.shared.generated.resources.list_created_with_items
 import simmerly.shared.generated.resources.login_failed
 import simmerly.shared.generated.resources.meal_plan
+import simmerly.shared.generated.resources.meal_plan_load_failed
+import simmerly.shared.generated.resources.meal_plan_moved
+import simmerly.shared.generated.resources.meal_plan_removed
+import simmerly.shared.generated.resources.meal_plan_save_failed
 import simmerly.shared.generated.resources.profile
 import simmerly.shared.generated.resources.recipes
 import simmerly.shared.generated.resources.shopping_list
@@ -47,6 +51,10 @@ private fun StringKey.toStringResource(): StringResource = when (this) {
     StringKey.TimelineLoadFailed -> Res.string.timeline_load_failed
     StringKey.TimelineSaveFailed -> Res.string.timeline_save_failed
     StringKey.TimelineDeleteFailed -> Res.string.timeline_delete_failed
+    StringKey.MealPlanLoadFailed -> Res.string.meal_plan_load_failed
+    StringKey.MealPlanSaveFailed -> Res.string.meal_plan_save_failed
+    StringKey.MealPlanRemoved -> Res.string.meal_plan_removed
+    StringKey.MealPlanMoved -> Res.string.meal_plan_moved
     StringKey.ShoppingListUpdateFailed -> Res.string.shopping_list_update_failed
     StringKey.ItemAddedToList -> Res.string.item_added_to_list
     StringKey.ItemsAddedToList -> Res.string.items_added_to_list
