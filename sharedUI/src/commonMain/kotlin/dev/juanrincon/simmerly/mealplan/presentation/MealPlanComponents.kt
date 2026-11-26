@@ -275,6 +275,8 @@ fun PlanEntryCard(
             .clip(shape)
             .background(scheme.surfaceContainerLow)
             .border(1.dp, scheme.outlineVariant, shape)
+            // The whole card opens the recipe; notes aren't clickable. Buttons inside take their own taps.
+            .then(if (recipe != null) Modifier.clickable(onClick = onOpenRecipe) else Modifier)
             .padding(start = 8.dp, top = 8.dp, bottom = 8.dp, end = 4.dp),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -307,7 +309,6 @@ fun PlanEntryCard(
                     fontWeight = FontWeight.Medium,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
-                    modifier = if (recipe != null) Modifier.clickable(onClick = onOpenRecipe) else Modifier,
                 )
                 if (recipe == null && entry.text.isNotBlank()) {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
