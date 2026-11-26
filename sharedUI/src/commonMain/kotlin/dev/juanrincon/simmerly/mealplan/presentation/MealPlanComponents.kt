@@ -85,7 +85,18 @@ fun PlanFilterChip(
         enabled = enabled,
         leadingIcon = leadingIcon,
         interactionSource = interaction,
+        // M3 lifts a hovered chip with a shadow; under a transparent container that shows through as
+        // a patchy fill behind the label. No lift, an opaque container, and a plain hover tint instead.
+        elevation = androidx.compose.material3.FilterChipDefaults.filterChipElevation(
+            elevation = 0.dp,
+            pressedElevation = 0.dp,
+            focusedElevation = 0.dp,
+            hoveredElevation = 0.dp,
+            draggedElevation = 0.dp,
+            disabledElevation = 0.dp,
+        ),
         colors = androidx.compose.material3.FilterChipDefaults.filterChipColors(
+            containerColor = if (hovered) scheme.surfaceContainer else scheme.surface,
             labelColor = text,
             iconColor = text,
             selectedContainerColor = scheme.primaryContainer,
