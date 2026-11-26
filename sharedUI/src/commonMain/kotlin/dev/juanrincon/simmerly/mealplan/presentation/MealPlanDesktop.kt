@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
@@ -402,7 +403,10 @@ private fun WeekBoard(state: MealPlanState, actions: PlanActions) {
                 }
             }
             BoardRows.forEach { (label, types) ->
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.fillMaxWidth().height(androidx.compose.foundation.layout.IntrinsicSize.Min),
+                ) {
                     Row(
                         Modifier.width(LabelColumn).padding(top = 16.dp),
                         horizontalArrangement = Arrangement.spacedBy(4.dp),
@@ -445,7 +449,7 @@ private fun BoardCell(
     val hovered by interaction.collectIsHoveredAsState()
     Column(
         verticalArrangement = Arrangement.spacedBy(8.dp),
-        modifier = modifier.heightIn(min = 120.dp)
+        modifier = modifier.heightIn(min = 120.dp).fillMaxHeight()
             .background(if (selected) scheme.primaryContainer.copy(alpha = 0.35f) else Color.Transparent)
             .hoverable(interaction)
             .padding(start = 4.dp, end = 4.dp, top = 8.dp, bottom = 12.dp),
