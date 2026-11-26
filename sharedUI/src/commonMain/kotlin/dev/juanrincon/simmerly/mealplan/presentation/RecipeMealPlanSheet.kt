@@ -180,8 +180,7 @@ private fun RecipeMealPlanPhone(
             Text("Meal", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 MealType.entries.forEach { type ->
-                    FilterChip(
-                        colors = planChipColors(),
+                    PlanFilterChip(
                         selected = state.type == type,
                         onClick = { onEvent(MealPlanAddIntent.SetType(type)) },
                         label = { Text(type.label()) },

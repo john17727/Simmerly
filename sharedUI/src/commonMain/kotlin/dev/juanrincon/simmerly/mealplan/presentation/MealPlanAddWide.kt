@@ -101,8 +101,7 @@ internal fun MealPlanAddWide(
                             e.type == type && e.id != state.editingId &&
                                 if (state.wholeWeek) e.isWholeWeek else !e.isWholeWeek && e.date == state.date
                         }
-                        FilterChip(
-                            colors = planChipColors(),
+                        PlanFilterChip(
                             selected = state.type == type,
                             onClick = { onEvent(MealPlanAddIntent.SetType(type)) },
                             label = { Text(type.label() + if (planned) " •" else "") },

@@ -4,6 +4,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -59,13 +60,40 @@ import dev.juanrincon.simmerly.mealplan.domain.MealPlanEntry
 import dev.juanrincon.simmerly.mealplan.domain.MealType
 import kotlinx.datetime.LocalDate
 
-/** Selected filter chips as designed: coral container with the dark coral label and icon. */
+/**
+ * A filter chip whose label and icon darken on hover along with its background, so the text doesn't
+ * look left behind by the hover highlight. Selected chips already use the dark coral label.
+ */
 @Composable
-fun planChipColors() = androidx.compose.material3.FilterChipDefaults.filterChipColors(
-    selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
-    selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer,
-    selectedLeadingIconColor = MaterialTheme.colorScheme.onPrimaryContainer,
-)
+fun PlanFilterChip(
+    selected: Boolean,
+    onClick: () -> Unit,
+    label: @Composable () -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    leadingIcon: (@Composable () -> Unit)? = null,
+) {
+    val interaction = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
+    val hovered by interaction.collectIsHoveredAsState()
+    val scheme = MaterialTheme.colorScheme
+    val text = if (hovered) scheme.onSurface else scheme.onSurfaceVariant
+    androidx.compose.material3.FilterChip(
+        selected = selected,
+        onClick = onClick,
+        label = label,
+        modifier = modifier,
+        enabled = enabled,
+        leadingIcon = leadingIcon,
+        interactionSource = interaction,
+        colors = androidx.compose.material3.FilterChipDefaults.filterChipColors(
+            labelColor = text,
+            iconColor = text,
+            selectedContainerColor = scheme.primaryContainer,
+            selectedLabelColor = scheme.onPrimaryContainer,
+            selectedLeadingIconColor = scheme.onPrimaryContainer,
+        ),
+    )
+}
 
 /** The seven-day strip under the header: weekday letter, date, and a dot when something is planned. */
 @Composable
