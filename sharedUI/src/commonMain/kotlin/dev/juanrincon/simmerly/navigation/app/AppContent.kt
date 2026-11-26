@@ -112,6 +112,7 @@ fun AppContent(
                         currentDestination = when (request) {
                             is AppNavRequest.OpenShoppingList -> AppDestinations.SHOPPING_LIST
                             is AppNavRequest.OpenRecipe -> AppDestinations.RECIPES
+                            is AppNavRequest.OpenMealPlan -> AppDestinations.MEAL_PLAN
                         }
                     },
                     request = pendingRequest as? AppNavRequest.OpenRecipe,
@@ -120,11 +121,14 @@ fun AppContent(
                 )
 
                 AppDestinations.MEAL_PLAN -> MealPlanTab(
+                    request = pendingRequest as? AppNavRequest.OpenMealPlan,
+                    onRequestHandled = { pendingRequest = null },
                     onNavigate = { request ->
                         pendingRequest = request
                         currentDestination = when (request) {
                             is AppNavRequest.OpenShoppingList -> AppDestinations.SHOPPING_LIST
                             is AppNavRequest.OpenRecipe -> AppDestinations.RECIPES
+                            is AppNavRequest.OpenMealPlan -> AppDestinations.MEAL_PLAN
                         }
                     },
                     modifier = Modifier.fillMaxSize()

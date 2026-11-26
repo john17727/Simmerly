@@ -73,8 +73,16 @@ fun MealPlanScreen(
     onOpenRecipe: (recipeId: String) -> Unit,
     onOpenShoppingList: (listId: String) -> Unit,
     modifier: Modifier = Modifier,
+    request: dev.juanrincon.simmerly.core.presentation.navigation.AppNavRequest.OpenMealPlan? = null,
+    onRequestHandled: () -> Unit = {},
     viewModel: MealPlanViewModel = koinViewModel(),
 ) {
+    androidx.compose.runtime.LaunchedEffect(request) {
+        if (request != null) {
+            viewModel.onEvent(MealPlanIntent.SelectDate(request.date))
+            onRequestHandled()
+        }
+    }
     val state by viewModel.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
     var addArgs by remember { mutableStateOf<MealPlanAddArgs?>(null) }

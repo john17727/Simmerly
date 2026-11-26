@@ -141,6 +141,7 @@ internal fun recipeActions(
     onToggleComments: (recipeId: String) -> Unit,
     onOpenOriginal: (url: String) -> Unit,
     commentsOpen: Boolean = false,
+    onAddToMealPlan: (recipeId: String) -> Unit = {},
     onOpenTimeline: (recipeId: String) -> Unit = {},
 ): AppBarRowScope.() -> Unit = {
     val link = state.recipe.link
@@ -183,12 +184,11 @@ internal fun recipeActions(
         label = "Timeline",
         enabled = !state.loading,
     )
-    // Not built yet: disabled, as in the phone menu.
     actionItem(
-        onClick = {},
+        onClick = { onAddToMealPlan(state.recipe.id) },
         icon = Icons.Outlined.EditCalendar,
         label = "Add to meal plan",
-        enabled = false,
+        enabled = !state.loading,
     )
     actionItem(
         onClick = {},
@@ -337,6 +337,7 @@ internal fun CompactRecipeDetails(
     onToggleComments: (recipeId: String) -> Unit,
     onStartCooking: (recipeId: String) -> Unit = {},
     onOpenTimeline: (recipeId: String) -> Unit = {},
+    onAddToMealPlan: (recipeId: String) -> Unit = {},
     /** A side panel (comments or settings) shares the window: use the phone's sections on a wide window. */
     narrow: Boolean = false,
     /** The comments extra pane is open beside the recipe: highlights the Comments action. */
@@ -353,7 +354,10 @@ internal fun CompactRecipeDetails(
     // actions in the top bar avoids that path.
     val medium = wideWindow && !narrow
     val uriHandler = LocalUriHandler.current
-    val recipeActions = recipeActions(state, onEvent, onToggleComments, uriHandler::openUri, commentsOpen, onOpenTimeline)
+    val recipeActions = recipeActions(
+        state, onEvent, onToggleComments, uriHandler::openUri, commentsOpen,
+        onAddToMealPlan = onAddToMealPlan, onOpenTimeline = onOpenTimeline,
+    )
     Scaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         snackbarHost = { SnackbarHost(snackbarHostState) },

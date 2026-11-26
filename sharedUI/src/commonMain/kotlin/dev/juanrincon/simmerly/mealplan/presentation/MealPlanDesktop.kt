@@ -170,7 +170,7 @@ private fun DesktopHeader(state: MealPlanState, actions: PlanActions) {
                                 Column {
                                     Text(state.selectedDate.dayTitle())
                                     Text(
-                                        if (n == 0) "No recipes planned" else "§n ${if (n == 1) "recipe" else "recipes"}",
+                                        if (n == 0) "No recipes planned" else "$n ${if (n == 1) "recipe" else "recipes"}",
                                         style = MaterialTheme.typography.bodySmall,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     )
@@ -313,7 +313,7 @@ private fun EntryMenu(entry: MealPlanEntry, actions: PlanActions, modifier: Modi
     val title = entry.recipe?.name ?: entry.title
     Box(modifier) {
         IconButton(onClick = { open = true }, modifier = Modifier.size(32.dp)) {
-            Icon(Icons.Rounded.MoreVert, contentDescription = "Options for §title", modifier = Modifier.size(20.dp))
+            Icon(Icons.Rounded.MoreVert, contentDescription = "Options for $title", modifier = Modifier.size(20.dp))
         }
         DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
             DropdownMenuItem(

@@ -143,6 +143,7 @@ fun RecipesContent(
                         onStartCooking = { backStack.add(RecipeDestinations.CookMode(it)) },
                         onOpenTimeline = { backStack.add(RecipeDestinations.Timeline(it)) },
                         onNavigateToShoppingList = { onNavigate(AppNavRequest.OpenShoppingList(it)) },
+                        onOpenMealPlan = { onNavigate(AppNavRequest.OpenMealPlan(it)) },
                         modifier = Modifier.fillMaxSize()
                     )
                 }

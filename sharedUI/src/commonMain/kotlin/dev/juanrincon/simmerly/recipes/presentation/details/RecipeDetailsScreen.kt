@@ -16,7 +16,14 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
+import dev.juanrincon.simmerly.mealplan.presentation.RecipeMealPlanSheet
+import dev.juanrincon.simmerly.mealplan.presentation.label
+import dev.juanrincon.simmerly.mealplan.presentation.shortDayLabel
+import kotlinx.coroutines.launch
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import dev.juanrincon.simmerly.core.presentation.asString
@@ -41,6 +48,7 @@ fun RecipeDetailsScreen(
     onStartCooking: (recipeId: String) -> Unit = {},
     onNavigateToShoppingList: (listId: String) -> Unit = {},
     onOpenTimeline: (recipeId: String) -> Unit = {},
+    onOpenMealPlan: (date: kotlinx.datetime.LocalDate) -> Unit = {},
     sharedTransitionScope: SharedTransitionScope? = null,
     viewModel: RecipeDetailsViewModel = koinViewModel { parametersOf(recipeId) },
     modifier: Modifier = Modifier
@@ -64,8 +72,28 @@ fun RecipeDetailsScreen(
             }
         }
     }
+    var mealPlanSheetOpen by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
+    if (mealPlanSheetOpen) {
+        RecipeMealPlanSheet(
+            recipeId = recipeId,
+            onDismiss = { mealPlanSheetOpen = false },
+            onAdded = { entry ->
+                mealPlanSheetOpen = false
+                scope.launch {
+                    val result = snackbarHostState.showSnackbar(
+                        message = "Added to ${entry.type.label().lowercase()}, ${if (entry.isWholeWeek) "any day this week" else entry.date.shortDayLabel()}",
+                        actionLabel = "View plan",
+                        duration = SnackbarDuration.Long,
+                    )
+                    if (result == SnackbarResult.ActionPerformed) onOpenMealPlan(entry.date)
+                }
+            },
+        )
+    }
     Content(
         state = state,
+        onAddToMealPlan = { mealPlanSheetOpen = true },
         // The comments pane and the settings sheet both take a share of the window, so opening one
         // closes the other.
         onEvent = { event ->
@@ -96,6 +124,7 @@ private fun Content(
     commentsOpen: Boolean,
     onStartCooking: (recipeId: String) -> Unit,
     onOpenTimeline: (recipeId: String) -> Unit,
+    onAddToMealPlan: () -> Unit,
     snackbarHostState: SnackbarHostState,
     sharedTransitionScope: SharedTransitionScope? = null,
     modifier: Modifier = Modifier
@@ -158,6 +187,7 @@ private fun Content(
                                     narrow = narrow,
                                     onStartCooking = onStartCooking,
                                     onOpenTimeline = onOpenTimeline,
+                                    onAddToMealPlan = { onAddToMealPlan() },
                                     modifier = modifier,
                                     snackbarHostState = snackbarHostState,
                                 )
@@ -169,6 +199,7 @@ private fun Content(
                                     onToggleComments = onToggleComments,
                                     onStartCooking = onStartCooking,
                                     onOpenTimeline = onOpenTimeline,
+                                    onAddToMealPlan = { onAddToMealPlan() },
                                     commentsOpen = commentsOpen,
                                 narrow = narrow,
                                     sharedTransitionScope = sharedTransitionScope,

@@ -118,7 +118,7 @@ internal fun MealPlanFoldable(
                                 )
                                 val n = state.weekRecipeEntries.size
                                 Text(
-                                    "§n ${if (n == 1) "recipe" else "recipes"} planned",
+                                    "$n ${if (n == 1) "recipe" else "recipes"} planned",
                                     style = MaterialTheme.typography.bodySmall,
                                     color = scheme.onSurfaceVariant,
                                 )

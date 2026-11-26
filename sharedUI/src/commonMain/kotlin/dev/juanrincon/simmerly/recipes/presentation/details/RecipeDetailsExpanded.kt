@@ -95,6 +95,7 @@ internal fun ExpandedView(
     narrow: Boolean = false,
     onStartCooking: (recipeId: String) -> Unit,
     onOpenTimeline: (recipeId: String) -> Unit = {},
+    onAddToMealPlan: (recipeId: String) -> Unit = {},
     modifier: Modifier = Modifier,
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
 ) {
@@ -155,6 +156,7 @@ internal fun ExpandedView(
                     narrow = narrow,
                     onShowComments = { onToggleComments(recipe.id) },
                     onOpenTimeline = { onOpenTimeline(recipe.id) },
+                    onAddToMealPlan = { onAddToMealPlan(recipe.id) },
                     modifier = Modifier.fillMaxWidth()
                 )
                 AnimatedVisibility(
@@ -268,12 +270,16 @@ private fun ExpandedHeader(
     onEvent: (RecipeDetailsIntent) -> Unit,
     onShowComments: () -> Unit,
     onOpenTimeline: () -> Unit,
+    onAddToMealPlan: () -> Unit,
     commentsOpen: Boolean,
     narrow: Boolean,
     modifier: Modifier = Modifier
 ) {
     val uriHandler = LocalUriHandler.current
-    val actions = recipeActions(state, onEvent, { onShowComments() }, uriHandler::openUri, commentsOpen) { onOpenTimeline() }
+    val actions = recipeActions(
+        state, onEvent, { onShowComments() }, uriHandler::openUri, commentsOpen,
+        onAddToMealPlan = { onAddToMealPlan() },
+    ) { onOpenTimeline() }
     Column(modifier = modifier) {
         Row(
             modifier = Modifier

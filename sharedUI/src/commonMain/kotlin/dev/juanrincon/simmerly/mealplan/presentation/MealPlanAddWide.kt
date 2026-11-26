@@ -56,13 +56,14 @@ internal fun MealPlanAddWide(
     onEvent: (MealPlanAddIntent) -> Unit,
     plannedDays: Set<LocalDate>,
     onDismiss: () -> Unit,
+    title: String? = null,
 ) {
     val scheme = MaterialTheme.colorScheme
     var month by remember { mutableStateOf(state.date) }
     Column(Modifier.fillMaxWidth()) {
         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(start = 24.dp, end = 8.dp, top = 16.dp)) {
             Text(
-                if (state.isEdit) "Edit meal" else "Plan a meal",
+                title ?: if (state.isEdit) "Edit meal" else "Plan a meal",
                 style = MaterialTheme.typography.headlineSmall,
                 modifier = Modifier.weight(1f),
             )

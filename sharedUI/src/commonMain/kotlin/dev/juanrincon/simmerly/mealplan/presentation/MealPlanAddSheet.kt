@@ -424,7 +424,17 @@ internal fun LockedRecipe(state: MealPlanAddState) {
             contentScale = ContentScale.Crop,
             modifier = Modifier.size(48.dp).clip(RoundedCornerShape(8.dp)).background(MaterialTheme.colorScheme.surfaceContainer),
         )
-        Text(recipe.name, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Medium)
+        Column {
+            Text(recipe.name, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Medium)
+            // Only from plans saved on this device.
+            val dates = state.plannedDates[recipe.id].orEmpty()
+            val next = dates.firstOrNull { it >= state.today } ?: dates.lastOrNull()
+            Text(
+                if (next == null) "Not planned yet" else "Planned ${next.monthDayLabel()}",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
     }
 }
 
