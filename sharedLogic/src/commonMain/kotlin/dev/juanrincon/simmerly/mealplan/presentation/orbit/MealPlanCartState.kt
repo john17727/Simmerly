@@ -9,7 +9,12 @@ import kotlinx.datetime.LocalDate
 
 enum class CartScope { Day, Week }
 
-data class MealPlanCartArgs(val date: LocalDate, val scope: CartScope = CartScope.Day)
+/** [entryId] set = just that one entry (from a card's menu); the scope switch is then hidden. */
+data class MealPlanCartArgs(
+    val date: LocalDate,
+    val scope: CartScope = CartScope.Day,
+    val entryId: Int? = null,
+)
 
 /** A planned recipe the cart may add; [included] is the checkbox. */
 data class CartEntry(

@@ -12,6 +12,7 @@ fun MealPlanTab(
 ) {
     MealPlanScreen(
         onOpenRecipe = { onNavigate(AppNavRequest.OpenRecipe(it)) },
+        onOpenShoppingList = { onNavigate(AppNavRequest.OpenShoppingList(it)) },
         modifier = modifier,
     )
 }

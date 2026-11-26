@@ -112,13 +112,13 @@ class MealPlanCartViewModel(
     private suspend fun org.orbitmvi.orbit.syntax.Syntax<MealPlanCartState, MealPlanCartSideEffect>.rebuild() {
         val s = state
         val week = s.weekStart..s.weekEnd
-        val inScope: List<MealPlanEntry> = when (s.scope) {
+        val inScope: List<MealPlanEntry> = if (args.entryId != null) plan.filter { it.id == args.entryId } else when (s.scope) {
             CartScope.Day -> plan.filter { !it.isWholeWeek && it.date == s.date }
             CartScope.Week -> plan.filter { if (it.isWholeWeek) it.coversDay(s.weekStart) else it.date in week }
         }
         val candidates = inScope.filter { it.recipe != null }.map { e ->
             val unscheduled = e.isWholeWeek
-            CartEntry(e, included = inclusion[e.id] ?: !unscheduled, unscheduled = unscheduled)
+            CartEntry(e, included = inclusion[e.id] ?: (args.entryId != null || !unscheduled), unscheduled = unscheduled)
         }
         reduce { state.copy(candidates = candidates, notes = inScope.filter { it.isNote }) }
         loadIngredients(candidates.mapNotNull { it.entry.recipe?.id }.distinct())

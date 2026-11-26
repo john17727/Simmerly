@@ -114,6 +114,21 @@ class MealPlanCartViewModelTest {
     }
 
     @Test
+    fun aSingleEntryCartHoldsJustThatEntryAndIncludesIt() = runTest(dispatcher) {
+        val viewModel = MealPlanCartViewModel(
+            MealPlanCartArgs(wed, CartScope.Day, entryId = 3), plan, recipes, lists, FakeUserRepository(),
+        )
+        viewModel.testWithInternalState(this) {
+            runOnCreate()
+            emitPlan(pizza, chicken, anyDay)
+            val state = awaitStateMatching { it.candidates.isNotEmpty() }
+            assertThat(state.candidates.map { it.entry.id }).isEqualTo(listOf(3))
+            assertThat(state.candidates.single().included).isTrue()
+            cancelAndIgnoreRemainingItems()
+        }
+    }
+
+    @Test
     fun combiningSumsMatchingIngredientsScaledByEachEntry() = runTest(dispatcher) {
         val viewModel = vm()
         viewModel.testWithInternalState(this) {

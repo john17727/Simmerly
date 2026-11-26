@@ -53,7 +53,10 @@ import androidx.compose.ui.unit.dp
 import dev.juanrincon.simmerly.core.presentation.asStringSuspend
 import dev.juanrincon.simmerly.mealplan.domain.MealPlanEntry
 import dev.juanrincon.simmerly.mealplan.domain.MealType
+import dev.juanrincon.simmerly.mealplan.presentation.orbit.CartScope
 import dev.juanrincon.simmerly.mealplan.presentation.orbit.MealPlanAddArgs
+import dev.juanrincon.simmerly.mealplan.presentation.orbit.MealPlanCartArgs
+import kotlinx.coroutines.launch
 import dev.juanrincon.simmerly.mealplan.presentation.orbit.MealPlanIntent
 import dev.juanrincon.simmerly.mealplan.presentation.orbit.MealPlanSideEffect
 import dev.juanrincon.simmerly.mealplan.presentation.orbit.MealPlanState
@@ -66,6 +69,7 @@ import org.orbitmvi.orbit.compose.collectSideEffect
 @Composable
 fun MealPlanScreen(
     onOpenRecipe: (recipeId: String) -> Unit,
+    onOpenShoppingList: (listId: String) -> Unit,
     modifier: Modifier = Modifier,
     viewModel: MealPlanViewModel = koinViewModel(),
 ) {
@@ -73,7 +77,8 @@ fun MealPlanScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     var addArgs by remember { mutableStateOf<MealPlanAddArgs?>(null) }
     var showCalendar by remember { mutableStateOf(false) }
-    var cartScope by remember { mutableStateOf<MealPlanCartRequest?>(null) }
+    var cartRequest by remember { mutableStateOf<MealPlanCartRequest?>(null) }
+    val scope = androidx.compose.runtime.rememberCoroutineScope()
 
     viewModel.collectSideEffect { effect ->
         when (effect) {
@@ -99,7 +104,7 @@ fun MealPlanScreen(
             addArgs = MealPlanAddArgs(date = state.selectedDate, type = entry.type, entryId = entry.id)
         },
         onOpenCalendar = { showCalendar = true },
-        onAddToList = { scope, entryId -> cartScope = MealPlanCartRequest(state.selectedDate, scope, entryId) },
+        onAddToList = { scope, entryId -> cartRequest = MealPlanCartRequest(state.selectedDate, scope, entryId) },
         modifier = modifier,
     )
 
@@ -112,6 +117,28 @@ fun MealPlanScreen(
             onSelect = { viewModel.onEvent(MealPlanIntent.SelectDate(it)); showCalendar = false },
             onToday = { viewModel.onEvent(MealPlanIntent.GoToToday); showCalendar = false },
             onDismiss = { showCalendar = false },
+        )
+    }
+    cartRequest?.let { request ->
+        MealPlanCartSheet(
+            args = MealPlanCartArgs(
+                date = request.date,
+                scope = if (request.scope == CartRequestScope.Week) CartScope.Week else CartScope.Day,
+                entryId = request.entryId,
+            ),
+            onDismiss = { cartRequest = null },
+            onAdded = { message, listId ->
+                cartRequest = null
+                scope.launch {
+                    val result = snackbarHostState.showSnackbar(
+                        message = message.asStringSuspend(),
+                        actionLabel = "View list",
+                        duration = SnackbarDuration.Long,
+                    )
+                    if (result == SnackbarResult.ActionPerformed) onOpenShoppingList(listId)
+                }
+            },
+            onError = { snackbarHostState.showSnackbar(it.asStringSuspend()) },
         )
     }
     addArgs?.let { args ->
@@ -258,6 +285,11 @@ private fun PlanList(
                             style = MaterialTheme.typography.bodySmall,
                             color = scheme.onSurfaceVariant,
                         )
+                        if (state.canEdit && state.weekRecipeEntries.isNotEmpty()) {
+                            IconButton(onClick = { onAddToList(CartRequestScope.Week, null) }) {
+                                Icon(Icons.Rounded.AddShoppingCart, contentDescription = "Add this week's recipes to a shopping list")
+                            }
+                        }
                     }
                     state.anyDayEntries.forEach { entry ->
                         PlanEntryCard(
