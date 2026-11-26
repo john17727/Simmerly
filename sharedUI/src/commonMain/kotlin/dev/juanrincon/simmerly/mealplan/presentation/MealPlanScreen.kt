@@ -63,6 +63,7 @@ import dev.juanrincon.simmerly.mealplan.presentation.orbit.MealPlanIntent
 import dev.juanrincon.simmerly.mealplan.presentation.orbit.MealPlanSideEffect
 import dev.juanrincon.simmerly.mealplan.presentation.orbit.MealPlanState
 import kotlinx.datetime.LocalDate
+import kotlinx.datetime.daysUntil
 import org.koin.compose.viewmodel.koinViewModel
 import org.orbitmvi.orbit.compose.collectAsState
 import org.orbitmvi.orbit.compose.collectSideEffect
@@ -214,13 +215,7 @@ internal fun MealPlanPhone(
                     Icon(Icons.Rounded.ChevronRight, contentDescription = "Next week")
                 }
             }
-            WeekStrip(
-                days = state.weekDays,
-                selected = state.selectedDate,
-                today = state.today,
-                plannedDays = state.plannedDays,
-                onSelect = { onEvent(MealPlanIntent.SelectDate(it)) },
-            )
+            SwipeableWeekStrip(state, onEvent)
             androidx.compose.material3.HorizontalDivider(color = scheme.outlineVariant)
             if (state.isLoading || state.isRefreshing) {
                 LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
@@ -272,3 +267,45 @@ private fun PlanList(state: MealPlanState, actions: PlanActions) {
     }
 }
 
+
+/** Weeks either side of today that the strip can be swiped through. */
+private const val WEEKS_EACH_WAY = 520
+
+/**
+ * The week strip as a pager: swiping moves to the next or previous week and keeps the weekday
+ * selected, like the arrows do. Selecting a date elsewhere (arrows, calendar, Today) scrolls it.
+ */
+@Composable
+private fun SwipeableWeekStrip(state: MealPlanState, onEvent: (MealPlanIntent) -> Unit) {
+    val baseWeek = remember(state.today, state.firstDay) { state.today.startOfWeek(state.firstDay) }
+    fun pageFor(date: LocalDate): Int =
+        WEEKS_EACH_WAY + baseWeek.daysUntil(date.startOfWeek(state.firstDay)) / 7
+    val targetPage = pageFor(state.selectedDate)
+    val pagerState = androidx.compose.foundation.pager.rememberPagerState(
+        initialPage = targetPage,
+        pageCount = { WEEKS_EACH_WAY * 2 + 1 },
+    )
+    val currentTarget by androidx.compose.runtime.rememberUpdatedState(targetPage)
+    val currentOnEvent by androidx.compose.runtime.rememberUpdatedState(onEvent)
+
+    // Selection moved by something other than a swipe: bring the strip to that week.
+    androidx.compose.runtime.LaunchedEffect(targetPage) {
+        if (pagerState.currentPage != targetPage) pagerState.animateScrollToPage(targetPage)
+    }
+    // A swipe settled on another week: select the same weekday there.
+    androidx.compose.runtime.LaunchedEffect(pagerState) {
+        androidx.compose.runtime.snapshotFlow { pagerState.settledPage }.collect { page ->
+            if (page != currentTarget) currentOnEvent(MealPlanIntent.StepWeeks(page - currentTarget))
+        }
+    }
+    androidx.compose.foundation.pager.HorizontalPager(state = pagerState, modifier = Modifier.fillMaxWidth()) { page ->
+        val start = baseWeek.plusDays((page - WEEKS_EACH_WAY) * 7)
+        WeekStrip(
+            days = start.weekDays(state.firstDay),
+            selected = state.selectedDate,
+            today = state.today,
+            plannedDays = state.plannedDays,
+            onSelect = { onEvent(MealPlanIntent.SelectDate(it)) },
+        )
+    }
+}
