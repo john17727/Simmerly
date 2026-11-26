@@ -367,10 +367,13 @@ private val BoardRows = listOf(
 @Composable
 private fun WeekBoard(state: MealPlanState, actions: PlanActions) {
     val scheme = MaterialTheme.colorScheme
-    // Below ~1100dp the board keeps its width and scrolls sideways.
-    Box(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState())) {
-        Column(Modifier.widthIn(min = 1000.dp)) {
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+    // Below ~1100dp the board keeps its width and scrolls sideways. The width must be explicit:
+    // the columns use weight, which collapses under the scroll container's unbounded width.
+    androidx.compose.foundation.layout.BoxWithConstraints(Modifier.fillMaxWidth()) {
+        val boardWidth = if (maxWidth > 1000.dp) maxWidth else 1000.dp
+        Box(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState())) {
+        Column(Modifier.width(boardWidth)) {
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
                 Spacer(Modifier.width(LabelColumn))
                 state.weekDays.forEach { day ->
                     val selected = day == state.selectedDate
@@ -422,6 +425,7 @@ private fun WeekBoard(state: MealPlanState, actions: PlanActions) {
                     }
                 }
             }
+        }
         }
     }
 }
