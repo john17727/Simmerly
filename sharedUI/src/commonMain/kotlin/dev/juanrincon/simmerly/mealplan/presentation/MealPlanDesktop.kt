@@ -423,8 +423,8 @@ private fun WeekBoard(state: MealPlanState, actions: PlanActions) {
                             canEdit = state.canEdit,
                             showTypes = types.size > 1,
                             isLastRow = rowIndex == BoardRows.lastIndex,
-                            // "Sides and more" has no single meal; Plan there preselects dinner.
-                            onPlan = { actions.onPlan(if (types.size > 1) MealType.Dinner else types.first(), day) },
+                            // "Sides and more" starts on Side; the meal can be changed in the dialog.
+                            onPlan = { actions.onPlan(types.first(), day) },
                             actions = actions,
                             modifier = Modifier.weight(1f),
                         )

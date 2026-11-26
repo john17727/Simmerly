@@ -306,6 +306,7 @@ internal fun RecipePicker(state: MealPlanAddState, onEvent: (MealPlanAddIntent) 
             FilterDropdownChip("Categories", state, isTag = false, onEvent)
             FilterDropdownChip("Tags", state, isTag = true, onEvent)
             FilterChip(
+                colors = planChipColors(),
                 selected = state.rulesEnabled,
                 enabled = state.rulesAvailable,
                 onClick = { onEvent(MealPlanAddIntent.SetRulesEnabled(!state.rulesEnabled)) },
@@ -391,6 +392,7 @@ private fun FilterDropdownChip(
     val picked = options.count { it.id in state.selectedFilterIds }
     Box {
         FilterChip(
+            colors = planChipColors(),
             selected = picked > 0,
             enabled = options.isNotEmpty(),
             onClick = { open = true },

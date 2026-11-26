@@ -211,6 +211,7 @@ internal fun MealPlanCartContent(
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     ListFilter.entries.forEach { filter ->
                         FilterChip(
+                            colors = planChipColors(),
                             selected = state.filter == filter,
                             onClick = { onEvent(MealPlanCartIntent.SetFilter(filter)) },
                             label = { Text(if (filter == ListFilter.Mine) "Mine" else "Household") },

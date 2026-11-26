@@ -59,6 +59,14 @@ import dev.juanrincon.simmerly.mealplan.domain.MealPlanEntry
 import dev.juanrincon.simmerly.mealplan.domain.MealType
 import kotlinx.datetime.LocalDate
 
+/** Selected filter chips as designed: coral container with the dark coral label and icon. */
+@Composable
+fun planChipColors() = androidx.compose.material3.FilterChipDefaults.filterChipColors(
+    selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+    selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer,
+    selectedLeadingIconColor = MaterialTheme.colorScheme.onPrimaryContainer,
+)
+
 /** The seven-day strip under the header: weekday letter, date, and a dot when something is planned. */
 @Composable
 fun WeekStrip(
